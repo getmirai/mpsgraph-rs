@@ -51,6 +51,14 @@ objc2-foundation = "0.3.0"
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "tvos", target_os = "watchos", target_os = "visionos"))'.dependencies]
 # MacOS/iOS specific dependencies would go here if needed
 
+[package.metadata.docs.rs]
+# Disable default features for docs.rs build
+no-default-features = true
+# Skip running tests for docs.rs
+rustdoc-args = ["--cfg", "docsrs"]
+# Target platforms
+targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
+
 [dev-dependencies]
 rand = "0.8.0"
 

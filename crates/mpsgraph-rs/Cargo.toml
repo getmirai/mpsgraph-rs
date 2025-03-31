@@ -46,3 +46,11 @@ path = "examples/simple_compile.rs"
 
 [package.metadata.macos]
 frameworks = ["MetalPerformanceShaders", "Metal", "Foundation"]
+
+[package.metadata.docs.rs]
+# Disable default features for docs.rs build
+no-default-features = true
+# Skip running tests for docs.rs
+rustdoc-args = ["--cfg", "docsrs"]
+# Target platforms
+targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
