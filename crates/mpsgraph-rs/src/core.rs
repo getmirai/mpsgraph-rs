@@ -44,6 +44,26 @@ pub fn create_ns_array_from_pointers(objects: &[*mut AnyObject]) -> *mut AnyObje
     }
 }
 
+/// Helper function for creating NSArray from object pointers (used by control_flow_ops)
+pub struct NSArrayContainer {
+    ptr: *mut AnyObject
+}
+
+impl NSArrayContainer {
+    pub fn from_objects(objects: &[*mut AnyObject]) -> Self {
+        // Use the existing function
+        let ptr = create_ns_array_from_pointers(objects);
+        NSArrayContainer { ptr }
+    }
+}
+
+// Define accessors for the NSArray pointer
+impl NSArrayContainer {
+    pub fn as_ptr(&self) -> *mut AnyObject {
+        self.ptr
+    }
+}
+
 // Helper function to create NSArray from i64 slice
 pub fn create_ns_array_from_i64_slice(values: &[i64]) -> *mut AnyObject {
     unsafe {

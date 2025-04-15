@@ -5,6 +5,7 @@ use crate::shape::Shape;
 use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
+use objc2_foundation::{NSArray, NSNumber};
 
 /// Descriptor for 2D depthwise convolution operations
 pub struct DepthwiseConvolution2DOpDescriptor(pub(crate) *mut AnyObject);
@@ -277,37 +278,26 @@ impl Clone for DepthwiseConvolution3DOpDescriptor {
 
 /// Helper function to create NSArray of NSNumber objects from a slice of usizes
 fn create_number_array(values: &[usize]) -> *mut AnyObject {
+    use objc2::rc::Retained;
+    
     unsafe {
-        let class_name = c"NSNumber";
-        if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-            let numbers: Vec<*mut AnyObject> = values
-                .iter()
-                .map(|&val| {
-                    let obj: *mut AnyObject = msg_send![cls, alloc];
-                    let obj: *mut AnyObject = msg_send![obj, initWithUnsignedInteger: val,];
-                    obj
-                })
-                .collect();
-
-            let array_class_name = c"NSArray";
-            if let Some(array_cls) = objc2::runtime::AnyClass::get(array_class_name) {
-                let array: *mut AnyObject = msg_send![array_cls, alloc];
-                let array: *mut AnyObject = msg_send![array, initWithObjects: numbers.as_ptr(),
-                    count: numbers.len(),
-                ];
-
-                // Release NSNumber objects
-                for num in numbers {
-                    objc2::ffi::objc_release(num as *mut _);
-                }
-
-                array
-            } else {
-                panic!("Class NSArray not found")
-            }
-        } else {
-            panic!("Class NSNumber not found")
-        }
+        // Create NSNumber objects using objc2_foundation
+        let numbers: Vec<Retained<NSNumber>> = values
+            .iter()
+            .map(|&val| NSNumber::new_usize(val))
+            .collect();
+        
+        // Get references to NSNumber objects
+        let number_refs: Vec<&NSNumber> = numbers.iter().map(|n| n.as_ref()).collect();
+        
+        // Create NSArray from the NSNumber objects
+        let array = NSArray::from_slice(&number_refs);
+        
+        // Get pointer to NSArray and retain it
+        let ptr: *mut AnyObject = array.as_ref() as *const NSArray<NSNumber> as *mut AnyObject;
+        objc2::ffi::objc_retain(ptr as *mut _);
+        
+        ptr
     }
 }
 

@@ -4,8 +4,8 @@ use std::ffi::c_void;
 use crate::graph::Graph;
 use crate::tensor::Tensor;
 use crate::operation::MPSGraphOperation;
-use objc2_foundation::NSString;
-use crate::core::AsRawObject;
+use objc2_foundation::{NSArray, NSString};
+use crate::core::{AsRawObject, NSArrayContainer};
 use objc2::msg_send;
 
 // Import the block_kit crate for Objective-C blocks
@@ -193,7 +193,7 @@ impl Graph {
             };
             
             // Convert initial inputs to NSArray
-            let initial_inputs_array = crate::core::NSArray::from_objects(
+            let initial_inputs_array = NSArrayContainer::from_objects(
                 &initial_inputs.iter().map(|t| t.0).collect::<Vec<_>>()
             );
             
@@ -239,16 +239,16 @@ impl Graph {
                 let result_tensors = after_block(&body_arguments);
                 
                 // Convert Vec<Tensor> to NSArray
-                let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
-                let result_array = crate::core::NSArray::from_objects(&result_ptrs);
+                let result_ptrs: Vec<*mut AnyObject> = result_tensors.iter().map(|t| t.0).collect();
+                let result_array = NSArrayContainer::from_objects(&result_ptrs);
                 
                 // Return the NSArray
-                result_array.0
+                result_array.as_ptr()
             }).copy();
             
             // Call the Objective-C method
             let result_array: *mut AnyObject = msg_send![
-                self.0, whileWithInitialInputs: initial_inputs_array.0,
+                self.0, whileWithInitialInputs: initial_inputs_array.as_ptr(),
                 before: &*before_callback,
                 after: &*after_callback,
                 name: name_obj,
@@ -302,7 +302,7 @@ impl Graph {
             };
             
             // Convert initial body arguments to NSArray
-            let initial_args_array = crate::core::NSArray::from_objects(
+            let initial_args_array = NSArrayContainer::from_objects(
                 &initial_body_arguments.iter().map(|t| t.0).collect::<Vec<_>>()
             );
             
@@ -323,11 +323,11 @@ impl Graph {
                 let result_tensors = body_block(&index_tensor, &body_arguments);
                 
                 // Convert Vec<Tensor> to NSArray
-                let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
-                let result_array = crate::core::NSArray::from_objects(&result_ptrs);
+                let result_ptrs: Vec<*mut AnyObject> = result_tensors.iter().map(|t| t.0).collect();
+                let result_array = NSArrayContainer::from_objects(&result_ptrs);
                 
                 // Return the NSArray
-                result_array.0
+                result_array.as_ptr()
             }).copy();
             
             // Call the Objective-C method
@@ -335,7 +335,7 @@ impl Graph {
                 self.0, forLoopWithLowerBound: lower_bound.0,
                 upperBound: upper_bound.0,
                 step: step.0,
-                initialBodyArguments: initial_args_array.0,
+                initialBodyArguments: initial_args_array.as_ptr(),
                 body: &*body_callback,
                 name: name_obj,
             ];
@@ -384,7 +384,7 @@ impl Graph {
             };
             
             // Convert initial body arguments to NSArray
-            let initial_args_array = crate::core::NSArray::from_objects(
+            let initial_args_array = NSArrayContainer::from_objects(
                 &initial_body_arguments.iter().map(|t| t.0).collect::<Vec<_>>()
             );
             
@@ -405,17 +405,17 @@ impl Graph {
                 let result_tensors = body_block(&index_tensor, &body_arguments);
                 
                 // Convert Vec<Tensor> to NSArray
-                let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
-                let result_array = crate::core::NSArray::from_objects(&result_ptrs);
+                let result_ptrs: Vec<*mut AnyObject> = result_tensors.iter().map(|t| t.0).collect();
+                let result_array = NSArrayContainer::from_objects(&result_ptrs);
                 
                 // Return the NSArray
-                result_array.0
+                result_array.as_ptr()
             }).copy();
             
             // Call the Objective-C method
             let result_array: *mut AnyObject = msg_send![
                 self.0, forLoopWithNumberOfIterations: num_iterations.0,
-                initialBodyArguments: initial_args_array.0,
+                initialBodyArguments: initial_args_array.as_ptr(),
                 body: &*body_callback,
                 name: name_obj,
             ];

@@ -3,7 +3,7 @@ use crate::graph::Graph;
 use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
-use objc2_foundation::NSString;
+use objc2_foundation::{NSArray, NSNumber, NSString};
 use std::ptr;
 
 /// Return indices mode for max pooling operations
@@ -307,24 +307,23 @@ impl Pooling4DOpDescriptor {
 
     /// Helper function to create NSArray of NSNumbers from a slice of usize values
     fn create_number_array(values: &[usize]) -> *mut AnyObject {
+        use objc2::rc::Retained;
+        
         unsafe {
-            // Create NSNumber objects for each value using objc2-foundation's NSNumber
-            let numbers: Vec<objc2::rc::Retained<objc2_foundation::NSNumber>> = values
+            // Create NSNumber objects using objc2-foundation
+            let numbers: Vec<Retained<NSNumber>> = values
                 .iter()
-                .map(|&value| objc2_foundation::NSNumber::new_u64(value as u64))
+                .map(|&value| NSNumber::new_u64(value as u64))
                 .collect();
 
             // Convert to slice of references
-            let number_refs: Vec<&objc2_foundation::NSNumber> =
-                numbers.iter().map(|n| n.as_ref()).collect();
+            let number_refs: Vec<&NSNumber> = numbers.iter().map(|n| n.as_ref()).collect();
 
             // Create NSArray from the NSNumber objects
-            let array = objc2_foundation::NSArray::from_slice(&number_refs);
+            let array = NSArray::from_slice(&number_refs);
 
             // Get pointer to the array and retain it manually
-            let ptr: *mut AnyObject = array.as_ref()
-                as *const objc2_foundation::NSArray<objc2_foundation::NSNumber>
-                as *mut AnyObject;
+            let ptr: *mut AnyObject = array.as_ref() as *const NSArray<NSNumber> as *mut AnyObject;
             objc2::ffi::objc_retain(ptr as *mut _);
 
             ptr
