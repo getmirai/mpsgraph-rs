@@ -1,12 +1,9 @@
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-// In objc2, use false as NO and true as YES
-const NO: bool = false;
-const YES: bool = true;
 use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
+use objc2::msg_send;
+use objc2::runtime::AnyObject;
 
 /// Defines the data layout for tensors
 #[repr(u64)]
@@ -30,7 +27,6 @@ pub enum PaddingStyle {
 
 // Re-export Convolution2DOpDescriptor from convolution_ops
 pub use crate::convolution_ops::Convolution2DOpDescriptor;
-
 
 /// Transposed convolution operations for Graph
 impl Graph {
