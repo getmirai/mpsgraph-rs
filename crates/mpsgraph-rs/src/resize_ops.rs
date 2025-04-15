@@ -4,9 +4,9 @@ const NO: bool = false;
 const YES: bool = true;
 use crate::convolution_transpose_ops::TensorNamedDataLayout;
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 
 /// The resize mode to use for resizing.
 #[repr(u64)]
@@ -36,8 +36,8 @@ pub enum MPSGraphResizeNearestRoundingMode {
     RoundToOdd = 5,
 }
 
-/// Resize operations for MPSGraph
-impl MPSGraph {
+/// Resize operations for Graph
+impl Graph {
     /// Creates a Resize operation and returns the result tensor.
     ///
     /// Resamples input images to given size. Result images will be distorted if size is of different aspect ratio.
@@ -50,17 +50,17 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size: &MPSShape,
+        images_tensor: &Tensor,
+        size: &Shape,
         mode: MPSGraphResizeMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -80,7 +80,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -94,17 +94,17 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_with_size_tensor(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         mode: MPSGraphResizeMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -124,7 +124,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -139,16 +139,16 @@ impl MPSGraph {
     ///   - center_result: Controls if the result image is centered on the input image.
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_rank_agnostic(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         mode: MPSGraphResizeMode,
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -167,7 +167,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -181,17 +181,17 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_nearest(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -211,7 +211,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -226,16 +226,16 @@ impl MPSGraph {
     ///   - center_result: Controls if the result image is centered on the input image.
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_nearest_rank_agnostic(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -254,7 +254,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -267,16 +267,16 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_bilinear(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -295,7 +295,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -309,15 +309,15 @@ impl MPSGraph {
     ///   - center_result: Controls if the result image is centered on the input image.
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_bilinear_rank_agnostic(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -335,7 +335,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -348,16 +348,16 @@ impl MPSGraph {
     ///   - mode: The resampling mode to use.
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_with_scale_offset(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
-        scale_offset_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_offset_tensor: &Tensor,
         mode: MPSGraphResizeMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -373,7 +373,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -388,16 +388,16 @@ impl MPSGraph {
     ///   - offset_tensor: 1D float tensor of size equal to rank of input.
     ///   - mode: The resampling mode to use.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_with_separate_scale_offset(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        offset_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
         mode: MPSGraphResizeMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -413,7 +413,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -428,16 +428,16 @@ impl MPSGraph {
     ///   - offset_tensor: 1D float tensor of size equal to rank of input.
     ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_nearest_with_separate_scale_offset(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        offset_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -453,7 +453,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -467,15 +467,15 @@ impl MPSGraph {
     ///   - scale_tensor: 1D float tensor of size equal to rank of input.
     ///   - offset_tensor: 1D float tensor of size equal to rank of input.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_bilinear_with_separate_scale_offset(
         &self,
-        images_tensor: &MPSGraphTensor,
-        size_tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        offset_tensor: &MPSGraphTensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -490,7 +490,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -504,17 +504,17 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
         mode: MPSGraphResizeMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -534,7 +534,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -548,17 +548,17 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_nearest_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -578,7 +578,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -591,16 +591,16 @@ impl MPSGraph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_bilinear_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -619,7 +619,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -632,16 +632,16 @@ impl MPSGraph {
     ///   - mode: The resampling mode to use
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_gradient_with_scale_offset(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
-        scale_offset_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
+        scale_offset_tensor: &Tensor,
         mode: MPSGraphResizeMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -657,7 +657,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -670,16 +670,16 @@ impl MPSGraph {
     ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_nearest_gradient_with_scale_offset(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
-        scale_offset_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
+        scale_offset_tensor: &Tensor,
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -695,7 +695,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -707,15 +707,15 @@ impl MPSGraph {
     ///   - scale_offset_tensor: 1D float tensor. A 4-element shape as [scaleY, scaleX, offsetY, offsetX]
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_bilinear_gradient_with_scale_offset(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
-        scale_offset_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
+        scale_offset_tensor: &Tensor,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -730,7 +730,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -745,16 +745,16 @@ impl MPSGraph {
     ///   - offset_tensor: 1D float tensor of size equal to rank of input
     ///   - mode: The resampling mode to use
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_gradient_with_separate_scale_offset(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        offset_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
         mode: MPSGraphResizeMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -770,7 +770,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -785,16 +785,16 @@ impl MPSGraph {
     ///   - offset_tensor: 1D float tensor of size equal to rank of input
     ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_nearest_gradient_with_separate_scale_offset(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        offset_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -810,7 +810,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -824,15 +824,15 @@ impl MPSGraph {
     ///   - scale_tensor: 1D float tensor of size equal to rank of input
     ///   - offset_tensor: 1D float tensor of size equal to rank of input
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn resize_bilinear_gradient_with_separate_scale_offset(
         &self,
-        gradient: &MPSGraphTensor,
-        input: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        offset_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        input: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -847,7 +847,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

@@ -1,10 +1,11 @@
 #[macro_use]
 extern crate objc2;
 
-/// Rust bindings for Apple's Metal Performance Shaders Graph (MPSGraph) API.
+/// Rust bindings for Apple's Metal Performance Shaders Graph API.
 ///
-/// This library provides Rust bindings for the MPSGraph API, which is part of Apple's
-/// Metal Performance Shaders framework.
+/// This library provides idiomatic Rust bindings for the Metal Performance Shaders Graph API, 
+/// which is part of Apple's Metal Performance Shaders framework. The API follows Rust naming
+/// conventions while maintaining compatibility with the underlying Objective-C interfaces.
 
 // Tests module (only included when running tests)
 #[cfg(test)]
@@ -73,12 +74,12 @@ pub use data_types::{MPSGraphShapedType, MPSGraphType};
 pub use depthwise_convolution_ops::{
     MPSGraphDepthwiseConvolution2DOpDescriptor, MPSGraphDepthwiseConvolution3DOpDescriptor,
 };
-pub use device::MPSGraphDevice;
+pub use device::Device;
 pub use executable::{
-    MPSGraphCompilationDescriptor, MPSGraphExecutable, MPSGraphExecutionDescriptor,
+    CompilationDescriptor, MPSGraphExecutable, ExecutionDescriptor,
 };
-pub use graph::MPSGraph;
-pub use graph::MPSTensorDataScalar;
+pub use graph::Graph;
+pub use graph::TensorDataScalar;
 pub use loss_ops::MPSGraphLossReductionType;
 pub use operation::MPSGraphOperation;
 pub use random_ops::{
@@ -88,9 +89,9 @@ pub use rnn_ops::{
     MPSGraphGRUDescriptor, MPSGraphLSTMDescriptor, MPSGraphRNNActivation,
     MPSGraphSingleGateRNNDescriptor,
 };
-pub use shape::MPSShape;
-pub use tensor::MPSGraphTensor;
-pub use tensor_data::MPSGraphTensorData;
+pub use shape::Shape;
+pub use tensor::Tensor;
+pub use tensor_data::TensorData;
 // Note: gather_ops doesn't have any standalone structs or enums to re-export
 pub use fourier_transform_ops::{MPSGraphFFTDescriptor, MPSGraphFFTScalingMode};
 pub use im2col_ops::MPSGraphImToColOpDescriptor;
@@ -115,12 +116,12 @@ pub mod prelude {
     pub use crate::depthwise_convolution_ops::{
         MPSGraphDepthwiseConvolution2DOpDescriptor, MPSGraphDepthwiseConvolution3DOpDescriptor,
     };
-    pub use crate::device::MPSGraphDevice;
+    pub use crate::device::Device;
     pub use crate::executable::{
-        MPSGraphCompilationDescriptor, MPSGraphExecutable, MPSGraphExecutionDescriptor,
+        CompilationDescriptor, MPSGraphExecutable, ExecutionDescriptor,
     };
-    pub use crate::graph::MPSGraph;
-    pub use crate::graph::MPSTensorDataScalar;
+    pub use crate::graph::Graph;
+    pub use crate::graph::TensorDataScalar;
     pub use crate::loss_ops::MPSGraphLossReductionType;
     pub use crate::operation::MPSGraphOperation;
     pub use crate::random_ops::{
@@ -130,9 +131,9 @@ pub mod prelude {
         MPSGraphGRUDescriptor, MPSGraphLSTMDescriptor, MPSGraphRNNActivation,
         MPSGraphSingleGateRNNDescriptor,
     };
-    pub use crate::shape::MPSShape;
-    pub use crate::tensor::MPSGraphTensor;
-    pub use crate::tensor_data::MPSGraphTensorData;
+    pub use crate::shape::Shape;
+    pub use crate::tensor::Tensor;
+    pub use crate::tensor_data::TensorData;
     // No separate types to import from gather_ops
     pub use crate::fourier_transform_ops::{MPSGraphFFTDescriptor, MPSGraphFFTScalingMode};
     pub use crate::im2col_ops::MPSGraphImToColOpDescriptor;

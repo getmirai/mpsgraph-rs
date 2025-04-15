@@ -1,16 +1,16 @@
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use std::fmt;
 use std::ptr;
 
-/// A wrapper for MPSGraphOperation objects
+/// A wrapper for Metal Performance Shaders Graph operation objects
 pub struct MPSGraphOperation(pub(crate) *mut AnyObject);
 
 impl MPSGraphOperation {
     /// Returns the input tensors of this operation
-    pub fn input_tensors(&self) -> Vec<MPSGraphTensor> {
+    pub fn input_tensors(&self) -> Vec<Tensor> {
         unsafe {
             let input_tensors: *mut AnyObject = msg_send![self.0, inputTensors];
             let count: usize = msg_send![input_tensors, count];
@@ -19,7 +19,7 @@ impl MPSGraphOperation {
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![input_tensors, objectAtIndex: i,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
 
             result
@@ -27,7 +27,7 @@ impl MPSGraphOperation {
     }
 
     /// Returns the output tensors of this operation
-    pub fn output_tensors(&self) -> Vec<MPSGraphTensor> {
+    pub fn output_tensors(&self) -> Vec<Tensor> {
         unsafe {
             let output_tensors: *mut AnyObject = msg_send![self.0, outputTensors];
             let count: usize = msg_send![output_tensors, count];
@@ -36,7 +36,7 @@ impl MPSGraphOperation {
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![output_tensors, objectAtIndex: i,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
 
             result
@@ -44,11 +44,11 @@ impl MPSGraphOperation {
     }
 
     /// Returns the graph this operation belongs to
-    pub fn graph(&self) -> MPSGraph {
+    pub fn graph(&self) -> Graph {
         unsafe {
             let graph: *mut AnyObject = msg_send![self.0, graph];
             let graph = objc2::ffi::objc_retain(graph as *mut _);
-            MPSGraph(graph)
+            Graph(graph)
         }
     }
 

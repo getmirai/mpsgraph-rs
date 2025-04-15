@@ -1,11 +1,11 @@
 use crate::tensor_ops::{abs, clip, exp, gelu, log, pow, relu, sigmoid, silu, sqrt, square, tanh};
 use crate::tensor_ops::{GraphExt, Tensor};
-use mpsgraph::{MPSDataType, MPSGraph, MPSGraphTensor, MPSShape};
+use mpsgraph::{MPSDataType, Graph, Shape};
 
 #[test]
 fn test_tensor_creation() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
 
     // Test creating a placeholder tensor
     let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
@@ -30,8 +30,8 @@ fn test_tensor_creation() {
 
 #[test]
 fn test_tensor_arithmetic_operators() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
 
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
     let b = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
@@ -63,8 +63,8 @@ fn test_tensor_arithmetic_operators() {
 
 #[test]
 fn test_tensor_unary_operations() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 
     // Test square
@@ -100,8 +100,8 @@ fn test_tensor_unary_operations() {
 
 #[test]
 fn test_activation_functions() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 
     // Test sigmoid
@@ -137,8 +137,8 @@ fn test_activation_functions() {
 
 #[test]
 fn test_binary_operations() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 
     // Test power operation
@@ -159,17 +159,17 @@ fn test_binary_operations() {
 
 #[test]
 fn test_tensor_conversion() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
 
-    // Test MPSGraphTensor to Tensor conversion (From trait)
+    // Test Tensor to Tensor conversion (From trait)
     let tensor_obj = graph.placeholder(&shape, MPSDataType::Float32, None);
     let tensor = Tensor::from(tensor_obj.clone());
     assert_eq!(tensor.inner().data_type(), MPSDataType::Float32);
 
-    // Test Tensor to MPSGraphTensor conversion (into() from From trait)
-    let tensor_back: MPSGraphTensor = tensor.clone().into();
-    assert_eq!(tensor_back.data_type(), MPSDataType::Float32);
+    // Test Tensor to Tensor conversion (into() from From trait)
+    let tensor_back: Tensor = tensor.clone().into();
+    assert_eq!(tensor_back.inner().data_type(), MPSDataType::Float32);
 
     // Test unwrap method
     let tensor_unwrapped = tensor.unwrap();
@@ -178,8 +178,8 @@ fn test_tensor_conversion() {
 
 #[test]
 fn test_const_scalar() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
     let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 
     // Test creating a constant scalar with matching data type
@@ -193,8 +193,8 @@ fn test_const_scalar() {
 
 #[test]
 fn test_complex_expressions() {
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
     let b = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 
@@ -215,7 +215,7 @@ fn test_complex_expressions() {
 
 #[test]
 fn test_random_tensors() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Test random uniform
     let random_uniform = graph.create_random_uniform(0.0f32, 1.0f32, &[2, 3], MPSDataType::Float32);

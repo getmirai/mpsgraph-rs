@@ -1,11 +1,11 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::runtime::AnyObject;
 use std::collections::HashMap;
 
-/// Gradient (Automatic Differentiation) operations for MPSGraph
-impl MPSGraph {
+/// Gradient (Automatic Differentiation) operations for Graph
+impl Graph {
     /// Calculates a partial derivative of primary_tensor with respect to the tensors.
     ///
     /// Returns a dictionary containing partial derivative d(primary_tensor)/d(secondary_tensor) for each tensor.
@@ -24,8 +24,8 @@ impl MPSGraph {
     ///
     /// ```no_run
     /// # use mpsgraph::prelude::*;
-    /// # let graph = MPSGraph::new();
-    /// # let shape = MPSShape::from_slice(&[2, 3]);
+    /// # let graph = Graph::new();
+    /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let x = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let y = graph.square(&x, None);
     /// // Calculate gradient dy/dx
@@ -34,10 +34,10 @@ impl MPSGraph {
     /// ```
     pub fn gradient_for_primary_tensor(
         &self,
-        primary_tensor: &MPSGraphTensor,
-        tensors: &[MPSGraphTensor],
+        primary_tensor: &Tensor,
+        tensors: &[Tensor],
         name: Option<&str>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensor> {
+    ) -> HashMap<Tensor, Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -64,11 +64,11 @@ impl MPSGraph {
             for i in 0..keys_count {
                 let key: *mut AnyObject = msg_send![keys, objectAtIndex: i,];
                 let key_retained = objc2::ffi::objc_retain(key as *mut _);
-                let key_tensor = MPSGraphTensor(key_retained);
+                let key_tensor = Tensor(key_retained);
 
                 let value: *mut AnyObject = msg_send![dict, objectForKey: key,];
                 let value_retained = objc2::ffi::objc_retain(value as *mut _);
-                let value_tensor = MPSGraphTensor(value_retained);
+                let value_tensor = Tensor(value_retained);
 
                 result.insert(key_tensor, value_tensor);
             }

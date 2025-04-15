@@ -102,11 +102,11 @@ fn main() {
 
 ### Tensor Wrapper
 
-The `Tensor` struct wraps an `MPSGraphTensor` and provides:
+The `Tensor` struct wraps an `Tensor` and provides:
 
 - Operator overloading (`+`, `-`, `*`, `/`, etc.)
 - Method-based operations (`.square()`, `.sigmoid()`, etc.)
-- Easy conversion to and from `MPSGraphTensor`
+- Easy conversion to and from `Tensor`
 
 ### GraphExt Trait
 

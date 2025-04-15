@@ -1,28 +1,28 @@
 use metal::foreign_types::ForeignType;
-use metal::Device;
+use metal::Device as MetalDevice;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use std::fmt;
 use std::ptr;
 
-/// A wrapper for an MPSGraphDevice object
-pub struct MPSGraphDevice(pub(crate) *mut AnyObject);
+/// A wrapper for a Metal Performance Shaders Graph device object
+pub struct Device(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphDevice {
+impl Default for Device {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphDevice {
-    /// Creates a new MPSGraphDevice using the system default Metal device
+impl Device {
+    /// Creates a new Device using the system default Metal device
     pub fn new() -> Self {
         let device = metal::Device::system_default().expect("No Metal device found");
         Self::with_device(&device)
     }
 
-    /// Creates a new MPSGraphDevice from a Metal device
-    pub fn with_device(device: &Device) -> Self {
+    /// Creates a new Device from a Metal device
+    pub fn with_device(device: &MetalDevice) -> Self {
         unsafe {
             let class_name = c"MPSGraphDevice";
             let cls = objc2::runtime::AnyClass::get(class_name)
@@ -30,12 +30,12 @@ impl MPSGraphDevice {
             let device_ptr = device.as_ptr() as *mut AnyObject;
             let obj: *mut AnyObject = msg_send![cls, deviceWithMTLDevice:device_ptr];
             let obj = objc2::ffi::objc_retain(obj as *mut _);
-            MPSGraphDevice(obj)
+            Device(obj)
         }
     }
 }
 
-impl Drop for MPSGraphDevice {
+impl Drop for Device {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -45,21 +45,21 @@ impl Drop for MPSGraphDevice {
     }
 }
 
-impl Clone for MPSGraphDevice {
+impl Clone for Device {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphDevice(obj)
+                Device(obj)
             } else {
-                MPSGraphDevice(ptr::null_mut())
+                Device(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphDevice {
+impl fmt::Debug for Device {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "MPSGraphDevice")
+        write!(f, "Device")
     }
 }

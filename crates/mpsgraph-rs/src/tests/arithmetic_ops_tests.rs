@@ -1,13 +1,13 @@
 use crate::{
-    core::MPSDataType, graph::MPSGraph, shape::MPSShape, tensor::MPSGraphTensor,
-    tensor_data::MPSGraphTensorData,
+    core::MPSDataType, graph::Graph, shape::Shape, tensor::Tensor,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 
-// Simple verification helper that checks if result exists - we can't check actual values from MPSGraphTensorData directly
+// Simple verification helper that checks if result exists - we can't check actual values from TensorData directly
 fn verify_result_exists(
-    results: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-    tensor: &MPSGraphTensor,
+    results: &HashMap<Tensor, TensorData>,
+    tensor: &Tensor,
     name: &str,
 ) {
     assert!(
@@ -19,10 +19,10 @@ fn verify_result_exists(
 
 #[test]
 fn test_binary_arithmetic_ops() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create inputs
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
     let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
 
@@ -33,8 +33,8 @@ fn test_binary_arithmetic_ops() {
     let div_result = graph.divide(&a, &b, Some("Divide"));
 
     // Create input data
-    let a_data = MPSGraphTensorData::new(&[2.0f32, 4.0, 6.0, 8.0], &[2, 2], MPSDataType::Float32);
-    let b_data = MPSGraphTensorData::new(&[1.0f32, 2.0, 3.0, 4.0], &[2, 2], MPSDataType::Float32);
+    let a_data = TensorData::new(&[2.0f32, 4.0, 6.0, 8.0], &[2, 2], MPSDataType::Float32);
+    let b_data = TensorData::new(&[1.0f32, 2.0, 3.0, 4.0], &[2, 2], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -61,10 +61,10 @@ fn test_binary_arithmetic_ops() {
 
 #[test]
 fn test_unary_arithmetic_ops() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
 
     // Define various unary operations
@@ -77,7 +77,7 @@ fn test_unary_arithmetic_ops() {
     let sqrt_result = graph.sqrt(&a, Some("Sqrt"));
 
     // Create input data
-    let a_data = MPSGraphTensorData::new(&[1.0f32, 2.0, 4.0, 16.0], &[2, 2], MPSDataType::Float32);
+    let a_data = TensorData::new(&[1.0f32, 2.0, 4.0, 16.0], &[2, 2], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -109,10 +109,10 @@ fn test_unary_arithmetic_ops() {
 
 #[test]
 fn test_power_ops() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create inputs
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let base = graph.placeholder(&shape, MPSDataType::Float32, Some("Base"));
 
     // Create exponent as constant
@@ -124,7 +124,7 @@ fn test_power_ops() {
 
     // Create input data
     let base_data =
-        MPSGraphTensorData::new(&[2.0f32, 3.0, 4.0, 5.0], &[2, 2], MPSDataType::Float32);
+        TensorData::new(&[2.0f32, 3.0, 4.0, 5.0], &[2, 2], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -139,10 +139,10 @@ fn test_power_ops() {
 
 #[test]
 fn test_scalar_arithmetic() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
 
     // Create scalar constant
@@ -155,7 +155,7 @@ fn test_scalar_arithmetic() {
     let div_scalar = graph.divide(&a, &scalar, Some("DivScalar"));
 
     // Create input data
-    let a_data = MPSGraphTensorData::new(&[1.0f32, 2.0, 3.0, 4.0], &[2, 2], MPSDataType::Float32);
+    let a_data = TensorData::new(&[1.0f32, 2.0, 3.0, 4.0], &[2, 2], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();

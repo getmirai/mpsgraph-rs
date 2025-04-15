@@ -1,6 +1,6 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
@@ -108,8 +108,8 @@ impl Clone for MPSGraphFFTDescriptor {
     }
 }
 
-/// Fourier transform operations for MPSGraph
-impl MPSGraph {
+/// Fourier transform operations for Graph
+impl Graph {
     /// Creates a fast Fourier transform operation
     ///
     /// # Arguments
@@ -128,11 +128,11 @@ impl MPSGraph {
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
     pub fn fast_fourier_transform(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: &[u64],
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -155,7 +155,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -177,11 +177,11 @@ impl MPSGraph {
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
     pub fn fast_fourier_transform_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
-        axes_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -196,7 +196,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -218,11 +218,11 @@ impl MPSGraph {
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
     pub fn real_to_hermitean_fft(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: &[u64],
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -245,7 +245,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -267,11 +267,11 @@ impl MPSGraph {
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
     pub fn real_to_hermitean_fft_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
-        axes_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -286,7 +286,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -308,11 +308,11 @@ impl MPSGraph {
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
     pub fn hermitean_to_real_fft(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: &[u64],
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -335,7 +335,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -357,11 +357,11 @@ impl MPSGraph {
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
     pub fn hermitean_to_real_fft_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
-        axes_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -376,7 +376,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -393,7 +393,7 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A tuple of MPSGraphTensor objects (real_output, imaginary_output).
+    /// A tuple of Tensor objects (real_output, imaginary_output).
     ///
     /// # Deprecated
     ///
@@ -401,11 +401,11 @@ impl MPSGraph {
     #[deprecated(since = "0.1.0", note = "Use `fast_fourier_transform` instead")]
     pub fn forward_fft(
         &self,
-        real: &MPSGraphTensor,
-        imaginary: &MPSGraphTensor,
+        real: &Tensor,
+        imaginary: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -430,7 +430,7 @@ impl MPSGraph {
             let real_output = objc2::ffi::objc_retain(real_output as *mut _);
             let imag_output = objc2::ffi::objc_retain(imag_output as *mut _);
 
-            (MPSGraphTensor(real_output), MPSGraphTensor(imag_output))
+            (Tensor(real_output), Tensor(imag_output))
         }
     }
 
@@ -445,7 +445,7 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A tuple of MPSGraphTensor objects (real_output, imaginary_output).
+    /// A tuple of Tensor objects (real_output, imaginary_output).
     ///
     /// # Deprecated
     ///
@@ -457,11 +457,11 @@ impl MPSGraph {
     )]
     pub fn inverse_fft(
         &self,
-        real: &MPSGraphTensor,
-        imaginary: &MPSGraphTensor,
+        real: &Tensor,
+        imaginary: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -486,7 +486,7 @@ impl MPSGraph {
             let real_output = objc2::ffi::objc_retain(real_output as *mut _);
             let imag_output = objc2::ffi::objc_retain(imag_output as *mut _);
 
-            (MPSGraphTensor(real_output), MPSGraphTensor(imag_output))
+            (Tensor(real_output), Tensor(imag_output))
         }
     }
 
@@ -500,7 +500,7 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A tuple of MPSGraphTensor objects (real_output, imaginary_output).
+    /// A tuple of Tensor objects (real_output, imaginary_output).
     ///
     /// # Deprecated
     ///
@@ -508,10 +508,10 @@ impl MPSGraph {
     #[deprecated(since = "0.1.0", note = "Use `real_to_hermitean_fft` instead")]
     pub fn forward_real_fft(
         &self,
-        real: &MPSGraphTensor,
+        real: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -535,7 +535,7 @@ impl MPSGraph {
             let real_output = objc2::ffi::objc_retain(real_output as *mut _);
             let imag_output = objc2::ffi::objc_retain(imag_output as *mut _);
 
-            (MPSGraphTensor(real_output), MPSGraphTensor(imag_output))
+            (Tensor(real_output), Tensor(imag_output))
         }
     }
 
@@ -550,7 +550,7 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// The real-valued output as an MPSGraphTensor object.
+    /// The real-valued output as an Tensor object.
     ///
     /// # Deprecated
     ///
@@ -558,11 +558,11 @@ impl MPSGraph {
     #[deprecated(since = "0.1.0", note = "Use `hermitean_to_real_fft` instead")]
     pub fn inverse_real_fft(
         &self,
-        real: &MPSGraphTensor,
-        imaginary: &MPSGraphTensor,
+        real: &Tensor,
+        imaginary: &Tensor,
         descriptor: &MPSGraphFFTDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -577,7 +577,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

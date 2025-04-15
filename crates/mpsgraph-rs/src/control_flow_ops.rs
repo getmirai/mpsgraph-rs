@@ -1,8 +1,8 @@
 use objc2::runtime::AnyObject;
 use std::ops::Fn;
 use std::ffi::c_void;
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use crate::operation::MPSGraphOperation;
 use objc2_foundation::NSString;
 use crate::core::AsRawObject;
@@ -11,14 +11,14 @@ use objc2::msg_send;
 // Import the block_kit crate for Objective-C blocks
 use block_kit::{Block, RcBlock};
 
-/// Control flow operations for MPSGraph
+/// Control flow operations for Graph
 ///
 /// These operations allow for dynamic control flow within the graph, including:
 /// - Control dependencies
 /// - Conditional execution (if-then-else)
 /// - While loops
 /// - For loops
-impl MPSGraph {
+impl Graph {
     /// Creates a control dependency between operations.
     ///
     /// This ensures that operations in the dependent_block are executed
@@ -36,9 +36,9 @@ impl MPSGraph {
     pub fn control_dependency<F>(&self, 
                               operations:  &[&MPSGraphOperation],
                               dependent_block:  F,
-                              name:  Option<&str>) -> Vec<MPSGraphTensor>
+                              name:  Option<&str>) -> Vec<Tensor>
     where
-        F:  Fn() -> Vec<MPSGraphTensor>
+        F:  Fn() -> Vec<Tensor>
     {
         unsafe {
             let name_obj = match name {
@@ -54,7 +54,7 @@ impl MPSGraph {
             let block = RcBlock::new(move || {
                 // Call the user's block
                 let tensors = dependent_block();
-                // Convert Vec<MPSGraphTensor> to NSArray of pointers
+                // Convert Vec<Tensor> to NSArray of pointers
                 let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
                 let tensor_array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
                 // Return the NSArray pointer
@@ -71,12 +71,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
             
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,,,,,,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
             
             result
@@ -99,13 +99,13 @@ impl MPSGraph {
     /// A vector of tensors that are the result of either the then_block or else_block,
     /// depending on the value of the predicate tensor
     pub fn if_op<F, G>(&self,
-                    predicate:  &MPSGraphTensor,
+                    predicate:  &Tensor,
                     then_block:  F,
                     else_block:  Option<G>,
-                    name:  Option<&str>) -> Vec<MPSGraphTensor>
+                    name:  Option<&str>) -> Vec<Tensor>
     where
-        F:  Fn() -> Vec<MPSGraphTensor>,
-        G:  Fn() -> Vec<MPSGraphTensor>
+        F:  Fn() -> Vec<Tensor>,
+        G:  Fn() -> Vec<Tensor>
     {
         unsafe {
             let name_obj = match name {
@@ -117,7 +117,7 @@ impl MPSGraph {
             let then_callback = RcBlock::new(move || {
                 // Call the user's block
                 let tensors = then_block();
-                // Convert Vec<MPSGraphTensor> to NSArray of pointers
+                // Convert Vec<Tensor> to NSArray of pointers
                 let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
                 let tensor_array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
                 // Return the NSArray pointer
@@ -129,7 +129,7 @@ impl MPSGraph {
                 let block = RcBlock::new(move || {
                     // Call the user's block
                     let tensors = else_fn();
-                    // Convert Vec<MPSGraphTensor> to NSArray of pointers
+                    // Convert Vec<Tensor> to NSArray of pointers
                     let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
                     let tensor_array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
                     // Return the NSArray pointer
@@ -151,12 +151,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
             
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
             
             result
@@ -178,13 +178,13 @@ impl MPSGraph {
     ///
     /// A vector of tensors that are the final result of the while loop
     pub fn while_loop<F, G>(&self,
-                         initial_inputs:  &[&MPSGraphTensor],
+                         initial_inputs:  &[&Tensor],
                          before_block:  F,
                          after_block:  G,
-                         name:  Option<&str>) -> Vec<MPSGraphTensor>
+                         name:  Option<&str>) -> Vec<Tensor>
     where
-        F:  Fn(&[MPSGraphTensor], &mut Vec<MPSGraphTensor>) -> MPSGraphTensor,
-        G:  Fn(&[MPSGraphTensor]) -> Vec<MPSGraphTensor>
+        F:  Fn(&[Tensor], &mut Vec<Tensor>) -> Tensor,
+        G:  Fn(&[Tensor]) -> Vec<Tensor>
     {
         unsafe {
             let name_obj = match name {
@@ -199,12 +199,12 @@ impl MPSGraph {
             
             // Create the before block callback
             let before_callback = ConcreteBlock::new(move |inputs: *mut AnyObject, results: *mut AnyObject| -> *mut AnyObject {
-                // Convert NSArray to Vec<MPSGraphTensor>
+                // Convert NSArray to Vec<Tensor>
                 let inputs_count: usize = msg_send![inputs, count];
                 let mut input_tensors = Vec::with_capacity(inputs_count);
                 for i in 0..inputs_count {
                     let tensor: *mut AnyObject = msg_send![inputs, objectAtIndex: i];
-                    input_tensors.push(MPSGraphTensor(tensor));
+                    input_tensors.push(Tensor(tensor));
                 }
                 
                 // Create a mutable Vec to hold result tensors
@@ -227,18 +227,18 @@ impl MPSGraph {
             
             // Create the after block callback
             let after_callback = ConcreteBlock::new(move |body_args: *mut AnyObject| -> *mut AnyObject {
-                // Convert NSArray to Vec<MPSGraphTensor>
+                // Convert NSArray to Vec<Tensor>
                 let args_count: usize = msg_send![body_args, count];
                 let mut body_arguments = Vec::with_capacity(args_count);
                 for i in 0..args_count {
                     let tensor: *mut AnyObject = msg_send![body_args, objectAtIndex: i];
-                    body_arguments.push(MPSGraphTensor(tensor));
+                    body_arguments.push(Tensor(tensor));
                 }
                 
                 // Call the user's block
                 let result_tensors = after_block(&body_arguments);
                 
-                // Convert Vec<MPSGraphTensor> to NSArray
+                // Convert Vec<Tensor> to NSArray
                 let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
                 let result_array = crate::core::NSArray::from_objects(&result_ptrs);
                 
@@ -257,12 +257,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
             
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,,,,,,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
             
             result
@@ -286,14 +286,14 @@ impl MPSGraph {
     ///
     /// A vector of tensors that are the final result of the for loop
     pub fn for_loop<F>(&self, 
-                    lower_bound:  &MPSGraphTensor,
-                    upper_bound:  &MPSGraphTensor,
-                    step:  &MPSGraphTensor,
-                    initial_body_arguments:  &[&MPSGraphTensor],
+                    lower_bound:  &Tensor,
+                    upper_bound:  &Tensor,
+                    step:  &Tensor,
+                    initial_body_arguments:  &[&Tensor],
                     body_block:  F,
-                    name:  Option<&str>) -> Vec<MPSGraphTensor>
+                    name:  Option<&str>) -> Vec<Tensor>
     where
-        F:  Fn(&MPSGraphTensor, &[MPSGraphTensor]) -> Vec<MPSGraphTensor>
+        F:  Fn(&Tensor, &[Tensor]) -> Vec<Tensor>
     {
         unsafe {
             let name_obj = match name {
@@ -308,21 +308,21 @@ impl MPSGraph {
             
             // Create the body block callback
             let body_callback = ConcreteBlock::new(move |index: *mut AnyObject, args: *mut AnyObject| -> *mut AnyObject {
-                // Convert to MPSGraphTensor
-                let index_tensor = MPSGraphTensor(index);
+                // Convert to Tensor
+                let index_tensor = Tensor(index);
                 
-                // Convert NSArray to Vec<MPSGraphTensor>
+                // Convert NSArray to Vec<Tensor>
                 let args_count: usize = msg_send![args, count];
                 let mut body_arguments = Vec::with_capacity(args_count);
                 for i in 0..args_count {
                     let tensor: *mut AnyObject = msg_send![args, objectAtIndex: i];
-                    body_arguments.push(MPSGraphTensor(tensor));
+                    body_arguments.push(Tensor(tensor));
                 }
                 
                 // Call the user's block
                 let result_tensors = body_block(&index_tensor, &body_arguments);
                 
-                // Convert Vec<MPSGraphTensor> to NSArray
+                // Convert Vec<Tensor> to NSArray
                 let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
                 let result_array = crate::core::NSArray::from_objects(&result_ptrs);
                 
@@ -343,12 +343,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
             
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
             
             result
@@ -370,12 +370,12 @@ impl MPSGraph {
     ///
     /// A vector of tensors that are the final result of the for loop
     pub fn for_loop_with_iterations<F>(&self,
-                                    num_iterations:  &MPSGraphTensor,
-                                    initial_body_arguments:  &[&MPSGraphTensor],
+                                    num_iterations:  &Tensor,
+                                    initial_body_arguments:  &[&Tensor],
                                     body_block:  F,
-                                    name:  Option<&str>) -> Vec<MPSGraphTensor>
+                                    name:  Option<&str>) -> Vec<Tensor>
     where
-        F:  Fn(&MPSGraphTensor, &[MPSGraphTensor]) -> Vec<MPSGraphTensor>
+        F:  Fn(&Tensor, &[Tensor]) -> Vec<Tensor>
     {
         unsafe {
             let name_obj = match name {
@@ -390,21 +390,21 @@ impl MPSGraph {
             
             // Create the body block callback
             let body_callback = ConcreteBlock::new(move |index: *mut AnyObject, args: *mut AnyObject| -> *mut AnyObject {
-                // Convert to MPSGraphTensor
-                let index_tensor = MPSGraphTensor(index);
+                // Convert to Tensor
+                let index_tensor = Tensor(index);
                 
-                // Convert NSArray to Vec<MPSGraphTensor>
+                // Convert NSArray to Vec<Tensor>
                 let args_count: usize = msg_send![args, count];
                 let mut body_arguments = Vec::with_capacity(args_count);
                 for i in 0..args_count {
                     let tensor: *mut AnyObject = msg_send![args, objectAtIndex: i];
-                    body_arguments.push(MPSGraphTensor(tensor));
+                    body_arguments.push(Tensor(tensor));
                 }
                 
                 // Call the user's block
                 let result_tensors = body_block(&index_tensor, &body_arguments);
                 
-                // Convert Vec<MPSGraphTensor> to NSArray
+                // Convert Vec<Tensor> to NSArray
                 let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
                 let result_array = crate::core::NSArray::from_objects(&result_ptrs);
                 
@@ -423,12 +423,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
             
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,,,,,,];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
             
             result
@@ -441,7 +441,7 @@ impl MPSGraph {
 mod tests {
     use super::*;
     use crate::core::MPSDataType;
-    use crate::device::MPSGraphDevice;
+    use crate::device::Device;
     use std::collections::HashMap;
     
     #[test]
@@ -451,8 +451,8 @@ mod tests {
             return;
         }
         
-        let graph = MPSGraph::new();
-        let device = MPSGraphDevice::new();
+        let graph = Graph::new();
+        let device = Device::new();
         
         // Create a predicate tensor (true)
         let predicate = graph.constant_scalar_value(1, MPSDataType::Bool, Some("predicate"));
@@ -491,8 +491,8 @@ mod tests {
             return;
         }
         
-        let graph = MPSGraph::new();
-        let device = MPSGraphDevice::new();
+        let graph = Graph::new();
+        let device = Device::new();
         
         // Create bounds and step for the loop
         let lower_bound = graph.constant_scalar_value(0i32, MPSDataType::Int32, Some("lower_bound"));

@@ -1,10 +1,10 @@
-use crate::{core::MPSDataType, graph::MPSGraph, shape::MPSShape, tensor_data::MPSGraphTensorData};
+use crate::{core::MPSDataType, graph::Graph, shape::Shape, tensor_data::TensorData};
 use metal::MTLResourceOptions;
 use std::collections::HashMap;
 
 // Helper struct for tests
 struct TensorBuffer {
-    tensor_data: MPSGraphTensorData,
+    tensor_data: TensorData,
 }
 
 impl TensorBuffer {
@@ -20,8 +20,8 @@ impl TensorBuffer {
         );
 
         // Create tensor data
-        let mps_shape = MPSShape::from_slice(shape);
-        let tensor_data = MPSGraphTensorData::from_buffer(&buffer, &mps_shape, data_type);
+        let mps_shape = Shape::from_slice(shape);
+        let tensor_data = TensorData::from_buffer(&buffer, &mps_shape, data_type);
 
         Self { tensor_data }
     }
@@ -31,10 +31,10 @@ impl TensorBuffer {
 fn test_graph_execution() {
     // Skip if Metal device not available
     if let Some(metal_device) = metal::Device::system_default() {
-        let graph = MPSGraph::new();
+        let graph = Graph::new();
 
         // Create input placeholders
-        let shape = MPSShape::from_slice(&[2, 2]);
+        let shape = Shape::from_slice(&[2, 2]);
         let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
         let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
 
@@ -83,10 +83,10 @@ fn test_graph_execution() {
 fn test_multiple_operations() {
     // Skip if Metal device not available
     if let Some(metal_device) = metal::Device::system_default() {
-        let graph = MPSGraph::new();
+        let graph = Graph::new();
 
         // Create input placeholder
-        let shape = MPSShape::from_slice(&[2, 2]);
+        let shape = Shape::from_slice(&[2, 2]);
         let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
 
         // Define a chain of operations: B = A + 1, C = B * 2, D = C - 3
@@ -126,10 +126,10 @@ fn test_multiple_operations() {
 fn test_graph_reuse() {
     // Skip if Metal device not available
     if let Some(metal_device) = metal::Device::system_default() {
-        let graph = MPSGraph::new();
+        let graph = Graph::new();
 
         // Create input placeholder
-        let shape = MPSShape::from_slice(&[2, 2]);
+        let shape = Shape::from_slice(&[2, 2]);
         let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
 
         // Define operation: B = A * 2

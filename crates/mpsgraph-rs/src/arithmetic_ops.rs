@@ -1,15 +1,15 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
-/// Arithmetic operations for MPSGraph
-impl MPSGraph {
+/// Arithmetic operations for Graph
+impl Graph {
     // MARK: - Unary Operations
 
     /// Creates an identity operation
-    pub fn identity(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn identity(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -23,12 +23,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns e raised to the power of the input tensor
-    pub fn exp(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn exp(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -42,12 +42,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns 2 raised to the power of the input tensor
-    pub fn exp2(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn exp2(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -61,12 +61,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns 10 raised to the power of the input tensor
-    pub fn exp10(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn exp10(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -80,12 +80,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the natural logarithm of the input tensor
-    pub fn log(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn log(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -99,12 +99,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the base-2 logarithm of the input tensor
-    pub fn log2(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn log2(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -118,12 +118,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the base-10 logarithm of the input tensor
-    pub fn log10(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn log10(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -137,12 +137,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the square of the input tensor
-    pub fn square(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn square(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -156,12 +156,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the square root of the input tensor
-    pub fn sqrt(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -175,12 +175,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the reciprocal square root of the input tensor
-    pub fn rsqrt(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -194,12 +194,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the reciprocal of the input tensor
-    pub fn reciprocal(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -213,12 +213,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the absolute value of the input tensor
-    pub fn abs(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn abs(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -232,12 +232,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the absolute square of the input tensor (equivalent to squaring the absolute value)
-    pub fn abs_square(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn abs_square(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -251,12 +251,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the negation of the input tensor
-    pub fn negative(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn negative(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -270,13 +270,13 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns a tensor with the sign of each element in the input tensor
     /// -1 for negative, 0 for zero, 1 for positive
-    pub fn sign(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn sign(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -290,12 +290,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns a tensor with 1 where sign bit is set, 0 otherwise
-    pub fn signbit(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn signbit(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -309,12 +309,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the ceiling of the input tensor
-    pub fn ceil(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn ceil(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -328,12 +328,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the floor of the input tensor
-    pub fn floor(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn floor(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -347,12 +347,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the rounded value of the input tensor
-    pub fn round(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn round(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -366,12 +366,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the rounded to nearest integral value of the input tensor using current rounding mode
-    pub fn rint(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn rint(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -385,12 +385,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the sine of the input tensor
-    pub fn sin(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn sin(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -404,12 +404,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the cosine of the input tensor
-    pub fn cos(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn cos(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -423,12 +423,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the tangent of the input tensor
-    pub fn tan(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn tan(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -442,12 +442,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the hyperbolic sine of the input tensor
-    pub fn sinh(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn sinh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -461,12 +461,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the hyperbolic cosine of the input tensor
-    pub fn cosh(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn cosh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -480,7 +480,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -488,7 +488,7 @@ impl MPSGraph {
     ///
     /// Note: This operation is also available in activation_ops.rs.
     /// This is provided for completeness of the arithmetic operations module.
-    pub fn tanh_arithmetic(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn tanh_arithmetic(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -502,12 +502,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the inverse sine (arcsine) of the input tensor
-    pub fn asin(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn asin(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -521,12 +521,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the inverse cosine (arccosine) of the input tensor
-    pub fn acos(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn acos(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -540,12 +540,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the inverse tangent (arctangent) of the input tensor
-    pub fn atan(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn atan(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -558,12 +558,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the inverse hyperbolic sine of the input tensor
-    pub fn asinh(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn asinh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -577,12 +577,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the inverse hyperbolic cosine of the input tensor
-    pub fn acosh(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn acosh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -596,12 +596,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the inverse hyperbolic tangent of the input tensor
-    pub fn atanh(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn atanh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -615,12 +615,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the error function of the input tensor
-    pub fn erf(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn erf(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -634,12 +634,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns a tensor that is 1 if the input is infinite, 0 otherwise
-    pub fn is_infinite(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn is_infinite(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -653,12 +653,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns a tensor that is 1 if the input is finite, 0 otherwise
-    pub fn is_finite(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn is_finite(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -672,12 +672,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns a tensor that is 1 if the input is NaN, 0 otherwise
-    pub fn is_nan(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn is_nan(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -691,12 +691,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Truncates the input tensor value
-    pub fn truncate(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn truncate(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -710,12 +710,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs bitwise NOT on the input tensor
-    pub fn bitwise_not(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn bitwise_not(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -729,16 +729,16 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Counts the number of 1 bits in each element of the input tensor
     pub fn bitwise_population_count(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -752,12 +752,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the logical NOT of the input tensor
-    pub fn logical_not(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -771,7 +771,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -780,10 +780,10 @@ impl MPSGraph {
     /// Performs addition of two tensors
     pub fn add(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -795,17 +795,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs subtraction of two tensors
     pub fn subtract(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -817,17 +817,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs multiplication of two tensors
     pub fn multiply(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -839,17 +839,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs division of two tensors
     pub fn divide(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -861,17 +861,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs division of two tensors but returns 0 if secondary is 0
     pub fn division_no_nan(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -883,17 +883,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs modulo operation between two tensors
     pub fn modulo(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -905,17 +905,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs floor modulo operation
     pub fn floor_modulo(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -927,17 +927,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Raises primary tensor to the power of secondary tensor
     pub fn power(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -949,17 +949,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the smaller of two tensors
     pub fn minimum(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -971,17 +971,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the greater of two tensors
     pub fn maximum(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -993,17 +993,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the smaller of two tensors, propagating NaNs
     pub fn minimum_with_nan_propagation(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1015,17 +1015,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the greater of two tensors, propagating NaNs
     pub fn maximum_with_nan_propagation(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1037,17 +1037,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns element-wise equal comparison
     pub fn equal(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1059,17 +1059,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns element-wise not equal comparison
     pub fn not_equal(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1081,17 +1081,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns element-wise less than comparison
     pub fn less_than(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1103,17 +1103,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns element-wise less than or equal comparison
     pub fn less_than_or_equal_to(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1125,17 +1125,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns element-wise greater than comparison
     pub fn greater_than(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1147,17 +1147,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns element-wise greater than or equal comparison
     pub fn greater_than_or_equal_to(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1169,17 +1169,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs logical AND of two tensors
     pub fn logical_and(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1191,17 +1191,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs logical OR of two tensors
     pub fn logical_or(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1213,17 +1213,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs logical NAND of two tensors
     pub fn logical_nand(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1235,17 +1235,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs logical NOR of two tensors
     pub fn logical_nor(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1257,17 +1257,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs logical XOR of two tensors
     pub fn logical_xor(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1279,17 +1279,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs logical XNOR of two tensors
     pub fn logical_xnor(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1301,17 +1301,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs atan2 operation (arctangent of y/x)
     pub fn atan2(
         &self,
-        y: &MPSGraphTensor,
-        x: &MPSGraphTensor,
+        y: &Tensor,
+        x: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1323,17 +1323,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs bitwise AND of two tensors
     pub fn bitwise_and(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1345,17 +1345,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs bitwise OR of two tensors
     pub fn bitwise_or(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1367,17 +1367,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs bitwise XOR of two tensors
     pub fn bitwise_xor(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1389,17 +1389,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs bitwise left shift
     pub fn left_shift(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1411,17 +1411,17 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Performs bitwise right shift
     pub fn right_shift(
         &self,
-        primary: &MPSGraphTensor,
-        secondary: &MPSGraphTensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1433,7 +1433,7 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -1442,11 +1442,11 @@ impl MPSGraph {
     /// Creates a select operation which chooses values from true or false tensor based on predicate
     pub fn select(
         &self,
-        predicate: &MPSGraphTensor,
-        true_tensor: &MPSGraphTensor,
-        false_tensor: &MPSGraphTensor,
+        predicate: &Tensor,
+        true_tensor: &Tensor,
+        false_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1459,18 +1459,18 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a clamp operation that clamps values to the given min and max
     pub fn clamp(
         &self,
-        tensor: &MPSGraphTensor,
-        min_tensor: &MPSGraphTensor,
-        max_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        min_tensor: &Tensor,
+        max_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1483,14 +1483,14 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     // MARK: - Complex Number Operations
 
     /// Returns the real part of a complex tensor
-    pub fn real_part(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn real_part(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1504,12 +1504,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the imaginary part of a complex tensor
-    pub fn imaginary_part(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn imaginary_part(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1523,17 +1523,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a complex tensor from real and imaginary parts
     pub fn complex_with_real_imaginary(
         &self,
-        real_tensor: &MPSGraphTensor,
-        imaginary_tensor: &MPSGraphTensor,
+        real_tensor: &Tensor,
+        imaginary_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1545,12 +1545,12 @@ impl MPSGraph {
                                                   name: name_obj];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Returns the complex conjugate of a complex tensor
-    pub fn conjugate(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn conjugate(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -1564,7 +1564,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

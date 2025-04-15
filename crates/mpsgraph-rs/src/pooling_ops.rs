@@ -1,6 +1,6 @@
 use crate::core::{create_ns_array_from_i64_slice, AsRawObject, MPSDataType};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation::NSString;
@@ -33,7 +33,7 @@ pub enum MPSGraphPoolingReturnIndicesMode {
 /// Data layout for 2D tensor operations
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphTensorNamedDataLayout {
+pub enum TensorNamedDataLayout {
     /// NCHW layout (batch, channels, height, width)
     NCHW = 0,
     /// NHWC layout (batch, height, width, channels)
@@ -125,7 +125,7 @@ impl MPSGraphPooling2DOpDescriptor {
         padding_top: usize,
         padding_bottom: usize,
         padding_style: MPSGraphPaddingStyle,
-        data_layout: MPSGraphTensorNamedDataLayout,
+        data_layout: TensorNamedDataLayout,
     ) -> Self {
         unsafe {
             let cls = objc2::runtime::AnyClass::get(c"MPSGraphPooling2DOpDescriptor").unwrap();
@@ -156,7 +156,7 @@ impl MPSGraphPooling2DOpDescriptor {
         stride_in_x: usize,
         stride_in_y: usize,
         padding_style: MPSGraphPaddingStyle,
-        data_layout: MPSGraphTensorNamedDataLayout,
+        data_layout: TensorNamedDataLayout,
     ) -> Self {
         unsafe {
             let cls = objc2::runtime::AnyClass::get(c"MPSGraphPooling2DOpDescriptor").unwrap();
@@ -332,15 +332,15 @@ impl MPSGraphPooling4DOpDescriptor {
     }
 }
 
-/// 2D and 4D pooling operations for MPSGraph
-impl MPSGraph {
+/// 2D and 4D pooling operations for Graph
+impl Graph {
     /// Creates a 2D max pooling operation
     pub fn max_pooling_2d(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -355,17 +355,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 2D max pooling operation that returns indices
     pub fn max_pooling_2d_return_indices(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -397,8 +397,8 @@ impl MPSGraph {
             objc2::ffi::objc_release(result as *mut _);
 
             (
-                MPSGraphTensor(pooling_tensor),
-                MPSGraphTensor(indices_tensor),
+                Tensor(pooling_tensor),
+                Tensor(indices_tensor),
             )
         }
     }
@@ -406,11 +406,11 @@ impl MPSGraph {
     /// Creates a max pooling gradient operation
     pub fn max_pooling_2d_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -426,19 +426,19 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a max pooling gradient operation using indices
     pub fn max_pooling_2d_gradient_with_indices(
         &self,
-        gradient: &MPSGraphTensor,
-        indices: &MPSGraphTensor,
+        gradient: &Tensor,
+        indices: &Tensor,
         output_shape: &[i64],
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -460,19 +460,19 @@ impl MPSGraph {
             objc2::ffi::objc_release(shape_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a max pooling gradient operation using indices tensor
     pub fn max_pooling_2d_gradient_with_indices_tensor(
         &self,
-        gradient: &MPSGraphTensor,
-        indices: &MPSGraphTensor,
-        output_shape_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        indices: &Tensor,
+        output_shape_tensor: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -489,17 +489,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 2D average pooling operation
     pub fn avg_pooling_2d(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -514,18 +514,18 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates an average pooling gradient operation
     pub fn avg_pooling_2d_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -541,17 +541,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 2D L2 norm pooling operation
     pub fn l2_norm_pooling_2d(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -566,18 +566,18 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates an L2 norm pooling gradient operation
     pub fn l2_norm_pooling_2d_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -593,17 +593,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 4D max pooling operation
     pub fn max_pooling_4d(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -618,17 +618,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 4D max pooling operation that returns indices
     pub fn max_pooling_4d_return_indices(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -660,8 +660,8 @@ impl MPSGraph {
             objc2::ffi::objc_release(result as *mut _);
 
             (
-                MPSGraphTensor(pooling_tensor),
-                MPSGraphTensor(indices_tensor),
+                Tensor(pooling_tensor),
+                Tensor(indices_tensor),
             )
         }
     }
@@ -669,11 +669,11 @@ impl MPSGraph {
     /// Creates a max pooling gradient operation
     pub fn max_pooling_4d_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -689,19 +689,19 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a max pooling gradient operation using indices
     pub fn max_pooling_4d_gradient_with_indices(
         &self,
-        gradient: &MPSGraphTensor,
-        indices: &MPSGraphTensor,
+        gradient: &Tensor,
+        indices: &Tensor,
         output_shape: &[i64],
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -723,19 +723,19 @@ impl MPSGraph {
             objc2::ffi::objc_release(shape_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a max pooling gradient operation using indices tensor
     pub fn max_pooling_4d_gradient_with_indices_tensor(
         &self,
-        gradient: &MPSGraphTensor,
-        indices: &MPSGraphTensor,
-        output_shape_tensor: &MPSGraphTensor,
+        gradient: &Tensor,
+        indices: &Tensor,
+        output_shape_tensor: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -752,17 +752,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 4D average pooling operation
     pub fn avg_pooling_4d(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -777,18 +777,18 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates an average pooling gradient operation
     pub fn avg_pooling_4d_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -804,17 +804,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a 4D L2 norm pooling operation
     pub fn l2_norm_pooling_4d(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -829,18 +829,18 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates an L2 norm pooling gradient operation
     pub fn l2_norm_pooling_4d_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         descriptor: &MPSGraphPooling4DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -856,7 +856,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
@@ -521,8 +521,8 @@ impl Clone for MPSGraphGRUDescriptor {
     }
 }
 
-/// RNN operation for MPSGraph
-impl MPSGraph {
+/// RNN operation for Graph
+impl Graph {
     /// Creates a single-gate RNN operation with mask support.
     ///
     /// This operation returns tensors `h` and optionally `z` that are defined recursively as follows:
@@ -550,19 +550,19 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A vector of MPSGraphTensor objects of size 1 or 2, depending on value of `descriptor.training`.
+    /// A vector of Tensor objects of size 1 or 2, depending on value of `descriptor.training`.
     /// The layout of both outputs is [T,N,H] or [T,N,2H] for bidirectional.
     pub fn single_gate_rnn_with_mask(
         &self,
-        input: &MPSGraphTensor,
-        recurrent_weight: &MPSGraphTensor,
-        input_weight: Option<&MPSGraphTensor>,
-        bias: Option<&MPSGraphTensor>,
-        init_state: Option<&MPSGraphTensor>,
-        mask: Option<&MPSGraphTensor>,
+        input: &Tensor,
+        recurrent_weight: &Tensor,
+        input_weight: Option<&Tensor>,
+        bias: Option<&Tensor>,
+        init_state: Option<&Tensor>,
+        mask: Option<&Tensor>,
         descriptor: &MPSGraphSingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -608,7 +608,7 @@ impl MPSGraph {
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(MPSGraphTensor(tensor));
+                tensors.push(Tensor(tensor));
             }
 
             objc2::ffi::objc_release(result as *mut _);
@@ -642,18 +642,18 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A vector of MPSGraphTensor objects of size 1 or 2, depending on value of `descriptor.training`.
+    /// A vector of Tensor objects of size 1 or 2, depending on value of `descriptor.training`.
     /// The layout of both outputs is [T,N,H] or [T,N,2H] for bidirectional.
     pub fn single_gate_rnn(
         &self,
-        input: &MPSGraphTensor,
-        recurrent_weight: &MPSGraphTensor,
-        input_weight: Option<&MPSGraphTensor>,
-        bias: Option<&MPSGraphTensor>,
-        init_state: Option<&MPSGraphTensor>,
+        input: &Tensor,
+        recurrent_weight: &Tensor,
+        input_weight: Option<&Tensor>,
+        bias: Option<&Tensor>,
+        init_state: Option<&Tensor>,
         descriptor: &MPSGraphSingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -693,7 +693,7 @@ impl MPSGraph {
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(MPSGraphTensor(tensor));
+                tensors.push(Tensor(tensor));
             }
 
             objc2::ffi::objc_release(result as *mut _);
@@ -722,16 +722,16 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A vector of MPSGraphTensor objects of size 1 or 2, depending on value of `descriptor.training`.
+    /// A vector of Tensor objects of size 1 or 2, depending on value of `descriptor.training`.
     /// The layout of both outputs is [T,N,H] or [T,N,2H] for bidirectional.
     pub fn single_gate_rnn_minimal(
         &self,
-        input: &MPSGraphTensor,
-        recurrent_weight: &MPSGraphTensor,
-        init_state: Option<&MPSGraphTensor>,
+        input: &Tensor,
+        recurrent_weight: &Tensor,
+        init_state: Option<&Tensor>,
         descriptor: &MPSGraphSingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -759,7 +759,7 @@ impl MPSGraph {
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(MPSGraphTensor(tensor));
+                tensors.push(Tensor(tensor));
             }
 
             objc2::ffi::objc_release(result as *mut _);
@@ -785,23 +785,23 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A vector of MPSGraphTensor objects containing gradients for each input tensor, except for `source_gradient` and `mask`.
+    /// A vector of Tensor objects containing gradients for each input tensor, except for `source_gradient` and `mask`.
     /// In case an input is `None`, no gradient will be returned for it.
     /// The order of the gradients will be: for `input`, for `recurrent_weight`, for `input_weight`, for `bias` and finally for `init_state`.
     pub fn single_gate_rnn_gradients(
         &self,
-        input: &MPSGraphTensor,
-        recurrent_weight: &MPSGraphTensor,
-        source_gradient: &MPSGraphTensor,
-        z_state: &MPSGraphTensor,
-        state_gradient: Option<&MPSGraphTensor>,
-        input_weight: Option<&MPSGraphTensor>,
-        bias: Option<&MPSGraphTensor>,
-        init_state: Option<&MPSGraphTensor>,
-        mask: Option<&MPSGraphTensor>,
+        input: &Tensor,
+        recurrent_weight: &Tensor,
+        source_gradient: &Tensor,
+        z_state: &Tensor,
+        state_gradient: Option<&Tensor>,
+        input_weight: Option<&Tensor>,
+        bias: Option<&Tensor>,
+        init_state: Option<&Tensor>,
+        mask: Option<&Tensor>,
         descriptor: &MPSGraphSingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -855,7 +855,7 @@ impl MPSGraph {
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(MPSGraphTensor(tensor));
+                tensors.push(Tensor(tensor));
             }
 
             objc2::ffi::objc_release(result as *mut _);
@@ -881,15 +881,15 @@ impl MPSGraph {
     /// Tuple containing (output tensor of shape [T,N,H] or [N,T,H], output hidden state tensor of shape [N,H], output cell state tensor of shape [N,H])
     pub fn lstm(
         &self,
-        input: &MPSGraphTensor,
-        initial_hidden_state: &MPSGraphTensor,
-        initial_cell_state: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
-        recurrent_weights: &MPSGraphTensor,
-        biases: Option<&MPSGraphTensor>,
+        input: &Tensor,
+        initial_hidden_state: &Tensor,
+        initial_cell_state: &Tensor,
+        weights: &Tensor,
+        recurrent_weights: &Tensor,
+        biases: Option<&Tensor>,
         descriptor: &MPSGraphLSTMDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -928,9 +928,9 @@ impl MPSGraph {
                 objc2::ffi::objc_retain(output_cell_state_tensor as *mut _);
 
             (
-                MPSGraphTensor(output_tensor),
-                MPSGraphTensor(output_hidden_state_tensor),
-                MPSGraphTensor(output_cell_state_tensor),
+                Tensor(output_tensor),
+                Tensor(output_hidden_state_tensor),
+                Tensor(output_cell_state_tensor),
             )
         }
     }
@@ -952,14 +952,14 @@ impl MPSGraph {
     /// Tuple containing (output tensor of shape [T,N,H] or [N,T,H], output state tensor of shape [N,H])
     pub fn gru(
         &self,
-        input: &MPSGraphTensor,
-        initial_state: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
-        recurrent_weights: &MPSGraphTensor,
-        biases: Option<&MPSGraphTensor>,
+        input: &Tensor,
+        initial_state: &Tensor,
+        weights: &Tensor,
+        recurrent_weights: &Tensor,
+        biases: Option<&Tensor>,
         descriptor: &MPSGraphGRUDescriptor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -993,8 +993,8 @@ impl MPSGraph {
             let output_state_tensor = objc2::ffi::objc_retain(output_state_tensor as *mut _);
 
             (
-                MPSGraphTensor(output_tensor),
-                MPSGraphTensor(output_state_tensor),
+                Tensor(output_tensor),
+                Tensor(output_state_tensor),
             )
         }
     }

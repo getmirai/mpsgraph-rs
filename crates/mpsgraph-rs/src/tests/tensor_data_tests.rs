@@ -1,4 +1,4 @@
-use crate::{core::MPSDataType, shape::MPSShape, tensor_data::MPSGraphTensorData};
+use crate::{core::MPSDataType, shape::Shape, tensor_data::TensorData};
 
 #[test]
 fn test_tensor_data_creation() {
@@ -7,22 +7,22 @@ fn test_tensor_data_creation() {
     // Float32
     let data_f32 = [1.0f32, 2.0, 3.0, 4.0];
     let shape_f32 = [2, 2];
-    let tensor_data_f32 = MPSGraphTensorData::new(&data_f32, &shape_f32, MPSDataType::Float32);
+    let tensor_data_f32 = TensorData::new(&data_f32, &shape_f32, MPSDataType::Float32);
 
     // Int32
     let data_i32 = [5i32, 6, 7, 8];
     let shape_i32 = [2, 2];
-    let tensor_data_i32 = MPSGraphTensorData::new(&data_i32, &shape_i32, MPSDataType::Int32);
+    let tensor_data_i32 = TensorData::new(&data_i32, &shape_i32, MPSDataType::Int32);
 
     // Float16 (test with f32 data, internally converted)
     let data_f16 = [0.5f32, 1.5, 2.5, 3.5];
     let shape_f16 = [4];
-    let tensor_data_f16 = MPSGraphTensorData::new(&data_f16, &shape_f16, MPSDataType::Float16);
+    let tensor_data_f16 = TensorData::new(&data_f16, &shape_f16, MPSDataType::Float16);
 
     // Int8
     let data_i8 = [1i8, 2, 3, 4];
     let shape_i8 = [2, 2];
-    let tensor_data_i8 = MPSGraphTensorData::new(&data_i8, &shape_i8, MPSDataType::Int8);
+    let tensor_data_i8 = TensorData::new(&data_i8, &shape_i8, MPSDataType::Int8);
 
     // Verify properties
     assert_eq!(tensor_data_f32.data_type(), MPSDataType::Float32);
@@ -52,8 +52,8 @@ fn test_tensor_data_metal_device() {
         );
 
         // Create tensor data from Metal buffer
-        let shape = MPSShape::from_slice(&[2, 2]);
-        let tensor_data = MPSGraphTensorData::from_buffer(&buffer, &shape, MPSDataType::Float32);
+        let shape = Shape::from_slice(&[2, 2]);
+        let tensor_data = TensorData::from_buffer(&buffer, &shape, MPSDataType::Float32);
 
         // Verify properties
         assert_eq!(tensor_data.data_type(), MPSDataType::Float32);
@@ -68,7 +68,7 @@ fn test_tensor_data_clone() {
     // Create tensor data
     let data = [1.0f32, 2.0, 3.0, 4.0];
     let shape = [2, 2];
-    let tensor_data = MPSGraphTensorData::new(&data, &shape, MPSDataType::Float32);
+    let tensor_data = TensorData::new(&data, &shape, MPSDataType::Float32);
 
     // Clone tensor data
     let cloned_data = tensor_data.clone();
@@ -88,7 +88,7 @@ fn test_tensor_data_different_shapes() {
     // 1D shape
     let data_1d = [1.0f32, 2.0, 3.0, 4.0];
     let shape_1d = [4];
-    let tensor_data_1d = MPSGraphTensorData::new(&data_1d, &shape_1d, MPSDataType::Float32);
+    let tensor_data_1d = TensorData::new(&data_1d, &shape_1d, MPSDataType::Float32);
 
     let shape_obj_1d = tensor_data_1d.shape();
     assert_eq!(shape_obj_1d.dimensions(), vec![4]);
@@ -96,7 +96,7 @@ fn test_tensor_data_different_shapes() {
     // 3D shape
     let data_3d = [1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
     let shape_3d = [2, 2, 2];
-    let tensor_data_3d = MPSGraphTensorData::new(&data_3d, &shape_3d, MPSDataType::Float32);
+    let tensor_data_3d = TensorData::new(&data_3d, &shape_3d, MPSDataType::Float32);
 
     let shape_obj_3d = tensor_data_3d.shape();
     assert_eq!(shape_obj_3d.dimensions(), vec![2, 2, 2]);
@@ -107,7 +107,7 @@ fn test_tensor_data_different_shapes() {
         data_4d.push(i as f32);
     }
     let shape_4d = [2, 2, 2, 2];
-    let tensor_data_4d = MPSGraphTensorData::new(&data_4d, &shape_4d, MPSDataType::Float32);
+    let tensor_data_4d = TensorData::new(&data_4d, &shape_4d, MPSDataType::Float32);
 
     let shape_obj_4d = tensor_data_4d.shape();
     assert_eq!(shape_obj_4d.dimensions(), vec![2, 2, 2, 2]);

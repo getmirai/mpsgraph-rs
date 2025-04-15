@@ -1,7 +1,7 @@
 use crate::core::{AsRawObject, MPSDataType};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation::{NSArray, NSString};
@@ -83,8 +83,8 @@ impl Clone for MPSGraphCreateSparseOpDescriptor {
     }
 }
 
-/// Sparse operations for MPSGraph
-impl MPSGraph {
+/// Sparse operations for Graph
+impl Graph {
     /// Creates a sparse tensor with the specified type.
     ///
     /// # Arguments
@@ -96,14 +96,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor representing the sparse tensor
+    /// A new Tensor representing the sparse tensor
     pub fn sparse_tensor_with_type(
         &self,
-        tensors: &[&MPSGraphTensor],
-        shape: &MPSShape,
+        tensors: &[&Tensor],
+        shape: &Shape,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -133,7 +133,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -148,14 +148,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor representing the sparse tensor
+    /// A new Tensor representing the sparse tensor
     pub fn sparse_tensor_with_descriptor(
         &self,
         descriptor: &MPSGraphCreateSparseOpDescriptor,
-        tensors: &[&MPSGraphTensor],
-        shape: &MPSShape,
+        tensors: &[&Tensor],
+        shape: &Shape,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -185,7 +185,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -201,7 +201,7 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor representing the sparse tensor
+    /// A new Tensor representing the sparse tensor
     ///
     /// # Deprecated
     ///
@@ -209,12 +209,12 @@ impl MPSGraph {
     /// Please use `sparse_tensor_with_type` or `sparse_tensor_with_descriptor` instead.
     pub fn sparse_tensor_with_indices_and_values(
         &self,
-        indices: &[&MPSGraphTensor],
-        values: &MPSGraphTensor,
-        dense_shape: &MPSShape,
+        indices: &[&Tensor],
+        values: &Tensor,
+        dense_shape: &Shape,
         descriptor: &MPSGraphCreateSparseOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -245,7 +245,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -263,11 +263,11 @@ impl MPSGraph {
     /// A dense tensor containing the values from the sparse format
     pub fn sparse_to_dense(
         &self,
-        indices: &[&MPSGraphTensor],
-        values: &MPSGraphTensor,
-        dense_shape: &MPSGraphTensor,
+        indices: &[&Tensor],
+        values: &Tensor,
+        dense_shape: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -296,7 +296,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

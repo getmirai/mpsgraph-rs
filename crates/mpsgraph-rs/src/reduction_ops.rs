@@ -1,20 +1,20 @@
 use crate::core::{create_ns_array_from_i64_slice, AsRawObject};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation::NSString;
 use std::ptr;
 
-/// Reduction operations for MPSGraph
-impl MPSGraph {
+/// Reduction operations for Graph
+impl Graph {
     /// Creates a reduction sum operation along a single axis
     pub fn reduction_sum_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -28,17 +28,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction sum operation along multiple axes
     pub fn reduction_sum_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -61,17 +61,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction maximum operation along a single axis
     pub fn reduction_maximum_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -85,17 +85,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction maximum operation along multiple axes
     pub fn reduction_maximum_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -118,17 +118,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction minimum operation along a single axis
     pub fn reduction_minimum_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -142,17 +142,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction minimum operation along multiple axes
     pub fn reduction_minimum_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -175,17 +175,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction product operation along a single axis
     pub fn reduction_product_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -199,17 +199,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction product operation along multiple axes
     pub fn reduction_product_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -232,17 +232,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction maximum propagate NaN operation along a single axis
     pub fn reduction_maximum_propagate_nan_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -256,17 +256,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction maximum propagate NaN operation along multiple axes
     pub fn reduction_maximum_propagate_nan_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -289,17 +289,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction minimum propagate NaN operation along a single axis
     pub fn reduction_minimum_propagate_nan_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -313,17 +313,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction minimum propagate NaN operation along multiple axes
     pub fn reduction_minimum_propagate_nan_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -346,17 +346,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction AND operation along a single axis
     pub fn reduction_and_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -370,17 +370,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction AND operation along multiple axes
     pub fn reduction_and_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -403,17 +403,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction OR operation along a single axis
     pub fn reduction_or_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -427,17 +427,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction OR operation along multiple axes
     pub fn reduction_or_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -460,17 +460,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction XOR operation along a single axis
     pub fn reduction_xor_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -484,17 +484,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction XOR operation along multiple axes
     pub fn reduction_xor_with_tensor_axes(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -517,17 +517,17 @@ impl MPSGraph {
             }
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction argmax operation along a single axis
     pub fn reduction_arg_maximum_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -541,17 +541,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a reduction argmin operation along a single axis
     pub fn reduction_arg_minimum_with_tensor_axis(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -565,7 +565,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

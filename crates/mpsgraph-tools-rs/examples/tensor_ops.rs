@@ -11,13 +11,14 @@
 //!
 //! Run with: `cargo run --example tensor_ops_example`
 
+use mpsgraph::{Graph, Shape, MPSDataType};
 use mpsgraph_tools::prelude::*;
 use mpsgraph_tools::tensor_ops::{GraphExt, Tensor};
 
 fn main() {
     // Create graph and input tensors
-    let graph = MPSGraph::new();
-    let shape = MPSShape::from_slice(&[2usize, 3usize]);
+    let graph = Graph::new();
+    let shape = Shape::from_slice(&[2usize, 3usize]);
 
     // Use the GraphExt trait to create tensors directly
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));

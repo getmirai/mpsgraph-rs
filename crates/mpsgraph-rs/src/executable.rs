@@ -2,8 +2,8 @@ use crate::command_buffer::MPSCommandBuffer;
 use crate::core::{
     AsRawObject, MPSDataType, MPSGraphOptimization, MPSGraphOptimizationProfile, NSString,
 };
-use crate::tensor::MPSGraphTensor;
-use crate::tensor_data::MPSGraphTensorData;
+use crate::tensor::Tensor;
+use crate::tensor_data::TensorData;
 use metal::foreign_types::ForeignType;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::ptr;
 
-/// A wrapper for MPSGraphExecutable objects
+/// A wrapper for Metal Performance Shaders Graph executable objects
 pub struct MPSGraphExecutable(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for the wrapper type
@@ -19,7 +19,7 @@ unsafe impl Send for MPSGraphExecutable {}
 unsafe impl Sync for MPSGraphExecutable {}
 
 /// Result type for graph execution
-pub type MPSGraphExecutionResult = HashMap<MPSGraphTensor, MPSGraphTensorData>;
+pub type MPSGraphExecutionResult = HashMap<Tensor, TensorData>;
 
 impl MPSGraphExecutable {
     /// Create a new executable from a serialized package at the specified URL
@@ -31,7 +31,7 @@ impl MPSGraphExecutable {
     /// - Returns: A new executable instance, or None if creation failed
     pub fn from_serialized_package(
         url_string: &str,
-        compilation_descriptor: Option<&MPSGraphCompilationDescriptor>,
+        compilation_descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Self> {
         unsafe {
             // Convert URL to NSURL
@@ -86,7 +86,7 @@ impl MPSGraphExecutable {
     /// - Returns: A new executable instance, or None if creation failed
     pub fn from_coreml_package(
         url_string: &str,
-        compilation_descriptor: Option<&MPSGraphCompilationDescriptor>,
+        compilation_descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Self> {
         unsafe {
             // Convert URL to NSURL
@@ -133,8 +133,8 @@ impl MPSGraphExecutable {
     /// Execute the graph on a device
     pub fn run_with_feeds(
         &self,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        output_tensors: &[MPSGraphTensor],
+        feeds: &HashMap<Tensor, TensorData>,
+        output_tensors: &[Tensor],
     ) -> MPSGraphExecutionResult {
         unsafe {
             // Create the feeds dictionary
@@ -177,9 +177,9 @@ impl MPSGraphExecutable {
     /// Execute the graph on a device with execution descriptor
     pub fn run_with_feeds_and_descriptor(
         &self,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        output_tensors: &[MPSGraphTensor],
-        execution_descriptor: &MPSGraphExecutionDescriptor,
+        feeds: &HashMap<Tensor, TensorData>,
+        output_tensors: &[Tensor],
+        execution_descriptor: &ExecutionDescriptor,
     ) -> MPSGraphExecutionResult {
         unsafe {
             // Create the feeds dictionary
@@ -233,9 +233,9 @@ impl MPSGraphExecutable {
     pub fn run_async_with_command_queue<F>(
         &self,
         command_queue: &metal::CommandQueue,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        output_tensors: &[MPSGraphTensor],
-        execution_descriptor: &MPSGraphExecutionDescriptor,
+        feeds: &HashMap<Tensor, TensorData>,
+        output_tensors: &[Tensor],
+        execution_descriptor: &ExecutionDescriptor,
         completion_handler: Option<F>,
     ) -> MPSGraphExecutionResult
     where
@@ -318,11 +318,11 @@ impl MPSGraphExecutable {
     /// - Returns: Array of output tensor data in the same order as output_tensors
     pub fn run_with_inputs_outputs(
         &self,
-        input_tensors: &[MPSGraphTensor],
-        input_values: &[MPSGraphTensorData],
-        output_tensors: &[MPSGraphTensor],
+        input_tensors: &[Tensor],
+        input_values: &[TensorData],
+        output_tensors: &[Tensor],
         execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
-    ) -> Vec<MPSGraphTensorData> {
+    ) -> Vec<TensorData> {
         assert_eq!(
             input_tensors.len(),
             input_values.len(),
@@ -364,14 +364,14 @@ impl MPSGraphExecutable {
                 executionDescriptor: descriptor_ptr
             ];
 
-            // Convert NSArray of results to Vec<MPSGraphTensorData>
+            // Convert NSArray of results to Vec<TensorData>
             let count: usize = msg_send![results, count];
             let mut result_vec = Vec::with_capacity(count);
 
             for i in 0..count {
                 let tensor_data: *mut AnyObject = msg_send![results, objectAtIndex: i];
                 objc2::ffi::objc_retain(tensor_data as *mut _);
-                result_vec.push(MPSGraphTensorData(tensor_data));
+                result_vec.push(TensorData(tensor_data));
             }
 
             // Release the results array
@@ -396,10 +396,10 @@ impl MPSGraphExecutable {
         &self,
         command_queue: &metal::CommandQueue,
         input_operations: &[crate::operation::MPSGraphOperation],
-        input_data: &[MPSGraphTensorData],
+        input_data: &[TensorData],
         output_operations: &[crate::operation::MPSGraphOperation],
         execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
-    ) -> Vec<MPSGraphTensorData> {
+    ) -> Vec<TensorData> {
         assert_eq!(
             input_operations.len(),
             input_data.len(),
@@ -443,14 +443,14 @@ impl MPSGraphExecutable {
                 executionDescriptor: descriptor_ptr
             ];
 
-            // Convert NSArray of results to Vec<MPSGraphTensorData>
+            // Convert NSArray of results to Vec<TensorData>
             let count: usize = msg_send![results, count];
             let mut result_vec = Vec::with_capacity(count);
 
             for i in 0..count {
                 let tensor_data: *mut AnyObject = msg_send![results, objectAtIndex: i];
                 objc2::ffi::objc_retain(tensor_data as *mut _);
-                result_vec.push(MPSGraphTensorData(tensor_data));
+                result_vec.push(TensorData(tensor_data));
             }
 
             // Release the results array
@@ -475,10 +475,10 @@ impl MPSGraphExecutable {
     pub fn encode_to_metal_command_buffer(
         &self,
         command_buffer: &metal::CommandBuffer,
-        inputs: &[MPSGraphTensorData],
-        results: Option<&[MPSGraphTensorData]>,
+        inputs: &[TensorData],
+        results: Option<&[TensorData]>,
         execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
-    ) -> Vec<MPSGraphTensorData> {
+    ) -> Vec<TensorData> {
         // Create an MPSCommandBuffer from the Metal command buffer
         let mps_command_buffer = MPSCommandBuffer::from_command_buffer(command_buffer);
 
@@ -498,10 +498,10 @@ impl MPSGraphExecutable {
     pub fn encode_to_command_buffer(
         &self,
         command_buffer: &MPSCommandBuffer,
-        inputs: &[MPSGraphTensorData],
-        results: Option<&[MPSGraphTensorData]>,
+        inputs: &[TensorData],
+        results: Option<&[TensorData]>,
         execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
-    ) -> Vec<MPSGraphTensorData> {
+    ) -> Vec<TensorData> {
         unsafe {
             // Create input values array
             let input_values_raw: Vec<*mut AnyObject> = inputs.iter().map(|d| d.0).collect();
@@ -534,14 +534,14 @@ impl MPSGraphExecutable {
                 executionDescriptor: descriptor_ptr
             ];
 
-            // Convert NSArray of results to Vec<MPSGraphTensorData>
+            // Convert NSArray of results to Vec<TensorData>
             let count: usize = msg_send![result_array, count];
             let mut result_vec = Vec::with_capacity(count);
 
             for i in 0..count {
                 let tensor_data: *mut AnyObject = msg_send![result_array, objectAtIndex: i];
                 objc2::ffi::objc_retain(tensor_data as *mut _);
-                result_vec.push(MPSGraphTensorData(tensor_data));
+                result_vec.push(TensorData(tensor_data));
             }
 
             // Release the results array
@@ -564,9 +564,9 @@ impl MPSGraphExecutable {
     /// - Returns: A new specialized executable
     pub fn specialize_with_device(
         &self,
-        device: &crate::device::MPSGraphDevice,
-        tensor_shapes: &HashMap<MPSGraphTensor, crate::shape::MPSShape>,
-        tensor_data_types: &HashMap<MPSGraphTensor, MPSDataType>,
+        device: &crate::device::Device,
+        tensor_shapes: &HashMap<Tensor, crate::shape::Shape>,
+        tensor_data_types: &HashMap<Tensor, MPSDataType>,
     ) -> Option<Self> {
         unsafe {
             // Convert tensor_shapes to NSDictionary
@@ -634,10 +634,10 @@ impl MPSGraphExecutable {
     /// - Returns: A dictionary mapping output tensors to their data types, or None if the operation fails
     pub fn get_output_types_with_device(
         &self,
-        device: &crate::device::MPSGraphDevice,
-        feed_tensor_shapes: &HashMap<MPSGraphTensor, crate::shape::MPSShape>,
-        feed_tensor_data_types: &HashMap<MPSGraphTensor, MPSDataType>,
-    ) -> Option<HashMap<MPSGraphTensor, MPSDataType>> {
+        device: &crate::device::Device,
+        feed_tensor_shapes: &HashMap<Tensor, crate::shape::Shape>,
+        feed_tensor_data_types: &HashMap<Tensor, MPSDataType>,
+    ) -> Option<HashMap<Tensor, MPSDataType>> {
         unsafe {
             // Convert feed_tensor_shapes to NSDictionary
             let mut shape_keys = Vec::with_capacity(feed_tensor_shapes.len());
@@ -703,7 +703,7 @@ impl MPSGraphExecutable {
                 objc2::ffi::objc_retain(key as *mut _);
 
                 // Create Tensor wrapper
-                let tensor = MPSGraphTensor(key);
+                let tensor = Tensor(key);
 
                 // Extract data type from NSNumber
                 let data_type_value: u64 = msg_send![value, unsignedIntegerValue];
@@ -757,7 +757,7 @@ impl MPSGraphExecutable {
 /// Helper function to convert an NSDictionary to a Rust HashMap
 fn convert_dictionary_to_hash_map(
     dictionary: *mut AnyObject,
-) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+) -> HashMap<Tensor, TensorData> {
     unsafe {
         let mut result = HashMap::new();
 
@@ -776,8 +776,8 @@ fn convert_dictionary_to_hash_map(
             objc2::ffi::objc_retain(value as *mut _);
 
             // Create Rust wrappers
-            let tensor = MPSGraphTensor(key);
-            let tensor_data = MPSGraphTensorData(value);
+            let tensor = Tensor(key);
+            let tensor_data = TensorData(value);
 
             // Add to the result HashMap
             result.insert(tensor, tensor_data);
@@ -816,10 +816,10 @@ impl fmt::Debug for MPSGraphExecutable {
     }
 }
 
-/// A wrapper for MPSGraphCompilationDescriptor
-pub struct MPSGraphCompilationDescriptor(pub(crate) *mut AnyObject);
+/// A wrapper for Metal Performance Shaders Graph compilation descriptor objects
+pub struct CompilationDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphCompilationDescriptor {
+impl CompilationDescriptor {
     /// Create a new compilation descriptor
     pub fn new() -> Self {
         unsafe {
@@ -827,7 +827,7 @@ impl MPSGraphCompilationDescriptor {
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let descriptor: *mut AnyObject = msg_send![obj, init];
-            MPSGraphCompilationDescriptor(descriptor)
+            CompilationDescriptor(descriptor)
         }
     }
 
@@ -853,13 +853,13 @@ impl MPSGraphCompilationDescriptor {
     }
 }
 
-impl Default for MPSGraphCompilationDescriptor {
+impl Default for CompilationDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Drop for MPSGraphCompilationDescriptor {
+impl Drop for CompilationDescriptor {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -869,29 +869,29 @@ impl Drop for MPSGraphCompilationDescriptor {
     }
 }
 
-impl Clone for MPSGraphCompilationDescriptor {
+impl Clone for CompilationDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphCompilationDescriptor(obj)
+                CompilationDescriptor(obj)
             } else {
-                MPSGraphCompilationDescriptor(ptr::null_mut())
+                CompilationDescriptor(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphCompilationDescriptor {
+impl fmt::Debug for CompilationDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphCompilationDescriptor").finish()
+        f.debug_struct("CompilationDescriptor").finish()
     }
 }
 
-/// A wrapper for MPSGraphExecutionDescriptor
-pub struct MPSGraphExecutionDescriptor(pub(crate) *mut AnyObject);
+/// A wrapper for Metal Performance Shaders Graph execution descriptor objects
+pub struct ExecutionDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphExecutionDescriptor {
+impl ExecutionDescriptor {
     /// Create a new execution descriptor
     pub fn new() -> Self {
         unsafe {
@@ -899,7 +899,7 @@ impl MPSGraphExecutionDescriptor {
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let descriptor: *mut AnyObject = msg_send![obj, init];
-            MPSGraphExecutionDescriptor(descriptor)
+            ExecutionDescriptor(descriptor)
         }
     }
 
@@ -1066,13 +1066,13 @@ impl fmt::Debug for MPSGraphExecutableSerializationDescriptor {
     }
 }
 
-impl Default for MPSGraphExecutionDescriptor {
+impl Default for ExecutionDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Drop for MPSGraphExecutionDescriptor {
+impl Drop for ExecutionDescriptor {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -1082,22 +1082,22 @@ impl Drop for MPSGraphExecutionDescriptor {
     }
 }
 
-impl Clone for MPSGraphExecutionDescriptor {
+impl Clone for ExecutionDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphExecutionDescriptor(obj)
+                ExecutionDescriptor(obj)
             } else {
-                MPSGraphExecutionDescriptor(ptr::null_mut())
+                ExecutionDescriptor(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphExecutionDescriptor {
+impl fmt::Debug for ExecutionDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphExecutionDescriptor").finish()
+        f.debug_struct("ExecutionDescriptor").finish()
     }
 }
 

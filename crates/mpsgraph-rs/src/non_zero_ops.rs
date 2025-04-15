@@ -1,11 +1,11 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
-/// NonZero operations for MPSGraph
-impl MPSGraph {
+/// NonZero operations for Graph
+impl Graph {
     /// Computes the indices of the non-zero elements of the input tensor.
     ///
     /// The indices are returned as a two-dimensional tensor of size `[number_of_nonzeros, input_rank]`.
@@ -20,10 +20,10 @@ impl MPSGraph {
     /// ```
     ///
     /// - Parameters:
-    ///   - tensor: An MPSGraphTensor of which to compute the non-zero indices.
+    ///   - tensor: An Tensor of which to compute the non-zero indices.
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor containing indices in signed int32 data type.
-    pub fn non_zero_indices(&self, tensor: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    /// - Returns: A valid Tensor containing indices in signed int32 data type.
+    pub fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -35,7 +35,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

@@ -1,31 +1,31 @@
 use crate::core::AsRawObject;
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation::{NSArray, NSString};
 
-/// Call operations for MPSGraph
-impl MPSGraph {
+/// Call operations for Graph
+impl Graph {
     /// Creates an operation which invokes another executable.
     ///
     /// # Arguments
     ///
-    /// * `symbol_name` - The unique identifier used to find the executable in the MPSGraphCompilationDescriptor.callables directory
+    /// * `symbol_name` - The unique identifier used to find the executable in the CompilationDescriptor.callables directory
     /// * `input_tensors` - The tensors which are passed as inputs to the executable being invoked
     /// * `output_types` - The expected return types of the executable being invoked
     /// * `name` - The name for the operation
     ///
     /// # Returns
     ///
-    /// An array of MPSGraphTensor objects representing the return tensors of the invoked executable
+    /// An array of Tensor objects representing the return tensors of the invoked executable
     pub fn call(
         &self,
         symbol_name: &str,
-        input_tensors: &[&MPSGraphTensor],
+        input_tensors: &[&Tensor],
         output_types: &[&crate::data_types::MPSGraphShapedType],
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -74,7 +74,7 @@ impl MPSGraph {
             result
         };
 
-        // Convert the result array to a Vec of MPSGraphTensor using objc2_foundation
+        // Convert the result array to a Vec of Tensor using objc2_foundation
         unsafe {
             // Convert to NSArray
             let array_ref: &NSArray<objc2::runtime::AnyObject> =
@@ -92,7 +92,7 @@ impl MPSGraph {
                     let tensor_ptr: *mut AnyObject =
                         obj as *const objc2::runtime::AnyObject as *mut AnyObject;
                     let tensor = objc2::ffi::objc_retain(tensor_ptr as *mut _);
-                    results.push(MPSGraphTensor(tensor));
+                    results.push(Tensor(tensor));
                 }
             }
 

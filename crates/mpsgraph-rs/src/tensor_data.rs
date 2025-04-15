@@ -1,5 +1,5 @@
 use crate::core::MPSDataType;
-use crate::shape::MPSShape;
+use crate::shape::Shape;
 use metal::foreign_types::ForeignType;
 use metal::Buffer;
 use objc2::msg_send;
@@ -7,19 +7,19 @@ use objc2::runtime::AnyObject;
 use objc2_foundation::NSData;
 use std::fmt;
 
-/// A wrapper for MPSGraphTensorData objects
-pub struct MPSGraphTensorData(pub(crate) *mut AnyObject);
+/// A wrapper for Metal Performance Shaders Graph tensor data objects
+pub struct TensorData(pub(crate) *mut AnyObject);
 
-impl MPSGraphTensorData {
-    /// Creates a new MPSGraphTensorData from a slice of data and a shape dimensions
-    /// This is a convenience method that converts shape dimensions to an MPSShape
+impl TensorData {
+    /// Creates a new TensorData from a slice of data and a shape dimensions
+    /// This is a convenience method that converts shape dimensions to a Shape
     pub fn new<T: Copy>(data: &[T], shape_dims: &[usize], data_type: MPSDataType) -> Self {
-        let shape = MPSShape::from_slice(shape_dims);
+        let shape = Shape::from_slice(shape_dims);
         Self::from_bytes(data, &shape, data_type)
     }
 
-    /// Creates a new MPSGraphTensorData from a slice of data and a shape
-    pub fn from_bytes<T: Copy>(data: &[T], shape: &MPSShape, data_type: MPSDataType) -> Self {
+    /// Creates a new TensorData from a slice of data and a shape
+    pub fn from_bytes<T: Copy>(data: &[T], shape: &Shape, data_type: MPSDataType) -> Self {
         unsafe {
             // Calculate the total data size
             let data_size = std::mem::size_of_val(data);
@@ -32,9 +32,9 @@ impl MPSGraphTensorData {
                 if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                     let obj: *mut AnyObject = msg_send![cls, alloc];
                     let obj: *mut AnyObject = msg_send![obj, init];
-                    return MPSGraphTensorData(obj);
+                    return TensorData(obj);
                 } else {
-                    return MPSGraphTensorData(std::ptr::null_mut());
+                    return TensorData(std::ptr::null_mut());
                 }
             }
 
@@ -57,7 +57,7 @@ impl MPSGraphTensorData {
             let mps_device: *mut AnyObject =
                 msg_send![mps_device_cls, deviceWithMTLDevice: device_ptr,];
 
-            // Create the MPSGraphTensorData with NSData
+            // Create the TensorData with NSData
             let class_name = c"MPSGraphTensorData";
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let tensor_obj: *mut AnyObject = msg_send![cls, alloc];
@@ -92,12 +92,12 @@ impl MPSGraphTensorData {
                 }
             };
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
-    /// Creates a new MPSGraphTensorData from a Metal buffer
-    pub fn from_buffer(buffer: &Buffer, shape: &MPSShape, data_type: MPSDataType) -> Self {
+    /// Creates a new TensorData from a Metal buffer
+    pub fn from_buffer(buffer: &Buffer, shape: &Shape, data_type: MPSDataType) -> Self {
         unsafe {
             let class_name = c"MPSGraphTensorData";
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
@@ -112,11 +112,11 @@ impl MPSGraphTensorData {
                 dataType: data_type_val_32
             ];
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
-    /// Creates a new MPSGraphTensorData from a Metal buffer with specified rowBytes
+    /// Creates a new TensorData from a Metal buffer with specified rowBytes
     ///
     /// Available since macOS 12.3+/iOS 15.4+
     ///
@@ -130,10 +130,10 @@ impl MPSGraphTensorData {
     ///   - data_type: The data type of the tensor elements
     ///   - row_bytes: Bytes per row for the first dimension (pass 0 for default)
     ///
-    /// - Returns: A new MPSGraphTensorData instance
+    /// - Returns: A new TensorData instance
     pub fn from_buffer_with_row_bytes(
         buffer: &Buffer,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         row_bytes: u64,
     ) -> Self {
@@ -152,21 +152,21 @@ impl MPSGraphTensorData {
                 rowBytes: row_bytes,
             ];
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
-    /// Creates a new MPSGraphTensorData from an MPSMatrix
+    /// Creates a new TensorData from an MPSMatrix
     pub fn from_mps_matrix(
         matrix: *mut AnyObject,
         transpose: bool,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
     ) -> Self {
         Self::from_mps_matrix_with_rank(matrix, transpose, shape, data_type, 0)
     }
 
-    /// Creates a new MPSGraphTensorData from an MPSMatrix with specified rank
+    /// Creates a new TensorData from an MPSMatrix with specified rank
     ///
     /// - Parameters:
     ///   - matrix: The MPSMatrix object to get data from
@@ -175,11 +175,11 @@ impl MPSGraphTensorData {
     ///   - data_type: The data type of the tensor elements
     ///   - rank: The rank of the tensor (pass 0 for default)
     ///
-    /// - Returns: A new MPSGraphTensorData instance
+    /// - Returns: A new TensorData instance
     pub fn from_mps_matrix_with_rank(
         matrix: *mut AnyObject,
         transpose: bool,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         rank: u64,
     ) -> Self {
@@ -196,20 +196,20 @@ impl MPSGraphTensorData {
                 rank: rank,
             ];
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
-    /// Creates a new MPSGraphTensorData from an MPSVector
+    /// Creates a new TensorData from an MPSVector
     pub fn from_mps_vector(
         vector: *mut AnyObject,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
     ) -> Self {
         Self::from_mps_vector_with_rank(vector, shape, data_type, 0)
     }
 
-    /// Creates a new MPSGraphTensorData from an MPSVector with specified rank
+    /// Creates a new TensorData from an MPSVector with specified rank
     ///
     /// - Parameters:
     ///   - vector: The MPSVector object to get data from
@@ -217,10 +217,10 @@ impl MPSGraphTensorData {
     ///   - data_type: The data type of the tensor elements
     ///   - rank: The rank of the tensor (pass 0 for default)
     ///
-    /// - Returns: A new MPSGraphTensorData instance
+    /// - Returns: A new TensorData instance
     pub fn from_mps_vector_with_rank(
         vector: *mut AnyObject,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         rank: u64,
     ) -> Self {
@@ -236,11 +236,11 @@ impl MPSGraphTensorData {
                 rank: rank,
             ];
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
-    /// Creates a new MPSGraphTensorData from an MPSNDArray
+    /// Creates a new TensorData from an MPSNDArray
     pub fn from_mps_ndarray(ndarray: *mut AnyObject) -> Self {
         unsafe {
             let class_name = c"MPSGraphTensorData";
@@ -249,17 +249,17 @@ impl MPSGraphTensorData {
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let obj: *mut AnyObject = msg_send![obj, initWithMPSNDArray: ndarray];
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
-    /// Creates a new MPSGraphTensorData from an MPSImageBatch
+    /// Creates a new TensorData from an MPSImageBatch
     ///
     /// - Parameters:
     ///   - image_batch: The MPSImageBatch object to get data from
     ///   - feature_channels: The number of feature channels per pixel
     ///
-    /// - Returns: A new MPSGraphTensorData instance
+    /// - Returns: A new TensorData instance
     pub fn from_mps_image_batch(image_batch: *mut AnyObject, feature_channels: u64) -> Self {
         unsafe {
             let class_name = c"MPSGraphTensorData";
@@ -270,16 +270,16 @@ impl MPSGraphTensorData {
                 featureChannels: feature_channels,
             ];
 
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         }
     }
 
     /// Returns the shape of this tensor data
-    pub fn shape(&self) -> MPSShape {
+    pub fn shape(&self) -> Shape {
         unsafe {
             let shape: *mut AnyObject = msg_send![self.0, shape];
             let shape = objc2::ffi::objc_retain(shape as *mut _);
-            MPSShape(shape)
+            Shape(shape)
         }
     }
 
@@ -558,7 +558,7 @@ impl MPSGraphTensorData {
     }
 }
 
-impl Drop for MPSGraphTensorData {
+impl Drop for TensorData {
     fn drop(&mut self) {
         if !self.0.is_null() {
             // Set the pointer to null to prevent further access
@@ -572,22 +572,22 @@ impl Drop for MPSGraphTensorData {
     }
 }
 
-impl Clone for MPSGraphTensorData {
+impl Clone for TensorData {
     fn clone(&self) -> Self {
         if !self.0.is_null() {
             // Don't retain, just copy the pointer
             // This is deliberate to avoid memory management issues
             let obj = self.0;
-            MPSGraphTensorData(obj)
+            TensorData(obj)
         } else {
-            MPSGraphTensorData(std::ptr::null_mut())
+            TensorData(std::ptr::null_mut())
         }
     }
 }
 
-impl fmt::Debug for MPSGraphTensorData {
+impl fmt::Debug for TensorData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphTensorData")
+        f.debug_struct("TensorData")
             .field("shape", &self.shape())
             .field("data_type", &self.data_type())
             .finish()

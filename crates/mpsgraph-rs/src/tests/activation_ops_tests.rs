@@ -1,13 +1,13 @@
 use crate::{
-    core::MPSDataType, graph::MPSGraph, shape::MPSShape, tensor::MPSGraphTensor,
-    tensor_data::MPSGraphTensorData,
+    core::MPSDataType, graph::Graph, shape::Shape, tensor::Tensor,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 
 // Simple verification helper that checks if result exists
 fn verify_result_exists(
-    results: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-    tensor: &MPSGraphTensor,
+    results: &HashMap<Tensor, TensorData>,
+    tensor: &Tensor,
     name: &str,
 ) {
     assert!(
@@ -21,12 +21,12 @@ fn verify_result_exists(
 fn test_relu_activation() {
     // Use an empty scope to force destructors to run earlier
     {
-        let graph = MPSGraph::new();
-        println!("DEBUG: Created MPSGraph");
+        let graph = Graph::new();
+        println!("DEBUG: Created Graph");
 
         // Create input
-        let shape = MPSShape::from_slice(&[2, 3]);
-        println!("DEBUG: Created MPSShape");
+        let shape = Shape::from_slice(&[2, 3]);
+        println!("DEBUG: Created Shape");
 
         let input = graph.placeholder(&shape, MPSDataType::Float32, None); // No name for now
         println!("DEBUG: Created placeholder");
@@ -36,7 +36,7 @@ fn test_relu_activation() {
         println!("DEBUG: Created ReLU operation");
 
         // Create input data with both positive and negative values
-        let input_data = MPSGraphTensorData::new(
+        let input_data = TensorData::new(
             &[-1.0f32, 0.0, 1.0, -2.0, 0.5, 3.0],
             &[2, 3],
             MPSDataType::Float32,
@@ -73,12 +73,12 @@ fn test_relu_activation() {
 fn test_sigmoid_activation() {
     // Use an empty scope to force destructors to run earlier
     {
-        let graph = MPSGraph::new();
-        println!("DEBUG: Created MPSGraph");
+        let graph = Graph::new();
+        println!("DEBUG: Created Graph");
 
         // Create input
-        let shape = MPSShape::from_slice(&[2, 2]);
-        println!("DEBUG: Created MPSShape");
+        let shape = Shape::from_slice(&[2, 2]);
+        println!("DEBUG: Created Shape");
 
         let input = graph.placeholder(&shape, MPSDataType::Float32, None); // No name
         println!("DEBUG: Created placeholder");
@@ -89,7 +89,7 @@ fn test_sigmoid_activation() {
 
         // Create input data
         let input_data =
-            MPSGraphTensorData::new(&[-2.0f32, -1.0, 0.0, 2.0], &[2, 2], MPSDataType::Float32);
+            TensorData::new(&[-2.0f32, -1.0, 0.0, 2.0], &[2, 2], MPSDataType::Float32);
         println!("DEBUG: Created input data");
 
         // Create feeds
@@ -122,12 +122,12 @@ fn test_sigmoid_activation() {
 fn test_tanh_activation() {
     // Use an empty scope to force destructors to run earlier
     {
-        let graph = MPSGraph::new();
-        println!("DEBUG: Created MPSGraph");
+        let graph = Graph::new();
+        println!("DEBUG: Created Graph");
 
         // Create input
-        let shape = MPSShape::from_slice(&[2, 2]);
-        println!("DEBUG: Created MPSShape");
+        let shape = Shape::from_slice(&[2, 2]);
+        println!("DEBUG: Created Shape");
 
         let input = graph.placeholder(&shape, MPSDataType::Float32, None); // No name
         println!("DEBUG: Created placeholder");
@@ -138,7 +138,7 @@ fn test_tanh_activation() {
 
         // Create input data
         let input_data =
-            MPSGraphTensorData::new(&[-2.0f32, -1.0, 0.0, 2.0], &[2, 2], MPSDataType::Float32);
+            TensorData::new(&[-2.0f32, -1.0, 0.0, 2.0], &[2, 2], MPSDataType::Float32);
         println!("DEBUG: Created input data");
 
         // Create feeds
@@ -171,12 +171,12 @@ fn test_tanh_activation() {
 fn test_softmax_activation() {
     // Use an empty scope to force destructors to run earlier
     {
-        let graph = MPSGraph::new();
-        println!("DEBUG: Created MPSGraph");
+        let graph = Graph::new();
+        println!("DEBUG: Created Graph");
 
         // Create input
-        let shape = MPSShape::from_slice(&[2, 3]);
-        println!("DEBUG: Created MPSShape");
+        let shape = Shape::from_slice(&[2, 3]);
+        println!("DEBUG: Created Shape");
 
         let input = graph.placeholder(&shape, MPSDataType::Float32, None); // No name
         println!("DEBUG: Created placeholder");
@@ -186,7 +186,7 @@ fn test_softmax_activation() {
         println!("DEBUG: Created softmax operation");
 
         // Create input data
-        let input_data = MPSGraphTensorData::new(
+        let input_data = TensorData::new(
             &[1.0f32, 2.0, 3.0, 4.0, 1.0, 2.0],
             &[2, 3],
             MPSDataType::Float32,
@@ -223,12 +223,12 @@ fn test_softmax_activation() {
 fn test_leaky_relu_activation() {
     // Use an empty scope to force destructors to run earlier
     {
-        let graph = MPSGraph::new();
-        println!("DEBUG: Created MPSGraph");
+        let graph = Graph::new();
+        println!("DEBUG: Created Graph");
 
         // Create input
-        let shape = MPSShape::from_slice(&[2, 3]);
-        println!("DEBUG: Created MPSShape");
+        let shape = Shape::from_slice(&[2, 3]);
+        println!("DEBUG: Created Shape");
 
         let input = graph.placeholder(&shape, MPSDataType::Float32, None); // No name
         println!("DEBUG: Created placeholder");
@@ -239,7 +239,7 @@ fn test_leaky_relu_activation() {
         println!("DEBUG: Created leaky ReLU operation");
 
         // Create input data with both positive and negative values
-        let input_data = MPSGraphTensorData::new(
+        let input_data = TensorData::new(
             &[-1.0f32, 0.0, 1.0, -2.0, 0.5, 3.0],
             &[2, 3],
             MPSDataType::Float32,

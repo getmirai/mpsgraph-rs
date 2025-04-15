@@ -1,12 +1,12 @@
 # mpsgraph-rs
 
-Rust bindings for Apple's Metal Performance Shaders Graph (MPSGraph) API.
+Idiomatic Rust bindings for Apple's Metal Performance Shaders Graph API.
 
 ## Workspace Structure
 
 This repository is organized as a Rust workspace with the following crates:
 
-- **mpsgraph**: Core bindings for MPSGraph API
+- **mpsgraph**: Core bindings for Metal Performance Shaders Graph API
 - **mpsgraph-tools**: High-level utilities and ergonomic tensor operations API
 
 ## Installation

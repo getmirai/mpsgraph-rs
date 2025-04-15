@@ -3,8 +3,8 @@ use objc2::runtime::AnyObject;
 const NO: bool = false;
 const YES: bool = true;
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 
 /// The non-maximum suppression coordinate mode.
@@ -24,8 +24,8 @@ pub enum MPSGraphNonMaximumSuppressionCoordinateMode {
     CentersWidthFirst = 3,
 }
 
-/// Non-maximum suppression operations for MPSGraph
-impl MPSGraph {
+/// Non-maximum suppression operations for Graph
+impl Graph {
     /// Creates a nonMaximumumSuppression operation and returns the result tensor.
     ///
     /// # Arguments
@@ -43,17 +43,17 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object containing the non-maximum suppression results.
+    /// A valid Tensor object containing the non-maximum suppression results.
     pub fn non_maximum_suppression(
         &self,
-        boxes_tensor: &MPSGraphTensor,
-        scores_tensor: &MPSGraphTensor,
+        boxes_tensor: &Tensor,
+        scores_tensor: &Tensor,
         iou_threshold: f32,
         score_threshold: f32,
         per_class_suppression: bool,
         coordinate_mode: MPSGraphNonMaximumSuppressionCoordinateMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -73,7 +73,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -96,18 +96,18 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object containing the non-maximum suppression results.
+    /// A valid Tensor object containing the non-maximum suppression results.
     pub fn non_maximum_suppression_with_class_indices(
         &self,
-        boxes_tensor: &MPSGraphTensor,
-        scores_tensor: &MPSGraphTensor,
-        class_indices_tensor: &MPSGraphTensor,
+        boxes_tensor: &Tensor,
+        scores_tensor: &Tensor,
+        class_indices_tensor: &Tensor,
         iou_threshold: f32,
         score_threshold: f32,
         per_class_suppression: bool,
         coordinate_mode: MPSGraphNonMaximumSuppressionCoordinateMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -128,7 +128,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

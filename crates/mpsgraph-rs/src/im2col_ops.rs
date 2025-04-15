@@ -1,8 +1,8 @@
 use crate::convolution_transpose_ops::TensorNamedDataLayout;
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
@@ -207,8 +207,8 @@ impl Clone for MPSGraphImToColOpDescriptor {
     }
 }
 
-/// ImToCol operations for MPSGraph
-impl MPSGraph {
+/// ImToCol operations for Graph
+impl Graph {
     /// Creates an image to column operation that converts a 3D or 4D input tensor to a matrix.
     ///
     /// This operation performs an im2col transformation, which is used in convolution operations.
@@ -222,13 +222,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the matrix result.
+    /// A new Tensor containing the matrix result.
     pub fn im_to_col(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphImToColOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -242,7 +242,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -257,14 +257,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the image result.
+    /// A new Tensor containing the image result.
     pub fn col_to_im(
         &self,
-        source: &MPSGraphTensor,
-        output_shape: &MPSShape,
+        source: &Tensor,
+        output_shape: &Shape,
         descriptor: &MPSGraphImToColOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -279,28 +279,28 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Alias for im_to_col for backward compatibility
     pub fn image_to_column(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         descriptor: &MPSGraphImToColOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         self.im_to_col(source, descriptor, name)
     }
 
     /// Alias for col_to_im for backward compatibility
     pub fn column_to_image(
         &self,
-        source: &MPSGraphTensor,
-        output_shape: &MPSShape,
+        source: &Tensor,
+        output_shape: &Shape,
         descriptor: &MPSGraphImToColOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         self.col_to_im(source, output_shape, descriptor, name)
     }
 }

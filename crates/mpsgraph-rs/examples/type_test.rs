@@ -1,7 +1,7 @@
 use mpsgraph::{
     core::MPSDataType,
     data_types::{MPSGraphShapedType, MPSGraphType},
-    shape::MPSShape,
+    shape::Shape,
 };
 
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
     println!("Basic graph type description: {}", graph_type.description());
 
     // Create a shape for our shaped type
-    let shape = MPSShape::from_slice(&[2, 3, 4]);
+    let shape = Shape::from_slice(&[2, 3, 4]);
     println!("Shape: {:?}", shape);
 
     // Create a shaped type with the shape and data type

@@ -1,6 +1,6 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::runtime::AnyObject;
 
 /// The type of reduction applied in loss operations
@@ -19,8 +19,8 @@ pub enum MPSGraphLossReductionType {
 #[allow(non_upper_case_globals)]
 pub const Axis: MPSGraphLossReductionType = MPSGraphLossReductionType::None;
 
-/// Loss operations for MPSGraph
-impl MPSGraph {
+/// Loss operations for Graph
+impl Graph {
     /// Creates a softmax cross-entropy loss operation and returns the result tensor.
     ///
     /// The softmax cross-entropy operation computes:
@@ -46,8 +46,8 @@ impl MPSGraph {
     /// ```no_run
     /// # use mpsgraph::prelude::*;
     /// # use mpsgraph::loss_ops::MPSGraphLossReductionType;
-    /// # let graph = MPSGraph::new();
-    /// # let shape = MPSShape::from_slice(&[2, 3]);
+    /// # let graph = Graph::new();
+    /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let logits = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let labels = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// // Calculate softmax cross entropy loss
@@ -61,12 +61,12 @@ impl MPSGraph {
     /// ```
     pub fn softmax_cross_entropy(
         &self,
-        source_tensor: &MPSGraphTensor,
-        labels_tensor: &MPSGraphTensor,
+        source_tensor: &Tensor,
+        labels_tensor: &Tensor,
         axis: i64,
         reduction_type: MPSGraphLossReductionType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -81,7 +81,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -105,8 +105,8 @@ impl MPSGraph {
     /// ```no_run
     /// # use mpsgraph::prelude::*;
     /// # use mpsgraph::loss_ops::MPSGraphLossReductionType;
-    /// # let graph = MPSGraph::new();
-    /// # let shape = MPSShape::from_slice(&[2, 3]);
+    /// # let graph = Graph::new();
+    /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let logits = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let labels = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let loss = graph.softmax_cross_entropy(&logits, &labels, 1, MPSGraphLossReductionType::Mean, None);
@@ -125,13 +125,13 @@ impl MPSGraph {
     /// ```
     pub fn softmax_cross_entropy_gradient(
         &self,
-        gradient_tensor: &MPSGraphTensor,
-        source_tensor: &MPSGraphTensor,
-        labels_tensor: &MPSGraphTensor,
+        gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
+        labels_tensor: &Tensor,
         axis: i64,
         reduction_type: MPSGraphLossReductionType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -147,7 +147,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

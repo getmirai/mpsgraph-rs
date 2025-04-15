@@ -1,13 +1,13 @@
 use crate::{
-    core::MPSDataType, graph::MPSGraph, shape::MPSShape, tensor::MPSGraphTensor,
-    tensor_data::MPSGraphTensorData,
+    core::MPSDataType, graph::Graph, shape::Shape, tensor::Tensor,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 
 // Simple verification helper that checks if result exists
 fn verify_result_exists(
-    results: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-    tensor: &MPSGraphTensor,
+    results: &HashMap<Tensor, TensorData>,
+    tensor: &Tensor,
     name: &str,
 ) {
     assert!(
@@ -19,15 +19,15 @@ fn verify_result_exists(
 
 #[test]
 fn test_matrix_multiplication() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input matrices
     // Matrix A: 2x3
-    let shape_a = MPSShape::from_slice(&[2, 3]);
+    let shape_a = Shape::from_slice(&[2, 3]);
     let a = graph.placeholder(&shape_a, MPSDataType::Float32, Some("A"));
 
     // Matrix B: 3x2
-    let shape_b = MPSShape::from_slice(&[3, 2]);
+    let shape_b = Shape::from_slice(&[3, 2]);
     let b = graph.placeholder(&shape_b, MPSDataType::Float32, Some("B"));
 
     // Define matrix multiplication operation: C = A * B
@@ -36,7 +36,7 @@ fn test_matrix_multiplication() {
     // Create input data
     // A: [1, 2, 3]
     //    [4, 5, 6]
-    let a_data = MPSGraphTensorData::new(
+    let a_data = TensorData::new(
         &[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0],
         &[2, 3],
         MPSDataType::Float32,
@@ -45,7 +45,7 @@ fn test_matrix_multiplication() {
     // B: [7, 8]
     //    [9, 10]
     //    [11, 12]
-    let b_data = MPSGraphTensorData::new(
+    let b_data = TensorData::new(
         &[7.0f32, 8.0, 9.0, 10.0, 11.0, 12.0],
         &[3, 2],
         MPSDataType::Float32,
@@ -65,11 +65,11 @@ fn test_matrix_multiplication() {
 
 #[test]
 fn test_transpose() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input matrix
     // Matrix A: 2x3
-    let shape_a = MPSShape::from_slice(&[2, 3]);
+    let shape_a = Shape::from_slice(&[2, 3]);
     let a = graph.placeholder(&shape_a, MPSDataType::Float32, Some("A"));
 
     // Define transpose operation: B = A^T
@@ -80,7 +80,7 @@ fn test_transpose() {
     // Create input data
     // A: [1, 2, 3]
     //    [4, 5, 6]
-    let a_data = MPSGraphTensorData::new(
+    let a_data = TensorData::new(
         &[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0],
         &[2, 3],
         MPSDataType::Float32,
@@ -99,15 +99,15 @@ fn test_transpose() {
 
 #[test]
 fn test_batch_matrix_multiplication() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensors
     // Tensor A: 2x2x3 (batch of 2 matrices, each 2x3)
-    let shape_a = MPSShape::from_slice(&[2, 2, 3]);
+    let shape_a = Shape::from_slice(&[2, 2, 3]);
     let a = graph.placeholder(&shape_a, MPSDataType::Float32, Some("A"));
 
     // Tensor B: 2x3x2 (batch of 2 matrices, each 3x2)
-    let shape_b = MPSShape::from_slice(&[2, 3, 2]);
+    let shape_b = Shape::from_slice(&[2, 3, 2]);
     let b = graph.placeholder(&shape_b, MPSDataType::Float32, Some("B"));
 
     // Define batch matrix multiplication operation: C = A * B
@@ -116,7 +116,7 @@ fn test_batch_matrix_multiplication() {
     // Create input data
     // Batch 1: A1 = [1, 2, 3, 4, 5, 6], B1 = [7, 8, 9, 10, 11, 12]
     // Batch 2: A2 = [13, 14, 15, 16, 17, 18], B2 = [19, 20, 21, 22, 23, 24]
-    let a_data = MPSGraphTensorData::new(
+    let a_data = TensorData::new(
         &[
             1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0,
         ],
@@ -124,7 +124,7 @@ fn test_batch_matrix_multiplication() {
         MPSDataType::Float32,
     );
 
-    let b_data = MPSGraphTensorData::new(
+    let b_data = TensorData::new(
         &[
             7.0f32, 8.0, 9.0, 10.0, 11.0, 12.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0,
         ],
@@ -150,10 +150,10 @@ fn test_batch_matrix_multiplication() {
 
 #[test]
 fn test_reshape_and_matmul() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor: 6 elements
-    let shape_in = MPSShape::from_slice(&[6]);
+    let shape_in = Shape::from_slice(&[6]);
     let input = graph.placeholder(&shape_in, MPSDataType::Float32, Some("Input"));
 
     // Reshape to 2x3 matrix - use i64 array since reshape takes &[i64]
@@ -161,7 +161,7 @@ fn test_reshape_and_matmul() {
     let a = graph.reshape(&input, shape_dims, Some("A"));
 
     // Create weight matrix: 3x2
-    let shape_b = MPSShape::from_slice(&[3, 2]);
+    let shape_b = Shape::from_slice(&[3, 2]);
     let b_data = [7.0f32, 8.0, 9.0, 10.0, 11.0, 12.0];
     let b = graph.constant(&b_data, &shape_b, MPSDataType::Float32);
 
@@ -169,7 +169,7 @@ fn test_reshape_and_matmul() {
     let matmul_result = graph.matmul(&a, &b, Some("MatMul"));
 
     // Create input data
-    let input_data = MPSGraphTensorData::new(
+    let input_data = TensorData::new(
         &[1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0],
         &[6],
         MPSDataType::Float32,

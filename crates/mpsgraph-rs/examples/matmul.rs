@@ -1,20 +1,20 @@
 use metal::{Buffer, Device, MTLResourceOptions};
 use mpsgraph::{
-    core::MPSDataType, executable::MPSGraphExecutionDescriptor, graph::MPSGraph, shape::MPSShape,
-    tensor_data::MPSGraphTensorData,
+    core::MPSDataType, executable::ExecutionDescriptor, graph::Graph, shape::Shape,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 
-// A struct that pairs an MTLBuffer with its MPSGraphTensorData
+// A struct that pairs an MTLBuffer with its TensorData
 #[derive(Clone)]
 struct TensorBuffer {
     buffer: Buffer,
-    tensor_data: MPSGraphTensorData,
+    tensor_data: TensorData,
 }
 
 impl TensorBuffer {
     // Create a new TensorBuffer from a vector of f32 data
-    fn new(device: &Device, data: &[f32], shape: &MPSShape, data_type: MPSDataType) -> Self {
+    fn new(device: &Device, data: &[f32], shape: &Shape, data_type: MPSDataType) -> Self {
         // Calculate size in bytes
         let byte_length = data.len() * std::mem::size_of::<f32>();
 
@@ -26,7 +26,7 @@ impl TensorBuffer {
         );
 
         // Create tensor data that references this buffer
-        let tensor_data = MPSGraphTensorData::from_buffer(&buffer, shape, data_type);
+        let tensor_data = TensorData::from_buffer(&buffer, shape, data_type);
 
         Self {
             buffer,
@@ -35,7 +35,7 @@ impl TensorBuffer {
     }
 
     // Create an empty TensorBuffer for results
-    fn new_empty(device: &Device, size: usize, shape: &MPSShape, data_type: MPSDataType) -> Self {
+    fn new_empty(device: &Device, size: usize, shape: &Shape, data_type: MPSDataType) -> Self {
         // Calculate size in bytes
         let byte_length = size * std::mem::size_of::<f32>();
 
@@ -43,7 +43,7 @@ impl TensorBuffer {
         let buffer = device.new_buffer(byte_length as u64, MTLResourceOptions::StorageModeShared);
 
         // Create tensor data that references this buffer
-        let tensor_data = MPSGraphTensorData::from_buffer(&buffer, shape, data_type);
+        let tensor_data = TensorData::from_buffer(&buffer, shape, data_type);
 
         Self {
             buffer,
@@ -72,12 +72,12 @@ fn main() {
     let b_data: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]; // 3x2 matrix
 
     // Create a graph
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input placeholders
-    let a_shape = MPSShape::matrix(m, k);
-    let b_shape = MPSShape::matrix(k, n);
-    let result_shape = MPSShape::matrix(m, n);
+    let a_shape = Shape::matrix(m, k);
+    let b_shape = Shape::matrix(k, n);
+    let result_shape = Shape::matrix(m, n);
 
     let a = graph.placeholder(&a_shape, MPSDataType::Float32, Some("A"));
     let b = graph.placeholder(&b_shape, MPSDataType::Float32, Some("B"));
@@ -106,7 +106,7 @@ fn main() {
 
     // Execute graph with our inputs and output buffers
     // Create execution descriptor that waits until completed
-    let execution_descriptor = MPSGraphExecutionDescriptor::new();
+    let execution_descriptor = ExecutionDescriptor::new();
     execution_descriptor.set_wait_until_completed(true);
 
     // Run the graph directly

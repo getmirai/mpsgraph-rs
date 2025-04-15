@@ -1,6 +1,6 @@
 use crate::{
-    core::MPSDataType, graph::MPSGraph, shape::MPSShape, tensor::MPSGraphTensor,
-    tensor_data::MPSGraphTensorData,
+    core::MPSDataType, graph::Graph, shape::Shape, tensor::Tensor,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -11,14 +11,14 @@ use std::thread;
 #[test]
 fn test_graph_cloning_and_dropping() {
     // Create a new graph
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Clone it multiple times
     let clones: Vec<_> = (0..10).map(|_| graph.clone()).collect();
 
     // Add operations to each clone
     for (i, clone) in clones.iter().enumerate() {
-        let shape = MPSShape::from_slice(&[2, 2]);
+        let shape = Shape::from_slice(&[2, 2]);
         let _tensor =
             clone.placeholder(&shape, MPSDataType::Float32, Some(&format!("tensor_{}", i)));
     }
@@ -29,16 +29,16 @@ fn test_graph_cloning_and_dropping() {
     }
 
     // Original should still be valid
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let _tensor = graph.placeholder(&shape, MPSDataType::Float32, Some("final_tensor"));
 }
 
 #[test]
 fn test_tensor_cloning_and_dropping() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create a tensor
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let tensor = graph.placeholder(&shape, MPSDataType::Float32, Some("original"));
 
     // Clone it multiple times
@@ -64,7 +64,7 @@ fn test_tensor_data_cloning_and_dropping() {
     // Create tensor data
     let data = [1.0f32, 2.0, 3.0, 4.0];
     let shape = [2, 2];
-    let tensor_data = MPSGraphTensorData::new(&data, &shape, MPSDataType::Float32);
+    let tensor_data = TensorData::new(&data, &shape, MPSDataType::Float32);
 
     // Clone it multiple times
     let clones: Vec<_> = (0..10).map(|_| tensor_data.clone()).collect();
@@ -87,10 +87,10 @@ fn test_tensor_data_cloning_and_dropping() {
 
 #[test]
 fn test_multithreaded_tensor_access() {
-    let graph = Arc::new(MPSGraph::new());
+    let graph = Arc::new(Graph::new());
 
     // Create a shared tensor
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let tensor = Arc::new(Mutex::new(graph.placeholder(
         &shape,
         MPSDataType::Float32,
@@ -110,7 +110,7 @@ fn test_multithreaded_tensor_access() {
                 let dtype = t.data_type();
 
                 // Create a new tensor in this thread
-                let shape = MPSShape::from_slice(&[3, 3]);
+                let shape = Shape::from_slice(&[3, 3]);
                 let _new_tensor = graph_clone.placeholder(&shape, MPSDataType::Float32, None);
 
                 (name, dtype)
@@ -128,10 +128,10 @@ fn test_multithreaded_tensor_access() {
 
 #[test]
 fn test_large_number_of_tensors() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create and drop a large number of tensors
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
 
     // Using a scope to control lifetimes
     {
@@ -164,10 +164,10 @@ fn test_large_number_of_tensors() {
 
 #[test]
 fn test_retain_release_cycle() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create tensors that refer to each other
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
     let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
 
@@ -175,7 +175,7 @@ fn test_retain_release_cycle() {
     let a_plus_b = graph.add(&a, &b, Some("A+B"));
 
     // Create a HashMap that stores the tensors
-    let mut tensors: HashMap<String, MPSGraphTensor> = HashMap::new();
+    let mut tensors: HashMap<String, Tensor> = HashMap::new();
     tensors.insert("A".to_string(), a.clone());
     tensors.insert("B".to_string(), b.clone());
     tensors.insert("A+B".to_string(), a_plus_b.clone());

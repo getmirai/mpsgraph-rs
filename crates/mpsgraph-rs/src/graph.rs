@@ -2,14 +2,14 @@
 
 use crate::command_buffer::MPSCommandBuffer;
 use crate::core::{AsRawObject, MPSDataType, MPSGraphOptions};
-use crate::device::MPSGraphDevice;
+use crate::device::Device;
 use crate::executable::{
-    MPSGraphCompilationDescriptor, MPSGraphExecutable, MPSGraphExecutionDescriptor,
+    CompilationDescriptor, MPSGraphExecutable, ExecutionDescriptor,
 };
 use crate::operation::MPSGraphOperation;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
-use crate::tensor_data::MPSGraphTensorData;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
+use crate::tensor_data::TensorData;
 use metal::foreign_types::ForeignType;
 use metal::{CommandBuffer, CommandQueue, SharedEvent};
 use objc2::msg_send;
@@ -20,18 +20,18 @@ use objc2_foundation::NSString;
 use std::collections::HashMap;
 use std::fmt;
 
-/// Trait for scalar types that can be used in MPSGraph operations
+/// Trait for scalar types that can be used in Graph operations
 /// This trait is used for both single scalar values and arrays of values
-pub trait MPSTensorDataScalar: Copy {
+pub trait TensorDataScalar: Copy {
     /// Convert a scalar value to f64 for use with Objective-C scalar methods
     fn to_f64(&self) -> f64;
 
-    /// Convert a slice of values to an NSData object that can be used with MPSGraph
+    /// Convert a slice of values to an NSData object that can be used with Graph
     fn to_nsdata(values: &[Self]) -> Retained<NSData>;
 }
 
 // Implement for common numeric types
-impl MPSTensorDataScalar for f32 {
+impl TensorDataScalar for f32 {
     fn to_f64(&self) -> f64 {
         *self as f64
     }
@@ -46,7 +46,7 @@ impl MPSTensorDataScalar for f32 {
     }
 }
 
-impl MPSTensorDataScalar for f64 {
+impl TensorDataScalar for f64 {
     fn to_f64(&self) -> f64 {
         *self
     }
@@ -61,7 +61,7 @@ impl MPSTensorDataScalar for f64 {
     }
 }
 
-impl MPSTensorDataScalar for i32 {
+impl TensorDataScalar for i32 {
     fn to_f64(&self) -> f64 {
         *self as f64
     }
@@ -76,7 +76,7 @@ impl MPSTensorDataScalar for i32 {
     }
 }
 
-impl MPSTensorDataScalar for i64 {
+impl TensorDataScalar for i64 {
     fn to_f64(&self) -> f64 {
         *self as f64 // This may lose precision for large values
     }
@@ -91,7 +91,7 @@ impl MPSTensorDataScalar for i64 {
     }
 }
 
-impl MPSTensorDataScalar for u32 {
+impl TensorDataScalar for u32 {
     fn to_f64(&self) -> f64 {
         *self as f64
     }
@@ -106,7 +106,7 @@ impl MPSTensorDataScalar for u32 {
     }
 }
 
-impl MPSTensorDataScalar for u64 {
+impl TensorDataScalar for u64 {
     fn to_f64(&self) -> f64 {
         *self as f64 // This may lose precision for large values
     }
@@ -128,20 +128,20 @@ extern "C" {
 }
 
 /// A wrapper for MPSGraph objects
-pub struct MPSGraph(pub(crate) *mut AnyObject);
+pub struct Graph(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for the wrapper type
-unsafe impl Send for MPSGraph {}
-unsafe impl Sync for MPSGraph {}
+unsafe impl Send for Graph {}
+unsafe impl Sync for Graph {}
 
-impl Default for MPSGraph {
+impl Default for Graph {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraph {
-    /// Creates a new MPS Graph
+impl Graph {
+    /// Creates a new Graph
     pub fn new() -> Self {
         unsafe {
             // Create without using external MPSGraphCreate function
@@ -149,7 +149,7 @@ impl MPSGraph {
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let graph: *mut AnyObject = msg_send![obj, init];
-            MPSGraph(graph)
+            Graph(graph)
         }
     }
 
@@ -166,18 +166,18 @@ impl MPSGraph {
         shape_dims: &[usize],
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
-        let shape = MPSShape::from_slice(shape_dims);
+    ) -> Tensor {
+        let shape = Shape::from_slice(shape_dims);
         self.placeholder(&shape, data_type, name)
     }
 
     /// Creates a placeholder tensor in the graph
     pub fn placeholder(
         &self,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -190,30 +190,30 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     // This is a convenience method not in the original API
     // Kept for compatibility with existing code
     /// Creates a constant tensor with given values and dimensions
-    pub fn constant_with_shape<T: MPSTensorDataScalar>(
+    pub fn constant_with_shape<T: TensorDataScalar>(
         &self,
         values: &[T],
         shape_dims: &[usize],
         data_type: MPSDataType,
-    ) -> MPSGraphTensor {
-        let shape = MPSShape::from_slice(shape_dims);
+    ) -> Tensor {
+        let shape = Shape::from_slice(shape_dims);
         self.constant(values, &shape, data_type)
     }
 
     /// Creates a constant tensor with given values and shape
-    pub fn constant<T: MPSTensorDataScalar>(
+    pub fn constant<T: TensorDataScalar>(
         &self,
         values: &[T],
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             // Create NSData with buffer values
             let data = T::to_nsdata(values);
@@ -231,16 +231,16 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a constant with given scalar value (wraps constantWithScalar:dataType:)
-    pub fn constant_scalar<T: MPSTensorDataScalar>(
+    pub fn constant_scalar<T: TensorDataScalar>(
         &self,
         value: T,
         data_type: MPSDataType,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let tensor: *mut AnyObject = msg_send![
                 self.0,
@@ -249,17 +249,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a constant with given scalar value and shape (wraps constantWithScalar:shape:dataType:)
-    pub fn constant_scalar_with_shape<T: MPSTensorDataScalar>(
+    pub fn constant_scalar_with_shape<T: TensorDataScalar>(
         &self,
         value: T,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let tensor: *mut AnyObject = msg_send![
                 self.0,
@@ -269,20 +269,20 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a random uniform tensor with given shape
     pub fn random_uniform(
         &self,
-        shape: &MPSShape,
+        shape: &Shape,
         lower_bound: f32,
         upper_bound: f32,
         data_type: MPSDataType,
         seed: u32,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -301,20 +301,20 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a random normal tensor with given shape
     pub fn random_normal(
         &self,
-        shape: &MPSShape,
+        shape: &Shape,
         mean: f32,
         stddev: f32,
         data_type: MPSDataType,
         seed: u32,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -333,17 +333,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Compiles the graph against a given set of feeds and targets
     pub fn compile(
         &self,
-        device: &MPSGraphDevice,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
-        descriptor: Option<&MPSGraphCompilationDescriptor>,
+        device: &Device,
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
+        descriptor: Option<&CompilationDescriptor>,
     ) -> MPSGraphExecutable {
         unsafe {
             // Get the device pointer
@@ -390,11 +390,11 @@ impl MPSGraph {
     /// Compiles the graph against a given set of feeds, targets, and target operations
     pub fn compile_with_targets_and_ops(
         &self,
-        device: &MPSGraphDevice,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
+        device: &Device,
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
         target_ops: &[MPSGraphOperation],
-        descriptor: Option<&MPSGraphCompilationDescriptor>,
+        descriptor: Option<&CompilationDescriptor>,
     ) -> MPSGraphExecutable {
         unsafe {
             // Get the device pointer
@@ -446,9 +446,9 @@ impl MPSGraph {
     /// Runs the graph synchronously against a given set of feeds and returns a result dictionary
     pub fn run_with_feeds(
         &self,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Create the feeds dictionary
             let mut feed_keys = Vec::with_capacity(feeds.len());
@@ -489,10 +489,10 @@ impl MPSGraph {
     /// with target operations specified
     pub fn run_with_feeds_and_ops(
         &self,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
         target_ops: &[MPSGraphOperation],
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Create the feeds dictionary
             let mut feed_keys = Vec::with_capacity(feeds.len());
@@ -555,10 +555,10 @@ impl MPSGraph {
     /// Runs the graph synchronized against a given device
     pub fn run_with_feeds_on_device(
         &self,
-        device: &MPSGraphDevice,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        device: &Device,
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the device pointer
             let device_obj = device.0;
@@ -602,11 +602,11 @@ impl MPSGraph {
     /// Runs the graph synchronously on a device with both target tensors and operations
     pub fn run_with_feeds_and_ops_on_device(
         &self,
-        device: &MPSGraphDevice,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
+        device: &Device,
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
         target_ops: &[MPSGraphOperation],
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the device pointer
             let device_obj = device.0;
@@ -659,17 +659,17 @@ impl MPSGraph {
     ///
     /// - Parameters:
     ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes MPSGraphTensorData to be returned
+    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
     ///   - target_operations: Operations to be completed at the end of the run
     ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results
+    /// - Returns: A valid Tensor : TensorData dictionary with results
     pub fn run_async_with_feeds(
         &self,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        target_tensors: &[MPSGraphTensor],
+        feeds: &HashMap<Tensor, TensorData>,
+        target_tensors: &[Tensor],
         target_operations: Option<&[MPSGraphOperation]>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Create the feeds dictionary
             let mut feed_keys = Vec::with_capacity(feeds.len());
@@ -730,18 +730,18 @@ impl MPSGraph {
     /// - Parameters:
     ///   - command_queue: CommandQueue passed to execute the graph on
     ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes MPSGraphTensorData to be returned
+    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
     ///   - target_operations: Operations to be completed at the end of the run
     ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results
+    /// - Returns: A valid Tensor : TensorData dictionary with results
     pub fn run_async_with_command_queue(
         &self,
         command_queue: &CommandQueue,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        target_tensors: &[MPSGraphTensor],
+        feeds: &HashMap<Tensor, TensorData>,
+        target_tensors: &[Tensor],
         target_operations: Option<&[MPSGraphOperation]>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the command queue pointer
             let queue_ptr = command_queue.as_ptr() as *mut AnyObject;
@@ -812,10 +812,10 @@ impl MPSGraph {
     pub fn run_async_with_command_queue_results_dict(
         &self,
         command_queue: &CommandQueue,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
+        feeds: &HashMap<Tensor, TensorData>,
         target_operations: Option<&[MPSGraphOperation]>,
-        results_dict: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        results_dict: &HashMap<Tensor, TensorData>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
     ) {
         unsafe {
             // Get the command queue pointer
@@ -884,18 +884,18 @@ impl MPSGraph {
     /// - Parameters:
     ///   - command_buffer: CommandBuffer to encode the graph execution into
     ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes MPSGraphTensorData to be returned
+    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
     ///   - target_operations: Operations to be completed at the end of the run
     ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results
+    /// - Returns: A valid Tensor : TensorData dictionary with results
     pub fn encode_to_metal_command_buffer(
         &self,
         command_buffer: &CommandBuffer,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        target_tensors: &[MPSGraphTensor],
+        feeds: &HashMap<Tensor, TensorData>,
+        target_tensors: &[Tensor],
         target_operations: Option<&[MPSGraphOperation]>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Tensor, TensorData> {
         // Create MPSCommandBuffer from the Metal command buffer
         let mps_command_buffer = MPSCommandBuffer::from_command_buffer(command_buffer);
 
@@ -923,10 +923,10 @@ impl MPSGraph {
     pub fn encode_to_metal_command_buffer_with_results(
         &self,
         command_buffer: &CommandBuffer,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
+        feeds: &HashMap<Tensor, TensorData>,
         target_operations: Option<&[MPSGraphOperation]>,
-        results_dict: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        results_dict: &HashMap<Tensor, TensorData>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
     ) {
         // Create MPSCommandBuffer from the Metal command buffer
         let mps_command_buffer = MPSCommandBuffer::from_command_buffer(command_buffer);
@@ -949,18 +949,18 @@ impl MPSGraph {
     /// - Parameters:
     ///   - command_buffer: MPSCommandBuffer to encode the graph execution into
     ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes MPSGraphTensorData to be returned
+    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
     ///   - target_operations: Operations to be completed at the end of the run
     ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results
+    /// - Returns: A valid Tensor : TensorData dictionary with results
     pub fn encode_to_command_buffer(
         &self,
         command_buffer: &MPSCommandBuffer,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        target_tensors: &[MPSGraphTensor],
+        feeds: &HashMap<Tensor, TensorData>,
+        target_tensors: &[Tensor],
         target_operations: Option<&[MPSGraphOperation]>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the command buffer pointer
             let buffer_ptr = command_buffer.0;
@@ -1031,10 +1031,10 @@ impl MPSGraph {
     pub fn encode_to_command_buffer_with_results(
         &self,
         command_buffer: &MPSCommandBuffer,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
+        feeds: &HashMap<Tensor, TensorData>,
         target_operations: Option<&[MPSGraphOperation]>,
-        results_dict: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        results_dict: &HashMap<Tensor, TensorData>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
     ) {
         unsafe {
             // Get the command buffer pointer
@@ -1098,12 +1098,12 @@ impl MPSGraph {
     /// Enqueue a graph run on a command queue
     pub fn encode_to_command_queue(
         &self,
-        device: &MPSGraphDevice,
+        device: &Device,
         command_queue: &CommandQueue,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the device pointer
             let _device_obj = device.0; // Keep reference for safety
@@ -1159,10 +1159,10 @@ impl MPSGraph {
     pub fn encode_to_command_buffer_legacy(
         &self,
         command_buffer: &CommandBuffer,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the buffer pointer
             let buffer_ptr = command_buffer.as_ptr() as *mut AnyObject;
@@ -1214,11 +1214,11 @@ impl MPSGraph {
     pub fn encode_to_command_buffer_with_event(
         &self,
         command_buffer: &CommandBuffer,
-        feeds: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-        targets: &[MPSGraphTensor],
-        execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        feeds: &HashMap<Tensor, TensorData>,
+        targets: &[Tensor],
+        execution_descriptor: Option<&ExecutionDescriptor>,
         event: Option<&SharedEvent>,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+    ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the buffer pointer
             let buffer_ptr = command_buffer.as_ptr() as *mut AnyObject;
@@ -1279,9 +1279,9 @@ impl MPSGraph {
     pub fn run_with_command_queue_feeds_outputs(
         &self,
         command_queue: &CommandQueue,
-        feeds: HashMap<&MPSGraphTensor, &MPSGraphTensorData>,
-        results_dict: HashMap<&MPSGraphTensor, &MPSGraphTensorData>,
-        _execution_descriptor: Option<&MPSGraphExecutionDescriptor>, // Ignored for now, not supported in this API
+        feeds: HashMap<&Tensor, &TensorData>,
+        results_dict: HashMap<&Tensor, &TensorData>,
+        _execution_descriptor: Option<&ExecutionDescriptor>, // Ignored for now, not supported in this API
     ) {
         unsafe {
             // Get the queue pointer
@@ -1331,7 +1331,7 @@ impl MPSGraph {
     fn convert_dictionary_to_hash_map(
         &self,
         dictionary: *mut AnyObject,
-    ) -> HashMap<MPSGraphTensor, MPSGraphTensorData> {
+    ) -> HashMap<Tensor, TensorData> {
         // Wrap the entire operation in an autoreleasepool to ensure proper memory management
         objc2::rc::autoreleasepool(|_| {
             println!("DEBUG: Inside autoreleasepool for dictionary conversion");
@@ -1385,8 +1385,8 @@ impl MPSGraph {
 
                     // Create Rust wrappers WITHOUT retaining the objects, since we're in an autorelease pool
                     // and we've adjusted the tensor implementation to not release
-                    let tensor = MPSGraphTensor(key);
-                    let tensor_data = MPSGraphTensorData(value);
+                    let tensor = Tensor(key);
+                    let tensor_data = TensorData(value);
 
                     println!(
                         "DEBUG: Created Rust wrappers: tensor={:p}, data={:p}",
@@ -1409,14 +1409,14 @@ impl MPSGraph {
 }
 
 // Concatenation operations extension
-impl MPSGraph {
+impl Graph {
     /// Creates a concatenation operation
     pub fn concatenate(
         &self,
-        tensors: &[MPSGraphTensor],
+        tensors: &[Tensor],
         dimension: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -1436,20 +1436,20 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }
 
 // Matrix operations extension
-impl MPSGraph {
+impl Graph {
     /// Creates a transpose operation
     pub fn transpose(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         dimensions: &[usize],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -1457,7 +1457,7 @@ impl MPSGraph {
             };
 
             // Create a shape object from the dimensions for convenience
-            let dimensions_shape = MPSShape::from_slice(dimensions);
+            let dimensions_shape = Shape::from_slice(dimensions);
 
             // Create the operation
             let tensor: *mut AnyObject = msg_send![
@@ -1468,12 +1468,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }
 
-impl Drop for MPSGraph {
+impl Drop for Graph {
     fn drop(&mut self) {
         unsafe {
             // Convert to NSObject and release
@@ -1484,29 +1484,29 @@ impl Drop for MPSGraph {
     }
 }
 
-impl Clone for MPSGraph {
+impl Clone for Graph {
     fn clone(&self) -> Self {
         unsafe {
             // Retain and return new instance
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraph(obj)
+                Graph(obj)
             } else {
-                MPSGraph(std::ptr::null_mut::<AnyObject>())
+                Graph(std::ptr::null_mut::<AnyObject>())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraph {
+impl fmt::Debug for Graph {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraph").finish()
+        f.debug_struct("Graph").finish()
     }
 }
 
 // Helper function to create NSArray from dimensions
 #[allow(dead_code)]
 fn create_dimensions(dimensions: &[usize]) -> *mut AnyObject {
-    let shape = MPSShape::from_slice(dimensions);
+    let shape = Shape::from_slice(dimensions);
     shape.0
 }

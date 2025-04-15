@@ -1,5 +1,5 @@
 use crate::core::MPSDataType;
-use crate::shape::MPSShape;
+use crate::shape::Shape;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use std::fmt;
@@ -92,7 +92,7 @@ unsafe impl Sync for MPSGraphShapedType {}
 
 impl MPSGraphShapedType {
     /// Create a new shaped type with shape and data type
-    pub fn new(shape: &MPSShape, data_type: MPSDataType) -> Self {
+    pub fn new(shape: &Shape, data_type: MPSDataType) -> Self {
         unsafe {
             let class_name = c"MPSGraphShapedType";
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
@@ -110,16 +110,16 @@ impl MPSGraphShapedType {
     }
 
     /// Returns the shape of this type
-    pub fn shape(&self) -> MPSShape {
+    pub fn shape(&self) -> Shape {
         unsafe {
             let shape_ptr: *mut AnyObject = msg_send![self.0, shape];
             if shape_ptr.is_null() {
                 // Return an empty shape if null
-                return MPSShape::from_slice(&[]);
+                return Shape::from_slice(&[]);
             }
 
             let shape_ptr = objc2::ffi::objc_retain(shape_ptr as *mut _);
-            MPSShape(shape_ptr)
+            Shape(shape_ptr)
         }
     }
 
@@ -156,7 +156,7 @@ impl MPSGraphShapedType {
     pub fn tensor_type_with_rank(rank: u64, data_type: MPSDataType) -> Self {
         // Create a shape with dimensions of size 1 for each rank
         let dimensions = vec![1usize; rank as usize];
-        let shape = crate::shape::MPSShape::from_slice(&dimensions);
+        let shape = crate::shape::Shape::from_slice(&dimensions);
 
         // Create a shaped type with the shape and data type
         Self::new(&shape, data_type)
@@ -167,7 +167,7 @@ impl MPSGraphShapedType {
     /// This creates a shaped type with an empty shape to represent an unranked tensor
     pub fn unranked_tensor_type(data_type: MPSDataType) -> Self {
         // Create a shaped type with an empty shape to represent an unranked tensor
-        let shape = crate::shape::MPSShape::from_slice(&[]);
+        let shape = crate::shape::Shape::from_slice(&[]);
 
         // Create a shaped type with the empty shape and data type
         Self::new(&shape, data_type)

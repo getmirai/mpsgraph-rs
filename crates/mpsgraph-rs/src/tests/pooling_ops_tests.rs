@@ -1,20 +1,20 @@
 use crate::{
     core::MPSDataType,
-    graph::MPSGraph,
+    graph::Graph,
     pooling_ops::{
         MPSGraphPaddingStyle, MPSGraphPooling2DOpDescriptor, MPSGraphPooling4DOpDescriptor,
-        MPSGraphPoolingReturnIndicesMode, MPSGraphTensorNamedDataLayout,
+        MPSGraphPoolingReturnIndicesMode, TensorNamedDataLayout,
     },
-    shape::MPSShape,
-    tensor::MPSGraphTensor,
-    tensor_data::MPSGraphTensorData,
+    shape::Shape,
+    tensor::Tensor,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 
 // Simple verification helper that checks if result exists
 fn verify_result_exists(
-    results: &HashMap<MPSGraphTensor, MPSGraphTensorData>,
-    tensor: &MPSGraphTensor,
+    results: &HashMap<Tensor, TensorData>,
+    tensor: &Tensor,
     name: &str,
 ) {
     assert!(
@@ -39,7 +39,7 @@ fn test_pooling_2d_descriptors() {
         0,
         0, // padding top/bottom
         MPSGraphPaddingStyle::Explicit,
-        MPSGraphTensorNamedDataLayout::NCHW,
+        TensorNamedDataLayout::NCHW,
     );
 
     // Test creating simplified 2D pooling descriptors
@@ -49,7 +49,7 @@ fn test_pooling_2d_descriptors() {
         1,
         1, // stride
         MPSGraphPaddingStyle::TfSame,
-        MPSGraphTensorNamedDataLayout::NHWC,
+        TensorNamedDataLayout::NHWC,
     );
 
     // Test setting explicit padding
@@ -100,10 +100,10 @@ fn test_pooling_4d_descriptors() {
 
 #[test]
 fn test_max_pooling_2d() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
-    let shape = MPSShape::from_slice(&[1, 3, 6, 6]);
+    let shape = Shape::from_slice(&[1, 3, 6, 6]);
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
@@ -113,7 +113,7 @@ fn test_max_pooling_2d() {
         2,
         2, // stride
         MPSGraphPaddingStyle::TfValid,
-        MPSGraphTensorNamedDataLayout::NCHW,
+        TensorNamedDataLayout::NCHW,
     );
 
     // Define max pooling operation
@@ -125,7 +125,7 @@ fn test_max_pooling_2d() {
         data.push(i as f32);
     }
 
-    let input_data = MPSGraphTensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -148,10 +148,10 @@ fn test_max_pooling_2d_return_indices() {
 
 #[test]
 fn test_avg_pooling_2d() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
-    let shape = MPSShape::from_slice(&[1, 3, 6, 6]);
+    let shape = Shape::from_slice(&[1, 3, 6, 6]);
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
@@ -161,7 +161,7 @@ fn test_avg_pooling_2d() {
         2,
         2, // stride
         MPSGraphPaddingStyle::TfValid,
-        MPSGraphTensorNamedDataLayout::NCHW,
+        TensorNamedDataLayout::NCHW,
     );
 
     // Set include zero padding option
@@ -176,7 +176,7 @@ fn test_avg_pooling_2d() {
         data.push(i as f32);
     }
 
-    let input_data = MPSGraphTensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -193,10 +193,10 @@ fn test_avg_pooling_2d() {
 fn test_l2_norm_pooling_2d() {
     // Test is modified to use average pooling since we're using it as a substitute for L2 norm pooling
     // due to API differences
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
-    let shape = MPSShape::from_slice(&[1, 3, 6, 6]);
+    let shape = Shape::from_slice(&[1, 3, 6, 6]);
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
@@ -206,7 +206,7 @@ fn test_l2_norm_pooling_2d() {
         2,
         2, // stride
         MPSGraphPaddingStyle::TfValid,
-        MPSGraphTensorNamedDataLayout::NCHW,
+        TensorNamedDataLayout::NCHW,
     );
 
     // Define L2 norm pooling operation (which now uses avg pooling under the hood)
@@ -218,7 +218,7 @@ fn test_l2_norm_pooling_2d() {
         data.push(i as f32);
     }
 
-    let input_data = MPSGraphTensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -233,10 +233,10 @@ fn test_l2_norm_pooling_2d() {
 
 #[test]
 fn test_pooling_gradients() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
-    let shape = MPSShape::from_slice(&[1, 3, 6, 6]);
+    let shape = Shape::from_slice(&[1, 3, 6, 6]);
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
@@ -246,7 +246,7 @@ fn test_pooling_gradients() {
         2,
         2, // stride
         MPSGraphPaddingStyle::TfValid,
-        MPSGraphTensorNamedDataLayout::NCHW,
+        TensorNamedDataLayout::NCHW,
     );
 
     // Define pooling operations - only testing max and avg pooling
@@ -254,7 +254,7 @@ fn test_pooling_gradients() {
     let avg_pool = graph.avg_pooling_2d(&input, &descriptor, Some("AvgPool"));
 
     // Create gradient placeholder (for output of pooling operations)
-    let max_pool_shape = MPSShape::from_slice(&[1, 3, 3, 3]); // Output will be 3x3 with stride 2
+    let max_pool_shape = Shape::from_slice(&[1, 3, 3, 3]); // Output will be 3x3 with stride 2
     let grad = graph.placeholder(&max_pool_shape, MPSDataType::Float32, Some("Grad"));
 
     // Define gradient operations - only testing max and avg pooling
@@ -275,8 +275,8 @@ fn test_pooling_gradients() {
         grad_data_vec.push(1.0);
     }
 
-    let input_data = MPSGraphTensorData::new(&input_data_vec, &[1, 3, 6, 6], MPSDataType::Float32);
-    let grad_data = MPSGraphTensorData::new(&grad_data_vec, &[1, 3, 3, 3], MPSDataType::Float32);
+    let input_data = TensorData::new(&input_data_vec, &[1, 3, 6, 6], MPSDataType::Float32);
+    let grad_data = TensorData::new(&grad_data_vec, &[1, 3, 3, 3], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -303,10 +303,10 @@ fn test_pooling_gradients() {
 
 #[test]
 fn test_max_pooling_4d() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor (4D: 1, 2, 3, 4)
-    let shape = MPSShape::from_slice(&[1, 2, 3, 4]);
+    let shape = Shape::from_slice(&[1, 2, 3, 4]);
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
@@ -324,7 +324,7 @@ fn test_max_pooling_4d() {
         data.push(i as f32);
     }
 
-    let input_data = MPSGraphTensorData::new(&data, &[1, 2, 3, 4], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 2, 3, 4], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -339,10 +339,10 @@ fn test_max_pooling_4d() {
 
 #[test]
 fn test_avg_pooling_4d() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensor (4D: 1, 2, 3, 4)
-    let shape = MPSShape::from_slice(&[1, 2, 3, 4]);
+    let shape = Shape::from_slice(&[1, 2, 3, 4]);
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
@@ -363,7 +363,7 @@ fn test_avg_pooling_4d() {
         data.push(i as f32);
     }
 
-    let input_data = MPSGraphTensorData::new(&data, &[1, 2, 3, 4], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 2, 3, 4], MPSDataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();

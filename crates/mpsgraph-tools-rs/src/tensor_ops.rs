@@ -1,7 +1,7 @@
-//! Tensor Operations API for MPSGraph
+//! Tensor Operations API for Graph
 //!
 //! This module provides ergonomic tensor operations with operator overloading
-//! and functional-style programming for MPSGraph tensors.
+//! and functional-style programming for Graph tensors.
 //!
 //! # Features
 //!
@@ -11,44 +11,44 @@
 //! - **Utility Methods**: Convenience functions for common operations
 //! - **Tensor Creation**: Helper methods for creating tensors filled with zeros, ones, etc.
 
-use mpsgraph::{MPSDataType, MPSGraph, MPSGraphTensor, MPSShape, MPSTensorDataScalar};
+use mpsgraph::{MPSDataType, Graph, Tensor as MpsGraphTensor, Shape, TensorDataScalar};
 use std::ops;
 
-/// A wrapper around MPSGraphTensor to enable operations with standard operators
+/// A wrapper around Tensor to enable operations with standard operators
 #[derive(Debug, Clone)]
-pub struct Tensor(pub MPSGraphTensor);
+pub struct Tensor(pub MpsGraphTensor);
 
 impl Tensor {
-    /// Create a new Tensor wrapper around an MPSGraphTensor
-    pub fn new(tensor: MPSGraphTensor) -> Self {
+    /// Create a new Tensor wrapper around a mpsgraph Tensor
+    pub fn new(tensor: MpsGraphTensor) -> Self {
         Tensor(tensor)
     }
 
-    /// Unwrap the Tensor to get the underlying MPSGraphTensor
-    pub fn unwrap(self) -> MPSGraphTensor {
+    /// Unwrap the Tensor to get the underlying mpsgraph Tensor
+    pub fn unwrap(self) -> MpsGraphTensor {
         self.0
     }
 
-    /// Get a reference to the underlying MPSGraphTensor
-    pub fn inner(&self) -> &MPSGraphTensor {
+    /// Get a reference to the underlying mpsgraph Tensor
+    pub fn inner(&self) -> &MpsGraphTensor {
         &self.0
     }
 }
 
-impl From<MPSGraphTensor> for Tensor {
-    fn from(tensor: MPSGraphTensor) -> Self {
+impl From<MpsGraphTensor> for Tensor {
+    fn from(tensor: MpsGraphTensor) -> Self {
         Tensor(tensor)
     }
 }
 
-impl From<Tensor> for MPSGraphTensor {
+impl From<Tensor> for MpsGraphTensor {
     fn from(tensor: Tensor) -> Self {
         tensor.0
     }
 }
 
-impl AsRef<MPSGraphTensor> for Tensor {
-    fn as_ref(&self) -> &MPSGraphTensor {
+impl AsRef<MpsGraphTensor> for Tensor {
+    fn as_ref(&self) -> &MpsGraphTensor {
         &self.0
     }
 }
@@ -65,8 +65,8 @@ impl AsRef<MPSGraphTensor> for Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and two tensors
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor1 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 /// let tensor2 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 ///
@@ -95,8 +95,8 @@ impl<'b> ops::Add<&'b Tensor> for &Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and two tensors
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor1 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 /// let tensor2 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 ///
@@ -125,8 +125,8 @@ impl<'b> ops::Sub<&'b Tensor> for &Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and two tensors
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor1 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 /// let tensor2 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 ///
@@ -155,8 +155,8 @@ impl<'b> ops::Mul<&'b Tensor> for &Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and two tensors
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor1 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 /// let tensor2 = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 ///
@@ -185,8 +185,8 @@ impl<'b> ops::Div<&'b Tensor> for &Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 ///
 /// let negated = -&tensor;
@@ -213,8 +213,8 @@ impl ops::Neg for &Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// // Negate the tensor
@@ -240,8 +240,8 @@ impl ops::Neg for Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and two tensors
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 /// let b = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 ///
@@ -277,15 +277,15 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
     ///
     /// // Create a constant tensor with value 0.5 and same data type as tensor
     /// let half = tensor.const_scalar(0.5);
     /// let scaled = &tensor * &half;
     /// ```
-    pub fn const_scalar<T: MPSTensorDataScalar>(&self, value: T) -> Self {
+    pub fn const_scalar<T: TensorDataScalar>(&self, value: T) -> Self {
         let op = self.0.operation();
         let graph = op.graph();
         let data_type = self.0.data_type();
@@ -312,8 +312,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let squared = tensor.square(None);
@@ -342,8 +342,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let root = tensor.sqrt(None);
@@ -372,8 +372,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let absolute = tensor.abs(None);
@@ -402,8 +402,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let exp_tensor = tensor.exp(None);
@@ -432,8 +432,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let log_tensor = tensor.log(None);
@@ -462,8 +462,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let sigmoid_tensor = tensor.sigmoid(None);
@@ -492,8 +492,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let tanh_tensor = tensor.tanh(None);
@@ -522,8 +522,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let relu_tensor = tensor.relu(None);
@@ -553,8 +553,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let activated = tensor.silu(Some("activation"));
@@ -587,8 +587,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// let activated = tensor.gelu(Some("activation"));
@@ -662,8 +662,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// // Create an exponent tensor
@@ -697,8 +697,8 @@ impl Tensor {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph and a tensor
-    /// let graph = MPSGraph::new();
-    /// let shape = MPSShape::from_slice(&[2, 3]);
+    /// let graph = Graph::new();
+    /// let shape = Shape::from_slice(&[2, 3]);
     /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
     ///
     /// // Create min and max value tensors
@@ -722,12 +722,12 @@ impl Tensor {
     }
 }
 
-/// Extensions for MPSGraph to create Tensor
+/// Extensions for Graph to create Tensor
 pub trait GraphExt {
     /// Create a placeholder tensor and wrap it with Tensor
     fn placeholder_tensor(
         &self,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         name: Option<&str>,
     ) -> Tensor;
@@ -739,7 +739,7 @@ pub trait GraphExt {
     fn ones(&self, shape: &[u64], data_type: MPSDataType) -> Tensor;
 
     /// Create a tensor filled with a specific value
-    fn full<T: MPSTensorDataScalar>(
+    fn full<T: TensorDataScalar>(
         &self,
         value: T,
         shape: &[u64],
@@ -747,7 +747,7 @@ pub trait GraphExt {
     ) -> Tensor;
 
     /// Create a tensor with random uniform values
-    fn create_random_uniform<T: MPSTensorDataScalar>(
+    fn create_random_uniform<T: TensorDataScalar>(
         &self,
         lower_bound: T,
         upper_bound: T,
@@ -756,7 +756,7 @@ pub trait GraphExt {
     ) -> Tensor;
 
     /// Create a tensor with random normal values
-    fn create_random_normal<T: MPSTensorDataScalar>(
+    fn create_random_normal<T: TensorDataScalar>(
         &self,
         mean: T,
         std_dev: T,
@@ -765,7 +765,7 @@ pub trait GraphExt {
     ) -> Tensor;
 
     /// Create a tensor with sequential values
-    fn arange<T: MPSTensorDataScalar>(
+    fn arange<T: TensorDataScalar>(
         &self,
         start: T,
         count: u64,
@@ -773,10 +773,10 @@ pub trait GraphExt {
     ) -> Tensor;
 }
 
-impl GraphExt for MPSGraph {
+impl GraphExt for Graph {
     fn placeholder_tensor(
         &self,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         name: Option<&str>,
     ) -> Tensor {
@@ -800,17 +800,17 @@ impl GraphExt for MPSGraph {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph
-    /// let graph = MPSGraph::new();
+    /// let graph = Graph::new();
     ///
     /// // Create a tensor filled with zeros
     /// let zeros = graph.zeros(&[2, 3], MPSDataType::Float32);
     /// ```
     fn zeros(&self, shape: &[u64], data_type: MPSDataType) -> Tensor {
-        // Convert shape from u64 to usize for MPSShape
+        // Convert shape from u64 to usize for Shape
         let usize_shape: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
 
         // Create a shape object
-        let shape_obj = MPSShape::from_slice(&usize_shape);
+        let shape_obj = Shape::from_slice(&usize_shape);
 
         // Create a scalar constant with zero and specified shape
         Tensor(self.constant_scalar_with_shape(0.0f32, &shape_obj, data_type))
@@ -833,17 +833,17 @@ impl GraphExt for MPSGraph {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph
-    /// let graph = MPSGraph::new();
+    /// let graph = Graph::new();
     ///
     /// // Create a tensor filled with ones
     /// let ones = graph.ones(&[2, 3], MPSDataType::Float32);
     /// ```
     fn ones(&self, shape: &[u64], data_type: MPSDataType) -> Tensor {
-        // Convert shape from u64 to usize for MPSShape
+        // Convert shape from u64 to usize for Shape
         let usize_shape: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
 
         // Create a shape object
-        let shape_obj = MPSShape::from_slice(&usize_shape);
+        let shape_obj = Shape::from_slice(&usize_shape);
 
         // Create a filled tensor using constant_scalar_with_shape which is more direct
         Tensor(self.constant_scalar_with_shape(1.0, &shape_obj, data_type))
@@ -867,22 +867,22 @@ impl GraphExt for MPSGraph {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph
-    /// let graph = MPSGraph::new();
+    /// let graph = Graph::new();
     ///
     /// // Create a tensor filled with the value 2.0
     /// let twos = graph.full(2.0, &[2, 3], MPSDataType::Float32);
     /// ```
-    fn full<T: MPSTensorDataScalar>(
+    fn full<T: TensorDataScalar>(
         &self,
         value: T,
         shape: &[u64],
         data_type: MPSDataType,
     ) -> Tensor {
-        // Convert shape from u64 to usize for MPSShape
+        // Convert shape from u64 to usize for Shape
         let usize_shape: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
 
         // Create a shape object
-        let shape_obj = MPSShape::from_slice(&usize_shape);
+        let shape_obj = Shape::from_slice(&usize_shape);
 
         // Create a filled tensor
         Tensor(self.constant_scalar_with_shape(value, &shape_obj, data_type))
@@ -910,23 +910,23 @@ impl GraphExt for MPSGraph {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph
-    /// let graph = MPSGraph::new();
+    /// let graph = Graph::new();
     ///
     /// // Creates a 2x3 tensor with random values in the range [0.0, 1.0]
     /// let random = graph.create_random_uniform(0.0, 1.0, &[2, 3], MPSDataType::Float32);
     /// ```
-    fn create_random_uniform<T: MPSTensorDataScalar>(
+    fn create_random_uniform<T: TensorDataScalar>(
         &self,
         lower_bound: T,
         upper_bound: T,
         shape: &[u64],
         data_type: MPSDataType,
     ) -> Tensor {
-        // Convert shape from u64 to usize for MPSShape
+        // Convert shape from u64 to usize for Shape
         let usize_shape: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
 
         // Create a shape object
-        let _shape_obj = MPSShape::from_slice(&usize_shape);
+        let _shape_obj = Shape::from_slice(&usize_shape);
 
         // Create lower and upper bound tensors
         let lower_f32 = lower_bound.to_f64() as f32;
@@ -965,23 +965,23 @@ impl GraphExt for MPSGraph {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph
-    /// let graph = MPSGraph::new();
+    /// let graph = Graph::new();
     ///
     /// // Creates a 2x3 tensor with random values from N(0.0, 1.0)
     /// let random = graph.create_random_normal(0.0, 1.0, &[2, 3], MPSDataType::Float32);
     /// ```
-    fn create_random_normal<T: MPSTensorDataScalar>(
+    fn create_random_normal<T: TensorDataScalar>(
         &self,
         mean: T,
         std_dev: T,
         shape: &[u64],
         data_type: MPSDataType,
     ) -> Tensor {
-        // Convert shape from u64 to usize for MPSShape
+        // Convert shape from u64 to usize for Shape
         let usize_shape: Vec<usize> = shape.iter().map(|&d| d as usize).collect();
 
         // Create a shape object
-        let _shape_obj = MPSShape::from_slice(&usize_shape);
+        let _shape_obj = Shape::from_slice(&usize_shape);
 
         // Convert to f32 for the existing API
         let mean_f32 = mean.to_f64() as f32;
@@ -1022,12 +1022,12 @@ impl GraphExt for MPSGraph {
     /// use mpsgraph_tools::prelude::*;
     ///
     /// // Create a graph
-    /// let graph = MPSGraph::new();
+    /// let graph = Graph::new();
     ///
     /// // Creates a tensor with values [5, 6, 7, 8, 9]
     /// let arange = graph.arange(5, 5, MPSDataType::Int32);
     /// ```
-    fn arange<T: MPSTensorDataScalar>(
+    fn arange<T: TensorDataScalar>(
         &self,
         start: T,
         count: u64,
@@ -1054,8 +1054,8 @@ impl GraphExt for MPSGraph {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// // Method-based API (object-oriented style)
@@ -1084,8 +1084,8 @@ impl GraphExt for MPSGraph {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Setup required for the example
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let squared = square(&tensor, None);
@@ -1113,8 +1113,8 @@ pub fn square(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let root = sqrt(&tensor, None);
@@ -1142,8 +1142,8 @@ pub fn sqrt(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and tensors
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 /// let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
 /// let b = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
@@ -1174,8 +1174,8 @@ pub fn abs(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let exp_tensor = exp(&tensor, None);
@@ -1203,8 +1203,8 @@ pub fn exp(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let log_tensor = log(&tensor, None);
@@ -1232,8 +1232,8 @@ pub fn log(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let sigmoid_tensor = sigmoid(&tensor, None);
@@ -1261,8 +1261,8 @@ pub fn sigmoid(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let tanh_tensor = tanh(&tensor, None);
@@ -1290,8 +1290,8 @@ pub fn tanh(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let relu_tensor = relu(&tensor, None);
@@ -1320,8 +1320,8 @@ pub fn relu(tensor: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let activated = silu(&tensor, Some("activation"));
@@ -1351,8 +1351,8 @@ pub fn silu(tensor: &Tensor, name_prefix: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// let activated = gelu(&tensor, Some("activation"));
@@ -1381,8 +1381,8 @@ pub fn gelu(tensor: &Tensor, name_prefix: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// // Create an exponent tensor
@@ -1415,8 +1415,8 @@ pub fn pow(tensor: &Tensor, exponent: &Tensor, name: Option<&str>) -> Tensor {
 /// use mpsgraph_tools::prelude::*;
 ///
 /// // Create a graph and a tensor
-/// let graph = MPSGraph::new();
-/// let shape = MPSShape::from_slice(&[2, 3]);
+/// let graph = Graph::new();
+/// let shape = Shape::from_slice(&[2, 3]);
 /// let tensor = graph.placeholder_tensor(&shape, MPSDataType::Float32, None);
 ///
 /// // Create min and max value tensors
@@ -1436,9 +1436,9 @@ mod tests {
 
     #[test]
     fn test_tensor_addition() {
-        let graph = MPSGraph::new();
+        let graph = Graph::new();
         let shape_dims = vec![2usize, 3usize];
-        let shape = MPSShape::from_slice(&shape_dims);
+        let shape = Shape::from_slice(&shape_dims);
 
         let a = Tensor::new(graph.placeholder(&shape, MPSDataType::Float32, None));
         let b = Tensor::new(graph.placeholder(&shape, MPSDataType::Float32, None));
@@ -1446,6 +1446,6 @@ mod tests {
         let sum = &a + &b;
 
         assert_eq!(sum.0.data_type(), MPSDataType::Float32);
-        // Additional test logic would verify the actual computation with MPSGraphExecutable
+        // Additional test logic would verify the actual computation with GraphExecutable
     }
 }

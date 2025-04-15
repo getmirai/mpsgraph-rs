@@ -1,6 +1,6 @@
 use crate::core::MPSDataType;
 use crate::operation::MPSGraphOperation;
-use crate::shape::MPSShape;
+use crate::shape::Shape;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use std::convert::AsRef;
@@ -8,14 +8,14 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ptr;
 
-/// A wrapper for MPSGraphTensor objects
-pub struct MPSGraphTensor(pub(crate) *mut AnyObject);
+/// A wrapper for Metal Performance Shaders Graph tensor objects
+pub struct Tensor(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for the wrapper type
-unsafe impl Send for MPSGraphTensor {}
-unsafe impl Sync for MPSGraphTensor {}
+unsafe impl Send for Tensor {}
+unsafe impl Sync for Tensor {}
 
-impl MPSGraphTensor {
+impl Tensor {
     /// Returns the data type of this tensor
     pub fn data_type(&self) -> MPSDataType {
         unsafe {
@@ -25,15 +25,15 @@ impl MPSGraphTensor {
     }
 
     /// Returns the shape of this tensor
-    pub fn shape(&self) -> MPSShape {
+    pub fn shape(&self) -> Shape {
         unsafe {
             let shape: *mut AnyObject = msg_send![self.0, shape];
             // Check if shape is null (unranked tensor)
             if shape.is_null() {
-                return MPSShape::from_slice(&[]);
+                return Shape::from_slice(&[]);
             }
             let shape = objc2::ffi::objc_retain(shape as *mut _);
-            MPSShape(shape)
+            Shape(shape)
         }
     }
 
@@ -77,7 +77,7 @@ impl MPSGraphTensor {
     }
 }
 
-impl Drop for MPSGraphTensor {
+impl Drop for Tensor {
     fn drop(&mut self) {
         if !self.0.is_null() {
             // We need to skip object release to avoid crashes
@@ -86,35 +86,35 @@ impl Drop for MPSGraphTensor {
     }
 }
 
-impl Clone for MPSGraphTensor {
+impl Clone for Tensor {
     fn clone(&self) -> Self {
         if !self.0.is_null() {
             // We need to skip object retain to avoid memory management issues
             let obj = self.0;
-            MPSGraphTensor(obj)
+            Tensor(obj)
         } else {
-            MPSGraphTensor(ptr::null_mut())
+            Tensor(ptr::null_mut())
         }
     }
 }
 
-impl PartialEq for MPSGraphTensor {
+impl PartialEq for Tensor {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
 
-impl Eq for MPSGraphTensor {}
+impl Eq for Tensor {}
 
-impl Hash for MPSGraphTensor {
+impl Hash for Tensor {
     fn hash<H: Hasher>(&self, state: &mut H) {
         (self.0 as usize).hash(state);
     }
 }
 
-impl fmt::Debug for MPSGraphTensor {
+impl fmt::Debug for Tensor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphTensor")
+        f.debug_struct("Tensor")
             .field("name", &self.name())
             .field("data_type", &self.data_type())
             .field("dimensions", &self.dimensions())
@@ -122,8 +122,8 @@ impl fmt::Debug for MPSGraphTensor {
     }
 }
 
-impl AsRef<MPSGraphTensor> for MPSGraphTensor {
-    fn as_ref(&self) -> &MPSGraphTensor {
+impl AsRef<Tensor> for Tensor {
+    fn as_ref(&self) -> &Tensor {
         self
     }
 }

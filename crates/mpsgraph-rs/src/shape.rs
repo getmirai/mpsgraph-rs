@@ -10,11 +10,11 @@ use std::ptr;
 
 use crate::core::AsRawObject;
 
-/// Type for NSArray objects that represent shape vectors
-pub struct MPSShape(pub(crate) *mut AnyObject);
+/// Type for Metal Performance Shaders Graph shape objects (NSArray) that represent tensor dimensions
+pub struct Shape(pub(crate) *mut AnyObject);
 
-// Implement AsRawObject for MPSShape
-impl AsRawObject for MPSShape {
+// Implement AsRawObject for Shape
+impl AsRawObject for Shape {
     fn as_raw_object(&self) -> *mut AnyObject {
         unsafe {
             if !self.0.is_null() {
@@ -25,8 +25,8 @@ impl AsRawObject for MPSShape {
     }
 }
 
-impl MPSShape {
-    /// Create an MPSShape from a slice of dimensions
+impl Shape {
+    /// Create a Shape from a slice of dimensions
     pub fn from_slice(dimensions: &[usize]) -> Self {
         unsafe {
             // Create NSNumbers for each dimension using numberWithUnsignedLongLong Objective-C method
@@ -60,31 +60,31 @@ impl MPSShape {
                 as *mut AnyObject;
             objc2::ffi::objc_retain(ptr as *mut _);
 
-            MPSShape(ptr)
+            Shape(ptr)
         }
     }
 
-    /// Create an MPSShape representing a scalar
+    /// Create a Shape representing a scalar
     pub fn scalar() -> Self {
         Self::from_slice(&[1])
     }
 
-    /// Create an MPSShape representing a vector
+    /// Create a Shape representing a vector
     pub fn vector(length: usize) -> Self {
         Self::from_slice(&[length])
     }
 
-    /// Create an MPSShape representing a matrix
+    /// Create a Shape representing a matrix
     pub fn matrix(rows: usize, columns: usize) -> Self {
         Self::from_slice(&[rows, columns])
     }
 
-    /// Create an MPSShape representing a 3D tensor
+    /// Create a Shape representing a 3D tensor
     pub fn tensor3d(dim1: usize, dim2: usize, dim3: usize) -> Self {
         Self::from_slice(&[dim1, dim2, dim3])
     }
 
-    /// Create an MPSShape representing a 4D tensor
+    /// Create a Shape representing a 4D tensor
     pub fn tensor4d(dim1: usize, dim2: usize, dim3: usize, dim4: usize) -> Self {
         Self::from_slice(&[dim1, dim2, dim3, dim4])
     }
@@ -124,7 +124,7 @@ impl MPSShape {
     }
 }
 
-impl Drop for MPSShape {
+impl Drop for Shape {
     fn drop(&mut self) {
         unsafe {
             // Convert to NSObject and release
@@ -135,22 +135,22 @@ impl Drop for MPSShape {
     }
 }
 
-impl Clone for MPSShape {
+impl Clone for Shape {
     fn clone(&self) -> Self {
         unsafe {
             // Retain and return new instance
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSShape(obj)
+                Shape(obj)
             } else {
-                MPSShape(ptr::null_mut())
+                Shape(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSShape {
+impl fmt::Debug for Shape {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("MPSShape").field(&self.dimensions()).finish()
+        f.debug_tuple("Shape").field(&self.dimensions()).finish()
     }
 }

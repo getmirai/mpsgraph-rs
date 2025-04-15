@@ -3,12 +3,12 @@ use objc2::runtime::AnyObject;
 const NO: bool = false;
 const YES: bool = true;
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 
-/// Cumulative operations for MPSGraph
-impl MPSGraph {
+/// Cumulative operations for Graph
+impl Graph {
     /// Computes the cumulative sum of the input tensor along the specified axis.
     ///
     /// # Arguments
@@ -21,15 +21,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_sum(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -48,7 +48,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -64,15 +64,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_sum_with_axis_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        axis_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axis_tensor: &Tensor,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -91,7 +91,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -105,13 +105,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_sum_simple(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -125,7 +125,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -141,15 +141,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_product(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -168,7 +168,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -184,15 +184,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_minimum(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -211,7 +211,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -227,15 +227,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_maximum(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -254,7 +254,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -270,15 +270,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_product_with_axis_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        axis_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axis_tensor: &Tensor,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -297,7 +297,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -311,13 +311,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_product_simple(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -331,7 +331,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -347,15 +347,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_minimum_with_axis_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        axis_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axis_tensor: &Tensor,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -374,7 +374,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -388,13 +388,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_minimum_simple(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -408,7 +408,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -424,15 +424,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_maximum_with_axis_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        axis_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        axis_tensor: &Tensor,
         exclusive: bool,
         reverse: bool,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -451,7 +451,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -465,13 +465,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn cumulative_maximum_simple(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -485,7 +485,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

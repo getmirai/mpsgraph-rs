@@ -1,7 +1,7 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
@@ -25,8 +25,8 @@ pub enum MPSGraphScatterMode {
     Set = 6,
 }
 
-/// ScatterND operations for MPSGraph
-impl MPSGraph {
+/// ScatterND operations for Graph
+impl Graph {
     /// Creates a ScatterND operation and returns the result tensor.
     ///
     /// Scatters the slices in updates_tensor to the result tensor along the indices in indices_tensor.
@@ -38,16 +38,16 @@ impl MPSGraph {
     ///   - batch_dimensions: The number of batch dimensions
     ///   - mode: The type of update to use on the destination
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter_nd(
         &self,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
-        shape: &MPSShape,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
+        shape: &Shape,
         batch_dimensions: usize,
         mode: MPSGraphScatterMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -63,7 +63,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -75,15 +75,15 @@ impl MPSGraph {
     ///   - shape: The shape of the result tensor
     ///   - batch_dimensions: The number of batch dimensions
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter_nd_add(
         &self,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
-        shape: &MPSShape,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
+        shape: &Shape,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -98,7 +98,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -113,16 +113,16 @@ impl MPSGraph {
     ///   - batch_dimensions: The number of batch dimensions
     ///   - mode: The type of update to use on the destination
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter_nd_with_data(
         &self,
-        data_tensor: &MPSGraphTensor,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        data_tensor: &Tensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         batch_dimensions: usize,
         mode: MPSGraphScatterMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -138,7 +138,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -153,16 +153,16 @@ impl MPSGraph {
     ///   - axis: The axis of the result tensor to scatter values along
     ///   - mode: The type of update to use on the destination
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter(
         &self,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
-        shape: &MPSShape,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
+        shape: &Shape,
         axis: isize,
         mode: MPSGraphScatterMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -178,7 +178,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -193,16 +193,16 @@ impl MPSGraph {
     ///   - axis: The axis of the result tensor to scatter values along
     ///   - mode: The type of update to use on the destination
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter_with_data(
         &self,
-        data_tensor: &MPSGraphTensor,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        data_tensor: &Tensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         axis: isize,
         mode: MPSGraphScatterMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -218,7 +218,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -233,16 +233,16 @@ impl MPSGraph {
     ///   - shape: The shape of the result tensor
     ///   - mode: The type of update to use
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter_along_axis(
         &self,
         axis: isize,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
-        shape: &MPSShape,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
+        shape: &Shape,
         mode: MPSGraphScatterMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -258,7 +258,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -273,16 +273,16 @@ impl MPSGraph {
     ///   - indices_tensor: Int32 or Int64 tensor used to index the result tensor
     ///   - mode: The type of update to use
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn scatter_along_axis_with_data(
         &self,
         axis: isize,
-        data_tensor: &MPSGraphTensor,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        data_tensor: &Tensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         mode: MPSGraphScatterMode,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -298,7 +298,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

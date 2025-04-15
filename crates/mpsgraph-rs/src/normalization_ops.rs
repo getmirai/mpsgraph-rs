@@ -1,12 +1,12 @@
 use crate::core::AsRawObject;
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation::NSString;
 
-/// Normalization operations for MPSGraph
-impl MPSGraph {
+/// Normalization operations for Graph
+impl Graph {
     /// Returns the mean of the input tensor along the specified axes.
     ///
     /// # Arguments
@@ -17,13 +17,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn mean(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -39,7 +39,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -54,14 +54,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn variance_with_mean(
         &self,
-        tensor: &MPSGraphTensor,
-        mean_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        mean_tensor: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -78,7 +78,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -92,13 +92,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn variance(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -114,7 +114,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -132,17 +132,17 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn normalize(
         &self,
-        tensor: &MPSGraphTensor,
-        mean: &MPSGraphTensor,
-        variance: &MPSGraphTensor,
-        gamma: Option<&MPSGraphTensor>,
-        beta: Option<&MPSGraphTensor>,
+        tensor: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
         epsilon: f32,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -169,7 +169,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -187,17 +187,17 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn normalization_gamma_gradient(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
-        mean: &MPSGraphTensor,
-        variance: &MPSGraphTensor,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -217,7 +217,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -232,14 +232,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn normalization_beta_gradient(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -256,7 +256,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -277,20 +277,20 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn normalization_gradient(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
-        mean: &MPSGraphTensor,
-        variance: &MPSGraphTensor,
-        gamma: Option<&MPSGraphTensor>,
-        gamma_gradient: Option<&MPSGraphTensor>,
-        beta_gradient: Option<&MPSGraphTensor>,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        gamma_gradient: Option<&Tensor>,
+        beta_gradient: Option<&Tensor>,
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -328,7 +328,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

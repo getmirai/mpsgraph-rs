@@ -1,7 +1,7 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
+use crate::graph::Graph;
 use crate::operation::MPSGraphOperation;
-use crate::tensor::MPSGraphTensor;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use std::ptr;
@@ -24,11 +24,11 @@ impl MPSGraphVariableOp {
     }
 
     /// Returns the tensor associated with this variable.
-    pub fn tensor(&self) -> MPSGraphTensor {
+    pub fn tensor(&self) -> Tensor {
         unsafe {
             let tensor: *mut AnyObject = msg_send![self.0, tensor];
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }
@@ -52,8 +52,8 @@ impl Clone for MPSGraphVariableOp {
     }
 }
 
-/// Optimizer operations for MPSGraph
-impl MPSGraph {
+/// Optimizer operations for Graph
+impl Graph {
     /// Stochastic gradient descent optimization.
     ///
     /// `variable = variable - (learningRate * gradient)`
@@ -73,8 +73,8 @@ impl MPSGraph {
     ///
     /// ```no_run
     /// # use mpsgraph::prelude::*;
-    /// # let graph = MPSGraph::new();
-    /// # let shape = MPSShape::from_slice(&[2, 3]);
+    /// # let graph = Graph::new();
+    /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let weights = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let gradients = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let learning_rate = graph.constant_scalar(0.01, MPSDataType::Float32);
@@ -89,11 +89,11 @@ impl MPSGraph {
     /// ```
     pub fn stochastic_gradient_descent(
         &self,
-        learning_rate: &MPSGraphTensor,
-        values: &MPSGraphTensor,
-        gradient: &MPSGraphTensor,
+        learning_rate: &Tensor,
+        values: &Tensor,
+        gradient: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -108,7 +108,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -151,8 +151,8 @@ impl MPSGraph {
     ///
     /// ```no_run
     /// # use mpsgraph::prelude::*;
-    /// # let graph = MPSGraph::new();
-    /// # let shape = MPSShape::from_slice(&[2, 3]);
+    /// # let graph = Graph::new();
+    /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let weights = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let gradients = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let learning_rate = graph.constant_scalar(0.001, MPSDataType::Float32);
@@ -188,19 +188,19 @@ impl MPSGraph {
     /// ```
     pub fn adam(
         &self,
-        learning_rate: &MPSGraphTensor,
-        beta1: &MPSGraphTensor,
-        beta2: &MPSGraphTensor,
-        epsilon: &MPSGraphTensor,
-        beta1_power: &MPSGraphTensor,
-        beta2_power: &MPSGraphTensor,
-        values: &MPSGraphTensor,
-        momentum: &MPSGraphTensor,
-        velocity: &MPSGraphTensor,
-        maximum_velocity: Option<&MPSGraphTensor>,
-        gradient: &MPSGraphTensor,
+        learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        beta1_power: &Tensor,
+        beta2_power: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -230,12 +230,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
 
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
 
             result
@@ -276,17 +276,17 @@ impl MPSGraph {
     /// - New maximum velocity (if maximum_velocity is provided)
     pub fn adam_with_current_learning_rate(
         &self,
-        current_learning_rate: &MPSGraphTensor,
-        beta1: &MPSGraphTensor,
-        beta2: &MPSGraphTensor,
-        epsilon: &MPSGraphTensor,
-        values: &MPSGraphTensor,
-        momentum: &MPSGraphTensor,
-        velocity: &MPSGraphTensor,
-        maximum_velocity: Option<&MPSGraphTensor>,
-        gradient: &MPSGraphTensor,
+        current_learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -314,12 +314,12 @@ impl MPSGraph {
             // Get the count of result tensors
             let count: usize = msg_send![result_array, count];
 
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i];
                 let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(MPSGraphTensor(tensor));
+                result.push(Tensor(tensor));
             }
 
             result
@@ -341,7 +341,7 @@ impl MPSGraph {
     /// A new MPSGraphVariableOp wrapper
     pub fn variable_op_for_tensor(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         name: Option<&str>,
     ) -> MPSGraphVariableOp {
         unsafe {
@@ -379,8 +379,8 @@ impl MPSGraph {
     ///
     /// ```no_run
     /// # use mpsgraph::prelude::*;
-    /// # let graph = MPSGraph::new();
-    /// # let shape = MPSShape::from_slice(&[2, 3]);
+    /// # let graph = Graph::new();
+    /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let weights = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let gradients = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let learning_rate = graph.constant_scalar(0.01, MPSDataType::Float32);
@@ -398,11 +398,11 @@ impl MPSGraph {
     /// ```
     pub fn apply_stochastic_gradient_descent(
         &self,
-        learning_rate: &MPSGraphTensor,
+        learning_rate: &Tensor,
         variable_op: &MPSGraphVariableOp,
-        gradient: &MPSGraphTensor,
+        gradient: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -417,7 +417,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

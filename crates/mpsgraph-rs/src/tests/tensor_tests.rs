@@ -1,14 +1,14 @@
-use crate::{core::MPSDataType, graph::MPSGraph, shape::MPSShape};
+use crate::{core::MPSDataType, graph::Graph, shape::Shape};
 
 #[test]
 fn test_tensor_properties() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create tensors with various shapes and data types
-    let shape1 = MPSShape::from_slice(&[2, 3]);
+    let shape1 = Shape::from_slice(&[2, 3]);
     let tensor1 = graph.placeholder(&shape1, MPSDataType::Float32, Some("tensor1"));
 
-    let shape2 = MPSShape::from_slice(&[5, 5, 3]);
+    let shape2 = Shape::from_slice(&[5, 5, 3]);
     let tensor2 = graph.placeholder(&shape2, MPSDataType::Int32, Some("tensor2"));
 
     // Test data type retrieval
@@ -33,10 +33,10 @@ fn test_tensor_properties() {
 
 #[test]
 fn test_tensor_clone() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create a tensor
-    let shape = MPSShape::from_slice(&[2, 3]);
+    let shape = Shape::from_slice(&[2, 3]);
     let tensor = graph.placeholder(&shape, MPSDataType::Float32, Some("original"));
 
     // Clone the tensor
@@ -65,24 +65,24 @@ fn test_tensor_null_checks() {
 
 #[test]
 fn test_tensor_debug_format() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create a tensor
-    let shape = MPSShape::from_slice(&[2, 3]);
+    let shape = Shape::from_slice(&[2, 3]);
     let tensor = graph.placeholder(&shape, MPSDataType::Float32, Some("debug_tensor"));
 
     // Test Debug formatting doesn't crash
     let debug_str = format!("{:?}", tensor);
     assert!(!debug_str.is_empty());
-    assert!(debug_str.contains("debug_tensor") || debug_str.contains("MPSGraphTensor"));
+    assert!(debug_str.contains("debug_tensor") || debug_str.contains("Tensor"));
 }
 
 #[test]
 fn test_tensor_operation_tracking() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input tensors
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
     let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
 
@@ -96,10 +96,10 @@ fn test_tensor_operation_tracking() {
 
 #[test]
 fn test_tensor_reshape() {
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create a tensor with initial shape
-    let shape1 = MPSShape::from_slice(&[2, 6]);
+    let shape1 = Shape::from_slice(&[2, 6]);
     let tensor = graph.placeholder(&shape1, MPSDataType::Float32, Some("original"));
 
     // Reshape to a new shape with same total elements

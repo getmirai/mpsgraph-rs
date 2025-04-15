@@ -1,7 +1,7 @@
-//! MPSGraph Tools - High-level utilities for MPSGraph
+//! Metal Performance Shaders Graph Tools - High-level utilities for the mpsgraph crate
 //!
 //! This crate provides high-level utilities and ergonomic APIs for working with
-//! Apple's Metal Performance Shaders Graph (MPSGraph) framework through the mpsgraph crate.
+//! Apple's Metal Performance Shaders Graph framework through the mpsgraph crate.
 //!
 //! # Features
 //!

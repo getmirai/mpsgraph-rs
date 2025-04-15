@@ -1,7 +1,7 @@
 use crate::core::{AsRawObject, MPSDataType, NSString};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 use objc2::runtime::AnyObject;
 
 /// Random distribution types supported by MPSGraph
@@ -114,14 +114,14 @@ impl Clone for MPSGraphRandomOpDescriptor {
     }
 }
 
-/// Random operations for MPSGraph
-impl MPSGraph {
+/// Random operations for Graph
+impl Graph {
     /// Creates a tensor representing state using the Philox algorithm with given seed
     pub fn random_philox_state_tensor_with_seed(
         &self,
         seed: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -133,7 +133,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -144,7 +144,7 @@ impl MPSGraph {
         counter_high: usize,
         key: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -158,7 +158,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -168,14 +168,14 @@ impl MPSGraph {
         shape: &[usize],
         descriptor: &MPSGraphRandomOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
                 None => std::ptr::null_mut(),
             };
 
-            let shape_obj = MPSShape::from_slice(shape);
+            let shape_obj = Shape::from_slice(shape);
 
             let tensor: *mut AnyObject = msg_send![self.0, randomTensorWithShape: shape_obj.0,
                 descriptor: descriptor.0,
@@ -183,7 +183,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -194,14 +194,14 @@ impl MPSGraph {
         descriptor: &MPSGraphRandomOpDescriptor,
         seed: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
                 None => std::ptr::null_mut(),
             };
 
-            let shape_obj = MPSShape::from_slice(shape);
+            let shape_obj = Shape::from_slice(shape);
 
             let tensor: *mut AnyObject = msg_send![self.0, randomTensorWithShape: shape_obj.0,
                 descriptor: descriptor.0,
@@ -210,7 +210,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -219,16 +219,16 @@ impl MPSGraph {
         &self,
         shape: &[usize],
         descriptor: &MPSGraphRandomOpDescriptor,
-        state: &MPSGraphTensor,
+        state: &Tensor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
                 None => std::ptr::null_mut(),
             };
 
-            let shape_obj = MPSShape::from_slice(shape);
+            let shape_obj = Shape::from_slice(shape);
 
             let result: *mut AnyObject = msg_send![self.0, randomTensorWithShape: shape_obj.0,
                 descriptor: descriptor.0,
@@ -250,26 +250,26 @@ impl MPSGraph {
             let random_tensor = objc2::ffi::objc_retain(random_tensor as *mut _);
             let updated_state = objc2::ffi::objc_retain(updated_state as *mut _);
 
-            (MPSGraphTensor(random_tensor), MPSGraphTensor(updated_state))
+            (Tensor(random_tensor), Tensor(updated_state))
         }
     }
 
     /// Creates a random uniform tensor with values in range [0.0, 1.0)
-    pub fn random_uniform_tensor(&self, shape: &[usize], name: Option<&str>) -> MPSGraphTensor {
+    pub fn random_uniform_tensor(&self, shape: &[usize], name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
                 None => std::ptr::null_mut(),
             };
 
-            let shape_obj = MPSShape::from_slice(shape);
+            let shape_obj = Shape::from_slice(shape);
 
             let tensor: *mut AnyObject = msg_send![self.0, randomUniformTensorWithShape: shape_obj.0,
                 name: name_obj,
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -279,14 +279,14 @@ impl MPSGraph {
         shape: &[usize],
         seed: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
                 None => std::ptr::null_mut(),
             };
 
-            let shape_obj = MPSShape::from_slice(shape);
+            let shape_obj = Shape::from_slice(shape);
 
             let tensor: *mut AnyObject = msg_send![self.0, randomUniformTensorWithShape: shape_obj.0,
                 seed: seed,
@@ -294,7 +294,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -302,16 +302,16 @@ impl MPSGraph {
     pub fn random_uniform_tensor_with_state(
         &self,
         shape: &[usize],
-        state: &MPSGraphTensor,
+        state: &Tensor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
                 None => std::ptr::null_mut(),
             };
 
-            let shape_obj = MPSShape::from_slice(shape);
+            let shape_obj = Shape::from_slice(shape);
 
             let result: *mut AnyObject = msg_send![self.0, randomUniformTensorWithShape: shape_obj.0,
                 stateTensor: state.0,
@@ -332,17 +332,17 @@ impl MPSGraph {
             let random_tensor = objc2::ffi::objc_retain(random_tensor as *mut _);
             let updated_state = objc2::ffi::objc_retain(updated_state as *mut _);
 
-            (MPSGraphTensor(random_tensor), MPSGraphTensor(updated_state))
+            (Tensor(random_tensor), Tensor(updated_state))
         }
     }
 
     /// Creates a dropout operation which zeros out elements of the input tensor randomly with probability equal to rate
     pub fn dropout(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         rate: f64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -355,17 +355,17 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
     /// Creates a dropout operation using a tensor to specify the dropout rate
     pub fn dropout_with_rate_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        rate_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        rate_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -378,7 +378,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

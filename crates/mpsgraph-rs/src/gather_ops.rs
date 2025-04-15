@@ -1,10 +1,10 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::runtime::AnyObject;
 
-/// Gather operations for MPSGraph
-impl MPSGraph {
+/// Gather operations for Graph
+impl Graph {
     /// Creates a GatherND operation and returns the result tensor.
     ///
     /// Gathers the slices in updatesTensor to the result tensor along the indices in indicesTensor.
@@ -14,14 +14,14 @@ impl MPSGraph {
     ///   - indices_tensor: Tensor containing the updates indices to read slices from
     ///   - batch_dimensions: The number of batch dimensions
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn gather_nd(
         &self,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -35,7 +35,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -49,15 +49,15 @@ impl MPSGraph {
     ///   - axis: The dimension on which to perform the gather
     ///   - batch_dimensions: The number of batch dimensions
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn gather(
         &self,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -72,7 +72,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -88,14 +88,14 @@ impl MPSGraph {
     ///   - updates_tensor: The input tensor to gather values from
     ///   - indices_tensor: Int32 or Int64 tensor used to index `updates_tensor`
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn gather_along_axis(
         &self,
         axis: isize,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -109,7 +109,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -125,14 +125,14 @@ impl MPSGraph {
     ///   - updates_tensor: The input tensor to gather values from
     ///   - indices_tensor: Int32 or Int64 tensor used to index `updates_tensor`
     ///   - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn gather_along_axis_tensor(
         &self,
-        axis_tensor: &MPSGraphTensor,
-        updates_tensor: &MPSGraphTensor,
-        indices_tensor: &MPSGraphTensor,
+        axis_tensor: &Tensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -146,7 +146,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

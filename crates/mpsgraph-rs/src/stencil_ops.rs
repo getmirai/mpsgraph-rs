@@ -1,7 +1,7 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
@@ -67,7 +67,7 @@ impl MPSGraphStencilOpDescriptor {
     }
 
     /// Creates a new stencil operation descriptor with the specified explicit padding
-    pub fn with_explicit_padding(explicit_padding: &MPSShape) -> Self {
+    pub fn with_explicit_padding(explicit_padding: &Shape) -> Self {
         unsafe {
             let class_name = c"MPSGraphStencilOpDescriptor";
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
@@ -84,8 +84,8 @@ impl MPSGraphStencilOpDescriptor {
 
     /// Creates a new stencil operation descriptor with the specified offsets and explicit padding
     pub fn with_offsets_and_explicit_padding(
-        offsets: &MPSShape,
-        explicit_padding: &MPSShape,
+        offsets: &Shape,
+        explicit_padding: &Shape,
     ) -> Self {
         unsafe {
             let class_name = c"MPSGraphStencilOpDescriptor";
@@ -103,10 +103,10 @@ impl MPSGraphStencilOpDescriptor {
     /// Creates a new stencil operation descriptor with all parameters specified
     pub fn with_all_params(
         reduction_mode: MPSGraphReductionMode,
-        offsets: &MPSShape,
-        strides: &MPSShape,
-        dilation_rates: &MPSShape,
-        explicit_padding: &MPSShape,
+        offsets: &Shape,
+        strides: &Shape,
+        dilation_rates: &Shape,
+        explicit_padding: &Shape,
         boundary_mode: crate::sample_grid_ops::MPSGraphPaddingMode,
         padding_style: crate::convolution_transpose_ops::PaddingStyle,
         padding_constant: f32,
@@ -140,28 +140,28 @@ impl MPSGraphStencilOpDescriptor {
     }
 
     /// Sets the offsets
-    pub fn set_offsets(&self, offsets: &MPSShape) {
+    pub fn set_offsets(&self, offsets: &Shape) {
         unsafe {
             let _: () = msg_send![self.0, setOffsets: offsets.0,];
         }
     }
 
     /// Sets the strides
-    pub fn set_strides(&self, strides: &MPSShape) {
+    pub fn set_strides(&self, strides: &Shape) {
         unsafe {
             let _: () = msg_send![self.0, setStrides: strides.0,];
         }
     }
 
     /// Sets the dilation rates
-    pub fn set_dilation_rates(&self, dilation_rates: &MPSShape) {
+    pub fn set_dilation_rates(&self, dilation_rates: &Shape) {
         unsafe {
             let _: () = msg_send![self.0, setDilationRates: dilation_rates.0,];
         }
     }
 
     /// Sets the explicit padding
-    pub fn set_explicit_padding(&self, explicit_padding: &MPSShape) {
+    pub fn set_explicit_padding(&self, explicit_padding: &Shape) {
         unsafe {
             let _: () = msg_send![self.0, setExplicitPadding: explicit_padding.0,];
         }
@@ -206,8 +206,8 @@ impl Clone for MPSGraphStencilOpDescriptor {
     }
 }
 
-/// Stencil operations for MPSGraph
-impl MPSGraph {
+/// Stencil operations for Graph
+impl Graph {
     /// Creates a stencil operation and returns the result tensor.
     ///
     /// Performs a weighted reduction operation (See `MPSGraphReductionMode`) on the last 4 dimensions of the `source`
@@ -225,14 +225,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object.
+    /// A valid Tensor object.
     pub fn stencil(
         &self,
-        source: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
+        source: &Tensor,
+        weights: &Tensor,
         descriptor: &MPSGraphStencilOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -247,7 +247,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

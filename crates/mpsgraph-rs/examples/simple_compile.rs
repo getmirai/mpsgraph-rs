@@ -1,7 +1,7 @@
 use metal::{Device, MTLResourceOptions};
 use mpsgraph::{
-    MPSCommandBuffer, MPSDataType, MPSGraph, MPSGraphExecutionDescriptor, MPSGraphTensorData,
-    MPSShape,
+    MPSCommandBuffer, MPSDataType, Graph, ExecutionDescriptor, TensorData,
+    Shape,
 };
 use std::collections::HashMap;
 
@@ -9,7 +9,7 @@ use std::collections::HashMap;
 ///
 /// This example shows:
 /// 1. Creation of Metal buffers for inputs and outputs
-/// 2. Wrapping buffers in MPSGraphTensorData
+/// 2. Wrapping buffers in TensorData
 /// 3. Building a computation graph with 3 operations
 /// 4. Creating an MPSCommandBuffer and encoding the graph
 /// 5. Committing and waiting for the command buffer
@@ -27,13 +27,13 @@ fn main() {
     let command_queue = device.new_command_queue();
 
     // Create a graph to define our computation
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     //-- Define Computation Graph --//
     println!("Building computation graph...");
 
     // 1. Define input tensors
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
     let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
 
@@ -76,15 +76,15 @@ fn main() {
     let d_buffer = device.new_buffer(buffer_size, MTLResourceOptions::StorageModeShared);
     let e_buffer = device.new_buffer(buffer_size, MTLResourceOptions::StorageModeShared);
 
-    //-- Create MPSGraphTensorData from Metal Buffers --//
-    println!("Creating MPSGraphTensorData from Metal buffers...");
+    //-- Create TensorData from Metal Buffers --//
+    println!("Creating TensorData from Metal buffers...");
 
-    // Wrap Metal buffers in MPSGraphTensorData
-    let a_data = MPSGraphTensorData::from_buffer(&a_buffer, &shape, MPSDataType::Float32);
-    let b_data = MPSGraphTensorData::from_buffer(&b_buffer, &shape, MPSDataType::Float32);
-    let c_data = MPSGraphTensorData::from_buffer(&c_buffer, &shape, MPSDataType::Float32);
-    let d_data = MPSGraphTensorData::from_buffer(&d_buffer, &shape, MPSDataType::Float32);
-    let e_data = MPSGraphTensorData::from_buffer(&e_buffer, &shape, MPSDataType::Float32);
+    // Wrap Metal buffers in TensorData
+    let a_data = TensorData::from_buffer(&a_buffer, &shape, MPSDataType::Float32);
+    let b_data = TensorData::from_buffer(&b_buffer, &shape, MPSDataType::Float32);
+    let c_data = TensorData::from_buffer(&c_buffer, &shape, MPSDataType::Float32);
+    let d_data = TensorData::from_buffer(&d_buffer, &shape, MPSDataType::Float32);
+    let e_data = TensorData::from_buffer(&e_buffer, &shape, MPSDataType::Float32);
 
     //-- Set Up Feeds and Results --//
     println!("Setting up feeds and results dictionaries...");
@@ -101,7 +101,7 @@ fn main() {
     results.insert(e.clone(), e_data);
 
     //-- Create Execution Descriptor --//
-    let execution_descriptor = MPSGraphExecutionDescriptor::new();
+    let execution_descriptor = ExecutionDescriptor::new();
     execution_descriptor.prefer_synchronous_execution();
 
     //-- Create MPSCommandBuffer --//

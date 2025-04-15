@@ -1,11 +1,11 @@
 use crate::core::{AsRawObject, MPSDataType, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
-/// Quantization operations for MPSGraph
-impl MPSGraph {
+/// Quantization operations for Graph
+impl Graph {
     /// Creates a Quantize operation and returns the result tensor.
     ///
     /// Convert the float `tensor` to an i8 or u8 tensor by applying a scale + bias transform:
@@ -21,15 +21,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor of datatype `data_type`
+    /// A valid Tensor of datatype `data_type`
     pub fn quantize(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         scale: f64,
         zero_point: f64,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -45,7 +45,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -64,15 +64,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor of datatype `data_type`
+    /// A valid Tensor of datatype `data_type`
     pub fn dequantize(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         scale: f64,
         zero_point: f64,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -88,7 +88,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -108,16 +108,16 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor of datatype `data_type`
+    /// A valid Tensor of datatype `data_type`
     pub fn quantize_with_scale_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
         zero_point: f64,
         data_type: MPSDataType,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -134,7 +134,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -154,16 +154,16 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor of datatype `data_type`
+    /// A valid Tensor of datatype `data_type`
     pub fn dequantize_with_scale_tensor(
         &self,
-        tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
         zero_point: f64,
         data_type: MPSDataType,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -180,7 +180,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -200,16 +200,16 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor of datatype `data_type`
+    /// A valid Tensor of datatype `data_type`
     pub fn quantize_with_tensors(
         &self,
-        tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        zero_point_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point_tensor: &Tensor,
         data_type: MPSDataType,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -226,7 +226,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -246,16 +246,16 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor of datatype `data_type`
+    /// A valid Tensor of datatype `data_type`
     pub fn dequantize_with_tensors(
         &self,
-        tensor: &MPSGraphTensor,
-        scale_tensor: &MPSGraphTensor,
-        zero_point_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point_tensor: &Tensor,
         data_type: MPSDataType,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -272,7 +272,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -289,13 +289,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn dequantize_with_lut(
         &self,
-        tensor: &MPSGraphTensor,
-        lut_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        lut_tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -309,7 +309,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -326,14 +326,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object
+    /// A valid Tensor object
     pub fn dequantize_with_lut_axis(
         &self,
-        tensor: &MPSGraphTensor,
-        lut_tensor: &MPSGraphTensor,
+        tensor: &Tensor,
+        lut_tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -348,7 +348,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

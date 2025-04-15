@@ -1,14 +1,14 @@
 use crate::core::{AsRawObject, MPSDataType, NSString};
-use crate::graph::MPSGraph;
+use crate::graph::Graph;
 use crate::operation::MPSGraphOperation;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation;
 
-/// Memory operations for MPSGraph
-impl MPSGraph {
+/// Memory operations for Graph
+impl Graph {
     // The placeholder and constant_scalar methods are already implemented in graph.rs
 
     /// Creates a complex constant with the realPart and imaginaryPart values and returns the result tensor.
@@ -20,8 +20,8 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object of type ComplexFloat32.
-    pub fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> MPSGraphTensor {
+    /// A valid Tensor object of type ComplexFloat32.
+    pub fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Tensor {
         unsafe {
             let result: *mut AnyObject = msg_send![
                 self.0, constantWithRealPart: real_part,
@@ -29,7 +29,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -43,13 +43,13 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object of complex type.
+    /// A valid Tensor object of complex type.
     pub fn complex_constant_with_type(
         &self,
         real_part: f64,
         imaginary_part: f64,
         data_type: MPSDataType,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let result: *mut AnyObject = msg_send![
                 self.0, constantWithRealPart: real_part,
@@ -58,7 +58,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -73,14 +73,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object of complex type.
+    /// A valid Tensor object of complex type.
     pub fn complex_constant_with_shape(
         &self,
         real_part: f64,
         imaginary_part: f64,
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let result: *mut AnyObject = msg_send![
                 self.0, constantWithRealPart: real_part,
@@ -90,7 +90,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -105,14 +105,14 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object.
+    /// A valid Tensor object.
     pub fn variable<T: Copy>(
         &self,
         data: &[T],
-        shape: &MPSShape,
+        shape: &Shape,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -134,7 +134,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -147,12 +147,12 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object representing the variable.
+    /// A valid Tensor object representing the variable.
     pub fn variable_from_tensor(
         &self,
-        tensor: &MPSGraphTensor,
+        tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -165,7 +165,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -178,8 +178,8 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphTensor object.
-    pub fn read_variable(&self, variable: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    /// A valid Tensor object.
+    pub fn read_variable(&self, variable: &Tensor, name: Option<&str>) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -192,7 +192,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -209,8 +209,8 @@ impl MPSGraph {
     /// A valid MPSGraphOperation object.
     pub fn assign_variable(
         &self,
-        variable: &MPSGraphTensor,
-        tensor: &MPSGraphTensor,
+        variable: &Tensor,
+        tensor: &Tensor,
         name: Option<&str>,
     ) -> MPSGraphOperation {
         let name_obj = match name {

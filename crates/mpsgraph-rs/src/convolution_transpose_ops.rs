@@ -4,9 +4,9 @@ use objc2::runtime::AnyObject;
 const NO: bool = false;
 const YES: bool = true;
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::shape::MPSShape;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 
 /// Defines the data layout for tensors
 #[repr(u64)]
@@ -167,8 +167,8 @@ impl Clone for MPSGraphConvolution2DOpDescriptor {
     }
 }
 
-/// Transposed convolution operations for MPSGraph
-impl MPSGraph {
+/// Transposed convolution operations for Graph
+impl Graph {
     /// Creates a 2D convolution transpose operation and returns the result tensor.
     ///
     /// Convolution Tranpose operation is exactly the same as convolution gradient with respect to input image.
@@ -186,15 +186,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the result
+    /// A new Tensor containing the result
     pub fn convolution_transpose_2d(
         &self,
-        source: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
-        output_shape: &MPSShape,
+        source: &Tensor,
+        weights: &Tensor,
+        output_shape: &Shape,
         descriptor: &MPSGraphConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -210,7 +210,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -226,15 +226,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the result
+    /// A new Tensor containing the result
     pub fn convolution_transpose_2d_with_tensor_shape(
         &self,
-        source: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
-        output_shape_tensor: &MPSGraphTensor,
+        source: &Tensor,
+        weights: &Tensor,
+        output_shape_tensor: &Tensor,
         descriptor: &MPSGraphConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -250,7 +250,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -266,15 +266,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the gradient with respect to source
+    /// A new Tensor containing the gradient with respect to source
     pub fn convolution_transpose_2d_data_gradient(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
-        output_shape: &MPSShape,
+        incoming_gradient: &Tensor,
+        weights: &Tensor,
+        output_shape: &Shape,
         forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -290,7 +290,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -306,15 +306,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the gradient with respect to source
+    /// A new Tensor containing the gradient with respect to source
     pub fn convolution_transpose_2d_data_gradient_with_tensor_shape(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        weights: &MPSGraphTensor,
-        output_shape_tensor: &MPSGraphTensor,
+        incoming_gradient: &Tensor,
+        weights: &Tensor,
+        output_shape_tensor: &Tensor,
         forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -330,7 +330,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -346,15 +346,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the gradient with respect to weights
+    /// A new Tensor containing the gradient with respect to weights
     pub fn convolution_transpose_2d_weights_gradient(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
-        output_shape: &MPSShape,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        output_shape: &Shape,
         forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -370,7 +370,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
@@ -386,15 +386,15 @@ impl MPSGraph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphTensor containing the gradient with respect to weights
+    /// A new Tensor containing the gradient with respect to weights
     pub fn convolution_transpose_2d_weights_gradient_with_tensor_shape(
         &self,
-        incoming_gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
-        output_shape_tensor: &MPSGraphTensor,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        output_shape_tensor: &Tensor,
         forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -410,7 +410,7 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

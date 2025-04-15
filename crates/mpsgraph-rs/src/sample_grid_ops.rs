@@ -4,9 +4,9 @@ const NO: bool = false;
 const YES: bool = true;
 use crate::convolution_transpose_ops::TensorNamedDataLayout;
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
+use crate::graph::Graph;
 use crate::resize_ops::{MPSGraphResizeMode, MPSGraphResizeNearestRoundingMode};
-use crate::tensor::MPSGraphTensor;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 
 /// Padding modes for MPSGraph operations
@@ -29,8 +29,8 @@ pub enum MPSGraphPaddingMode {
     AntiPeriodic = 6,
 }
 
-/// Sample Grid operations for MPSGraph
-impl MPSGraph {
+/// Sample Grid operations for Graph
+impl Graph {
     /// Samples a tensor using the coordinates provided.
     ///
     /// Given an input tensor (N, H1, W1, C) or (N, C, H1, W1) and coordinates tensor (N, H2, W2, 2)
@@ -48,11 +48,11 @@ impl MPSGraph {
     ///   - sampling_mode: Can be either MPSGraphResizeNearest or MPSGraphResizeBilinear
     ///   - constant_value: If paddingMode is Constant, then this constant is used for samples outside the input tensor
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn sample_grid(
         &self,
-        source: &MPSGraphTensor,
-        coordinates: &MPSGraphTensor,
+        source: &Tensor,
+        coordinates: &Tensor,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -61,7 +61,7 @@ impl MPSGraph {
         sampling_mode: MPSGraphResizeMode,
         constant_value: f64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -85,7 +85,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -102,11 +102,11 @@ impl MPSGraph {
     ///   - nearest_rounding_mode: The rounding mode to use for determining the nearest neighbor
     ///   - constant_value: If paddingMode is Constant, then this constant is used for samples outside the input tensor
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn sample_grid_nearest(
         &self,
-        source: &MPSGraphTensor,
-        coordinates: &MPSGraphTensor,
+        source: &Tensor,
+        coordinates: &Tensor,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -115,7 +115,7 @@ impl MPSGraph {
         nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
         constant_value: f64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -139,7 +139,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

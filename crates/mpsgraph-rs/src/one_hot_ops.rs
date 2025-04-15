@@ -1,11 +1,11 @@
 use crate::core::{AsRawObject, MPSDataType, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
-/// OneHot operations for MPSGraph
-impl MPSGraph {
+/// OneHot operations for Graph
+impl Graph {
     /// Creates a oneHot operation and returns the result tensor.
     ///
     /// Creates a tensor of rank equal to the indicesTensor rank + 1.
@@ -21,17 +21,17 @@ impl MPSGraph {
     ///   - on_value: The value for indices designated by the indicesTensor
     ///   - off_value: The value for indices not designated by the indicesTensor
     ///   - name: Name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn one_hot(
         &self,
-        indices_tensor: &MPSGraphTensor,
+        indices_tensor: &Tensor,
         depth: usize,
         axis: usize,
         data_type: MPSDataType,
         on_value: f64,
         off_value: f64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -48,7 +48,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -61,16 +61,16 @@ impl MPSGraph {
     ///   - on_value: The value for indices designated by the indicesTensor
     ///   - off_value: The value for indices not designated by the indicesTensor
     ///   - name: Name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn one_hot_default_axis(
         &self,
-        indices_tensor: &MPSGraphTensor,
+        indices_tensor: &Tensor,
         depth: usize,
         data_type: MPSDataType,
         on_value: f64,
         off_value: f64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -86,7 +86,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -98,15 +98,15 @@ impl MPSGraph {
     ///   - axis: The axis to insert the new oneHot vector at
     ///   - data_type: MPSDataType of the result tensor
     ///   - name: Name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn one_hot_default_values(
         &self,
-        indices_tensor: &MPSGraphTensor,
+        indices_tensor: &Tensor,
         depth: usize,
         axis: usize,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -121,7 +121,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -131,13 +131,13 @@ impl MPSGraph {
     ///   - indices_tensor: Tensor of indices for on values
     ///   - depth: Depth of the oneHot vector along the axis
     ///   - name: Name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn one_hot_simple(
         &self,
-        indices_tensor: &MPSGraphTensor,
+        indices_tensor: &Tensor,
         depth: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -150,7 +150,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -161,14 +161,14 @@ impl MPSGraph {
     ///   - depth: Depth of the oneHot vector along the axis
     ///   - data_type: MPSDataType of the result tensor
     ///   - name: Name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn one_hot_default_axis_values(
         &self,
-        indices_tensor: &MPSGraphTensor,
+        indices_tensor: &Tensor,
         depth: usize,
         data_type: MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -182,7 +182,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -193,14 +193,14 @@ impl MPSGraph {
     ///   - depth: Depth of the oneHot vector along the axis
     ///   - axis: The axis to insert the new oneHot vector at
     ///   - name: Name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn one_hot_default_type_values(
         &self,
-        indices_tensor: &MPSGraphTensor,
+        indices_tensor: &Tensor,
         depth: usize,
         axis: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -214,7 +214,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }

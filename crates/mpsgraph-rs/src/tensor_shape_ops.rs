@@ -1,16 +1,16 @@
 use crate::core::create_ns_array_from_i64_slice;
 use crate::core::AsRawObject;
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 use objc2_foundation::NSString;
 use std::ptr;
 
-/// Tensor shape operations for MPSGraph
-impl MPSGraph {
+/// Tensor shape operations for Graph
+impl Graph {
     /// Creates a reshape operation
-    pub fn reshape(&self, x: &MPSGraphTensor, shape: &[i64], name: Option<&str>) -> MPSGraphTensor {
+    pub fn reshape(&self, x: &Tensor, shape: &[i64], name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -27,12 +27,12 @@ impl MPSGraph {
             objc2::ffi::objc_release(shape_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a flatten2D operation
-    pub fn flatten2d(&self, x: &MPSGraphTensor, axis: i64, name: Option<&str>) -> MPSGraphTensor {
+    pub fn flatten2d(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -45,17 +45,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a broadcast operation
     pub fn broadcast(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         shape: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -72,12 +72,12 @@ impl MPSGraph {
             objc2::ffi::objc_release(shape_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a shape-of operation
-    pub fn shape_of(&self, x: &MPSGraphTensor, name: Option<&str>) -> MPSGraphTensor {
+    pub fn shape_of(&self, x: &Tensor, name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -89,17 +89,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a cast operation
     pub fn cast(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         data_type: crate::core::MPSDataType,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -112,17 +112,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a stack operation
     pub fn stack(
         &self,
-        tensors: &[MPSGraphTensor],
+        tensors: &[Tensor],
         axis: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -143,18 +143,18 @@ impl MPSGraph {
             objc2::ffi::objc_release(tensor_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a split operation
     pub fn split(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         num_splits: i64,
         axis: i64,
         name: Option<&str>,
-    ) -> Vec<MPSGraphTensor> {
+    ) -> Vec<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -167,14 +167,14 @@ impl MPSGraph {
                 name: name_obj
             ];
 
-            // Convert NSArray to Vec<MPSGraphTensor>
+            // Convert NSArray to Vec<Tensor>
             let count: usize = msg_send![result, count];
             let mut tensors = Vec::with_capacity(count);
 
             for i in 0..count {
                 let tensor_obj: *mut AnyObject = msg_send![result, objectAtIndex: i];
                 objc2::ffi::objc_retain(tensor_obj as *mut _);
-                tensors.push(MPSGraphTensor(tensor_obj));
+                tensors.push(Tensor(tensor_obj));
             }
 
             objc2::ffi::objc_release(result as *mut _);
@@ -184,7 +184,7 @@ impl MPSGraph {
     }
 
     /// Creates a squeeze operation
-    pub fn squeeze(&self, x: &MPSGraphTensor, axes: &[i64], name: Option<&str>) -> MPSGraphTensor {
+    pub fn squeeze(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -201,17 +201,17 @@ impl MPSGraph {
             objc2::ffi::objc_release(axes_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates an expand_dims operation
     pub fn expand_dims(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -228,17 +228,17 @@ impl MPSGraph {
             objc2::ffi::objc_release(axes_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a tile operation
     pub fn tile(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         multiples: &[i64],
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -255,18 +255,18 @@ impl MPSGraph {
             objc2::ffi::objc_release(multiples_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a pad operation
     pub fn pad(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         padding: &[i64],
         constant: f32,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -284,17 +284,17 @@ impl MPSGraph {
             objc2::ffi::objc_release(padding_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a space-to-depth operation
     pub fn space_to_depth(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         block_size: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -307,17 +307,17 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a depth-to-space operation
     pub fn depth_to_space(
         &self,
-        x: &MPSGraphTensor,
+        x: &Tensor,
         block_size: i64,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -330,12 +330,12 @@ impl MPSGraph {
             ];
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 
     /// Creates a reverse operation
-    pub fn reverse(&self, x: &MPSGraphTensor, axes: &[i64], name: Option<&str>) -> MPSGraphTensor {
+    pub fn reverse(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -352,7 +352,7 @@ impl MPSGraph {
             objc2::ffi::objc_release(axes_array as *mut _);
 
             let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            MPSGraphTensor(tensor)
+            Tensor(tensor)
         }
     }
 }

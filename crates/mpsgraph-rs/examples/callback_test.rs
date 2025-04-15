@@ -1,6 +1,6 @@
 use mpsgraph::{
-    core::MPSDataType, executable::MPSGraphExecutionDescriptor, graph::MPSGraph, shape::MPSShape,
-    tensor_data::MPSGraphTensorData,
+    core::MPSDataType, executable::ExecutionDescriptor, graph::Graph, shape::Shape,
+    tensor_data::TensorData,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -9,10 +9,10 @@ use std::time::Duration;
 
 fn main() {
     // Create the graph and device
-    let graph = MPSGraph::new();
+    let graph = Graph::new();
 
     // Create input placeholders
-    let shape = MPSShape::from_slice(&[2, 2]);
+    let shape = Shape::from_slice(&[2, 2]);
     let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
     let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
 
@@ -20,8 +20,8 @@ fn main() {
     let result = graph.add(&a, &b, None);
 
     // Create some input data
-    let a_data = MPSGraphTensorData::new(&[1.0f32, 2.0, 3.0, 4.0], &[2, 2], MPSDataType::Float32);
-    let b_data = MPSGraphTensorData::new(&[5.0f32, 6.0, 7.0, 8.0], &[2, 2], MPSDataType::Float32);
+    let a_data = TensorData::new(&[1.0f32, 2.0, 3.0, 4.0], &[2, 2], MPSDataType::Float32);
+    let b_data = TensorData::new(&[5.0f32, 6.0, 7.0, 8.0], &[2, 2], MPSDataType::Float32);
 
     // Create input feeds
     let mut feeds = HashMap::new();
@@ -33,7 +33,7 @@ fn main() {
     let command_queue = metal_device.new_command_queue();
 
     // Create execution descriptor with asynchronous execution preference
-    let execution_descriptor = MPSGraphExecutionDescriptor::new();
+    let execution_descriptor = ExecutionDescriptor::new();
     execution_descriptor.prefer_asynchronous_execution();
 
     // Create a flag to signal when the callback has completed
@@ -70,7 +70,7 @@ fn main() {
     );
 
     // For comparison, run synchronously
-    let sync_descriptor = MPSGraphExecutionDescriptor::new();
+    let sync_descriptor = ExecutionDescriptor::new();
     sync_descriptor.prefer_synchronous_execution();
 
     println!("\nRunning synchronously for comparison:");

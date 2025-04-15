@@ -1,11 +1,11 @@
 use crate::core::{AsRawObject, NSString};
-use crate::graph::MPSGraph;
-use crate::tensor::MPSGraphTensor;
+use crate::graph::Graph;
+use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
-/// TopK operations for MPSGraph
-impl MPSGraph {
+/// TopK operations for Graph
+impl Graph {
     /// Finds the k largest values along the minor dimension of the input.
     ///
     /// The source must have at least k elements along its minor dimension.
@@ -17,13 +17,13 @@ impl MPSGraph {
     ///   - source: Tensor containing source data
     ///   - k: The number of largest values to return
     ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of MPSGraphTensor objects
+    /// - Returns: A tuple (values, indices) of Tensor objects
     pub fn top_k(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         k: usize,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -43,7 +43,7 @@ impl MPSGraph {
             let values = objc2::ffi::objc_retain(values as *mut _);
             let indices = objc2::ffi::objc_retain(indices as *mut _);
 
-            (MPSGraphTensor(values), MPSGraphTensor(indices))
+            (Tensor(values), Tensor(indices))
         }
     }
 
@@ -56,14 +56,14 @@ impl MPSGraph {
     ///   - axis: The dimension along which to compute the TopK values
     ///   - k: The number of largest values to return
     ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of MPSGraphTensor objects
+    /// - Returns: A tuple (values, indices) of Tensor objects
     pub fn top_k_axis(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -84,7 +84,7 @@ impl MPSGraph {
             let values = objc2::ffi::objc_retain(values as *mut _);
             let indices = objc2::ffi::objc_retain(indices as *mut _);
 
-            (MPSGraphTensor(values), MPSGraphTensor(indices))
+            (Tensor(values), Tensor(indices))
         }
     }
 
@@ -97,14 +97,14 @@ impl MPSGraph {
     ///   - axis: The dimension along which to compute the BottomK values
     ///   - k: The number of smallest values to return
     ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of MPSGraphTensor objects
+    /// - Returns: A tuple (values, indices) of Tensor objects
     pub fn bottom_k_axis(
         &self,
-        source: &MPSGraphTensor,
+        source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -125,7 +125,7 @@ impl MPSGraph {
             let values = objc2::ffi::objc_retain(values as *mut _);
             let indices = objc2::ffi::objc_retain(indices as *mut _);
 
-            (MPSGraphTensor(values), MPSGraphTensor(indices))
+            (Tensor(values), Tensor(indices))
         }
     }
 
@@ -135,13 +135,13 @@ impl MPSGraph {
     ///   - source: Tensor containing source data
     ///   - k_tensor: Tensor containing the value of k
     ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of MPSGraphTensor objects
+    /// - Returns: A tuple (values, indices) of Tensor objects
     pub fn top_k_with_tensor(
         &self,
-        source: &MPSGraphTensor,
-        k_tensor: &MPSGraphTensor,
+        source: &Tensor,
+        k_tensor: &Tensor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -161,7 +161,7 @@ impl MPSGraph {
             let values = objc2::ffi::objc_retain(values as *mut _);
             let indices = objc2::ffi::objc_retain(indices as *mut _);
 
-            (MPSGraphTensor(values), MPSGraphTensor(indices))
+            (Tensor(values), Tensor(indices))
         }
     }
 
@@ -172,14 +172,14 @@ impl MPSGraph {
     ///   - axis_tensor: Tensor containing the axis along which to compute TopK
     ///   - k_tensor: Tensor containing the value of k
     ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of MPSGraphTensor objects
+    /// - Returns: A tuple (values, indices) of Tensor objects
     pub fn top_k_with_axis_tensor(
         &self,
-        source: &MPSGraphTensor,
-        axis_tensor: &MPSGraphTensor,
-        k_tensor: &MPSGraphTensor,
+        source: &Tensor,
+        axis_tensor: &Tensor,
+        k_tensor: &Tensor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -200,7 +200,7 @@ impl MPSGraph {
             let values = objc2::ffi::objc_retain(values as *mut _);
             let indices = objc2::ffi::objc_retain(indices as *mut _);
 
-            (MPSGraphTensor(values), MPSGraphTensor(indices))
+            (Tensor(values), Tensor(indices))
         }
     }
 
@@ -211,14 +211,14 @@ impl MPSGraph {
     ///   - axis_tensor: Tensor containing the axis along which to compute BottomK
     ///   - k_tensor: Tensor containing the value of k
     ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of MPSGraphTensor objects
+    /// - Returns: A tuple (values, indices) of Tensor objects
     pub fn bottom_k_with_axis_tensor(
         &self,
-        source: &MPSGraphTensor,
-        axis_tensor: &MPSGraphTensor,
-        k_tensor: &MPSGraphTensor,
+        source: &Tensor,
+        axis_tensor: &Tensor,
+        k_tensor: &Tensor,
         name: Option<&str>,
-    ) -> (MPSGraphTensor, MPSGraphTensor) {
+    ) -> (Tensor, Tensor) {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -239,7 +239,7 @@ impl MPSGraph {
             let values = objc2::ffi::objc_retain(values as *mut _);
             let indices = objc2::ffi::objc_retain(indices as *mut _);
 
-            (MPSGraphTensor(values), MPSGraphTensor(indices))
+            (Tensor(values), Tensor(indices))
         }
     }
 
@@ -250,14 +250,14 @@ impl MPSGraph {
     ///   - source: Tensor containing source data
     ///   - k: The number of largest values used in the forward pass
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn top_k_gradient(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         k: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -271,7 +271,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -283,15 +283,15 @@ impl MPSGraph {
     ///   - axis: The dimension along which TopK was computed
     ///   - k: The number of largest values used in the forward pass
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn top_k_gradient_axis(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -306,7 +306,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 
@@ -318,15 +318,15 @@ impl MPSGraph {
     ///   - axis: The dimension along which BottomK was computed
     ///   - k: The number of smallest values used in the forward pass
     ///   - name: The name for the operation
-    /// - Returns: A valid MPSGraphTensor object
+    /// - Returns: A valid Tensor object
     pub fn bottom_k_gradient_axis(
         &self,
-        gradient: &MPSGraphTensor,
-        source: &MPSGraphTensor,
+        gradient: &Tensor,
+        source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> MPSGraphTensor {
+    ) -> Tensor {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -341,7 +341,7 @@ impl MPSGraph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphTensor(result)
+            Tensor(result)
         }
     }
 }
