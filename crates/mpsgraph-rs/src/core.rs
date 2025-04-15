@@ -192,7 +192,7 @@ impl MPSDataType {
 /// Options for MPSGraph execution
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphOptions {
+pub enum Options {
     /// No Options
     None = 0,
     /// The graph synchronizes results to the CPU using a blit encoder if on a discrete GPU at the end of execution
@@ -206,7 +206,7 @@ pub enum MPSGraphOptions {
 /// Optimization levels for MPSGraph compilation
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphOptimization {
+pub enum Optimization {
     /// Graph performs core optimizations only
     Level0 = 0,
     /// Graph performs additional optimizations
@@ -216,7 +216,7 @@ pub enum MPSGraphOptimization {
 /// Optimization profile for MPSGraph
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphOptimizationProfile {
+pub enum OptimizationProfile {
     /// Default, graph optimized for performance
     Performance = 0,
     /// Graph optimized for power efficiency
@@ -226,7 +226,7 @@ pub enum MPSGraphOptimizationProfile {
 /// Execution events that can be used with shared events
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphExecutionStage {
+pub enum ExecutionStage {
     /// Stage when execution of the graph completes
     Completed = 0,
 }

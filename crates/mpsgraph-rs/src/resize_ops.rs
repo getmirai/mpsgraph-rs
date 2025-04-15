@@ -11,7 +11,7 @@ use crate::tensor::Tensor;
 /// The resize mode to use for resizing.
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphResizeMode {
+pub enum ResizeMode {
     /// Samples the nearest neighbor to the pixel coordinate.
     Nearest = 0,
     /// Samples the 4 neighbors to the pixel coordinate and uses bilinear interpolation.
@@ -21,7 +21,7 @@ pub enum MPSGraphResizeMode {
 /// The rounding mode to use when using nearest resize mode.
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphResizeNearestRoundingMode {
+pub enum ResizeNearestRoundingMode {
     /// Rounds values to the nearest integer value, with 0.5f offset rounding toward +inf.
     RoundPreferCeil = 0,
     /// Rounds values to the nearest integer value, with 0.5f rounding toward -inf.
@@ -55,7 +55,7 @@ impl Graph {
         &self,
         images_tensor: &Tensor,
         size: &Shape,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
@@ -99,7 +99,7 @@ impl Graph {
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
@@ -144,7 +144,7 @@ impl Graph {
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
@@ -186,7 +186,7 @@ impl Graph {
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
@@ -231,7 +231,7 @@ impl Graph {
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
@@ -354,7 +354,7 @@ impl Graph {
         images_tensor: &Tensor,
         size_tensor: &Tensor,
         scale_offset_tensor: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
     ) -> Tensor {
@@ -395,7 +395,7 @@ impl Graph {
         size_tensor: &Tensor,
         scale_tensor: &Tensor,
         offset_tensor: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -435,7 +435,7 @@ impl Graph {
         size_tensor: &Tensor,
         scale_tensor: &Tensor,
         offset_tensor: &Tensor,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -509,7 +509,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         input: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
@@ -553,7 +553,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         input: &Tensor,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
@@ -638,7 +638,7 @@ impl Graph {
         gradient: &Tensor,
         input: &Tensor,
         scale_offset_tensor: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
     ) -> Tensor {
@@ -676,7 +676,7 @@ impl Graph {
         gradient: &Tensor,
         input: &Tensor,
         scale_offset_tensor: &Tensor,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
     ) -> Tensor {
@@ -752,7 +752,7 @@ impl Graph {
         input: &Tensor,
         scale_tensor: &Tensor,
         offset_tensor: &Tensor,
-        mode: MPSGraphResizeMode,
+        mode: ResizeMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -792,7 +792,7 @@ impl Graph {
         input: &Tensor,
         scale_tensor: &Tensor,
         offset_tensor: &Tensor,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {

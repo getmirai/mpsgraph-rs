@@ -23,7 +23,7 @@ impl Graph {
         &self,
         symbol_name: &str,
         input_tensors: &[&Tensor],
-        output_types: &[&crate::data_types::MPSGraphShapedType],
+        output_types: &[&crate::data_types::ShapedType],
         name: Option<&str>,
     ) -> Vec<Tensor> {
         let name_obj = match name {

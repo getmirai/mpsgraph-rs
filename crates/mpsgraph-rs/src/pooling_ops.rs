@@ -9,7 +9,7 @@ use std::ptr;
 /// Return indices mode for max pooling operations
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphPoolingReturnIndicesMode {
+pub enum PoolingReturnIndicesMode {
     /// No indices returned
     None = 0,
     /// Returns indices flattened in inner most (last) dimension
@@ -43,7 +43,7 @@ pub enum TensorNamedDataLayout {
 /// Padding style for tensor operations
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub enum MPSGraphPaddingStyle {
+pub enum PaddingStyle {
     /// Explicit padding with specified values
     Explicit = 0,
     /// Same padding (input and output have same dimensions)
@@ -53,19 +53,19 @@ pub enum MPSGraphPaddingStyle {
 }
 
 /// The descriptor for 2D pooling operations
-pub struct MPSGraphPooling2DOpDescriptor(pub(crate) *mut AnyObject);
+pub struct Pooling2DOpDescriptor(pub(crate) *mut AnyObject);
 
 /// The descriptor for 4D pooling operations
-pub struct MPSGraphPooling4DOpDescriptor(pub(crate) *mut AnyObject);
+pub struct Pooling4DOpDescriptor(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for thread safety
-unsafe impl Send for MPSGraphPooling2DOpDescriptor {}
-unsafe impl Sync for MPSGraphPooling2DOpDescriptor {}
+unsafe impl Send for Pooling2DOpDescriptor {}
+unsafe impl Sync for Pooling2DOpDescriptor {}
 
-unsafe impl Send for MPSGraphPooling4DOpDescriptor {}
-unsafe impl Sync for MPSGraphPooling4DOpDescriptor {}
+unsafe impl Send for Pooling4DOpDescriptor {}
+unsafe impl Sync for Pooling4DOpDescriptor {}
 
-impl Drop for MPSGraphPooling2DOpDescriptor {
+impl Drop for Pooling2DOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -75,20 +75,20 @@ impl Drop for MPSGraphPooling2DOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphPooling2DOpDescriptor {
+impl Clone for Pooling2DOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphPooling2DOpDescriptor(obj)
+                Pooling2DOpDescriptor(obj)
             } else {
-                MPSGraphPooling2DOpDescriptor(ptr::null_mut())
+                Pooling2DOpDescriptor(ptr::null_mut())
             }
         }
     }
 }
 
-impl Drop for MPSGraphPooling4DOpDescriptor {
+impl Drop for Pooling4DOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -98,20 +98,20 @@ impl Drop for MPSGraphPooling4DOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphPooling4DOpDescriptor {
+impl Clone for Pooling4DOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphPooling4DOpDescriptor(obj)
+                Pooling4DOpDescriptor(obj)
             } else {
-                MPSGraphPooling4DOpDescriptor(ptr::null_mut())
+                Pooling4DOpDescriptor(ptr::null_mut())
             }
         }
     }
 }
 
-impl MPSGraphPooling2DOpDescriptor {
+impl Pooling2DOpDescriptor {
     /// Creates a new 2D pooling descriptor with the given parameters
     pub fn new(
         kernel_width: usize,
@@ -124,7 +124,7 @@ impl MPSGraphPooling2DOpDescriptor {
         padding_right: usize,
         padding_top: usize,
         padding_bottom: usize,
-        padding_style: MPSGraphPaddingStyle,
+        padding_style: PaddingStyle,
         data_layout: TensorNamedDataLayout,
     ) -> Self {
         unsafe {
@@ -145,7 +145,7 @@ impl MPSGraphPooling2DOpDescriptor {
             ];
 
             let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-            MPSGraphPooling2DOpDescriptor(descriptor)
+            Pooling2DOpDescriptor(descriptor)
         }
     }
 
@@ -155,7 +155,7 @@ impl MPSGraphPooling2DOpDescriptor {
         kernel_height: usize,
         stride_in_x: usize,
         stride_in_y: usize,
-        padding_style: MPSGraphPaddingStyle,
+        padding_style: PaddingStyle,
         data_layout: TensorNamedDataLayout,
     ) -> Self {
         unsafe {
@@ -170,7 +170,7 @@ impl MPSGraphPooling2DOpDescriptor {
             ];
 
             let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-            MPSGraphPooling2DOpDescriptor(descriptor)
+            Pooling2DOpDescriptor(descriptor)
         }
     }
 
@@ -193,7 +193,7 @@ impl MPSGraphPooling2DOpDescriptor {
     }
 
     /// Sets the return indices mode for max pooling operations
-    pub fn set_return_indices_mode(&self, mode: MPSGraphPoolingReturnIndicesMode) {
+    pub fn set_return_indices_mode(&self, mode: PoolingReturnIndicesMode) {
         unsafe {
             let _: () = msg_send![self.0, setReturnIndicesMode: mode as u64];
         }
@@ -221,14 +221,14 @@ impl MPSGraphPooling2DOpDescriptor {
     }
 }
 
-impl MPSGraphPooling4DOpDescriptor {
+impl Pooling4DOpDescriptor {
     /// Creates a new 4D pooling descriptor with the given parameters
     pub fn new(
         kernel_sizes: &[usize],
         strides: &[usize],
         dilation_rates: &[usize],
         padding_values: &[usize],
-        padding_style: MPSGraphPaddingStyle,
+        padding_style: PaddingStyle,
     ) -> Self {
         unsafe {
             // Create NSArrays for parameters
@@ -253,12 +253,12 @@ impl MPSGraphPooling4DOpDescriptor {
             objc2::ffi::objc_release(padding_values_array as *mut _);
 
             let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-            MPSGraphPooling4DOpDescriptor(descriptor)
+            Pooling4DOpDescriptor(descriptor)
         }
     }
 
     /// Creates a simplified 4D pooling descriptor
-    pub fn new_simple(kernel_sizes: &[usize], padding_style: MPSGraphPaddingStyle) -> Self {
+    pub fn new_simple(kernel_sizes: &[usize], padding_style: PaddingStyle) -> Self {
         unsafe {
             // Create NSArray for kernel sizes
             let kernel_sizes_array = Self::create_number_array(kernel_sizes);
@@ -273,12 +273,12 @@ impl MPSGraphPooling4DOpDescriptor {
             objc2::ffi::objc_release(kernel_sizes_array as *mut _);
 
             let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-            MPSGraphPooling4DOpDescriptor(descriptor)
+            Pooling4DOpDescriptor(descriptor)
         }
     }
 
     /// Sets the return indices mode for max pooling operations
-    pub fn set_return_indices_mode(&self, mode: MPSGraphPoolingReturnIndicesMode) {
+    pub fn set_return_indices_mode(&self, mode: PoolingReturnIndicesMode) {
         unsafe {
             let _: () = msg_send![self.0, setReturnIndicesMode: mode as u64];
         }
@@ -338,7 +338,7 @@ impl Graph {
     pub fn max_pooling_2d(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -363,7 +363,7 @@ impl Graph {
     pub fn max_pooling_2d_return_indices(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {
         let name_obj = match name {
@@ -408,7 +408,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -436,7 +436,7 @@ impl Graph {
         gradient: &Tensor,
         indices: &Tensor,
         output_shape: &[i64],
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -470,7 +470,7 @@ impl Graph {
         gradient: &Tensor,
         indices: &Tensor,
         output_shape_tensor: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -497,7 +497,7 @@ impl Graph {
     pub fn avg_pooling_2d(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -523,7 +523,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -549,7 +549,7 @@ impl Graph {
     pub fn l2_norm_pooling_2d(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -575,7 +575,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         source: &Tensor,
-        descriptor: &MPSGraphPooling2DOpDescriptor,
+        descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -601,7 +601,7 @@ impl Graph {
     pub fn max_pooling_4d(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -626,7 +626,7 @@ impl Graph {
     pub fn max_pooling_4d_return_indices(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {
         let name_obj = match name {
@@ -671,7 +671,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -699,7 +699,7 @@ impl Graph {
         gradient: &Tensor,
         indices: &Tensor,
         output_shape: &[i64],
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -733,7 +733,7 @@ impl Graph {
         gradient: &Tensor,
         indices: &Tensor,
         output_shape_tensor: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -760,7 +760,7 @@ impl Graph {
     pub fn avg_pooling_4d(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -786,7 +786,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -812,7 +812,7 @@ impl Graph {
     pub fn l2_norm_pooling_4d(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -838,7 +838,7 @@ impl Graph {
         &self,
         gradient: &Tensor,
         source: &Tensor,
-        descriptor: &MPSGraphPooling4DOpDescriptor,
+        descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {

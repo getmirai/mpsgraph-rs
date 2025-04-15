@@ -723,7 +723,7 @@ impl Tensor {
 }
 
 /// Extensions for Graph to create Tensor
-pub trait GraphExt {
+pub trait GraphExtensions {
     /// Create a placeholder tensor and wrap it with Tensor
     fn placeholder_tensor(
         &self,
@@ -773,7 +773,7 @@ pub trait GraphExt {
     ) -> Tensor;
 }
 
-impl GraphExt for Graph {
+impl GraphExtensions for Graph {
     fn placeholder_tensor(
         &self,
         shape: &Shape,

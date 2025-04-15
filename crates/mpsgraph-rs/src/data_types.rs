@@ -8,19 +8,19 @@ use std::ptr;
 /// A wrapper for MPSGraphType objects
 ///
 /// `MPSGraphType` is the base class for types used on tensors in MPSGraph.
-pub struct MPSGraphType(pub(crate) *mut AnyObject);
+pub struct Type(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for wrapper types
-unsafe impl Send for MPSGraphType {}
-unsafe impl Sync for MPSGraphType {}
+unsafe impl Send for Type {}
+unsafe impl Sync for Type {}
 
-impl Default for MPSGraphType {
+impl Default for Type {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphType {
+impl Type {
     /// Create a new MPSGraphType
     pub fn new() -> Self {
         unsafe {
@@ -28,7 +28,7 @@ impl MPSGraphType {
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let initialized: *mut AnyObject = msg_send![obj, init];
-            MPSGraphType(initialized)
+            Type(initialized)
         }
     }
 
@@ -50,7 +50,7 @@ impl MPSGraphType {
     }
 }
 
-impl Drop for MPSGraphType {
+impl Drop for Type {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -60,22 +60,22 @@ impl Drop for MPSGraphType {
     }
 }
 
-impl Clone for MPSGraphType {
+impl Clone for Type {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphType(obj)
+                Type(obj)
             } else {
-                MPSGraphType(ptr::null_mut())
+                Type(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphType {
+impl fmt::Debug for Type {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphType")
+        f.debug_struct("Type")
             .field("description", &self.description())
             .finish()
     }
@@ -84,13 +84,13 @@ impl fmt::Debug for MPSGraphType {
 /// A wrapper for MPSGraphShapedType objects
 ///
 /// `MPSGraphShapedType` is a subclass of `MPSGraphType` that includes shape and data type information.
-pub struct MPSGraphShapedType(pub(crate) *mut AnyObject);
+pub struct ShapedType(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for wrapper types
-unsafe impl Send for MPSGraphShapedType {}
-unsafe impl Sync for MPSGraphShapedType {}
+unsafe impl Send for ShapedType {}
+unsafe impl Sync for ShapedType {}
 
-impl MPSGraphShapedType {
+impl ShapedType {
     /// Create a new shaped type with shape and data type
     pub fn new(shape: &Shape, data_type: MPSDataType) -> Self {
         unsafe {
@@ -105,7 +105,7 @@ impl MPSGraphShapedType {
                 dataType: data_type_val_32
             ];
 
-            MPSGraphShapedType(initialized)
+            ShapedType(initialized)
         }
     }
 
@@ -174,7 +174,7 @@ impl MPSGraphShapedType {
     }
 }
 
-impl Drop for MPSGraphShapedType {
+impl Drop for ShapedType {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -184,22 +184,22 @@ impl Drop for MPSGraphShapedType {
     }
 }
 
-impl Clone for MPSGraphShapedType {
+impl Clone for ShapedType {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphShapedType(obj)
+                ShapedType(obj)
             } else {
-                MPSGraphShapedType(ptr::null_mut())
+                ShapedType(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphShapedType {
+impl fmt::Debug for ShapedType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphShapedType")
+        f.debug_struct("ShapedType")
             .field("shape", &self.shape())
             .field("data_type", &self.data_type())
             .field("rank", &self.rank())
@@ -217,12 +217,12 @@ pub enum ExecutionMode {
 
 // Shape descriptor for tensors (keeping from original file)
 #[derive(Debug, Clone)]
-pub struct MPSShapeDescriptor {
+pub struct ShapeDescriptor {
     pub dimensions: Vec<u64>,
     pub data_type: MPSDataType,
 }
 
-impl MPSShapeDescriptor {
+impl ShapeDescriptor {
     pub fn new(dimensions: Vec<u64>, data_type: MPSDataType) -> Self {
         Self {
             dimensions,

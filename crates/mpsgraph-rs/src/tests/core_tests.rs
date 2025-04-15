@@ -1,6 +1,6 @@
 use crate::core::{
-    MPSDataType, MPSGraphExecutionStage, MPSGraphOptimization, MPSGraphOptimizationProfile,
-    MPSGraphOptions,
+    MPSDataType, ExecutionStage, Optimization, OptimizationProfile,
+    Options,
 };
 
 #[test]
@@ -29,17 +29,17 @@ fn test_mps_data_type() {
 #[test]
 fn test_graph_options() {
     // Initialize options with default value
-    let options = MPSGraphOptions::Default;
+    let options = Options::Default;
 
     // Test with various option combinations
-    let with_verbose = MPSGraphOptions::Verbose;
-    let with_sync = MPSGraphOptions::SynchronizeResults;
+    let with_verbose = Options::Verbose;
+    let with_sync = Options::SynchronizeResults;
 
     // Ensure enums have their values
     assert_eq!(with_verbose as u64, 2);
     assert_eq!(with_sync as u64, 1);
-    assert_eq!(MPSGraphOptions::None as u64, 0);
-    assert_eq!(MPSGraphOptions::Default as u64, 3);
+    assert_eq!(Options::None as u64, 0);
+    assert_eq!(Options::Default as u64, 3);
 
     // Test string representation
     let _desc = format!("{:?}", options);
@@ -48,7 +48,7 @@ fn test_graph_options() {
 #[test]
 fn test_graph_optimization() {
     // Test all optimization values
-    let opts = [MPSGraphOptimization::Level0, MPSGraphOptimization::Level1];
+    let opts = [Optimization::Level0, Optimization::Level1];
 
     for opt in &opts {
         // Check string representation
@@ -63,7 +63,7 @@ fn test_graph_optimization() {
 #[test]
 fn test_execution_stage() {
     // Test execution stage
-    let stage = MPSGraphExecutionStage::Completed;
+    let stage = ExecutionStage::Completed;
 
     // Check string representation
     let _desc = format!("{:?}", stage);
@@ -76,10 +76,10 @@ fn test_execution_stage() {
 #[test]
 fn test_optimization_profile() {
     // Test optimization profile values
-    let profile = MPSGraphOptimizationProfile::Performance;
+    let profile = OptimizationProfile::Performance;
     assert_eq!(profile as u64, 0);
 
-    let profile = MPSGraphOptimizationProfile::PowerEfficiency;
+    let profile = OptimizationProfile::PowerEfficiency;
     assert_eq!(profile as u64, 1);
 
     // Test string representation

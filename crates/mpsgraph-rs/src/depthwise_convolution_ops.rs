@@ -7,15 +7,15 @@ use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
 /// Descriptor for 2D depthwise convolution operations
-pub struct MPSGraphDepthwiseConvolution2DOpDescriptor(pub(crate) *mut AnyObject);
+pub struct DepthwiseConvolution2DOpDescriptor(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphDepthwiseConvolution2DOpDescriptor {
+impl Default for DepthwiseConvolution2DOpDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphDepthwiseConvolution2DOpDescriptor {
+impl DepthwiseConvolution2DOpDescriptor {
     /// Creates a new depthwise convolution 2D operation descriptor
     pub fn new() -> Self {
         unsafe {
@@ -23,7 +23,7 @@ impl MPSGraphDepthwiseConvolution2DOpDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptor];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphDepthwiseConvolution2DOpDescriptor(descriptor)
+                DepthwiseConvolution2DOpDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphDepthwiseConvolution2DOpDescriptor not found")
             }
@@ -43,7 +43,7 @@ impl MPSGraphDepthwiseConvolution2DOpDescriptor {
                     weightsLayout: weights_layout as u64
                 ];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphDepthwiseConvolution2DOpDescriptor(descriptor)
+                DepthwiseConvolution2DOpDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphDepthwiseConvolution2DOpDescriptor not found")
             }
@@ -140,7 +140,7 @@ impl MPSGraphDepthwiseConvolution2DOpDescriptor {
     }
 }
 
-impl Drop for MPSGraphDepthwiseConvolution2DOpDescriptor {
+impl Drop for DepthwiseConvolution2DOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -148,19 +148,19 @@ impl Drop for MPSGraphDepthwiseConvolution2DOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphDepthwiseConvolution2DOpDescriptor {
+impl Clone for DepthwiseConvolution2DOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphDepthwiseConvolution2DOpDescriptor(desc)
+            DepthwiseConvolution2DOpDescriptor(desc)
         }
     }
 }
 
 /// Descriptor for 3D depthwise convolution operations
-pub struct MPSGraphDepthwiseConvolution3DOpDescriptor(pub(crate) *mut AnyObject);
+pub struct DepthwiseConvolution3DOpDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphDepthwiseConvolution3DOpDescriptor {
+impl DepthwiseConvolution3DOpDescriptor {
     /// Creates a new depthwise convolution 3D operation descriptor with default values
     pub fn new(padding_style: PaddingStyle) -> Self {
         unsafe {
@@ -169,7 +169,7 @@ impl MPSGraphDepthwiseConvolution3DOpDescriptor {
                 let descriptor: *mut AnyObject =
                     msg_send![cls, descriptorWithPaddingStyle: padding_style as u64];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphDepthwiseConvolution3DOpDescriptor(descriptor)
+                DepthwiseConvolution3DOpDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphDepthwiseConvolution3DOpDescriptor not found")
             }
@@ -204,7 +204,7 @@ impl MPSGraphDepthwiseConvolution3DOpDescriptor {
                 objc2::ffi::objc_release(padding_values_array as *mut _);
 
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphDepthwiseConvolution3DOpDescriptor(descriptor)
+                DepthwiseConvolution3DOpDescriptor(descriptor)
             } else {
                 // Release the NSArrays to prevent memory leaks before panicking
                 objc2::ffi::objc_release(strides_array as *mut _);
@@ -258,7 +258,7 @@ impl MPSGraphDepthwiseConvolution3DOpDescriptor {
     }
 }
 
-impl Drop for MPSGraphDepthwiseConvolution3DOpDescriptor {
+impl Drop for DepthwiseConvolution3DOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -266,11 +266,11 @@ impl Drop for MPSGraphDepthwiseConvolution3DOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphDepthwiseConvolution3DOpDescriptor {
+impl Clone for DepthwiseConvolution3DOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphDepthwiseConvolution3DOpDescriptor(desc)
+            DepthwiseConvolution3DOpDescriptor(desc)
         }
     }
 }
@@ -329,7 +329,7 @@ impl Graph {
         &self,
         source: &Tensor,
         weights: &Tensor,
-        descriptor: &MPSGraphDepthwiseConvolution2DOpDescriptor,
+        descriptor: &DepthwiseConvolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -368,7 +368,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         weights: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphDepthwiseConvolution2DOpDescriptor,
+        descriptor: &DepthwiseConvolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -408,7 +408,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         source: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphDepthwiseConvolution2DOpDescriptor,
+        descriptor: &DepthwiseConvolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -446,7 +446,7 @@ impl Graph {
         &self,
         source: &Tensor,
         weights: &Tensor,
-        descriptor: &MPSGraphDepthwiseConvolution3DOpDescriptor,
+        descriptor: &DepthwiseConvolution3DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -485,7 +485,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         weights: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphDepthwiseConvolution3DOpDescriptor,
+        descriptor: &DepthwiseConvolution3DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -525,7 +525,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         source: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphDepthwiseConvolution3DOpDescriptor,
+        descriptor: &DepthwiseConvolution3DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {

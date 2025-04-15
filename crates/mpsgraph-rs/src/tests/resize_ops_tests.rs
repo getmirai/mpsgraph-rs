@@ -2,7 +2,7 @@ use crate::{
     convolution_transpose_ops::TensorNamedDataLayout,
     core::MPSDataType,
     graph::Graph,
-    resize_ops::{MPSGraphResizeMode, MPSGraphResizeNearestRoundingMode},
+    resize_ops::{ResizeMode, ResizeNearestRoundingMode},
     shape::Shape,
     tensor::Tensor,
     tensor_data::TensorData,
@@ -37,7 +37,7 @@ fn test_resize_basic() {
     let resize_nearest = graph.resize(
         &input,
         &target_size,
-        MPSGraphResizeMode::Nearest,
+        ResizeMode::Nearest,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -47,7 +47,7 @@ fn test_resize_basic() {
     let resize_bilinear = graph.resize(
         &input,
         &target_size,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -90,7 +90,7 @@ fn test_resize_with_size_tensor() {
     let resize = graph.resize_with_size_tensor(
         &input,
         &size_tensor,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         true, // center_result
         true, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -132,7 +132,7 @@ fn test_resize_nearest_with_rounding_modes() {
     let resize_ceil = graph.resize_nearest(
         &input,
         &size_tensor,
-        MPSGraphResizeNearestRoundingMode::Ceil,
+        ResizeNearestRoundingMode::Ceil,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -142,7 +142,7 @@ fn test_resize_nearest_with_rounding_modes() {
     let resize_floor = graph.resize_nearest(
         &input,
         &size_tensor,
-        MPSGraphResizeNearestRoundingMode::Floor,
+        ResizeNearestRoundingMode::Floor,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -152,7 +152,7 @@ fn test_resize_nearest_with_rounding_modes() {
     let resize_round_prefer_ceil = graph.resize_nearest(
         &input,
         &size_tensor,
-        MPSGraphResizeNearestRoundingMode::RoundPreferCeil,
+        ResizeNearestRoundingMode::RoundPreferCeil,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -257,7 +257,7 @@ fn test_resize_with_scale_offset() {
         &input,
         &size_tensor,
         &scale_offset_tensor,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         TensorNamedDataLayout::NCHW,
         Some("ResizeWithScaleOffset"),
     );
@@ -296,7 +296,7 @@ fn test_resize_gradient() {
     let resized = graph.resize(
         &input,
         &target_size,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -311,7 +311,7 @@ fn test_resize_gradient() {
     let resize_grad = graph.resize_gradient(
         &gradient,
         &input,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         true,  // center_result
         false, // align_corners
         TensorNamedDataLayout::NCHW,
@@ -391,7 +391,7 @@ fn test_resize_gradient_with_scale_offset() {
         &input,
         &size_tensor,
         &scale_offset_tensor,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         TensorNamedDataLayout::NCHW,
         Some("ResizeWithScaleOffset"),
     );
@@ -405,7 +405,7 @@ fn test_resize_gradient_with_scale_offset() {
         &gradient,
         &input,
         &scale_offset_tensor,
-        MPSGraphResizeMode::Bilinear,
+        ResizeMode::Bilinear,
         TensorNamedDataLayout::NCHW,
         Some("ResizeGradientWithScaleOffset"),
     );

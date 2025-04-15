@@ -2,8 +2,8 @@ use crate::{
     core::MPSDataType,
     graph::Graph,
     pooling_ops::{
-        MPSGraphPaddingStyle, MPSGraphPooling2DOpDescriptor, MPSGraphPooling4DOpDescriptor,
-        MPSGraphPoolingReturnIndicesMode, TensorNamedDataLayout,
+        PaddingStyle, Pooling2DOpDescriptor, Pooling4DOpDescriptor,
+        PoolingReturnIndicesMode, TensorNamedDataLayout,
     },
     shape::Shape,
     tensor::Tensor,
@@ -27,7 +27,7 @@ fn verify_result_exists(
 #[test]
 fn test_pooling_2d_descriptors() {
     // Test creating 2D pooling descriptors
-    let descriptor1 = MPSGraphPooling2DOpDescriptor::new(
+    let descriptor1 = Pooling2DOpDescriptor::new(
         2,
         2, // kernel size
         2,
@@ -38,17 +38,17 @@ fn test_pooling_2d_descriptors() {
         0, // padding left/right
         0,
         0, // padding top/bottom
-        MPSGraphPaddingStyle::Explicit,
+        PaddingStyle::Explicit,
         TensorNamedDataLayout::NCHW,
     );
 
     // Test creating simplified 2D pooling descriptors
-    let descriptor2 = MPSGraphPooling2DOpDescriptor::new_simple(
+    let descriptor2 = Pooling2DOpDescriptor::new_simple(
         3,
         3, // kernel size
         1,
         1, // stride
-        MPSGraphPaddingStyle::TfSame,
+        PaddingStyle::TfSame,
         TensorNamedDataLayout::NHWC,
     );
 
@@ -56,7 +56,7 @@ fn test_pooling_2d_descriptors() {
     descriptor2.set_explicit_padding(1, 1, 1, 1);
 
     // Test setting return indices mode
-    descriptor1.set_return_indices_mode(MPSGraphPoolingReturnIndicesMode::GlobalFlatten2D);
+    descriptor1.set_return_indices_mode(PoolingReturnIndicesMode::GlobalFlatten2D);
 
     // Test setting return indices data type
     descriptor1.set_return_indices_data_type(MPSDataType::Int32);
@@ -71,22 +71,22 @@ fn test_pooling_2d_descriptors() {
 #[test]
 fn test_pooling_4d_descriptors() {
     // Test creating 4D pooling descriptors
-    let descriptor1 = MPSGraphPooling4DOpDescriptor::new(
+    let descriptor1 = Pooling4DOpDescriptor::new(
         &[2, 2, 2, 2],             // kernel sizes
         &[2, 2, 2, 2],             // strides
         &[1, 1, 1, 1],             // dilation rates
         &[0, 0, 0, 0, 0, 0, 0, 0], // padding values (left, right, top, bottom, etc.)
-        MPSGraphPaddingStyle::Explicit,
+        PaddingStyle::Explicit,
     );
 
     // Test creating simplified 4D pooling descriptors
-    let _descriptor2 = MPSGraphPooling4DOpDescriptor::new_simple(
+    let _descriptor2 = Pooling4DOpDescriptor::new_simple(
         &[3, 3, 3, 3], // kernel sizes
-        MPSGraphPaddingStyle::TfValid,
+        PaddingStyle::TfValid,
     );
 
     // Test setting return indices mode
-    descriptor1.set_return_indices_mode(MPSGraphPoolingReturnIndicesMode::GlobalFlatten4D);
+    descriptor1.set_return_indices_mode(PoolingReturnIndicesMode::GlobalFlatten4D);
 
     // Test setting return indices data type
     descriptor1.set_return_indices_data_type(MPSDataType::Int32);
@@ -107,12 +107,12 @@ fn test_max_pooling_2d() {
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
-    let descriptor = MPSGraphPooling2DOpDescriptor::new_simple(
+    let descriptor = Pooling2DOpDescriptor::new_simple(
         2,
         2, // kernel size
         2,
         2, // stride
-        MPSGraphPaddingStyle::TfValid,
+        PaddingStyle::TfValid,
         TensorNamedDataLayout::NCHW,
     );
 
@@ -155,12 +155,12 @@ fn test_avg_pooling_2d() {
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
-    let descriptor = MPSGraphPooling2DOpDescriptor::new_simple(
+    let descriptor = Pooling2DOpDescriptor::new_simple(
         2,
         2, // kernel size
         2,
         2, // stride
-        MPSGraphPaddingStyle::TfValid,
+        PaddingStyle::TfValid,
         TensorNamedDataLayout::NCHW,
     );
 
@@ -200,12 +200,12 @@ fn test_l2_norm_pooling_2d() {
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
-    let descriptor = MPSGraphPooling2DOpDescriptor::new_simple(
+    let descriptor = Pooling2DOpDescriptor::new_simple(
         2,
         2, // kernel size
         2,
         2, // stride
-        MPSGraphPaddingStyle::TfValid,
+        PaddingStyle::TfValid,
         TensorNamedDataLayout::NCHW,
     );
 
@@ -240,12 +240,12 @@ fn test_pooling_gradients() {
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
-    let descriptor = MPSGraphPooling2DOpDescriptor::new_simple(
+    let descriptor = Pooling2DOpDescriptor::new_simple(
         2,
         2, // kernel size
         2,
         2, // stride
-        MPSGraphPaddingStyle::TfValid,
+        PaddingStyle::TfValid,
         TensorNamedDataLayout::NCHW,
     );
 
@@ -310,9 +310,9 @@ fn test_max_pooling_4d() {
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
-    let descriptor = MPSGraphPooling4DOpDescriptor::new_simple(
+    let descriptor = Pooling4DOpDescriptor::new_simple(
         &[1, 1, 2, 2], // kernel sizes
-        MPSGraphPaddingStyle::TfValid,
+        PaddingStyle::TfValid,
     );
 
     // Define max pooling operation
@@ -346,12 +346,12 @@ fn test_avg_pooling_4d() {
     let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
 
     // Create pooling descriptor
-    let descriptor = MPSGraphPooling4DOpDescriptor::new(
+    let descriptor = Pooling4DOpDescriptor::new(
         &[1, 1, 2, 2],             // kernel sizes
         &[1, 1, 1, 1],             // strides
         &[1, 1, 1, 1],             // dilation rates
         &[0, 0, 0, 0, 0, 0, 0, 0], // padding values
-        MPSGraphPaddingStyle::Explicit,
+        PaddingStyle::Explicit,
     );
 
     // Define avg pooling operation

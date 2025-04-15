@@ -7,7 +7,7 @@ use objc2::runtime::AnyObject;
 /// Random distribution types supported by MPSGraph
 #[repr(u64)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum MPSGraphRandomDistribution {
+pub enum RandomDistribution {
     /// Uniform distribution, with samples drawn uniformly from [min, max) for float types,
     /// and [min, max] for integer types
     Uniform = 0,
@@ -20,7 +20,7 @@ pub enum MPSGraphRandomDistribution {
 /// Sampling methods for normal distributions
 #[repr(u64)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum MPSGraphRandomNormalSamplingMethod {
+pub enum RandomNormalSamplingMethod {
     /// Use inverse erf to convert uniform values to values in the normal distribution
     InverseCDF = 0,
     /// Use Box Muller transform to convert uniform values to values in the normal distribution
@@ -28,18 +28,18 @@ pub enum MPSGraphRandomNormalSamplingMethod {
 }
 
 /// Descriptor for random operations in MPSGraph
-pub struct MPSGraphRandomOpDescriptor(pub(crate) *mut AnyObject);
+pub struct RandomOpDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphRandomOpDescriptor {
+impl RandomOpDescriptor {
     /// Creates a new random operation descriptor with the specified distribution and data type
-    pub fn new(distribution: MPSGraphRandomDistribution, data_type: MPSDataType) -> Self {
+    pub fn new(distribution: RandomDistribution, data_type: MPSDataType) -> Self {
         unsafe {
             let descriptor: *mut AnyObject = msg_send![
                 class!(MPSGraphRandomOpDescriptor), descriptorWithDistribution: distribution as u64,
                 dataType: data_type as u64
             ];
             let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-            MPSGraphRandomOpDescriptor(descriptor)
+            RandomOpDescriptor(descriptor)
         }
     }
 
@@ -86,14 +86,14 @@ impl MPSGraphRandomOpDescriptor {
     }
 
     /// Sets the sampling method (for normal distributions)
-    pub fn set_sampling_method(&self, method: MPSGraphRandomNormalSamplingMethod) {
+    pub fn set_sampling_method(&self, method: RandomNormalSamplingMethod) {
         unsafe {
             let _: () = msg_send![self.0, setSamplingMethod: method as u64];
         }
     }
 }
 
-impl Drop for MPSGraphRandomOpDescriptor {
+impl Drop for RandomOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -101,15 +101,15 @@ impl Drop for MPSGraphRandomOpDescriptor {
     }
 }
 
-// Enable Send and Sync for MPSGraphRandomOpDescriptor
-unsafe impl Send for MPSGraphRandomOpDescriptor {}
-unsafe impl Sync for MPSGraphRandomOpDescriptor {}
+// Enable Send and Sync for RandomOpDescriptor
+unsafe impl Send for RandomOpDescriptor {}
+unsafe impl Sync for RandomOpDescriptor {}
 
-impl Clone for MPSGraphRandomOpDescriptor {
+impl Clone for RandomOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-            MPSGraphRandomOpDescriptor(obj)
+            RandomOpDescriptor(obj)
         }
     }
 }
@@ -166,7 +166,7 @@ impl Graph {
     pub fn random_tensor(
         &self,
         shape: &[usize],
-        descriptor: &MPSGraphRandomOpDescriptor,
+        descriptor: &RandomOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -191,7 +191,7 @@ impl Graph {
     pub fn random_tensor_with_seed(
         &self,
         shape: &[usize],
-        descriptor: &MPSGraphRandomOpDescriptor,
+        descriptor: &RandomOpDescriptor,
         seed: usize,
         name: Option<&str>,
     ) -> Tensor {
@@ -218,7 +218,7 @@ impl Graph {
     pub fn random_tensor_with_state(
         &self,
         shape: &[usize],
-        descriptor: &MPSGraphRandomOpDescriptor,
+        descriptor: &RandomOpDescriptor,
         state: &Tensor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {

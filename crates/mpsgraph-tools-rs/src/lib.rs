@@ -24,7 +24,7 @@ pub mod prelude {
     // Tensor operations (our additional functionality)
     pub use crate::tensor_ops;
     pub use crate::tensor_ops::{
-        abs, clip, exp, gelu, log, pow, relu, sigmoid, silu, sqrt, square, tanh, GraphExt, Tensor,
+        abs, clip, exp, gelu, log, pow, relu, sigmoid, silu, sqrt, square, tanh, GraphExtensions, Tensor,
     };
 }
 

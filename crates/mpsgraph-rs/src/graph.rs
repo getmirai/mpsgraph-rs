@@ -1,12 +1,12 @@
 #![allow(clippy::let_and_return)]
 
 use crate::command_buffer::MPSCommandBuffer;
-use crate::core::{AsRawObject, MPSDataType, MPSGraphOptions};
+use crate::core::{AsRawObject, MPSDataType, Options};
 use crate::device::Device;
 use crate::executable::{
-    CompilationDescriptor, MPSGraphExecutable, ExecutionDescriptor,
+    CompilationDescriptor, Executable, ExecutionDescriptor,
 };
-use crate::operation::MPSGraphOperation;
+use crate::operation::Operation;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
 use crate::tensor_data::TensorData;
@@ -154,7 +154,7 @@ impl Graph {
     }
 
     /// Sets the options for this graph
-    pub fn set_options(&self, options: MPSGraphOptions) {
+    pub fn set_options(&self, options: Options) {
         unsafe {
             let _: () = msg_send![self.0, setOptions:options as u64];
         }
@@ -344,7 +344,7 @@ impl Graph {
         feeds: &HashMap<Tensor, TensorData>,
         targets: &[Tensor],
         descriptor: Option<&CompilationDescriptor>,
-    ) -> MPSGraphExecutable {
+    ) -> Executable {
         unsafe {
             // Get the device pointer
             let device_obj = device.0;
@@ -383,7 +383,7 @@ impl Graph {
             ];
 
             let executable = objc2::ffi::objc_retain(executable as *mut _);
-            MPSGraphExecutable(executable)
+            Executable(executable)
         }
     }
 
@@ -393,9 +393,9 @@ impl Graph {
         device: &Device,
         feeds: &HashMap<Tensor, TensorData>,
         targets: &[Tensor],
-        target_ops: &[MPSGraphOperation],
+        target_ops: &[Operation],
         descriptor: Option<&CompilationDescriptor>,
-    ) -> MPSGraphExecutable {
+    ) -> Executable {
         unsafe {
             // Get the device pointer
             let device_obj = device.0;
@@ -439,7 +439,7 @@ impl Graph {
             ];
 
             let executable = objc2::ffi::objc_retain(executable as *mut _);
-            MPSGraphExecutable(executable)
+            Executable(executable)
         }
     }
 
@@ -491,7 +491,7 @@ impl Graph {
         &self,
         feeds: &HashMap<Tensor, TensorData>,
         targets: &[Tensor],
-        target_ops: &[MPSGraphOperation],
+        target_ops: &[Operation],
     ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Create the feeds dictionary
@@ -605,7 +605,7 @@ impl Graph {
         device: &Device,
         feeds: &HashMap<Tensor, TensorData>,
         targets: &[Tensor],
-        target_ops: &[MPSGraphOperation],
+        target_ops: &[Operation],
     ) -> HashMap<Tensor, TensorData> {
         unsafe {
             // Get the device pointer
@@ -667,7 +667,7 @@ impl Graph {
         &self,
         feeds: &HashMap<Tensor, TensorData>,
         target_tensors: &[Tensor],
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) -> HashMap<Tensor, TensorData> {
         unsafe {
@@ -739,7 +739,7 @@ impl Graph {
         command_queue: &CommandQueue,
         feeds: &HashMap<Tensor, TensorData>,
         target_tensors: &[Tensor],
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) -> HashMap<Tensor, TensorData> {
         unsafe {
@@ -813,7 +813,7 @@ impl Graph {
         &self,
         command_queue: &CommandQueue,
         feeds: &HashMap<Tensor, TensorData>,
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         results_dict: &HashMap<Tensor, TensorData>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) {
@@ -893,7 +893,7 @@ impl Graph {
         command_buffer: &CommandBuffer,
         feeds: &HashMap<Tensor, TensorData>,
         target_tensors: &[Tensor],
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) -> HashMap<Tensor, TensorData> {
         // Create MPSCommandBuffer from the Metal command buffer
@@ -924,7 +924,7 @@ impl Graph {
         &self,
         command_buffer: &CommandBuffer,
         feeds: &HashMap<Tensor, TensorData>,
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         results_dict: &HashMap<Tensor, TensorData>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) {
@@ -958,7 +958,7 @@ impl Graph {
         command_buffer: &MPSCommandBuffer,
         feeds: &HashMap<Tensor, TensorData>,
         target_tensors: &[Tensor],
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) -> HashMap<Tensor, TensorData> {
         unsafe {
@@ -1032,7 +1032,7 @@ impl Graph {
         &self,
         command_buffer: &MPSCommandBuffer,
         feeds: &HashMap<Tensor, TensorData>,
-        target_operations: Option<&[MPSGraphOperation]>,
+        target_operations: Option<&[Operation]>,
         results_dict: &HashMap<Tensor, TensorData>,
         execution_descriptor: Option<&ExecutionDescriptor>,
     ) {

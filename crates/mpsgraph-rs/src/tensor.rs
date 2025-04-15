@@ -1,5 +1,5 @@
 use crate::core::MPSDataType;
-use crate::operation::MPSGraphOperation;
+use crate::operation::Operation;
 use crate::shape::Shape;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
@@ -38,11 +38,11 @@ impl Tensor {
     }
 
     /// Returns the operation that produced this tensor
-    pub fn operation(&self) -> MPSGraphOperation {
+    pub fn operation(&self) -> Operation {
         unsafe {
             let operation: *mut AnyObject = msg_send![self.0, operation];
             let operation = objc2::ffi::objc_retain(operation as *mut _);
-            MPSGraphOperation(operation)
+            Operation(operation)
         }
     }
 

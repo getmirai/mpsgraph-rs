@@ -6,9 +6,9 @@ use std::fmt;
 use std::ptr;
 
 /// A wrapper for Metal Performance Shaders Graph operation objects
-pub struct MPSGraphOperation(pub(crate) *mut AnyObject);
+pub struct Operation(pub(crate) *mut AnyObject);
 
-impl MPSGraphOperation {
+impl Operation {
     /// Returns the input tensors of this operation
     pub fn input_tensors(&self) -> Vec<Tensor> {
         unsafe {
@@ -62,7 +62,7 @@ impl MPSGraphOperation {
     }
 
     /// Returns the control dependencies of this operation
-    pub fn control_dependencies(&self) -> Vec<MPSGraphOperation> {
+    pub fn control_dependencies(&self) -> Vec<Operation> {
         unsafe {
             let dependencies: *mut AnyObject = msg_send![self.0, controlDependencies];
             let count: usize = msg_send![dependencies, count];
@@ -71,7 +71,7 @@ impl MPSGraphOperation {
             for i in 0..count {
                 let op: *mut AnyObject = msg_send![dependencies, objectAtIndex: i,];
                 let op = objc2::ffi::objc_retain(op as *mut _);
-                result.push(MPSGraphOperation(op));
+                result.push(Operation(op));
             }
 
             result
@@ -79,7 +79,7 @@ impl MPSGraphOperation {
     }
 }
 
-impl Drop for MPSGraphOperation {
+impl Drop for Operation {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -89,22 +89,22 @@ impl Drop for MPSGraphOperation {
     }
 }
 
-impl Clone for MPSGraphOperation {
+impl Clone for Operation {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphOperation(obj)
+                Operation(obj)
             } else {
-                MPSGraphOperation(ptr::null_mut())
+                Operation(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphOperation {
+impl fmt::Debug for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphOperation")
+        f.debug_struct("Operation")
             .field("name", &self.name())
             .finish()
     }

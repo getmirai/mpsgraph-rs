@@ -7,9 +7,9 @@ use objc2::msg_send;
 use objc2::runtime::AnyObject;
 
 /// Descriptor for Image to Column operations
-pub struct MPSGraphImToColOpDescriptor(pub(crate) *mut AnyObject);
+pub struct ImToColOpDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphImToColOpDescriptor {
+impl ImToColOpDescriptor {
     /// Creates a new descriptor with full parameters for im2col operations
     ///
     /// # Arguments
@@ -56,11 +56,11 @@ impl MPSGraphImToColOpDescriptor {
                     dataLayout: data_layout as u64
                 ];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphImToColOpDescriptor(descriptor)
+                ImToColOpDescriptor(descriptor)
             } else {
                 // Fall back to creating an empty object if class not found
                 let empty_obj: *mut AnyObject = std::ptr::null_mut();
-                MPSGraphImToColOpDescriptor(empty_obj)
+                ImToColOpDescriptor(empty_obj)
             }
         }
     }
@@ -99,11 +99,11 @@ impl MPSGraphImToColOpDescriptor {
                     dataLayout: data_layout as u64
                 ];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphImToColOpDescriptor(descriptor)
+                ImToColOpDescriptor(descriptor)
             } else {
                 // Fall back to creating an empty object if class not found
                 let empty_obj: *mut AnyObject = std::ptr::null_mut();
-                MPSGraphImToColOpDescriptor(empty_obj)
+                ImToColOpDescriptor(empty_obj)
             }
         }
     }
@@ -190,7 +190,7 @@ impl MPSGraphImToColOpDescriptor {
     }
 }
 
-impl Drop for MPSGraphImToColOpDescriptor {
+impl Drop for ImToColOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -198,11 +198,11 @@ impl Drop for MPSGraphImToColOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphImToColOpDescriptor {
+impl Clone for ImToColOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphImToColOpDescriptor(desc)
+            ImToColOpDescriptor(desc)
         }
     }
 }
@@ -226,7 +226,7 @@ impl Graph {
     pub fn im_to_col(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphImToColOpDescriptor,
+        descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -262,7 +262,7 @@ impl Graph {
         &self,
         source: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphImToColOpDescriptor,
+        descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -287,7 +287,7 @@ impl Graph {
     pub fn image_to_column(
         &self,
         source: &Tensor,
-        descriptor: &MPSGraphImToColOpDescriptor,
+        descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         self.im_to_col(source, descriptor, name)
@@ -298,7 +298,7 @@ impl Graph {
         &self,
         source: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphImToColOpDescriptor,
+        descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         self.col_to_im(source, output_shape, descriptor, name)

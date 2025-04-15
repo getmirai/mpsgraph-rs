@@ -11,7 +11,7 @@ use objc2_foundation::{NSArray, NSNumber};
 /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphFFTScalingMode {
+pub enum FFTScalingMode {
     /// No scaling
     None = 0,
     /// Scale by reciprocal of total FFT size
@@ -23,15 +23,15 @@ pub enum MPSGraphFFTScalingMode {
 /// Descriptor for FFT operations
 ///
 /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-pub struct MPSGraphFFTDescriptor(pub(crate) *mut AnyObject);
+pub struct FFTDescriptor(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphFFTDescriptor {
+impl Default for FFTDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphFFTDescriptor {
+impl FFTDescriptor {
     /// Creates a new FFT descriptor with default settings
     pub fn new() -> Self {
         unsafe {
@@ -39,7 +39,7 @@ impl MPSGraphFFTDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptor];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphFFTDescriptor(descriptor)
+                FFTDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphFFTDescriptor not found")
             }
@@ -59,21 +59,21 @@ impl MPSGraphFFTDescriptor {
     }
 
     /// Sets the scaling mode
-    pub fn set_scaling_mode(&self, mode: MPSGraphFFTScalingMode) {
+    pub fn set_scaling_mode(&self, mode: FFTScalingMode) {
         unsafe {
             let _: () = msg_send![self.0, setScalingMode: mode as u64];
         }
     }
 
     /// Gets the scaling mode
-    pub fn scaling_mode(&self) -> MPSGraphFFTScalingMode {
+    pub fn scaling_mode(&self) -> FFTScalingMode {
         unsafe {
             let mode: u64 = msg_send![self.0, scalingMode];
             match mode {
-                0 => MPSGraphFFTScalingMode::None,
-                1 => MPSGraphFFTScalingMode::Size,
-                2 => MPSGraphFFTScalingMode::Unitary,
-                _ => MPSGraphFFTScalingMode::None,
+                0 => FFTScalingMode::None,
+                1 => FFTScalingMode::Size,
+                2 => FFTScalingMode::Unitary,
+                _ => FFTScalingMode::None,
             }
         }
     }
@@ -91,7 +91,7 @@ impl MPSGraphFFTDescriptor {
     }
 }
 
-impl Drop for MPSGraphFFTDescriptor {
+impl Drop for FFTDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -99,11 +99,11 @@ impl Drop for MPSGraphFFTDescriptor {
     }
 }
 
-impl Clone for MPSGraphFFTDescriptor {
+impl Clone for FFTDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphFFTDescriptor(desc)
+            FFTDescriptor(desc)
         }
     }
 }
@@ -130,7 +130,7 @@ impl Graph {
         &self,
         tensor: &Tensor,
         axes: &[u64],
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -179,7 +179,7 @@ impl Graph {
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -220,7 +220,7 @@ impl Graph {
         &self,
         tensor: &Tensor,
         axes: &[u64],
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -269,7 +269,7 @@ impl Graph {
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -310,7 +310,7 @@ impl Graph {
         &self,
         tensor: &Tensor,
         axes: &[u64],
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -359,7 +359,7 @@ impl Graph {
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -403,7 +403,7 @@ impl Graph {
         &self,
         real: &Tensor,
         imaginary: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {
         let name_obj = match name {
@@ -459,7 +459,7 @@ impl Graph {
         &self,
         real: &Tensor,
         imaginary: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {
         let name_obj = match name {
@@ -509,7 +509,7 @@ impl Graph {
     pub fn forward_real_fft(
         &self,
         real: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {
         let name_obj = match name {
@@ -560,7 +560,7 @@ impl Graph {
         &self,
         real: &Tensor,
         imaginary: &Tensor,
-        descriptor: &MPSGraphFFTDescriptor,
+        descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {

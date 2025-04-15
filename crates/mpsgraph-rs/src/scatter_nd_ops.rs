@@ -8,7 +8,7 @@ use objc2::runtime::AnyObject;
 /// Scatter operation mode
 #[repr(i64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphScatterMode {
+pub enum ScatterMode {
     /// Add values
     Add = 0,
     /// Subtract values
@@ -45,7 +45,7 @@ impl Graph {
         indices_tensor: &Tensor,
         shape: &Shape,
         batch_dimensions: usize,
-        mode: MPSGraphScatterMode,
+        mode: ScatterMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -120,7 +120,7 @@ impl Graph {
         updates_tensor: &Tensor,
         indices_tensor: &Tensor,
         batch_dimensions: usize,
-        mode: MPSGraphScatterMode,
+        mode: ScatterMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -160,7 +160,7 @@ impl Graph {
         indices_tensor: &Tensor,
         shape: &Shape,
         axis: isize,
-        mode: MPSGraphScatterMode,
+        mode: ScatterMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -200,7 +200,7 @@ impl Graph {
         updates_tensor: &Tensor,
         indices_tensor: &Tensor,
         axis: isize,
-        mode: MPSGraphScatterMode,
+        mode: ScatterMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -240,7 +240,7 @@ impl Graph {
         updates_tensor: &Tensor,
         indices_tensor: &Tensor,
         shape: &Shape,
-        mode: MPSGraphScatterMode,
+        mode: ScatterMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -280,7 +280,7 @@ impl Graph {
         data_tensor: &Tensor,
         updates_tensor: &Tensor,
         indices_tensor: &Tensor,
-        mode: MPSGraphScatterMode,
+        mode: ScatterMode,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {

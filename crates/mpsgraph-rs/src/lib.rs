@@ -63,84 +63,94 @@ pub mod top_k_ops;
 
 // Re-export most commonly used types
 pub use command_buffer::MPSCommandBuffer;
-pub use convolution_transpose_ops::{
-    MPSGraphConvolution2DOpDescriptor, PaddingStyle, TensorNamedDataLayout,
+pub use convolution_ops::{
+    Convolution2DOpDescriptor, Convolution3DOpDescriptor, PaddingMode, ConvolutionDataLayout, WeightsLayout, 
 };
+pub use convolution_transpose_ops::{PaddingStyle, TensorNamedDataLayout};
 pub use core::{
-    MPSDataType, MPSGraphExecutionStage, MPSGraphOptimization, MPSGraphOptimizationProfile,
-    MPSGraphOptions,
+    MPSDataType, ExecutionStage, Optimization, OptimizationProfile,
+    Options,
 };
-pub use data_types::{MPSGraphShapedType, MPSGraphType};
+pub use data_types::{ShapedType, Type, ShapeDescriptor};
 pub use depthwise_convolution_ops::{
-    MPSGraphDepthwiseConvolution2DOpDescriptor, MPSGraphDepthwiseConvolution3DOpDescriptor,
+    DepthwiseConvolution2DOpDescriptor, DepthwiseConvolution3DOpDescriptor,
 };
 pub use device::Device;
 pub use executable::{
-    CompilationDescriptor, MPSGraphExecutable, ExecutionDescriptor,
+    CompilationDescriptor, ExecutionDescriptor, Executable, ExecutionResult, 
+    ExecutableSerializationDescriptor, ExecutableExecutionDescriptor,
 };
 pub use graph::Graph;
 pub use graph::TensorDataScalar;
-pub use loss_ops::MPSGraphLossReductionType;
-pub use operation::MPSGraphOperation;
+pub use loss_ops::LossReductionType;
+pub use operation::Operation;
 pub use random_ops::{
-    MPSGraphRandomDistribution, MPSGraphRandomNormalSamplingMethod, MPSGraphRandomOpDescriptor,
+    RandomDistribution, RandomNormalSamplingMethod, RandomOpDescriptor,
 };
 pub use rnn_ops::{
-    MPSGraphGRUDescriptor, MPSGraphLSTMDescriptor, MPSGraphRNNActivation,
-    MPSGraphSingleGateRNNDescriptor,
+    GRUDescriptor, LSTMDescriptor, RNNActivation,
+    SingleGateRNNDescriptor,
 };
 pub use shape::Shape;
 pub use tensor::Tensor;
 pub use tensor_data::TensorData;
 // Note: gather_ops doesn't have any standalone structs or enums to re-export
-pub use fourier_transform_ops::{MPSGraphFFTDescriptor, MPSGraphFFTScalingMode};
-pub use im2col_ops::MPSGraphImToColOpDescriptor;
-pub use non_maximum_suppression_ops::MPSGraphNonMaximumSuppressionCoordinateMode;
-pub use resize_ops::{MPSGraphResizeMode, MPSGraphResizeNearestRoundingMode};
-pub use sample_grid_ops::MPSGraphPaddingMode;
-pub use scatter_nd_ops::MPSGraphScatterMode;
-pub use sparse_ops::{MPSGraphCreateSparseOpDescriptor, MPSGraphSparseStorageType};
-pub use stencil_ops::{MPSGraphReductionMode, MPSGraphStencilOpDescriptor};
+pub use fourier_transform_ops::{FFTDescriptor, FFTScalingMode};
+pub use im2col_ops::ImToColOpDescriptor;
+pub use non_maximum_suppression_ops::NonMaximumSuppressionCoordinateMode;
+pub use resize_ops::{ResizeMode, ResizeNearestRoundingMode};
+// Removed duplicate import: pub use sample_grid_ops::PaddingMode;
+pub use scatter_nd_ops::ScatterMode;
+pub use sparse_ops::{CreateSparseOpDescriptor, SparseStorageType};
+pub use pooling_ops::{
+    PoolingReturnIndicesMode, Pooling2DOpDescriptor, Pooling4DOpDescriptor,
+};
+pub use stencil_ops::{ReductionMode, StencilOpDescriptor};
 
 /// Convenience prelude module with most commonly used items
 pub mod prelude {
     pub use crate::command_buffer::MPSCommandBuffer;
-    pub use crate::convolution_transpose_ops::{
-        MPSGraphConvolution2DOpDescriptor, PaddingStyle, TensorNamedDataLayout,
+    pub use crate::convolution_ops::{
+        Convolution2DOpDescriptor, Convolution3DOpDescriptor, PaddingMode, ConvolutionDataLayout, WeightsLayout, 
     };
+    pub use crate::convolution_transpose_ops::{PaddingStyle, TensorNamedDataLayout};
     pub use crate::core::{
-        MPSDataType, MPSGraphExecutionStage, MPSGraphOptimization, MPSGraphOptimizationProfile,
-        MPSGraphOptions,
+        MPSDataType, ExecutionStage, Optimization, OptimizationProfile,
+        Options,
     };
-    pub use crate::data_types::{MPSGraphShapedType, MPSGraphType};
+    pub use crate::data_types::{ShapedType, Type, ShapeDescriptor};
     pub use crate::depthwise_convolution_ops::{
-        MPSGraphDepthwiseConvolution2DOpDescriptor, MPSGraphDepthwiseConvolution3DOpDescriptor,
+        DepthwiseConvolution2DOpDescriptor, DepthwiseConvolution3DOpDescriptor,
     };
     pub use crate::device::Device;
     pub use crate::executable::{
-        CompilationDescriptor, MPSGraphExecutable, ExecutionDescriptor,
+        CompilationDescriptor, ExecutionDescriptor, Executable, ExecutionResult,
+        ExecutableSerializationDescriptor, ExecutableExecutionDescriptor,
     };
     pub use crate::graph::Graph;
     pub use crate::graph::TensorDataScalar;
-    pub use crate::loss_ops::MPSGraphLossReductionType;
-    pub use crate::operation::MPSGraphOperation;
+    pub use crate::loss_ops::LossReductionType;
+    pub use crate::operation::Operation;
     pub use crate::random_ops::{
-        MPSGraphRandomDistribution, MPSGraphRandomNormalSamplingMethod, MPSGraphRandomOpDescriptor,
+        RandomDistribution, RandomNormalSamplingMethod, RandomOpDescriptor,
     };
     pub use crate::rnn_ops::{
-        MPSGraphGRUDescriptor, MPSGraphLSTMDescriptor, MPSGraphRNNActivation,
-        MPSGraphSingleGateRNNDescriptor,
+        GRUDescriptor, LSTMDescriptor, RNNActivation,
+        SingleGateRNNDescriptor,
     };
     pub use crate::shape::Shape;
     pub use crate::tensor::Tensor;
     pub use crate::tensor_data::TensorData;
     // No separate types to import from gather_ops
-    pub use crate::fourier_transform_ops::{MPSGraphFFTDescriptor, MPSGraphFFTScalingMode};
-    pub use crate::im2col_ops::MPSGraphImToColOpDescriptor;
-    pub use crate::non_maximum_suppression_ops::MPSGraphNonMaximumSuppressionCoordinateMode;
-    pub use crate::resize_ops::{MPSGraphResizeMode, MPSGraphResizeNearestRoundingMode};
-    pub use crate::sample_grid_ops::MPSGraphPaddingMode;
-    pub use crate::scatter_nd_ops::MPSGraphScatterMode;
-    pub use crate::sparse_ops::{MPSGraphCreateSparseOpDescriptor, MPSGraphSparseStorageType};
-    pub use crate::stencil_ops::{MPSGraphReductionMode, MPSGraphStencilOpDescriptor};
+    pub use crate::fourier_transform_ops::{FFTDescriptor, FFTScalingMode};
+    pub use crate::im2col_ops::ImToColOpDescriptor;
+    pub use crate::non_maximum_suppression_ops::NonMaximumSuppressionCoordinateMode;
+    pub use crate::resize_ops::{ResizeMode, ResizeNearestRoundingMode};
+    // Removed duplicate import: pub use crate::sample_grid_ops::PaddingMode;
+    pub use crate::scatter_nd_ops::ScatterMode;
+    pub use crate::sparse_ops::{CreateSparseOpDescriptor, SparseStorageType};
+    pub use crate::pooling_ops::{
+        PoolingReturnIndicesMode, Pooling2DOpDescriptor, Pooling4DOpDescriptor,
+    };
+    pub use crate::stencil_ops::{ReductionMode, StencilOpDescriptor};
 }

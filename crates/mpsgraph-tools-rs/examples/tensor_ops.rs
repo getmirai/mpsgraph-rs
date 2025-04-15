@@ -13,14 +13,14 @@
 
 use mpsgraph::{Graph, Shape, MPSDataType};
 use mpsgraph_tools::prelude::*;
-use mpsgraph_tools::tensor_ops::{GraphExt, Tensor};
+use mpsgraph_tools::tensor_ops::{GraphExtensions, Tensor};
 
 fn main() {
     // Create graph and input tensors
     let graph = Graph::new();
     let shape = Shape::from_slice(&[2usize, 3usize]);
 
-    // Use the GraphExt trait to create tensors directly
+    // Use the GraphExtensions trait to create tensors directly
     let a = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("a"));
     let b = graph.placeholder_tensor(&shape, MPSDataType::Float32, Some("b"));
 
@@ -46,7 +46,7 @@ fn main() {
     let _silu_a = silu(&a, None);
     let _gelu_a = gelu(&a, None);
 
-    // 5. Tensor creation using GraphExt trait
+    // 5. Tensor creation using GraphExtensions trait
     let _zeros = graph.zeros(&[2, 3], MPSDataType::Float32);
     let _ones = graph.ones(&[2, 3], MPSDataType::Float32);
     let _random = graph.create_random_uniform(0.0, 1.0, &[2, 2], MPSDataType::Float32);

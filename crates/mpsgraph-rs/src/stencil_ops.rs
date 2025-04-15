@@ -8,7 +8,7 @@ use objc2::runtime::AnyObject;
 /// The reduction mode for stencil operations.
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphReductionMode {
+pub enum ReductionMode {
     /// Min reduction
     Min = 0,
     /// Max reduction
@@ -24,15 +24,15 @@ pub enum MPSGraphReductionMode {
 }
 
 /// Descriptor for stencil operations
-pub struct MPSGraphStencilOpDescriptor(pub(crate) *mut AnyObject);
+pub struct StencilOpDescriptor(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphStencilOpDescriptor {
+impl Default for StencilOpDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphStencilOpDescriptor {
+impl StencilOpDescriptor {
     /// Creates a new stencil operation descriptor with default values
     pub fn new() -> Self {
         unsafe {
@@ -40,10 +40,10 @@ impl MPSGraphStencilOpDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptor];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphStencilOpDescriptor(descriptor)
+                StencilOpDescriptor(descriptor)
             } else {
                 // Fall back to a null descriptor if class not found
-                MPSGraphStencilOpDescriptor(std::ptr::null_mut())
+                StencilOpDescriptor(std::ptr::null_mut())
             }
         }
     }
@@ -58,10 +58,10 @@ impl MPSGraphStencilOpDescriptor {
                 let descriptor: *mut AnyObject =
                     msg_send![cls, descriptorWithPaddingStyle: padding_style as i64];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphStencilOpDescriptor(descriptor)
+                StencilOpDescriptor(descriptor)
             } else {
                 // Fall back to a null descriptor if class not found
-                MPSGraphStencilOpDescriptor(std::ptr::null_mut())
+                StencilOpDescriptor(std::ptr::null_mut())
             }
         }
     }
@@ -74,10 +74,10 @@ impl MPSGraphStencilOpDescriptor {
                 let descriptor: *mut AnyObject =
                     msg_send![cls, descriptorWithExplicitPadding: explicit_padding.0,];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphStencilOpDescriptor(descriptor)
+                StencilOpDescriptor(descriptor)
             } else {
                 // Fall back to a null descriptor if class not found
-                MPSGraphStencilOpDescriptor(std::ptr::null_mut())
+                StencilOpDescriptor(std::ptr::null_mut())
             }
         }
     }
@@ -92,22 +92,22 @@ impl MPSGraphStencilOpDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptorWithOffsets: offsets.0, explicitPadding: explicit_padding.0,];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphStencilOpDescriptor(descriptor)
+                StencilOpDescriptor(descriptor)
             } else {
                 // Fall back to a null descriptor if class not found
-                MPSGraphStencilOpDescriptor(std::ptr::null_mut())
+                StencilOpDescriptor(std::ptr::null_mut())
             }
         }
     }
 
     /// Creates a new stencil operation descriptor with all parameters specified
     pub fn with_all_params(
-        reduction_mode: MPSGraphReductionMode,
+        reduction_mode: ReductionMode,
         offsets: &Shape,
         strides: &Shape,
         dilation_rates: &Shape,
         explicit_padding: &Shape,
-        boundary_mode: crate::sample_grid_ops::MPSGraphPaddingMode,
+        boundary_mode: crate::sample_grid_ops::PaddingMode,
         padding_style: crate::convolution_transpose_ops::PaddingStyle,
         padding_constant: f32,
     ) -> Self {
@@ -124,16 +124,16 @@ impl MPSGraphStencilOpDescriptor {
                     paddingConstant: padding_constant,
                 ];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphStencilOpDescriptor(descriptor)
+                StencilOpDescriptor(descriptor)
             } else {
                 // Fall back to a null descriptor if class not found
-                MPSGraphStencilOpDescriptor(std::ptr::null_mut())
+                StencilOpDescriptor(std::ptr::null_mut())
             }
         }
     }
 
     /// Sets the reduction mode
-    pub fn set_reduction_mode(&self, mode: MPSGraphReductionMode) {
+    pub fn set_reduction_mode(&self, mode: ReductionMode) {
         unsafe {
             let _: () = msg_send![self.0, setReductionMode: mode as u64];
         }
@@ -168,7 +168,7 @@ impl MPSGraphStencilOpDescriptor {
     }
 
     /// Sets the boundary mode
-    pub fn set_boundary_mode(&self, mode: crate::sample_grid_ops::MPSGraphPaddingMode) {
+    pub fn set_boundary_mode(&self, mode: crate::sample_grid_ops::PaddingMode) {
         unsafe {
             let _: () = msg_send![self.0, setBoundaryMode: mode as i64];
         }
@@ -189,7 +189,7 @@ impl MPSGraphStencilOpDescriptor {
     }
 }
 
-impl Drop for MPSGraphStencilOpDescriptor {
+impl Drop for StencilOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -197,11 +197,11 @@ impl Drop for MPSGraphStencilOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphStencilOpDescriptor {
+impl Clone for StencilOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphStencilOpDescriptor(desc)
+            StencilOpDescriptor(desc)
         }
     }
 }
@@ -230,7 +230,7 @@ impl Graph {
         &self,
         source: &Tensor,
         weights: &Tensor,
-        descriptor: &MPSGraphStencilOpDescriptor,
+        descriptor: &StencilOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {

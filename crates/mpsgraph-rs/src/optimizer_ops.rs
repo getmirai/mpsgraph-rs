@@ -1,6 +1,6 @@
 use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
-use crate::operation::MPSGraphOperation;
+use crate::operation::Operation;
 use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::runtime::AnyObject;
@@ -11,15 +11,15 @@ use std::ptr;
 /// In MPSGraph, a variable operation is a special operation that creates a tensor
 /// which can be updated during the graph execution. This is particularly useful for
 /// trainable parameters in machine learning models.
-pub struct MPSGraphVariableOp(pub(crate) *mut AnyObject);
+pub struct VariableOp(pub(crate) *mut AnyObject);
 
-impl MPSGraphVariableOp {
+impl VariableOp {
     /// Returns the operation associated with this variable.
-    pub fn operation(&self) -> MPSGraphOperation {
+    pub fn operation(&self) -> Operation {
         unsafe {
             let op: *mut AnyObject = msg_send![self.0, operation];
             let op = objc2::ffi::objc_retain(op as *mut _);
-            MPSGraphOperation(op)
+            Operation(op)
         }
     }
 
@@ -33,7 +33,7 @@ impl MPSGraphVariableOp {
     }
 }
 
-impl Drop for MPSGraphVariableOp {
+impl Drop for VariableOp {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -43,11 +43,11 @@ impl Drop for MPSGraphVariableOp {
     }
 }
 
-impl Clone for MPSGraphVariableOp {
+impl Clone for VariableOp {
     fn clone(&self) -> Self {
         unsafe {
             let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-            MPSGraphVariableOp(obj)
+            VariableOp(obj)
         }
     }
 }
@@ -338,12 +338,12 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A new MPSGraphVariableOp wrapper
+    /// A new VariableOp wrapper
     pub fn variable_op_for_tensor(
         &self,
         tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphVariableOp {
+    ) -> VariableOp {
         unsafe {
             let name_obj = match name {
                 Some(s) => NSString::from_str(s).as_raw_object(),
@@ -356,7 +356,7 @@ impl Graph {
             ];
 
             let variable_op = objc2::ffi::objc_retain(variable_op as *mut _);
-            MPSGraphVariableOp(variable_op)
+            VariableOp(variable_op)
         }
     }
 
@@ -399,7 +399,7 @@ impl Graph {
     pub fn apply_stochastic_gradient_descent(
         &self,
         learning_rate: &Tensor,
-        variable_op: &MPSGraphVariableOp,
+        variable_op: &VariableOp,
         gradient: &Tensor,
         name: Option<&str>,
     ) -> Tensor {

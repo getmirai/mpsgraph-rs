@@ -1,6 +1,6 @@
 use crate::core::{AsRawObject, MPSDataType, NSString};
 use crate::graph::Graph;
-use crate::operation::MPSGraphOperation;
+use crate::operation::Operation;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
 use objc2::msg_send;
@@ -212,7 +212,7 @@ impl Graph {
         variable: &Tensor,
         tensor: &Tensor,
         name: Option<&str>,
-    ) -> MPSGraphOperation {
+    ) -> Operation {
         let name_obj = match name {
             Some(s) => NSString::from_str(s).as_raw_object(),
             None => std::ptr::null_mut(),
@@ -226,7 +226,7 @@ impl Graph {
             ];
 
             let result = objc2::ffi::objc_retain(result as *mut _);
-            MPSGraphOperation(result)
+            Operation(result)
         }
     }
 }

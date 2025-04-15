@@ -1,6 +1,6 @@
 use crate::command_buffer::MPSCommandBuffer;
 use crate::core::{
-    AsRawObject, MPSDataType, MPSGraphOptimization, MPSGraphOptimizationProfile, NSString,
+    AsRawObject, MPSDataType, Optimization, OptimizationProfile, NSString,
 };
 use crate::tensor::Tensor;
 use crate::tensor_data::TensorData;
@@ -12,16 +12,16 @@ use std::fmt;
 use std::ptr;
 
 /// A wrapper for Metal Performance Shaders Graph executable objects
-pub struct MPSGraphExecutable(pub(crate) *mut AnyObject);
+pub struct Executable(pub(crate) *mut AnyObject);
 
 // Implement Send + Sync for the wrapper type
-unsafe impl Send for MPSGraphExecutable {}
-unsafe impl Sync for MPSGraphExecutable {}
+unsafe impl Send for Executable {}
+unsafe impl Sync for Executable {}
 
 /// Result type for graph execution
-pub type MPSGraphExecutionResult = HashMap<Tensor, TensorData>;
+pub type ExecutionResult = HashMap<Tensor, TensorData>;
 
-impl MPSGraphExecutable {
+impl Executable {
     /// Create a new executable from a serialized package at the specified URL
     ///
     /// - Parameters:
@@ -71,7 +71,7 @@ impl MPSGraphExecutable {
                 return None;
             }
 
-            Some(MPSGraphExecutable(executable))
+            Some(Executable(executable))
         }
     }
 
@@ -126,7 +126,7 @@ impl MPSGraphExecutable {
                 return None;
             }
 
-            Some(MPSGraphExecutable(executable))
+            Some(Executable(executable))
         }
     }
 
@@ -135,7 +135,7 @@ impl MPSGraphExecutable {
         &self,
         feeds: &HashMap<Tensor, TensorData>,
         output_tensors: &[Tensor],
-    ) -> MPSGraphExecutionResult {
+    ) -> ExecutionResult {
         unsafe {
             // Create the feeds dictionary
             let mut feed_keys = Vec::with_capacity(feeds.len());
@@ -180,7 +180,7 @@ impl MPSGraphExecutable {
         feeds: &HashMap<Tensor, TensorData>,
         output_tensors: &[Tensor],
         execution_descriptor: &ExecutionDescriptor,
-    ) -> MPSGraphExecutionResult {
+    ) -> ExecutionResult {
         unsafe {
             // Create the feeds dictionary
             let mut feed_keys = Vec::with_capacity(feeds.len());
@@ -237,9 +237,9 @@ impl MPSGraphExecutable {
         output_tensors: &[Tensor],
         execution_descriptor: &ExecutionDescriptor,
         completion_handler: Option<F>,
-    ) -> MPSGraphExecutionResult
+    ) -> ExecutionResult
     where
-        F: FnOnce(MPSGraphExecutionResult) + 'static,
+        F: FnOnce(ExecutionResult) + 'static,
     {
         unsafe {
             // Create the feeds dictionary
@@ -321,7 +321,7 @@ impl MPSGraphExecutable {
         input_tensors: &[Tensor],
         input_values: &[TensorData],
         output_tensors: &[Tensor],
-        execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
+        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
     ) -> Vec<TensorData> {
         assert_eq!(
             input_tensors.len(),
@@ -395,10 +395,10 @@ impl MPSGraphExecutable {
     pub fn run_with_operations_on_command_queue(
         &self,
         command_queue: &metal::CommandQueue,
-        input_operations: &[crate::operation::MPSGraphOperation],
+        input_operations: &[crate::operation::Operation],
         input_data: &[TensorData],
-        output_operations: &[crate::operation::MPSGraphOperation],
-        execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
+        output_operations: &[crate::operation::Operation],
+        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
     ) -> Vec<TensorData> {
         assert_eq!(
             input_operations.len(),
@@ -477,7 +477,7 @@ impl MPSGraphExecutable {
         command_buffer: &metal::CommandBuffer,
         inputs: &[TensorData],
         results: Option<&[TensorData]>,
-        execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
+        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
     ) -> Vec<TensorData> {
         // Create an MPSCommandBuffer from the Metal command buffer
         let mps_command_buffer = MPSCommandBuffer::from_command_buffer(command_buffer);
@@ -500,7 +500,7 @@ impl MPSGraphExecutable {
         command_buffer: &MPSCommandBuffer,
         inputs: &[TensorData],
         results: Option<&[TensorData]>,
-        execution_descriptor: Option<&MPSGraphExecutableExecutionDescriptor>,
+        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
     ) -> Vec<TensorData> {
         unsafe {
             // Create input values array
@@ -617,7 +617,7 @@ impl MPSGraphExecutable {
                 return None;
             }
 
-            Some(MPSGraphExecutable(specialized))
+            Some(Executable(specialized))
         }
     }
 
@@ -730,7 +730,7 @@ impl MPSGraphExecutable {
     pub fn serialize_to_url(
         &self,
         url_string: &str,
-        descriptor: &MPSGraphExecutableSerializationDescriptor,
+        descriptor: &ExecutableSerializationDescriptor,
     ) -> bool {
         unsafe {
             // Convert URL to NSURL
@@ -787,7 +787,7 @@ fn convert_dictionary_to_hash_map(
     }
 }
 
-impl Drop for MPSGraphExecutable {
+impl Drop for Executable {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -797,22 +797,22 @@ impl Drop for MPSGraphExecutable {
     }
 }
 
-impl Clone for MPSGraphExecutable {
+impl Clone for Executable {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphExecutable(obj)
+                Executable(obj)
             } else {
-                MPSGraphExecutable(ptr::null_mut())
+                Executable(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphExecutable {
+impl fmt::Debug for Executable {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphExecutable").finish()
+        f.debug_struct("Executable").finish()
     }
 }
 
@@ -832,14 +832,14 @@ impl CompilationDescriptor {
     }
 
     /// Set the optimization level
-    pub fn set_optimization_level(&self, level: MPSGraphOptimization) {
+    pub fn set_optimization_level(&self, level: Optimization) {
         unsafe {
             let _: () = msg_send![self.0, setOptimizationLevel: level as u64];
         }
     }
 
     /// Set the optimization profile
-    pub fn set_optimization_profile(&self, profile: MPSGraphOptimizationProfile) {
+    pub fn set_optimization_profile(&self, profile: OptimizationProfile) {
         unsafe {
             let _: () = msg_send![self.0, setOptimizationProfile: profile as u64];
         }
@@ -960,7 +960,7 @@ impl ExecutionDescriptor {
     pub fn signal_event(
         &self,
         event: &metal::SharedEvent,
-        execution_stage: MPSGraphExecutionStage,
+        execution_stage: ExecutionStage,
         value: u64,
     ) {
         unsafe {
@@ -973,7 +973,7 @@ impl ExecutionDescriptor {
 /// Represents the stages of execution for a graph
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphExecutionStage {
+pub enum ExecutionStage {
     /// Execution is completed
     Completed = 0,
 }
@@ -981,7 +981,7 @@ pub enum MPSGraphExecutionStage {
 /// Represents the deployment platform for a graph
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphDeploymentPlatform {
+pub enum DeploymentPlatform {
     /// macOS platform
     MacOS = 0,
     /// iOS platform
@@ -993,9 +993,9 @@ pub enum MPSGraphDeploymentPlatform {
 }
 
 /// A wrapper for MPSGraphExecutableSerializationDescriptor
-pub struct MPSGraphExecutableSerializationDescriptor(pub(crate) *mut AnyObject);
+pub struct ExecutableSerializationDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphExecutableSerializationDescriptor {
+impl ExecutableSerializationDescriptor {
     /// Create a new serialization descriptor
     pub fn new() -> Self {
         unsafe {
@@ -1003,7 +1003,7 @@ impl MPSGraphExecutableSerializationDescriptor {
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let descriptor: *mut AnyObject = msg_send![obj, init];
-            MPSGraphExecutableSerializationDescriptor(descriptor)
+            ExecutableSerializationDescriptor(descriptor)
         }
     }
 
@@ -1015,7 +1015,7 @@ impl MPSGraphExecutableSerializationDescriptor {
     }
 
     /// Set deployment platform
-    pub fn set_deployment_platform(&self, platform: MPSGraphDeploymentPlatform) {
+    pub fn set_deployment_platform(&self, platform: DeploymentPlatform) {
         unsafe {
             let _: () = msg_send![self.0, setDeploymentPlatform: platform as u64];
         }
@@ -1030,13 +1030,13 @@ impl MPSGraphExecutableSerializationDescriptor {
     }
 }
 
-impl Default for MPSGraphExecutableSerializationDescriptor {
+impl Default for ExecutableSerializationDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Drop for MPSGraphExecutableSerializationDescriptor {
+impl Drop for ExecutableSerializationDescriptor {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -1046,22 +1046,22 @@ impl Drop for MPSGraphExecutableSerializationDescriptor {
     }
 }
 
-impl Clone for MPSGraphExecutableSerializationDescriptor {
+impl Clone for ExecutableSerializationDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphExecutableSerializationDescriptor(obj)
+                ExecutableSerializationDescriptor(obj)
             } else {
-                MPSGraphExecutableSerializationDescriptor(ptr::null_mut())
+                ExecutableSerializationDescriptor(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphExecutableSerializationDescriptor {
+impl fmt::Debug for ExecutableSerializationDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphExecutableSerializationDescriptor")
+        f.debug_struct("ExecutableSerializationDescriptor")
             .finish()
     }
 }
@@ -1102,9 +1102,9 @@ impl fmt::Debug for ExecutionDescriptor {
 }
 
 /// A wrapper for MPSGraphExecutableExecutionDescriptor
-pub struct MPSGraphExecutableExecutionDescriptor(pub(crate) *mut AnyObject);
+pub struct ExecutableExecutionDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphExecutableExecutionDescriptor {
+impl ExecutableExecutionDescriptor {
     /// Create a new executable execution descriptor
     pub fn new() -> Self {
         unsafe {
@@ -1112,7 +1112,7 @@ impl MPSGraphExecutableExecutionDescriptor {
             let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
             let obj: *mut AnyObject = msg_send![cls, alloc];
             let descriptor: *mut AnyObject = msg_send![obj, init];
-            MPSGraphExecutableExecutionDescriptor(descriptor)
+            ExecutableExecutionDescriptor(descriptor)
         }
     }
 
@@ -1173,7 +1173,7 @@ impl MPSGraphExecutableExecutionDescriptor {
     pub fn signal_event(
         &self,
         event: &metal::SharedEvent,
-        execution_stage: MPSGraphExecutionStage,
+        execution_stage: ExecutionStage,
         value: u64,
     ) {
         unsafe {
@@ -1183,13 +1183,13 @@ impl MPSGraphExecutableExecutionDescriptor {
     }
 }
 
-impl Default for MPSGraphExecutableExecutionDescriptor {
+impl Default for ExecutableExecutionDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Drop for MPSGraphExecutableExecutionDescriptor {
+impl Drop for ExecutableExecutionDescriptor {
     fn drop(&mut self) {
         unsafe {
             if !self.0.is_null() {
@@ -1199,22 +1199,22 @@ impl Drop for MPSGraphExecutableExecutionDescriptor {
     }
 }
 
-impl Clone for MPSGraphExecutableExecutionDescriptor {
+impl Clone for ExecutableExecutionDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             if !self.0.is_null() {
                 let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSGraphExecutableExecutionDescriptor(obj)
+                ExecutableExecutionDescriptor(obj)
             } else {
-                MPSGraphExecutableExecutionDescriptor(ptr::null_mut())
+                ExecutableExecutionDescriptor(ptr::null_mut())
             }
         }
     }
 }
 
-impl fmt::Debug for MPSGraphExecutableExecutionDescriptor {
+impl fmt::Debug for ExecutableExecutionDescriptor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSGraphExecutableExecutionDescriptor")
+        f.debug_struct("ExecutableExecutionDescriptor")
             .finish()
     }
 }

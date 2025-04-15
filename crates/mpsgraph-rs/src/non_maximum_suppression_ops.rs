@@ -13,7 +13,7 @@ use objc2::msg_send;
 /// Center coordinate modes define a centered box and the box dimensions.
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphNonMaximumSuppressionCoordinateMode {
+pub enum NonMaximumSuppressionCoordinateMode {
     /// [h_start, w_start, h_end, w_end]
     CornersHeightFirst = 0,
     /// [w_start, h_start, w_end, h_end]
@@ -51,7 +51,7 @@ impl Graph {
         iou_threshold: f32,
         score_threshold: f32,
         per_class_suppression: bool,
-        coordinate_mode: MPSGraphNonMaximumSuppressionCoordinateMode,
+        coordinate_mode: NonMaximumSuppressionCoordinateMode,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -105,7 +105,7 @@ impl Graph {
         iou_threshold: f32,
         score_threshold: f32,
         per_class_suppression: bool,
-        coordinate_mode: MPSGraphNonMaximumSuppressionCoordinateMode,
+        coordinate_mode: NonMaximumSuppressionCoordinateMode,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {

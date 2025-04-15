@@ -1,5 +1,5 @@
 use crate::tensor_ops::{abs, clip, exp, gelu, log, pow, relu, sigmoid, silu, sqrt, square, tanh};
-use crate::tensor_ops::{GraphExt, Tensor};
+use crate::tensor_ops::{GraphExtensions, Tensor};
 use mpsgraph::{MPSDataType, Graph, Shape};
 
 #[test]

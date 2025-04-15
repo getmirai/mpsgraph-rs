@@ -9,7 +9,7 @@ use objc2_foundation::{NSArray, NSString};
 /// The sparse storage options for MPSGraph sparse operations.
 #[repr(u64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphSparseStorageType {
+pub enum SparseStorageType {
     /// COO (Coordinate) Storage format
     COO = 0,
     /// CSC (Compressed Sparse Column) Storage format
@@ -19,9 +19,9 @@ pub enum MPSGraphSparseStorageType {
 }
 
 /// Descriptor for sparse tensor creation
-pub struct MPSGraphCreateSparseOpDescriptor(pub(crate) *mut AnyObject);
+pub struct CreateSparseOpDescriptor(pub(crate) *mut AnyObject);
 
-impl MPSGraphCreateSparseOpDescriptor {
+impl CreateSparseOpDescriptor {
     /// Creates a new descriptor for a sparse tensor.
     ///
     /// # Arguments
@@ -32,7 +32,7 @@ impl MPSGraphCreateSparseOpDescriptor {
     /// # Returns
     ///
     /// A new sparse tensor descriptor
-    pub fn new(storage_type: MPSGraphSparseStorageType, data_type: MPSDataType) -> Self {
+    pub fn new(storage_type: SparseStorageType, data_type: MPSDataType) -> Self {
         unsafe {
             // Get the class, unwrap it, then use it in msg_send
             let class_name = c"MPSGraphCreateSparseOpDescriptor";
@@ -42,17 +42,17 @@ impl MPSGraphCreateSparseOpDescriptor {
                     dataType: data_type as u64
                 ];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphCreateSparseOpDescriptor(descriptor)
+                CreateSparseOpDescriptor(descriptor)
             } else {
                 // Fall back to creating an empty object if class not found
                 let empty_obj: *mut AnyObject = std::ptr::null_mut();
-                MPSGraphCreateSparseOpDescriptor(empty_obj)
+                CreateSparseOpDescriptor(empty_obj)
             }
         }
     }
 
     /// Sets the sparse storage type
-    pub fn set_sparse_storage_type(&self, storage_type: MPSGraphSparseStorageType) {
+    pub fn set_sparse_storage_type(&self, storage_type: SparseStorageType) {
         unsafe {
             let _: () = msg_send![self.0, setSparseStorageType: storage_type as u64];
         }
@@ -66,7 +66,7 @@ impl MPSGraphCreateSparseOpDescriptor {
     }
 }
 
-impl Drop for MPSGraphCreateSparseOpDescriptor {
+impl Drop for CreateSparseOpDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -74,11 +74,11 @@ impl Drop for MPSGraphCreateSparseOpDescriptor {
     }
 }
 
-impl Clone for MPSGraphCreateSparseOpDescriptor {
+impl Clone for CreateSparseOpDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphCreateSparseOpDescriptor(desc)
+            CreateSparseOpDescriptor(desc)
         }
     }
 }
@@ -151,7 +151,7 @@ impl Graph {
     /// A new Tensor representing the sparse tensor
     pub fn sparse_tensor_with_descriptor(
         &self,
-        descriptor: &MPSGraphCreateSparseOpDescriptor,
+        descriptor: &CreateSparseOpDescriptor,
         tensors: &[&Tensor],
         shape: &Shape,
         name: Option<&str>,
@@ -212,7 +212,7 @@ impl Graph {
         indices: &[&Tensor],
         values: &Tensor,
         dense_shape: &Shape,
-        descriptor: &MPSGraphCreateSparseOpDescriptor,
+        descriptor: &CreateSparseOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {

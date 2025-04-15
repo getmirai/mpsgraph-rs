@@ -7,7 +7,7 @@ use objc2::runtime::AnyObject;
 /// Activation functions for RNN operations
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum MPSGraphRNNActivation {
+pub enum RNNActivation {
     /// No activation
     None = 0,
     /// ReLU activation
@@ -21,15 +21,15 @@ pub enum MPSGraphRNNActivation {
 }
 
 /// Descriptor for single-gate RNN operations
-pub struct MPSGraphSingleGateRNNDescriptor(pub(crate) *mut AnyObject);
+pub struct SingleGateRNNDescriptor(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphSingleGateRNNDescriptor {
+impl Default for SingleGateRNNDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphSingleGateRNNDescriptor {
+impl SingleGateRNNDescriptor {
     /// Creates a new single-gate RNN descriptor with default settings
     pub fn new() -> Self {
         unsafe {
@@ -37,7 +37,7 @@ impl MPSGraphSingleGateRNNDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptor];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphSingleGateRNNDescriptor(descriptor)
+                SingleGateRNNDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphSingleGateRNNDescriptor not found")
             }
@@ -78,8 +78,8 @@ impl MPSGraphSingleGateRNNDescriptor {
 
     /// A parameter that defines the activation function to use with the RNN operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::ReLU`.
-    pub fn set_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::ReLU`.
+    pub fn set_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setActivation: activation as u64];
         }
@@ -101,7 +101,7 @@ impl MPSGraphSingleGateRNNDescriptor {
     }
 
     /// Returns the activation function setting.
-    pub fn activation(&self) -> MPSGraphRNNActivation {
+    pub fn activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, activation];
             std::mem::transmute(activation_val)
@@ -109,7 +109,7 @@ impl MPSGraphSingleGateRNNDescriptor {
     }
 }
 
-impl Drop for MPSGraphSingleGateRNNDescriptor {
+impl Drop for SingleGateRNNDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -117,25 +117,25 @@ impl Drop for MPSGraphSingleGateRNNDescriptor {
     }
 }
 
-impl Clone for MPSGraphSingleGateRNNDescriptor {
+impl Clone for SingleGateRNNDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphSingleGateRNNDescriptor(desc)
+            SingleGateRNNDescriptor(desc)
         }
     }
 }
 
 /// Descriptor for LSTM operations
-pub struct MPSGraphLSTMDescriptor(pub(crate) *mut AnyObject);
+pub struct LSTMDescriptor(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphLSTMDescriptor {
+impl Default for LSTMDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphLSTMDescriptor {
+impl LSTMDescriptor {
     /// Creates a new LSTM descriptor with default settings
     pub fn new() -> Self {
         unsafe {
@@ -143,7 +143,7 @@ impl MPSGraphLSTMDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptor];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphLSTMDescriptor(descriptor)
+                LSTMDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphLSTMDescriptor not found")
             }
@@ -204,8 +204,8 @@ impl MPSGraphLSTMDescriptor {
 
     /// A parameter that defines the activation function used with the input gate of the LSTM operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::Sigmoid`.
-    pub fn set_input_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::Sigmoid`.
+    pub fn set_input_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setInputGateActivation: activation as u64];
         }
@@ -213,8 +213,8 @@ impl MPSGraphLSTMDescriptor {
 
     /// A parameter that defines the activation function used with the forget gate of the LSTM operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::Sigmoid`.
-    pub fn set_forget_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::Sigmoid`.
+    pub fn set_forget_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setForgetGateActivation: activation as u64];
         }
@@ -222,8 +222,8 @@ impl MPSGraphLSTMDescriptor {
 
     /// A parameter that defines the activation function used with the cell gate of the LSTM operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::TanH`.
-    pub fn set_cell_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::TanH`.
+    pub fn set_cell_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setCellGateActivation: activation as u64];
         }
@@ -231,8 +231,8 @@ impl MPSGraphLSTMDescriptor {
 
     /// A parameter that defines the activation function used with the output gate of the LSTM operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::Sigmoid`.
-    pub fn set_output_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::Sigmoid`.
+    pub fn set_output_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setOutputGateActivation: activation as u64];
         }
@@ -240,8 +240,8 @@ impl MPSGraphLSTMDescriptor {
 
     /// A parameter that defines the activation function used with the current cell value of the LSTM operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::TanH`.
-    pub fn set_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::TanH`.
+    pub fn set_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setActivation: activation as u64];
         }
@@ -275,7 +275,7 @@ impl MPSGraphLSTMDescriptor {
     }
 
     /// Returns the input gate activation setting.
-    pub fn input_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn input_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, inputGateActivation];
             std::mem::transmute(activation_val)
@@ -283,7 +283,7 @@ impl MPSGraphLSTMDescriptor {
     }
 
     /// Returns the forget gate activation setting.
-    pub fn forget_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn forget_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, forgetGateActivation];
             std::mem::transmute(activation_val)
@@ -291,7 +291,7 @@ impl MPSGraphLSTMDescriptor {
     }
 
     /// Returns the cell gate activation setting.
-    pub fn cell_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn cell_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, cellGateActivation];
             std::mem::transmute(activation_val)
@@ -299,7 +299,7 @@ impl MPSGraphLSTMDescriptor {
     }
 
     /// Returns the output gate activation setting.
-    pub fn output_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn output_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, outputGateActivation];
             std::mem::transmute(activation_val)
@@ -307,7 +307,7 @@ impl MPSGraphLSTMDescriptor {
     }
 
     /// Returns the activation setting.
-    pub fn activation(&self) -> MPSGraphRNNActivation {
+    pub fn activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, activation];
             std::mem::transmute(activation_val)
@@ -315,7 +315,7 @@ impl MPSGraphLSTMDescriptor {
     }
 }
 
-impl Drop for MPSGraphLSTMDescriptor {
+impl Drop for LSTMDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -323,25 +323,25 @@ impl Drop for MPSGraphLSTMDescriptor {
     }
 }
 
-impl Clone for MPSGraphLSTMDescriptor {
+impl Clone for LSTMDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphLSTMDescriptor(desc)
+            LSTMDescriptor(desc)
         }
     }
 }
 
 /// Descriptor for GRU operations
-pub struct MPSGraphGRUDescriptor(pub(crate) *mut AnyObject);
+pub struct GRUDescriptor(pub(crate) *mut AnyObject);
 
-impl Default for MPSGraphGRUDescriptor {
+impl Default for GRUDescriptor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl MPSGraphGRUDescriptor {
+impl GRUDescriptor {
     /// Creates a new GRU descriptor with default settings
     pub fn new() -> Self {
         unsafe {
@@ -349,7 +349,7 @@ impl MPSGraphGRUDescriptor {
             if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
                 let descriptor: *mut AnyObject = msg_send![cls, descriptor];
                 let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphGRUDescriptor(descriptor)
+                GRUDescriptor(descriptor)
             } else {
                 panic!("Class MPSGraphGRUDescriptor not found")
             }
@@ -422,8 +422,8 @@ impl MPSGraphGRUDescriptor {
 
     /// A parameter that defines the activation function to use with the update-gate of the GRU operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::Sigmoid`.
-    pub fn set_update_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::Sigmoid`.
+    pub fn set_update_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setUpdateGateActivation: activation as u64];
         }
@@ -431,8 +431,8 @@ impl MPSGraphGRUDescriptor {
 
     /// A parameter that defines the activation function to use with the reset-gate of the GRU operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::Sigmoid`.
-    pub fn set_reset_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::Sigmoid`.
+    pub fn set_reset_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setResetGateActivation: activation as u64];
         }
@@ -440,8 +440,8 @@ impl MPSGraphGRUDescriptor {
 
     /// A parameter that defines the activation function to use with the output-gate of the GRU operation.
     ///
-    /// Default value: `MPSGraphRNNActivation::TanH`.
-    pub fn set_output_gate_activation(&self, activation: MPSGraphRNNActivation) {
+    /// Default value: `RNNActivation::TanH`.
+    pub fn set_output_gate_activation(&self, activation: RNNActivation) {
         unsafe {
             let _: () = msg_send![self.0, setOutputGateActivation: activation as u64];
         }
@@ -480,7 +480,7 @@ impl MPSGraphGRUDescriptor {
     }
 
     /// Returns the update gate activation setting.
-    pub fn update_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn update_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, updateGateActivation];
             std::mem::transmute(activation_val)
@@ -488,7 +488,7 @@ impl MPSGraphGRUDescriptor {
     }
 
     /// Returns the reset gate activation setting.
-    pub fn reset_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn reset_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, resetGateActivation];
             std::mem::transmute(activation_val)
@@ -496,7 +496,7 @@ impl MPSGraphGRUDescriptor {
     }
 
     /// Returns the output gate activation setting.
-    pub fn output_gate_activation(&self) -> MPSGraphRNNActivation {
+    pub fn output_gate_activation(&self) -> RNNActivation {
         unsafe {
             let activation_val: u64 = msg_send![self.0, outputGateActivation];
             std::mem::transmute(activation_val)
@@ -504,7 +504,7 @@ impl MPSGraphGRUDescriptor {
     }
 }
 
-impl Drop for MPSGraphGRUDescriptor {
+impl Drop for GRUDescriptor {
     fn drop(&mut self) {
         unsafe {
             objc2::ffi::objc_release(self.0 as *mut _);
@@ -512,11 +512,11 @@ impl Drop for MPSGraphGRUDescriptor {
     }
 }
 
-impl Clone for MPSGraphGRUDescriptor {
+impl Clone for GRUDescriptor {
     fn clone(&self) -> Self {
         unsafe {
             let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphGRUDescriptor(desc)
+            GRUDescriptor(desc)
         }
     }
 }
@@ -560,7 +560,7 @@ impl Graph {
         bias: Option<&Tensor>,
         init_state: Option<&Tensor>,
         mask: Option<&Tensor>,
-        descriptor: &MPSGraphSingleGateRNNDescriptor,
+        descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Tensor> {
         let name_obj = match name {
@@ -651,7 +651,7 @@ impl Graph {
         input_weight: Option<&Tensor>,
         bias: Option<&Tensor>,
         init_state: Option<&Tensor>,
-        descriptor: &MPSGraphSingleGateRNNDescriptor,
+        descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Tensor> {
         let name_obj = match name {
@@ -729,7 +729,7 @@ impl Graph {
         input: &Tensor,
         recurrent_weight: &Tensor,
         init_state: Option<&Tensor>,
-        descriptor: &MPSGraphSingleGateRNNDescriptor,
+        descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Tensor> {
         let name_obj = match name {
@@ -799,7 +799,7 @@ impl Graph {
         bias: Option<&Tensor>,
         init_state: Option<&Tensor>,
         mask: Option<&Tensor>,
-        descriptor: &MPSGraphSingleGateRNNDescriptor,
+        descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Tensor> {
         let name_obj = match name {
@@ -887,7 +887,7 @@ impl Graph {
         weights: &Tensor,
         recurrent_weights: &Tensor,
         biases: Option<&Tensor>,
-        descriptor: &MPSGraphLSTMDescriptor,
+        descriptor: &LSTMDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor, Tensor) {
         let name_obj = match name {
@@ -957,7 +957,7 @@ impl Graph {
         weights: &Tensor,
         recurrent_weights: &Tensor,
         biases: Option<&Tensor>,
-        descriptor: &MPSGraphGRUDescriptor,
+        descriptor: &GRUDescriptor,
         name: Option<&str>,
     ) -> (Tensor, Tensor) {
         let name_obj = match name {

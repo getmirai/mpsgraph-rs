@@ -5,14 +5,14 @@ const YES: bool = true;
 use crate::convolution_transpose_ops::TensorNamedDataLayout;
 use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
-use crate::resize_ops::{MPSGraphResizeMode, MPSGraphResizeNearestRoundingMode};
+use crate::resize_ops::{ResizeMode, ResizeNearestRoundingMode};
 use crate::tensor::Tensor;
 use objc2::msg_send;
 
 /// Padding modes for MPSGraph operations
 #[repr(i64)]
 #[derive(Debug, Copy, Clone)]
-pub enum MPSGraphPaddingMode {
+pub enum PaddingMode {
     /// Constant padding
     Constant = 0,
     /// Reflect padding
@@ -57,8 +57,8 @@ impl Graph {
         normalize_coordinates: bool,
         relative_coordinates: bool,
         align_corners: bool,
-        padding_mode: MPSGraphPaddingMode,
-        sampling_mode: MPSGraphResizeMode,
+        padding_mode: PaddingMode,
+        sampling_mode: ResizeMode,
         constant_value: f64,
         name: Option<&str>,
     ) -> Tensor {
@@ -111,8 +111,8 @@ impl Graph {
         normalize_coordinates: bool,
         relative_coordinates: bool,
         align_corners: bool,
-        padding_mode: MPSGraphPaddingMode,
-        nearest_rounding_mode: MPSGraphResizeNearestRoundingMode,
+        padding_mode: PaddingMode,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
         constant_value: f64,
         name: Option<&str>,
     ) -> Tensor {

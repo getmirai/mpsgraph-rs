@@ -6,7 +6,7 @@ use objc2::runtime::AnyObject;
 /// The type of reduction applied in loss operations
 #[repr(u64)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum MPSGraphLossReductionType {
+pub enum LossReductionType {
     /// Computes the loss without reduction
     None = 0,
     /// Reduces the loss down to a scalar with a sum operation
@@ -17,7 +17,7 @@ pub enum MPSGraphLossReductionType {
 
 // Alias for backward compatibility
 #[allow(non_upper_case_globals)]
-pub const Axis: MPSGraphLossReductionType = MPSGraphLossReductionType::None;
+pub const Axis: LossReductionType = LossReductionType::None;
 
 /// Loss operations for Graph
 impl Graph {
@@ -45,7 +45,7 @@ impl Graph {
     ///
     /// ```no_run
     /// # use mpsgraph::prelude::*;
-    /// # use mpsgraph::loss_ops::MPSGraphLossReductionType;
+    /// # use mpsgraph::loss_ops::LossReductionType;
     /// # let graph = Graph::new();
     /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let logits = graph.placeholder(&shape, MPSDataType::Float32, None);
@@ -55,7 +55,7 @@ impl Graph {
     ///     &logits,
     ///     &labels,
     ///     1,
-    ///     MPSGraphLossReductionType::Mean,
+    ///     LossReductionType::Mean,
     ///     None
     /// );
     /// ```
@@ -64,7 +64,7 @@ impl Graph {
         source_tensor: &Tensor,
         labels_tensor: &Tensor,
         axis: i64,
-        reduction_type: MPSGraphLossReductionType,
+        reduction_type: LossReductionType,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {
@@ -104,12 +104,12 @@ impl Graph {
     ///
     /// ```no_run
     /// # use mpsgraph::prelude::*;
-    /// # use mpsgraph::loss_ops::MPSGraphLossReductionType;
+    /// # use mpsgraph::loss_ops::LossReductionType;
     /// # let graph = Graph::new();
     /// # let shape = Shape::from_slice(&[2, 3]);
     /// # let logits = graph.placeholder(&shape, MPSDataType::Float32, None);
     /// # let labels = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let loss = graph.softmax_cross_entropy(&logits, &labels, 1, MPSGraphLossReductionType::Mean, None);
+    /// # let loss = graph.softmax_cross_entropy(&logits, &labels, 1, LossReductionType::Mean, None);
     /// // Create gradient of 1.0 for the loss (scalar)
     /// let grad_const = graph.constant_scalar(1.0, MPSDataType::Float32);
     ///
@@ -119,7 +119,7 @@ impl Graph {
     ///     &logits,
     ///     &labels,
     ///     1,
-    ///     MPSGraphLossReductionType::Mean,
+    ///     LossReductionType::Mean,
     ///     None
     /// );
     /// ```
@@ -129,7 +129,7 @@ impl Graph {
         source_tensor: &Tensor,
         labels_tensor: &Tensor,
         axis: i64,
-        reduction_type: MPSGraphLossReductionType,
+        reduction_type: LossReductionType,
         name: Option<&str>,
     ) -> Tensor {
         unsafe {

@@ -28,144 +28,9 @@ pub enum PaddingStyle {
     TfValid = 2,
 }
 
-/// Descriptor for 2D convolution operations
-pub struct MPSGraphConvolution2DOpDescriptor(pub(crate) *mut AnyObject);
+// Re-export Convolution2DOpDescriptor from convolution_ops
+pub use crate::convolution_ops::Convolution2DOpDescriptor;
 
-impl Default for MPSGraphConvolution2DOpDescriptor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl MPSGraphConvolution2DOpDescriptor {
-    /// Creates a new convolution 2D operation descriptor
-    pub fn new() -> Self {
-        unsafe {
-            let class_name = c"MPSGraphConvolution2DOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptor];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                MPSGraphConvolution2DOpDescriptor(descriptor)
-            } else {
-                panic!("Class MPSGraphConvolution2DOpDescriptor not found")
-            }
-        }
-    }
-
-    /// Sets the stride in X dimension
-    pub fn set_stride_in_x(&self, stride: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setStrideInX: stride,];
-        }
-    }
-
-    /// Sets the stride in Y dimension
-    pub fn set_stride_in_y(&self, stride: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setStrideInY: stride,];
-        }
-    }
-
-    /// Sets the dilation rate in X dimension
-    pub fn set_dilation_rate_in_x(&self, rate: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setDilationRateInX: rate,];
-        }
-    }
-
-    /// Sets the dilation rate in Y dimension
-    pub fn set_dilation_rate_in_y(&self, rate: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setDilationRateInY: rate,];
-        }
-    }
-
-    /// Sets the padding on the left
-    pub fn set_padding_left(&self, padding: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setPaddingLeft: padding,];
-        }
-    }
-
-    /// Sets the padding on the right
-    pub fn set_padding_right(&self, padding: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setPaddingRight: padding,];
-        }
-    }
-
-    /// Sets the padding on the top
-    pub fn set_padding_top(&self, padding: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setPaddingTop: padding,];
-        }
-    }
-
-    /// Sets the padding on the bottom
-    pub fn set_padding_bottom(&self, padding: usize) {
-        unsafe {
-            let _: () = msg_send![self.0, setPaddingBottom: padding,];
-        }
-    }
-
-    /// Sets the padding style
-    pub fn set_padding_style(&self, style: PaddingStyle) {
-        unsafe {
-            let _: () = msg_send![self.0, setPaddingStyle: style as u64];
-        }
-    }
-
-    /// Sets the data layout
-    pub fn set_data_layout(&self, layout: TensorNamedDataLayout) {
-        unsafe {
-            let _: () = msg_send![self.0, setDataLayout: layout as u64];
-        }
-    }
-
-    /// Sets the weights layout
-    pub fn set_weights_layout(&self, layout: TensorNamedDataLayout) {
-        unsafe {
-            let _: () = msg_send![self.0, setWeightsLayout: layout as u64];
-        }
-    }
-
-    /// Sets the explicit padding values
-    pub fn set_explicit_padding(&self, left: usize, right: usize, top: usize, bottom: usize) {
-        unsafe {
-            let _: () = msg_send![
-                self.0, setExplicitPaddingWithPaddingLeft: left,
-                paddingRight: right,
-                paddingTop: top,
-                paddingBottom: bottom,
-            ];
-        }
-    }
-
-    /// Sets whether to use same padding in the TensorFlow style
-    pub fn set_use_same_padding(&self, use_same_padding: bool) {
-        unsafe {
-            let _: () =
-                msg_send![self.0, setUseSamePadding: if use_same_padding { YES } else { NO }];
-        }
-    }
-}
-
-impl Drop for MPSGraphConvolution2DOpDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for MPSGraphConvolution2DOpDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            MPSGraphConvolution2DOpDescriptor(desc)
-        }
-    }
-}
 
 /// Transposed convolution operations for Graph
 impl Graph {
@@ -192,7 +57,7 @@ impl Graph {
         source: &Tensor,
         weights: &Tensor,
         output_shape: &Shape,
-        descriptor: &MPSGraphConvolution2DOpDescriptor,
+        descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -232,7 +97,7 @@ impl Graph {
         source: &Tensor,
         weights: &Tensor,
         output_shape_tensor: &Tensor,
-        descriptor: &MPSGraphConvolution2DOpDescriptor,
+        descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -272,7 +137,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         weights: &Tensor,
         output_shape: &Shape,
-        forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -312,7 +177,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         weights: &Tensor,
         output_shape_tensor: &Tensor,
-        forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -352,7 +217,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         source: &Tensor,
         output_shape: &Shape,
-        forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
@@ -392,7 +257,7 @@ impl Graph {
         incoming_gradient: &Tensor,
         source: &Tensor,
         output_shape_tensor: &Tensor,
-        forward_convolution_descriptor: &MPSGraphConvolution2DOpDescriptor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Tensor {
         let name_obj = match name {
