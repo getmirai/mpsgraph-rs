@@ -52,12 +52,12 @@ fn main() {
 
     // Create input feeds
     let mut feeds = HashMap::new();
-    feeds.insert(&*a, &*a_data);
-    feeds.insert(&*b, &*b_data);
+    feeds.insert(&a, &a_data);
+    feeds.insert(&b, &b_data);
 
     // Create results map
     let mut results = HashMap::new();
-    results.insert(&*result, &*result_data);
+    results.insert(&result, &result_data);
 
     // Get a Metal command queue
     let command_queue = metal_device.new_command_queue();
@@ -122,7 +122,7 @@ fn main() {
     
     let sync_result_data = TensorData::from_buffer(&sync_result_buffer, &shape_dimensions, DataType::Float32);
     let mut sync_results = HashMap::new();
-    sync_results.insert(&*result, &*sync_result_data);
+    sync_results.insert(&result, &sync_result_data);
     
     // Encode the graph to the command buffer synchronously
     graph.encode_to_command_buffer_with_results(

@@ -91,14 +91,14 @@ fn main() {
 
     // Create feed dictionary (inputs)
     let mut feeds = HashMap::new();
-    feeds.insert(&*a, &*a_data);
-    feeds.insert(&*b, &*b_data);
+    feeds.insert(&a, &a_data);
+    feeds.insert(&b, &b_data);
 
     // Create results dictionary (outputs)
     let mut results = HashMap::new();
-    results.insert(&*c, &*c_data);
-    results.insert(&*d, &*d_data);
-    results.insert(&*e, &*e_data);
+    results.insert(&c, &c_data);
+    results.insert(&d, &d_data);
+    results.insert(&e, &e_data);
 
     //-- Create Execution Descriptor --//
     let execution_descriptor = ExecutionDescriptor::new();

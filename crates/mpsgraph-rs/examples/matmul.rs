@@ -109,12 +109,12 @@ fn main() {
 
     // Prepare feeds
     let mut feeds = HashMap::new();
-    feeds.insert(&*a, &*a_tensor.tensor_data);
-    feeds.insert(&*b, &*b_tensor.tensor_data);
+    feeds.insert(&a, &a_tensor.tensor_data);
+    feeds.insert(&b, &b_tensor.tensor_data);
 
     // Output tensor
     let mut results = HashMap::new();
-    results.insert(&*result, &*result_tensor.tensor_data);
+    results.insert(&result, &result_tensor.tensor_data);
 
     println!("Executing matrix multiplication...");
 
