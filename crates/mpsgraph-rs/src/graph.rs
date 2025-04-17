@@ -568,6 +568,17 @@ impl Graph {
     ///   - descriptor: Optional compilation descriptor
     ///
     /// - Returns: A compiled executable
+    /// Compiles the graph against a given set of feeds and targets
+    ///
+    /// This signature is kept for backward compatibility, but the newer signature with Retained types is preferred.
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to compile for
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - targets: An array of tensors whose values should be computed
+    ///   - descriptor: Optional compilation descriptor
+    ///
+    /// - Returns: A compiled executable
     pub fn compile(
         &self,
         device: &Device,
@@ -583,6 +594,69 @@ impl Graph {
             // Add entries to dictionary
             for (tensor, data) in feeds {
                 let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for target tensors
+            let targets_array = NSArray::from_slice(targets);
+            
+            // Get descriptor pointer if provided
+            let desc_ptr = match descriptor {
+                Some(desc) => desc as *const _,
+                None => std::ptr::null(),
+            };
+            
+            // Compile the graph
+            let executable_ptr: *mut Executable = msg_send![
+                self,
+                compileWithDevice: device,
+                feeds: dictionary_ptr,
+                targetTensors: &*targets_array,
+                targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                compilationDescriptor: desc_ptr
+            ];
+            
+            if executable_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(executable_ptr)
+            }
+        }
+    }
+    
+    /// Compiles the graph against a given set of feeds and targets
+    ///
+    /// This version accepts Retained references, which is the preferred approach.
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to compile for
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - targets: An array of tensors whose values should be computed
+    ///   - descriptor: Optional compilation descriptor
+    ///
+    /// - Returns: A compiled executable
+    pub fn compile_with_retained(
+        &self,
+        device: &Device,
+        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
+        targets: &[&Tensor],
+        descriptor: Option<&CompilationDescriptor>,
+    ) -> Option<Retained<Executable>> {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                // Get raw pointers to the inner Objective-C objects
+                let tensor_ptr = tensor.as_ref() as *const Tensor;
+                let data_ptr = data.as_ref() as *const TensorData;
+                
+                // Create temporary references for message sending
+                let tensor_ref: &Tensor = &*tensor_ptr;
+                let data_ref: &TensorData = &*data_ptr;
+                
+                let _: () = msg_send![dictionary_ptr, setObject: data_ref, forKey: tensor_ref];
             }
             
             // Create NSArray for target tensors
@@ -638,6 +712,74 @@ impl Graph {
             // Add entries to dictionary
             for (tensor, data) in feeds {
                 let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for target tensors
+            let targets_array = NSArray::from_slice(targets);
+            
+            // Create NSArray for target operations
+            let ops_array = NSArray::from_slice(target_ops);
+            
+            // Get descriptor pointer if provided
+            let desc_ptr = match descriptor {
+                Some(desc) => desc as *const _,
+                None => std::ptr::null(),
+            };
+            
+            // Compile the graph
+            let executable_ptr: *mut Executable = msg_send![
+                self,
+                compileWithDevice: device,
+                feeds: dictionary_ptr,
+                targetTensors: &*targets_array,
+                targetOperations: &*ops_array,
+                compilationDescriptor: desc_ptr
+            ];
+            
+            if executable_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(executable_ptr)
+            }
+        }
+    }
+
+    /// Compiles the graph against a given set of feeds, targets, and target operations
+    ///
+    /// This version accepts Retained references, which is the preferred approach.
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to compile for
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - targets: An array of tensors whose values should be computed
+    ///   - target_ops: An array of operations to be completed
+    ///   - descriptor: Optional compilation descriptor
+    ///
+    /// - Returns: A compiled executable
+    pub fn compile_with_targets_and_ops_retained(
+        &self,
+        device: &Device,
+        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
+        targets: &[&Tensor],
+        target_ops: &[&Operation],
+        descriptor: Option<&CompilationDescriptor>,
+    ) -> Option<Retained<Executable>> {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                // Get raw pointers to the inner Objective-C objects
+                let tensor_ptr = tensor.as_ref() as *const Tensor;
+                let data_ptr = data.as_ref() as *const TensorData;
+                
+                // Create temporary references for message sending
+                let tensor_ref: &Tensor = &*tensor_ptr;
+                let data_ref: &TensorData = &*data_ptr;
+                
+                let _: () = msg_send![dictionary_ptr, setObject: data_ref, forKey: tensor_ref];
             }
             
             // Create NSArray for target tensors

@@ -25,8 +25,11 @@ impl TensorBuffer {
             MTLResourceOptions::StorageModeShared,
         );
 
+        // Convert shape from usize to i64 for TensorData::from_buffer
+        let shape_i64: Vec<i64> = shape.iter().map(|&x| x as i64).collect();
+
         // Create tensor data that references this buffer
-        let tensor_data = TensorData::from_buffer(&buffer, shape, data_type);
+        let tensor_data = TensorData::from_buffer(&buffer, &shape_i64, data_type);
 
         Self {
             buffer,
@@ -42,8 +45,11 @@ impl TensorBuffer {
         // Create empty MTLBuffer with storage mode shared
         let buffer = device.new_buffer(byte_length as u64, MTLResourceOptions::StorageModeShared);
 
+        // Convert shape from usize to i64 for TensorData::from_buffer
+        let shape_i64: Vec<i64> = shape.iter().map(|&x| x as i64).collect();
+
         // Create tensor data that references this buffer
-        let tensor_data = TensorData::from_buffer(&buffer, shape, data_type);
+        let tensor_data = TensorData::from_buffer(&buffer, &shape_i64, data_type);
 
         Self {
             buffer,
@@ -62,10 +68,10 @@ fn main() {
     // Get Metal device
     let device = Device::system_default().expect("No Metal device found");
 
-    // Input dimensions
-    let m = 2; // Matrix A rows
-    let k = 3; // Matrix A cols / Matrix B rows
-    let n = 2; // Matrix B cols
+    // Input dimensions (use usize for array indexing)
+    let m: usize = 2; // Matrix A rows
+    let k: usize = 3; // Matrix A cols / Matrix B rows
+    let n: usize = 2; // Matrix B cols
 
     // Create input data
     let a_data: Vec<f32> = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]; // 2x3 matrix
@@ -75,13 +81,13 @@ fn main() {
     let graph = Graph::new();
 
     // Create input placeholders
-    let a_shape = [m, k];  // usize array for TensorData
+    let a_shape = [m, k];  // usize array for TensorBuffer
     let b_shape = [k, n];
     let result_shape = [m, n];
 
-    // Create shapes for the tensors
-    let a_tensor_shape = ShapeHelper::matrix(m, k);
-    let b_tensor_shape = ShapeHelper::matrix(k, n);
+    // Create shapes for the tensors (convert usize to i64 for ShapeHelper)
+    let a_tensor_shape = ShapeHelper::matrix(m as i64, k as i64);
+    let b_tensor_shape = ShapeHelper::matrix(k as i64, n as i64);
 
     let a = graph.placeholder(DataType::Float32, &a_tensor_shape).unwrap();
     let b = graph.placeholder(DataType::Float32, &b_tensor_shape).unwrap();
