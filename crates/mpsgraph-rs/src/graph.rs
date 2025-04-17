@@ -16,6 +16,7 @@ use crate::executable::{
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::shape::{ShapeExtensions, ShapeHelper};
+use crate::ShapedType;
 
 /// Trait for scalar types that can be used in Graph operations
 /// This trait is used for both single scalar values and arrays of values
@@ -580,26 +581,26 @@ impl Graph {
     pub fn compile(
         &self,
         device: &Device,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
+        feeds: &HashMap<&Retained<Tensor>, &Retained<ShapedType>>,
         targets: &[&Retained<Tensor>],
         descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Retained<Executable>> {
         unsafe {
             // Create NSMutableDictionary for feeds
-            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
             
             // Add entries to dictionary
-            for (tensor, data) in feeds {
+            for (tensor, shaped_type) in feeds {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
-                let data_ptr = data.as_ref() as *const TensorData;
+                let shape_ptr = shaped_type.as_ref() as *const ShapedType;
                 
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
-                let data_ref: &TensorData = &*data_ptr;
+                let shape_ref: &ShapedType = &*shape_ptr;
                 
-                let _: () = msg_send![dictionary_ptr, setObject: data_ref, forKey: tensor_ref];
+                let _: () = msg_send![dictionary_ptr, setObject: shape_ref, forKey: tensor_ref];
             }
             
             // Create NSArray for target tensors
@@ -646,27 +647,27 @@ impl Graph {
     pub fn compile_with_targets_and_ops(
         &self,
         device: &Device,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
+        feeds: &HashMap<&Retained<Tensor>, &Retained<ShapedType>>,
         targets: &[&Retained<Tensor>],
         target_ops: &[&Operation],
         descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Retained<Executable>> {
         unsafe {
             // Create NSMutableDictionary for feeds
-            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
             
             // Add entries to dictionary
-            for (tensor, data) in feeds {
+            for (tensor, shaped_type) in feeds {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
-                let data_ptr = data.as_ref() as *const TensorData;
+                let shape_ptr = shaped_type.as_ref() as *const ShapedType;
                 
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
-                let data_ref: &TensorData = &*data_ptr;
+                let shape_ref: &ShapedType = &*shape_ptr;
                 
-                let _: () = msg_send![dictionary_ptr, setObject: data_ref, forKey: tensor_ref];
+                let _: () = msg_send![dictionary_ptr, setObject: shape_ref, forKey: tensor_ref];
             }
             
             // Create NSArray for target tensors
