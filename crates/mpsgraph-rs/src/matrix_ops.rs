@@ -21,7 +21,7 @@ pub trait GraphMatrixOps {
     fn transpose(
         &self,
         x: &Tensor,
-        dimensions: &[usize],
+        dimensions: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -194,7 +194,7 @@ impl GraphMatrixOps for Graph {
     fn transpose(
         &self,
         x: &Tensor,
-        dimensions: &[usize],
+        dimensions: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {

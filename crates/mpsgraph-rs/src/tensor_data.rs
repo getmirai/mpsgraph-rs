@@ -21,7 +21,7 @@ unsafe impl NSObjectProtocol for TensorData {}
 
 impl TensorData {
     /// Creates a new TensorData from a slice of data and a shape dimensions
-    pub fn from_bytes<T: Copy>(data: &[T], shape_dimensions: &[usize], data_type: DataType) -> Retained<Self> {
+    pub fn from_bytes<T: Copy>(data: &[T], shape_dimensions: &[i64], data_type: DataType) -> Retained<Self> {
         // Create a Shape from dimensions
         let shape = ShapeHelper::from_dimensions(shape_dimensions);
         
@@ -101,7 +101,7 @@ impl TensorData {
     }
 
     /// Creates a new TensorData from a Metal buffer
-    pub fn from_buffer(buffer: &Buffer, shape_dimensions: &[usize], data_type: DataType) -> Retained<Self> {
+    pub fn from_buffer(buffer: &Buffer, shape_dimensions: &[i64], data_type: DataType) -> Retained<Self> {
         // Create a Shape from dimensions
         let shape = ShapeHelper::from_dimensions(shape_dimensions);
         

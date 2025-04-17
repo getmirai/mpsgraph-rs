@@ -37,6 +37,9 @@ pub enum DataType {
     // Complex types
     Complex32 = 0x10000000 | 0x80000000 | 32,
     Complex64 = 0x10000000 | 0x80000000 | 64,
+    
+    // BFloat16 type
+    BFloat16 = 0x80000000 | 0x10000000 | 16,
 }
 
 impl DataType {
@@ -57,6 +60,7 @@ impl DataType {
             val if val == DataType::Bool as u32 => DataType::Bool,
             val if val == DataType::Complex32 as u32 => DataType::Complex32,
             val if val == DataType::Complex64 as u32 => DataType::Complex64,
+            val if val == DataType::BFloat16 as u32 => DataType::BFloat16,
             _ => DataType::Invalid,
         }
     }
@@ -89,18 +93,13 @@ impl Tensor {
     }
 
     /// Returns the dimensions of the tensor
-    pub fn dimensions(&self) -> Vec<usize> {
+    pub fn dimensions(&self) -> Vec<i64> {
         self.shape().dimensions()
     }
 
     /// Returns the rank (number of dimensions) of this tensor
     pub fn rank(&self) -> usize {
         self.shape().len()
-    }
-
-    /// Returns the total number of elements in this tensor
-    pub fn element_count(&self) -> usize {
-        self.shape().element_count()
     }
 
     /// Returns the name of this tensor

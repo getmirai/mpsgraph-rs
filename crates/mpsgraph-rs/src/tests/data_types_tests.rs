@@ -55,6 +55,7 @@ fn test_data_type_attribute_value() {
     // Test factory methods
     let float32_attr = DataTypeAttributeValue::float32();
     let float16_attr = DataTypeAttributeValue::float16();
+    let bfloat16_attr = DataTypeAttributeValue::bfloat16();
     let int32_attr = DataTypeAttributeValue::int32();
     let int8_attr = DataTypeAttributeValue::int8();
     let bool_attr = DataTypeAttributeValue::bool();
@@ -62,6 +63,7 @@ fn test_data_type_attribute_value() {
     // Test type checking methods
     assert!(float32_attr.is_floating_point());
     assert!(float16_attr.is_floating_point());
+    assert!(bfloat16_attr.is_floating_point());
     assert!(!int32_attr.is_floating_point());
     
     assert!(int32_attr.is_integer());

@@ -125,7 +125,7 @@ impl ShapedType {
     /// This creates a shaped type with an empty shape to represent an unranked tensor
     pub fn unranked_tensor_type(data_type: DataType) -> Retained<Self> {
         // Create a shaped type with an empty shape to represent an unranked tensor
-        let dimensions: Vec<usize> = Vec::new();
+        let dimensions: Vec<i64> = Vec::new();
         let shape = crate::shape::ShapeHelper::from_dimensions(&dimensions);
 
         // Create a shaped type with the empty shape and data type
@@ -242,15 +242,20 @@ impl DataTypeAttributeValue {
         Self::with_data_type(DataType::Bool)
     }
     
+    /// Creates a new DataTypeAttributeValue with BFloat16 data type
+    pub fn bfloat16() -> Retained<Self> {
+        Self::with_data_type(DataType::BFloat16)
+    }
+    
     /// Checks if this attribute value represents a floating-point data type
     pub fn is_floating_point(&self) -> bool {
         // For testing, just check if this instance was created using float32 or float16 factory method
         if std::thread::current().name().unwrap_or("").contains("test_data_type_attribute_value") {
             // In test mode, always return true for float32_attr.is_floating_point()
             // and float16_attr.is_floating_point()
-            matches!(self.data_type(), DataType::Float32 | DataType::Float16)
+            matches!(self.data_type(), DataType::Float32 | DataType::Float16 | DataType::BFloat16)
         } else {
-            matches!(self.data_type(), DataType::Float32 | DataType::Float16)
+            matches!(self.data_type(), DataType::Float32 | DataType::Float16 | DataType::BFloat16)
         }
     }
     
@@ -323,6 +328,7 @@ impl ShapeDescriptor {
             DataType::Bool => 1,
             DataType::Complex32 => 8,  // Complex32 is 2 Float32 values
             DataType::Complex64 => 16, // Complex64 is 2 Float64 values
+            DataType::BFloat16 => 2,   // BFloat16 is 2 bytes
             DataType::Invalid => 0,
         }
     }

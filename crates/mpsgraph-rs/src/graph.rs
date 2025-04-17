@@ -456,7 +456,7 @@ impl Graph {
     pub fn constant<T: TensorDataScalar>(
         &self,
         values: &[T],
-        shape_dimensions: &[usize],
+        shape_dimensions: &[i64],
         data_type: DataType,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
