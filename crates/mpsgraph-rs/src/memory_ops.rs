@@ -1,16 +1,15 @@
-use crate::core::{AsRawObject, MPSDataType, NSString};
+use crate::core::DataType;
 use crate::graph::Graph;
 use crate::operation::Operation;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use objc2_foundation;
+use objc2::rc::Retained;
+use objc2_foundation::{NSData, NSString};
+use std::ptr;
 
 /// Memory operations for Graph
-impl Graph {
-    // The placeholder and constant_scalar methods are already implemented in graph.rs
-
+pub trait GraphMemoryOps {
     /// Creates a complex constant with the realPart and imaginaryPart values and returns the result tensor.
     ///
     /// # Arguments
@@ -21,17 +20,11 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object of type ComplexFloat32.
-    pub fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Tensor {
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, constantWithRealPart: real_part,
-                imaginaryPart: imaginary_part,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    fn complex_constant(
+        &self,
+        real_part: f64,
+        imaginary_part: f64,
+    ) -> Retained<Tensor>;
 
     /// Creates a complex constant with the specified data type and returns the result tensor.
     ///
@@ -44,23 +37,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object of complex type.
-    pub fn complex_constant_with_type(
+    fn complex_constant_with_type(
         &self,
         real_part: f64,
         imaginary_part: f64,
-        data_type: MPSDataType,
-    ) -> Tensor {
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, constantWithRealPart: real_part,
-                imaginaryPart: imaginary_part,
-                dataType: data_type as u64
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+        data_type: DataType,
+    ) -> Retained<Tensor>;
 
     /// Creates a complex constant with shape and returns the result tensor.
     ///
@@ -74,31 +56,19 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object of complex type.
-    pub fn complex_constant_with_shape(
+    fn complex_constant_with_shape(
         &self,
         real_part: f64,
         imaginary_part: f64,
         shape: &Shape,
-        data_type: MPSDataType,
-    ) -> Tensor {
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, constantWithRealPart: real_part,
-                imaginaryPart: imaginary_part,
-                shape: shape.0,
-                dataType: data_type as u64
-            ];
+        data_type: DataType,
+    ) -> Retained<Tensor>;
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
-
-    /// Creates a variable operation and returns the result tensor.
+    /// Creates a variable from raw data.
     ///
     /// # Arguments
     ///
-    /// * `data` - The data for the tensor.
+    /// * `data` - The raw data for the tensor as a byte slice.
     /// * `shape` - The shape of the output tensor. This has to be statically shaped.
     /// * `data_type` - The dataType of the variable tensor.
     /// * `name` - The name for the operation.
@@ -106,37 +76,13 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn variable<T: Copy>(
+    fn variable_with_bytes(
         &self,
-        data: &[T],
+        data: &[u8],
         shape: &Shape,
-        data_type: MPSDataType,
+        data_type: DataType,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            // Create NSData using objc2_foundation
-            let bytes_len = std::mem::size_of_val(data);
-            let data_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, bytes_len);
-            let ns_data = objc2_foundation::NSData::with_bytes(data_slice);
-            let data_obj: *mut AnyObject =
-                ns_data.as_ref() as *const objc2_foundation::NSData as *mut AnyObject;
-
-            let result: *mut AnyObject = msg_send![
-                self.0, variableWithData: data_obj,
-                shape: shape.0,
-                dataType: data_type as u64,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a variable from an input tensor.
     ///
@@ -148,26 +94,11 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object representing the variable.
-    pub fn variable_from_tensor(
+    fn variable_from_tensor(
         &self,
         tensor: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, variableFromTensorWithTensor: tensor.0,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a read op which reads at this point of execution of the graph.
     ///
@@ -179,22 +110,11 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn read_variable(&self, variable: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, readVariable: variable.0,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    fn read_variable(
+        &self,
+        variable: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates an assign operation which writes at this point of execution of the graph.
     ///
@@ -207,26 +127,219 @@ impl Graph {
     /// # Returns
     ///
     /// A valid MPSGraphOperation object.
-    pub fn assign_variable(
+    fn assign_variable(
         &self,
         variable: &Tensor,
         tensor: &Tensor,
         name: Option<&str>,
-    ) -> Operation {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Operation>>;
+}
 
+/// Extension methods to provide generic variable creation
+pub trait GraphVariableOps {
+    /// Creates a variable operation and returns the result tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The data for the tensor.
+    /// * `shape` - The shape of the output tensor. This has to be statically shaped.
+    /// * `data_type` - The dataType of the variable tensor.
+    /// * `name` - The name for the operation.
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object.
+    fn variable<T: Copy>(
+        &self,
+        data: &[T],
+        shape: &Shape,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+}
+
+impl GraphMemoryOps for Graph {
+    fn complex_constant(
+        &self,
+        real_part: f64,
+        imaginary_part: f64,
+    ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, assignVariable: variable.0,
-                withValueOfTensor: tensor.0,
-                name: name_obj,
+            msg_send![
+                self,
+                constantWithRealPart: real_part,
+                imaginaryPart: imaginary_part
+            ]
+        }
+    }
+
+    fn complex_constant_with_type(
+        &self,
+        real_part: f64,
+        imaginary_part: f64,
+        data_type: DataType,
+    ) -> Retained<Tensor> {
+        unsafe {
+            msg_send![
+                self,
+                constantWithRealPart: real_part,
+                imaginaryPart: imaginary_part,
+                dataType: data_type as u64
+            ]
+        }
+    }
+
+    fn complex_constant_with_shape(
+        &self,
+        real_part: f64,
+        imaginary_part: f64,
+        shape: &Shape,
+        data_type: DataType,
+    ) -> Retained<Tensor> {
+        unsafe {
+            msg_send![
+                self,
+                constantWithRealPart: real_part,
+                imaginaryPart: imaginary_part,
+                shape: shape,
+                dataType: data_type as u64
+            ]
+        }
+    }
+
+    fn variable_with_bytes(
+        &self,
+        data: &[u8],
+        shape: &Shape,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
+
+            // Create NSData
+            let ns_data = NSData::with_bytes(data);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                variableWithData: &*ns_data,
+                shape: shape,
+                dataType: data_type as u64,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Operation(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn variable_from_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                variableFromTensorWithTensor: tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn read_variable(
+        &self,
+        variable: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                readVariable: variable,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn assign_variable(
+        &self,
+        variable: &Tensor,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Operation>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
+
+            let result: *mut Operation = msg_send![
+                self,
+                assignVariable: variable,
+                withValueOfTensor: tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+impl GraphVariableOps for Graph {
+    fn variable<T: Copy>(
+        &self,
+        data: &[T],
+        shape: &Shape,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            // Create NSData
+            let bytes_len = std::mem::size_of_val(data);
+            let data_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, bytes_len);
+            
+            self.variable_with_bytes(data_slice, shape, data_type, name)
+        }
+    }
+}
+
+/// Extension trait providing a method for Graph to access memory operations
+pub trait GraphMemoryOpsExtension {
+    /// Access memory operations for this graph
+    fn memory_ops(&self) -> &Self
+    where
+        Self: GraphMemoryOps;
+}
+
+impl GraphMemoryOpsExtension for Graph {
+    fn memory_ops(&self) -> &Self
+    where
+        Self: GraphMemoryOps,
+    {
+        self
     }
 }

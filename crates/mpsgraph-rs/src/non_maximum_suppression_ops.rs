@@ -1,18 +1,16 @@
-use objc2::runtime::AnyObject;
-// In objc2, use false as NO and true as YES
-const NO: bool = false;
-const YES: bool = true;
-use crate::core::{AsRawObject, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
 
 /// The non-maximum suppression coordinate mode.
 ///
 /// This mode specifies the representation used for the 4 box coordinate values.
 /// Center coordinate modes define a centered box and the box dimensions.
 #[repr(u64)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum NonMaximumSuppressionCoordinateMode {
     /// [h_start, w_start, h_end, w_end]
     CornersHeightFirst = 0,
@@ -24,8 +22,8 @@ pub enum NonMaximumSuppressionCoordinateMode {
     CentersWidthFirst = 3,
 }
 
-/// Non-maximum suppression operations for Graph
-impl Graph {
+/// Trait for performing non-maximum suppression operations on a graph
+pub trait GraphNonMaximumSuppressionOps {
     /// Creates a nonMaximumumSuppression operation and returns the result tensor.
     ///
     /// # Arguments
@@ -44,7 +42,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object containing the non-maximum suppression results.
-    pub fn non_maximum_suppression(
+    fn non_maximum_suppression(
         &self,
         boxes_tensor: &Tensor,
         scores_tensor: &Tensor,
@@ -53,29 +51,7 @@ impl Graph {
         per_class_suppression: bool,
         coordinate_mode: NonMaximumSuppressionCoordinateMode,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let per_class_suppression_obj = if per_class_suppression { YES } else { NO };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, nonMaximumSuppressionWithBoxesTensor: boxes_tensor.0,
-                scoresTensor: scores_tensor.0,
-                IOUThreshold: iou_threshold,
-                scoreThreshold: score_threshold,
-                perClassSuppression: per_class_suppression_obj,
-                coordinateMode: coordinate_mode as u64,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a nonMaximumumSuppression operation with class indices and returns the result tensor.
     ///
@@ -97,7 +73,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object containing the non-maximum suppression results.
-    pub fn non_maximum_suppression_with_class_indices(
+    fn non_maximum_suppression_with_class_indices(
         &self,
         boxes_tensor: &Tensor,
         scores_tensor: &Tensor,
@@ -107,28 +83,88 @@ impl Graph {
         per_class_suppression: bool,
         coordinate_mode: NonMaximumSuppressionCoordinateMode,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
+}
 
-        let per_class_suppression_obj = if per_class_suppression { YES } else { NO };
-
+/// Implementation of non-maximum suppression operations for Graph
+impl GraphNonMaximumSuppressionOps for Graph {
+    fn non_maximum_suppression(
+        &self,
+        boxes_tensor: &Tensor,
+        scores_tensor: &Tensor,
+        iou_threshold: f32,
+        score_threshold: f32,
+        per_class_suppression: bool,
+        coordinate_mode: NonMaximumSuppressionCoordinateMode,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, nonMaximumSuppressionWithBoxesTensor: boxes_tensor.0,
-                scoresTensor: scores_tensor.0,
-                classIndicesTensor: class_indices_tensor.0,
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                nonMaximumSuppressionWithBoxesTensor: boxes_tensor,
+                scoresTensor: scores_tensor,
                 IOUThreshold: iou_threshold,
                 scoreThreshold: score_threshold,
-                perClassSuppression: per_class_suppression_obj,
+                perClassSuppression: per_class_suppression,
                 coordinateMode: coordinate_mode as u64,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn non_maximum_suppression_with_class_indices(
+        &self,
+        boxes_tensor: &Tensor,
+        scores_tensor: &Tensor,
+        class_indices_tensor: &Tensor,
+        iou_threshold: f32,
+        score_threshold: f32,
+        per_class_suppression: bool,
+        coordinate_mode: NonMaximumSuppressionCoordinateMode,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                nonMaximumSuppressionWithBoxesTensor: boxes_tensor,
+                scoresTensor: scores_tensor,
+                classIndicesTensor: class_indices_tensor,
+                IOUThreshold: iou_threshold,
+                scoreThreshold: score_threshold,
+                perClassSuppression: per_class_suppression,
+                coordinateMode: coordinate_mode as u64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait for easier access to non-maximum suppression operations
+pub trait GraphNonMaximumSuppressionOpsExtension {
+    /// Get access to non-maximum suppression operations
+    fn non_maximum_suppression_ops(&self) -> &dyn GraphNonMaximumSuppressionOps;
+}
+
+impl GraphNonMaximumSuppressionOpsExtension for Graph {
+    fn non_maximum_suppression_ops(&self) -> &dyn GraphNonMaximumSuppressionOps {
+        self
     }
 }

@@ -1,13 +1,22 @@
-use crate::convolution_transpose_ops::TensorNamedDataLayout;
-use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
+use crate::pooling_ops::TensorNamedDataLayout;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
+use objc2::rc::Retained;
+use objc2::runtime::AnyClass;
+use objc2::extern_class;
+use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
 
-/// Descriptor for Image to Column operations
-pub struct ImToColOpDescriptor(pub(crate) *mut AnyObject);
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphImToColOpDescriptor"]
+    /// Descriptor for Image to Column operations
+    pub struct ImToColOpDescriptor;
+);
+
+unsafe impl NSObjectProtocol for ImToColOpDescriptor {}
 
 impl ImToColOpDescriptor {
     /// Creates a new descriptor with full parameters for im2col operations
@@ -37,31 +46,23 @@ impl ImToColOpDescriptor {
         padding_top: usize,
         padding_bottom: usize,
         data_layout: TensorNamedDataLayout,
-    ) -> Self {
+    ) -> Retained<Self> {
         unsafe {
-            // Get the class, unwrap it, then use it in msg_send
-            let class_name = c"MPSGraphImToColOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![
-                    cls, descriptorWithKernelWidth: kernel_width,
-                    kernelHeight: kernel_height,
-                    strideInX: stride_in_x,
-                    strideInY: stride_in_y,
-                    dilationRateInX: dilation_rate_in_x,
-                    dilationRateInY: dilation_rate_in_y,
-                    paddingLeft: padding_left,
-                    paddingRight: padding_right,
-                    paddingTop: padding_top,
-                    paddingBottom: padding_bottom,
-                    dataLayout: data_layout as u64
-                ];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                ImToColOpDescriptor(descriptor)
-            } else {
-                // Fall back to creating an empty object if class not found
-                let empty_obj: *mut AnyObject = std::ptr::null_mut();
-                ImToColOpDescriptor(empty_obj)
-            }
+            let cls = AnyClass::get(c"MPSGraphImToColOpDescriptor").unwrap();
+            msg_send![
+                cls, 
+                descriptorWithKernelWidth: kernel_width as u64,
+                kernelHeight: kernel_height as u64,
+                strideInX: stride_in_x as u64,
+                strideInY: stride_in_y as u64,
+                dilationRateInX: dilation_rate_in_x as u64,
+                dilationRateInY: dilation_rate_in_y as u64,
+                paddingLeft: padding_left as u64,
+                paddingRight: padding_right as u64,
+                paddingTop: padding_top as u64,
+                paddingBottom: padding_bottom as u64,
+                dataLayout: data_layout as u64
+            ]
         }
     }
 
@@ -84,27 +85,19 @@ impl ImToColOpDescriptor {
         dilation_rate_in_x: usize,
         dilation_rate_in_y: usize,
         data_layout: TensorNamedDataLayout,
-    ) -> Self {
+    ) -> Retained<Self> {
         unsafe {
-            // Get the class, unwrap it, then use it in msg_send
-            let class_name = c"MPSGraphImToColOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![
-                    cls, descriptorWithKernelWidth: kernel_width,
-                    kernelHeight: kernel_height,
-                    strideInX: stride_in_x,
-                    strideInY: stride_in_y,
-                    dilationRateInX: dilation_rate_in_x,
-                    dilationRateInY: dilation_rate_in_y,
-                    dataLayout: data_layout as u64
-                ];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                ImToColOpDescriptor(descriptor)
-            } else {
-                // Fall back to creating an empty object if class not found
-                let empty_obj: *mut AnyObject = std::ptr::null_mut();
-                ImToColOpDescriptor(empty_obj)
-            }
+            let cls = AnyClass::get(c"MPSGraphImToColOpDescriptor").unwrap();
+            msg_send![
+                cls, 
+                descriptorWithKernelWidth: kernel_width as u64,
+                kernelHeight: kernel_height as u64,
+                strideInX: stride_in_x as u64,
+                strideInY: stride_in_y as u64,
+                dilationRateInX: dilation_rate_in_x as u64,
+                dilationRateInY: dilation_rate_in_y as u64,
+                dataLayout: data_layout as u64
+            ]
         }
     }
 
@@ -121,7 +114,7 @@ impl ImToColOpDescriptor {
         padding_top: usize,
         padding_bottom: usize,
         data_layout: TensorNamedDataLayout,
-    ) -> Self {
+    ) -> Retained<Self> {
         Self::descriptor_with_kernel_dimensions(
             kernel_width,
             kernel_height,
@@ -146,7 +139,7 @@ impl ImToColOpDescriptor {
         dilation_rate_in_x: usize,
         dilation_rate_in_y: usize,
         data_layout: TensorNamedDataLayout,
-    ) -> Self {
+    ) -> Retained<Self> {
         Self::descriptor_with_kernel_dimensions_simple(
             kernel_width,
             kernel_height,
@@ -179,31 +172,14 @@ impl ImToColOpDescriptor {
     ) -> &Self {
         unsafe {
             let _: () = msg_send![
-                self.0,
-                setExplicitPaddingWithPaddingLeft: padding_left,
-                paddingRight: padding_right,
-                paddingTop: padding_top,
-                paddingBottom: padding_bottom
+                self,
+                setExplicitPaddingWithPaddingLeft: padding_left as u64,
+                paddingRight: padding_right as u64,
+                paddingTop: padding_top as u64,
+                paddingBottom: padding_bottom as u64
             ];
         }
         self
-    }
-}
-
-impl Drop for ImToColOpDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for ImToColOpDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            ImToColOpDescriptor(desc)
-        }
     }
 }
 
@@ -228,21 +204,19 @@ impl Graph {
         source: &Tensor,
         descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, imToColWithSourceTensor: source.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            msg_send![
+                self,
+                imToColWithSourceTensor: source,
+                descriptor: descriptor,
+                name: name_obj
+            ]
         }
     }
 
@@ -264,22 +238,20 @@ impl Graph {
         output_shape: &Shape,
         descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, colToImWithSourceTensor: source.0,
-                outputShape: output_shape.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            msg_send![
+                self,
+                colToImWithSourceTensor: source,
+                outputShape: output_shape,
+                descriptor: descriptor,
+                name: name_obj
+            ]
         }
     }
 
@@ -289,7 +261,7 @@ impl Graph {
         source: &Tensor,
         descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Retained<Tensor> {
         self.im_to_col(source, descriptor, name)
     }
 
@@ -300,7 +272,7 @@ impl Graph {
         output_shape: &Shape,
         descriptor: &ImToColOpDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Retained<Tensor> {
         self.col_to_im(source, output_shape, descriptor, name)
     }
 }

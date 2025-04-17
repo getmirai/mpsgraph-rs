@@ -1,16 +1,15 @@
-use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
 use crate::tensor::Tensor;
+use objc2::ClassType;
 use objc2::msg_send;
 use objc2::rc::Retained;
-use objc2::runtime::AnyObject;
-use objc2_foundation::{NSArray, NSNumber};
+use objc2_foundation::{NSArray, NSNumber, NSObject, NSObjectProtocol, NSString};
 
 /// Scaling mode for FFT operations
 ///
 /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
 #[repr(u64)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FFTScalingMode {
     /// No scaling
     None = 0,
@@ -20,55 +19,49 @@ pub enum FFTScalingMode {
     Unitary = 2,
 }
 
-/// Descriptor for FFT operations
-///
-/// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-pub struct FFTDescriptor(pub(crate) *mut AnyObject);
+objc2::extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphFFTDescriptor"]
+    /// Descriptor for FFT operations
+    ///
+    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
+    pub struct FFTDescriptor;
+);
 
-impl Default for FFTDescriptor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+unsafe impl NSObjectProtocol for FFTDescriptor {}
 
 impl FFTDescriptor {
     /// Creates a new FFT descriptor with default settings
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphFFTDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptor];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                FFTDescriptor(descriptor)
-            } else {
-                panic!("Class MPSGraphFFTDescriptor not found")
-            }
+            msg_send![Self::class(), descriptor]
         }
     }
 
     /// Sets whether to use inverse FFT (positive phase factor)
     pub fn set_inverse(&self, inverse: bool) {
         unsafe {
-            let _: () = msg_send![self.0, setInverse: inverse];
+            let _: () = msg_send![self, setInverse: inverse];
         }
     }
 
     /// Gets whether inverse FFT is used
     pub fn inverse(&self) -> bool {
-        unsafe { msg_send![self.0, inverse] }
+        unsafe { msg_send![self, inverse] }
     }
 
     /// Sets the scaling mode
     pub fn set_scaling_mode(&self, mode: FFTScalingMode) {
         unsafe {
-            let _: () = msg_send![self.0, setScalingMode: mode as u64];
+            let _: () = msg_send![self, setScalingMode: mode as u64];
         }
     }
 
     /// Gets the scaling mode
     pub fn scaling_mode(&self) -> FFTScalingMode {
         unsafe {
-            let mode: u64 = msg_send![self.0, scalingMode];
+            let mode: u64 = msg_send![self, scalingMode];
             match mode {
                 0 => FFTScalingMode::None,
                 1 => FFTScalingMode::Size,
@@ -77,39 +70,36 @@ impl FFTDescriptor {
             }
         }
     }
+    
+    /// Sets the normalization factor for the FFT
+    pub fn set_normalization_factor(&self, factor: f64) {
+        unsafe {
+            let _: () = msg_send![self, setNormalizationFactor:factor];
+        }
+    }
 
     /// Sets whether to round to odd Hermitean output dimensions
     pub fn set_round_to_odd_hermitean(&self, round: bool) {
         unsafe {
-            let _: () = msg_send![self.0, setRoundToOddHermitean: round];
+            let _: () = msg_send![self, setRoundToOddHermitean: round];
         }
     }
 
     /// Gets whether to round to odd Hermitean output dimensions
     pub fn round_to_odd_hermitean(&self) -> bool {
-        unsafe { msg_send![self.0, roundToOddHermitean] }
+        unsafe { msg_send![self, roundToOddHermitean] }
     }
 }
 
-impl Drop for FFTDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
+impl FFTDescriptor {
+    // Helper method that serves as a replacement for Default
+    pub fn default_descriptor() -> Retained<Self> {
+        Self::new()
     }
 }
 
-impl Clone for FFTDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            FFTDescriptor(desc)
-        }
-    }
-}
-
-/// Fourier transform operations for Graph
-impl Graph {
+/// Trait for performing Fourier transform operations on a graph
+pub trait GraphFourierTransformOps {
     /// Creates a fast Fourier transform operation
     ///
     /// # Arguments
@@ -126,38 +116,13 @@ impl Graph {
     /// # Availability
     ///
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    pub fn fast_fourier_transform(
+    fn fast_fourier_transform(
         &self,
         tensor: &Tensor,
-        axes: &[u64],
+        axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert axes to NSArray
-        let axes_numbers: Vec<Retained<NSNumber>> =
-            axes.iter().map(|&x| NSNumber::new_u64(x)).collect();
-
-        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
-        let ns_array = NSArray::from_slice(&refs);
-        let axes_array = ns_array.as_raw_object();
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, fastFourierTransformWithTensor: tensor.0,
-                axes: axes_array,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a fast Fourier transform operation with axes specified by a tensor
     ///
@@ -175,30 +140,93 @@ impl Graph {
     /// # Availability
     ///
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    pub fn fast_fourier_transform_with_tensor_axes(
+    fn fast_fourier_transform_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
 
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, fastFourierTransformWithTensor: tensor.0,
-                axesTensor: axes_tensor.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
+    /// Creates a real-to-complex Fast Fourier Transform.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Input tensor (real tensor)
+    /// * `axes` - Axes along which to perform the FFT
+    /// * `descriptor` - Descriptor for the FFT operation
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn real_to_complex_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    /// Creates a real-to-complex Fast Fourier Transform using tensor axes.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Input tensor (real tensor)
+    /// * `axes_tensor` - Tensor containing the axes along which to perform the FFT
+    /// * `descriptor` - Descriptor for the FFT operation
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn real_to_complex_fft_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    /// Creates a complex-to-real Fast Fourier Transform.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Input tensor (complex tensor with alternating real and imaginary components)
+    /// * `axes` - Axes along which to perform the FFT
+    /// * `descriptor` - Descriptor for the FFT operation
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn complex_to_real_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    /// Creates a complex-to-real Fast Fourier Transform using tensor axes.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Input tensor (complex tensor with alternating real and imaginary components)
+    /// * `axes_tensor` - Tensor containing the axes along which to perform the FFT
+    /// * `descriptor` - Descriptor for the FFT operation
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn complex_to_real_fft_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a real-to-Hermitean fast Fourier transform operation
     ///
@@ -216,38 +244,13 @@ impl Graph {
     /// # Availability
     ///
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    pub fn real_to_hermitean_fft(
+    fn real_to_hermitean_fft(
         &self,
         tensor: &Tensor,
-        axes: &[u64],
+        axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert axes to NSArray
-        let axes_numbers: Vec<Retained<NSNumber>> =
-            axes.iter().map(|&x| NSNumber::new_u64(x)).collect();
-
-        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
-        let ns_array = NSArray::from_slice(&refs);
-        let axes_array = ns_array.as_raw_object();
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, realToHermiteanFFTWithTensor: tensor.0,
-                axes: axes_array,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a real-to-Hermitean fast Fourier transform operation with axes specified by a tensor
     ///
@@ -265,30 +268,13 @@ impl Graph {
     /// # Availability
     ///
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    pub fn real_to_hermitean_fft_with_tensor_axes(
+    fn real_to_hermitean_fft_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, realToHermiteanFFTWithTensor: tensor.0,
-                axesTensor: axes_tensor.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Hermitean-to-real fast Fourier transform operation
     ///
@@ -306,38 +292,13 @@ impl Graph {
     /// # Availability
     ///
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    pub fn hermitean_to_real_fft(
+    fn hermitean_to_real_fft(
         &self,
         tensor: &Tensor,
-        axes: &[u64],
+        axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert axes to NSArray
-        let axes_numbers: Vec<Retained<NSNumber>> =
-            axes.iter().map(|&x| NSNumber::new_u64(x)).collect();
-
-        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
-        let ns_array = NSArray::from_slice(&refs);
-        let axes_array = ns_array.as_raw_object();
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, HermiteanToRealFFTWithTensor: tensor.0,
-                axes: axes_array,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Hermitean-to-real fast Fourier transform operation with axes specified by a tensor
     ///
@@ -355,32 +316,13 @@ impl Graph {
     /// # Availability
     ///
     /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    pub fn hermitean_to_real_fft_with_tensor_axes(
+    fn hermitean_to_real_fft_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, HermiteanToRealFFTWithTensor: tensor.0,
-                axesTensor: axes_tensor.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    // Keep legacy methods for backward compatibility
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a forward FFT operation using complex-valued input.
     ///
@@ -398,41 +340,13 @@ impl Graph {
     /// # Deprecated
     ///
     /// This method uses the older API. Consider using `fast_fourier_transform` instead.
-    #[deprecated(since = "0.1.0", note = "Use `fast_fourier_transform` instead")]
-    pub fn forward_fft(
+    fn forward_fft(
         &self,
         real: &Tensor,
         imaginary: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, forwardFFTWithRealTensor: real.0,
-                imaginaryTensor: imaginary.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            // This returns an NSArray with two tensors: real and imaginary parts
-            // Extract both tensors from the array
-            let count: usize = msg_send![result, count];
-            assert_eq!(count, 2, "Expected 2 result tensors from forward FFT");
-
-            let real_output: *mut AnyObject = msg_send![result, objectAtIndex: 0];
-            let imag_output: *mut AnyObject = msg_send![result, objectAtIndex: 1];
-
-            let real_output = objc2::ffi::objc_retain(real_output as *mut _);
-            let imag_output = objc2::ffi::objc_retain(imag_output as *mut _);
-
-            (Tensor(real_output), Tensor(imag_output))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Creates an inverse FFT operation using complex-valued input.
     ///
@@ -451,44 +365,13 @@ impl Graph {
     ///
     /// This method uses the older API. Consider using `fast_fourier_transform` instead
     /// with `descriptor.set_inverse(true)`.
-    #[deprecated(
-        since = "0.1.0",
-        note = "Use `fast_fourier_transform` with `descriptor.set_inverse(true)` instead"
-    )]
-    pub fn inverse_fft(
+    fn inverse_fft(
         &self,
         real: &Tensor,
         imaginary: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, inverseFFTWithRealTensor: real.0,
-                imaginaryTensor: imaginary.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            // This returns an NSArray with two tensors: real and imaginary parts
-            // Extract both tensors from the array
-            let count: usize = msg_send![result, count];
-            assert_eq!(count, 2, "Expected 2 result tensors from inverse FFT");
-
-            let real_output: *mut AnyObject = msg_send![result, objectAtIndex: 0];
-            let imag_output: *mut AnyObject = msg_send![result, objectAtIndex: 1];
-
-            let real_output = objc2::ffi::objc_retain(real_output as *mut _);
-            let imag_output = objc2::ffi::objc_retain(imag_output as *mut _);
-
-            (Tensor(real_output), Tensor(imag_output))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Creates a forward FFT operation using real-valued input.
     ///
@@ -505,39 +388,12 @@ impl Graph {
     /// # Deprecated
     ///
     /// This method uses the older API. Consider using `real_to_hermitean_fft` instead.
-    #[deprecated(since = "0.1.0", note = "Use `real_to_hermitean_fft` instead")]
-    pub fn forward_real_fft(
+    fn forward_real_fft(
         &self,
         real: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, forwardRealFFTWithRealTensor: real.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            // This returns an NSArray with two tensors: real and imaginary parts
-            // Extract both tensors from the array
-            let count: usize = msg_send![result, count];
-            assert_eq!(count, 2, "Expected 2 result tensors from forward real FFT");
-
-            let real_output: *mut AnyObject = msg_send![result, objectAtIndex: 0];
-            let imag_output: *mut AnyObject = msg_send![result, objectAtIndex: 1];
-
-            let real_output = objc2::ffi::objc_retain(real_output as *mut _);
-            let imag_output = objc2::ffi::objc_retain(imag_output as *mut _);
-
-            (Tensor(real_output), Tensor(imag_output))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Creates an inverse FFT operation that produces real-valued output.
     ///
@@ -555,29 +411,476 @@ impl Graph {
     /// # Deprecated
     ///
     /// This method uses the older API. Consider using `hermitean_to_real_fft` instead.
-    #[deprecated(since = "0.1.0", note = "Use `hermitean_to_real_fft` instead")]
-    pub fn inverse_real_fft(
+    fn inverse_real_fft(
         &self,
         real: &Tensor,
         imaginary: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
+}
+
+/// Implementation of Fourier transform operations for Graph
+impl GraphFourierTransformOps for Graph {
+    /// Creates a fast Fourier transform operation
+    fn fast_fourier_transform(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        // Convert axes to NSArray
+        let axes_numbers: Vec<Retained<NSNumber>> =
+            axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
+
+        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
+        let ns_array = NSArray::from_slice(&refs);
 
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, inverseRealFFTWithRealTensor: real.0,
-                imaginaryTensor: imaginary.0,
-                descriptor: descriptor.0,
-                name: name_obj,
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, fastFourierTransformWithTensor: tensor,
+                axes: &*ns_array,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
         }
+    }
+
+    /// Creates a fast Fourier transform operation with axes specified by a tensor
+    fn fast_fourier_transform_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, fastFourierTransformWithTensor: tensor,
+                axesTensor: axes_tensor,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a real-to-complex Fast Fourier Transform.
+    fn real_to_complex_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        // Convert axes to NSArray
+        let axes_numbers: Vec<Retained<NSNumber>> =
+            axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
+
+        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
+        let ns_array = NSArray::from_slice(&refs);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, realToComplexFFTWithTensor: tensor,
+                axes: &*ns_array,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a real-to-complex Fast Fourier Transform using tensor axes.
+    fn real_to_complex_fft_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, realToComplexFFTWithTensor: tensor,
+                axesTensor: axes_tensor,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a complex-to-real Fast Fourier Transform.
+    fn complex_to_real_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        // Convert axes to NSArray
+        let axes_numbers: Vec<Retained<NSNumber>> =
+            axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
+
+        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
+        let ns_array = NSArray::from_slice(&refs);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, complexToRealFFTWithTensor: tensor,
+                axes: &*ns_array,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a complex-to-real Fast Fourier Transform using tensor axes.
+    fn complex_to_real_fft_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, complexToRealFFTWithTensor: tensor,
+                axesTensor: axes_tensor,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a real-to-Hermitean fast Fourier transform operation
+    fn real_to_hermitean_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        // Convert axes to NSArray
+        let axes_numbers: Vec<Retained<NSNumber>> =
+            axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
+
+        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
+        let ns_array = NSArray::from_slice(&refs);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, realToHermiteanFFTWithTensor: tensor,
+                axes: &*ns_array,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a real-to-Hermitean fast Fourier transform operation with axes specified by a tensor
+    fn real_to_hermitean_fft_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, realToHermiteanFFTWithTensor: tensor,
+                axesTensor: axes_tensor,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a Hermitean-to-real fast Fourier transform operation
+    fn hermitean_to_real_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        // Convert axes to NSArray
+        let axes_numbers: Vec<Retained<NSNumber>> =
+            axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
+
+        let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
+        let ns_array = NSArray::from_slice(&refs);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, hermiteanToRealFFTWithTensor: tensor,
+                axes: &*ns_array,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    /// Creates a Hermitean-to-real fast Fourier transform operation with axes specified by a tensor
+    fn hermitean_to_real_fft_with_tensor_axes(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, hermiteanToRealFFTWithTensor: tensor,
+                axesTensor: axes_tensor,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+
+    // Legacy API methods for backward compatibility
+
+    /// Creates a forward FFT operation using complex-valued input.
+    fn forward_fft(
+        &self,
+        real: &Tensor,
+        imaginary: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let result_ptr: *mut NSArray<Tensor> = msg_send![
+                self, forwardFFTWithRealTensor: real,
+                imaginaryTensor: imaginary,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if result_ptr.is_null() {
+                return None;
+            }
+
+            let result_array = Retained::from_raw(result_ptr).unwrap();
+            let count = result_array.count();
+            
+            if count != 2 {
+                return None;
+            }
+
+            let real_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 0u64];
+            let imag_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 1u64];
+
+            if real_output_ptr.is_null() || imag_output_ptr.is_null() {
+                return None;
+            }
+
+            let real_output = Retained::from_raw(real_output_ptr).unwrap();
+            let imag_output = Retained::from_raw(imag_output_ptr).unwrap();
+
+            Some((real_output, imag_output))
+        }
+    }
+
+    /// Creates an inverse FFT operation using complex-valued input.
+    fn inverse_fft(
+        &self,
+        real: &Tensor,
+        imaginary: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let result_ptr: *mut NSArray<Tensor> = msg_send![
+                self, inverseFFTWithRealTensor: real,
+                imaginaryTensor: imaginary,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if result_ptr.is_null() {
+                return None;
+            }
+
+            let result_array = Retained::from_raw(result_ptr).unwrap();
+            let count = result_array.count();
+            
+            if count != 2 {
+                return None;
+            }
+
+            let real_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 0u64];
+            let imag_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 1u64];
+
+            if real_output_ptr.is_null() || imag_output_ptr.is_null() {
+                return None;
+            }
+
+            let real_output = Retained::from_raw(real_output_ptr).unwrap();
+            let imag_output = Retained::from_raw(imag_output_ptr).unwrap();
+
+            Some((real_output, imag_output))
+        }
+    }
+
+    /// Creates a forward FFT operation using real-valued input.
+    fn forward_real_fft(
+        &self,
+        real: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let result_ptr: *mut NSArray<Tensor> = msg_send![
+                self, forwardRealFFTWithRealTensor: real,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if result_ptr.is_null() {
+                return None;
+            }
+
+            let result_array = Retained::from_raw(result_ptr).unwrap();
+            let count = result_array.count();
+            
+            if count != 2 {
+                return None;
+            }
+
+            let real_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 0u64];
+            let imag_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 1u64];
+
+            if real_output_ptr.is_null() || imag_output_ptr.is_null() {
+                return None;
+            }
+
+            let real_output = Retained::from_raw(real_output_ptr).unwrap();
+            let imag_output = Retained::from_raw(imag_output_ptr).unwrap();
+
+            Some((real_output, imag_output))
+        }
+    }
+
+    /// Creates an inverse FFT operation that produces real-valued output.
+    fn inverse_real_fft(
+        &self,
+        real: &Tensor,
+        imaginary: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        let name_obj = name.map(NSString::from_str);
+
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![
+                self, inverseRealFFTWithRealTensor: real,
+                imaginaryTensor: imaginary,
+                descriptor: descriptor,
+                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(tensor_ptr).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait for easier access to Fourier transform operations
+pub trait GraphFourierTransformOpsExtension {
+    /// Get access to Fourier transform operations
+    fn fourier_transform_ops(&self) -> &dyn GraphFourierTransformOps;
+}
+
+impl GraphFourierTransformOpsExtension for Graph {
+    fn fourier_transform_ops(&self) -> &dyn GraphFourierTransformOps {
+        self
     }
 }

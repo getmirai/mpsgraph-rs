@@ -1,65 +1,48 @@
 use metal::foreign_types::ForeignType;
 use metal::Device as MetalDevice;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use std::fmt;
-use std::ptr;
+use objc2::rc::Retained;
+use objc2::{extern_class, ClassType, msg_send};
+use objc2::runtime::NSObject;
+use objc2_foundation::NSObjectProtocol;
 
-/// A wrapper for a Metal Performance Shaders Graph device object
-pub struct Device(pub(crate) *mut AnyObject);
+// The extern_class macro will generate the struct definition
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphDevice"]
+    pub struct Device;
+);
 
-impl Default for Device {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+unsafe impl NSObjectProtocol for Device {}
 
 impl Device {
     /// Creates a new Device using the system default Metal device
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         let device = metal::Device::system_default().expect("No Metal device found");
         Self::with_device(&device)
     }
 
     /// Creates a new Device from a Metal device
-    pub fn with_device(device: &MetalDevice) -> Self {
+    pub fn with_device(device: &MetalDevice) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphDevice";
-            let cls = objc2::runtime::AnyClass::get(class_name)
-                .unwrap_or_else(|| panic!("MPSGraphDevice class not found"));
-            let device_ptr = device.as_ptr() as *mut AnyObject;
-            let obj: *mut AnyObject = msg_send![cls, deviceWithMTLDevice:device_ptr];
-            let obj = objc2::ffi::objc_retain(obj as *mut _);
-            Device(obj)
+            let class = Self::class();
+            let device_ptr = device.as_ptr();
+            
+            // Cast the raw device pointer to id type (NSObject) as expected by MPS
+            let device_id = device_ptr as *mut objc2::runtime::AnyObject;
+            
+            msg_send![class, deviceWithMTLDevice: device_id]
         }
     }
 }
 
-impl Drop for Device {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.0.is_null() {
-                objc2::ffi::objc_release(self.0 as *mut _);
-            }
-        }
-    }
+// Implement CustomDefault instead of Default, since Default requires returning Self
+pub trait CustomDefault {
+    fn custom_default() -> Retained<Self> where Self: Sized;
 }
 
-impl Clone for Device {
-    fn clone(&self) -> Self {
-        unsafe {
-            if !self.0.is_null() {
-                let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                Device(obj)
-            } else {
-                Device(ptr::null_mut())
-            }
-        }
-    }
-}
-
-impl fmt::Debug for Device {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Device")
+impl CustomDefault for Device {
+    fn custom_default() -> Retained<Self> {
+        Self::new()
     }
 }

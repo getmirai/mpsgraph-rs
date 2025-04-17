@@ -1,11 +1,13 @@
-use crate::core::{AsRawObject, MPSDataType, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
+use crate::core::DataType;
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
 
-/// OneHot operations for Graph
-impl Graph {
+/// One-hot operations for Graph
+pub trait GraphOneHotOps {
     /// Creates a oneHot operation and returns the result tensor.
     ///
     /// Creates a tensor of rank equal to the indicesTensor rank + 1.
@@ -13,208 +15,318 @@ impl Graph {
     /// The values at the indices in the indicesTensor will have the onValue,
     /// and all other values will be set to the offValue.
     ///
-    /// - Parameters:
-    ///   - indices_tensor: Tensor of indices for on values
-    ///   - depth: Depth of the oneHot vector along the axis
-    ///   - axis: The axis to insert the new oneHot vector at
-    ///   - data_type: MPSDataType of the result tensor
-    ///   - on_value: The value for indices designated by the indicesTensor
-    ///   - off_value: The value for indices not designated by the indicesTensor
-    ///   - name: Name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn one_hot(
+    /// # Arguments
+    ///
+    /// * `indices_tensor` - Tensor of indices for on values
+    /// * `depth` - Depth of the oneHot vector along the axis
+    /// * `axis` - The axis to insert the new oneHot vector at
+    /// * `data_type` - DataType of the result tensor
+    /// * `on_value` - The value for indices designated by the indicesTensor
+    /// * `off_value` - The value for indices not designated by the indicesTensor
+    /// * `name` - Name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn one_hot(
         &self,
         indices_tensor: &Tensor,
         depth: usize,
         axis: usize,
-        data_type: MPSDataType,
+        data_type: DataType,
         on_value: f64,
         off_value: f64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0, oneHotWithIndicesTensor: indices_tensor.0,
-                depth: depth,
-                axis: axis,
-                dataType: data_type as u64,
-                onValue: on_value,
-                offValue: off_value,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a oneHot operation with default axis (the minor dimension).
     ///
-    /// - Parameters:
-    ///   - indices_tensor: Tensor of indices for on values
-    ///   - depth: Depth of the oneHot vector along the axis
-    ///   - data_type: MPSDataType of the result tensor
-    ///   - on_value: The value for indices designated by the indicesTensor
-    ///   - off_value: The value for indices not designated by the indicesTensor
-    ///   - name: Name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn one_hot_default_axis(
+    /// # Arguments
+    ///
+    /// * `indices_tensor` - Tensor of indices for on values
+    /// * `depth` - Depth of the oneHot vector along the axis
+    /// * `data_type` - DataType of the result tensor
+    /// * `on_value` - The value for indices designated by the indicesTensor
+    /// * `off_value` - The value for indices not designated by the indicesTensor
+    /// * `name` - Name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn one_hot_default_axis(
         &self,
         indices_tensor: &Tensor,
         depth: usize,
-        data_type: MPSDataType,
+        data_type: DataType,
         on_value: f64,
         off_value: f64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let result: *mut AnyObject = msg_send![self.0, oneHotWithIndicesTensor: indices_tensor.0,
+    /// Creates a oneHot operation with default on/off values (1.0 and 0.0).
+    ///
+    /// # Arguments
+    ///
+    /// * `indices_tensor` - Tensor of indices for on values
+    /// * `depth` - Depth of the oneHot vector along the axis
+    /// * `axis` - The axis to insert the new oneHot vector at
+    /// * `data_type` - DataType of the result tensor
+    /// * `name` - Name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn one_hot_default_values(
+        &self,
+        indices_tensor: &Tensor,
+        depth: usize,
+        axis: usize,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    /// Creates a oneHot operation with default axis and float32 data type (simplest version).
+    ///
+    /// # Arguments
+    ///
+    /// * `indices_tensor` - Tensor of indices for on values
+    /// * `depth` - Depth of the oneHot vector along the axis
+    /// * `name` - Name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn one_hot_simple(
+        &self,
+        indices_tensor: &Tensor,
+        depth: usize,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    /// Creates a oneHot operation with default axis and default values.
+    ///
+    /// # Arguments
+    ///
+    /// * `indices_tensor` - Tensor of indices for on values
+    /// * `depth` - Depth of the oneHot vector along the axis
+    /// * `data_type` - DataType of the result tensor
+    /// * `name` - Name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn one_hot_default_axis_values(
+        &self,
+        indices_tensor: &Tensor,
+        depth: usize,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    /// Creates a oneHot operation with default data type (Float32) and default values.
+    ///
+    /// # Arguments
+    ///
+    /// * `indices_tensor` - Tensor of indices for on values
+    /// * `depth` - Depth of the oneHot vector along the axis
+    /// * `axis` - The axis to insert the new oneHot vector at
+    /// * `name` - Name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn one_hot_default_type_values(
+        &self,
+        indices_tensor: &Tensor,
+        depth: usize,
+        axis: usize,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+}
+
+/// Implementation of one-hot operations for Graph
+impl GraphOneHotOps for Graph {
+    fn one_hot(
+        &self,
+        indices_tensor: &Tensor,
+        depth: usize,
+        axis: usize,
+        data_type: DataType,
+        on_value: f64,
+        off_value: f64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                oneHotWithIndicesTensor: indices_tensor,
+                depth: depth,
+                axis: axis,
+                dataType: data_type as u64,
+                onValue: on_value,
+                offValue: off_value,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn one_hot_default_axis(
+        &self,
+        indices_tensor: &Tensor,
+        depth: usize,
+        data_type: DataType,
+        on_value: f64,
+        off_value: f64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 dataType: data_type as u64,
                 onValue: on_value,
                 offValue: off_value,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a oneHot operation with default on/off values (1.0 and 0.0).
-    ///
-    /// - Parameters:
-    ///   - indices_tensor: Tensor of indices for on values
-    ///   - depth: Depth of the oneHot vector along the axis
-    ///   - axis: The axis to insert the new oneHot vector at
-    ///   - data_type: MPSDataType of the result tensor
-    ///   - name: Name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn one_hot_default_values(
+    fn one_hot_default_values(
         &self,
         indices_tensor: &Tensor,
         depth: usize,
         axis: usize,
-        data_type: MPSDataType,
+        data_type: DataType,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut AnyObject = msg_send![self.0, oneHotWithIndicesTensor: indices_tensor.0,
+            let result: *mut Tensor = msg_send![
+                self, 
+                oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
                 dataType: data_type as u64,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a oneHot operation with default axis and float32 data type (simplest version).
-    ///
-    /// - Parameters:
-    ///   - indices_tensor: Tensor of indices for on values
-    ///   - depth: Depth of the oneHot vector along the axis
-    ///   - name: Name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn one_hot_simple(
+    fn one_hot_simple(
         &self,
         indices_tensor: &Tensor,
         depth: usize,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut AnyObject = msg_send![self.0, oneHotWithIndicesTensor: indices_tensor.0,
+            let result: *mut Tensor = msg_send![
+                self, 
+                oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a oneHot operation with default axis and default values.
-    ///
-    /// - Parameters:
-    ///   - indices_tensor: Tensor of indices for on values
-    ///   - depth: Depth of the oneHot vector along the axis
-    ///   - data_type: MPSDataType of the result tensor
-    ///   - name: Name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn one_hot_default_axis_values(
+    fn one_hot_default_axis_values(
         &self,
         indices_tensor: &Tensor,
         depth: usize,
-        data_type: MPSDataType,
+        data_type: DataType,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut AnyObject = msg_send![self.0, oneHotWithIndicesTensor: indices_tensor.0,
+            let result: *mut Tensor = msg_send![
+                self, 
+                oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 dataType: data_type as u64,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a oneHot operation with default data type (Float32) and default values.
-    ///
-    /// - Parameters:
-    ///   - indices_tensor: Tensor of indices for on values
-    ///   - depth: Depth of the oneHot vector along the axis
-    ///   - axis: The axis to insert the new oneHot vector at
-    ///   - name: Name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn one_hot_default_type_values(
+    fn one_hot_default_type_values(
         &self,
         indices_tensor: &Tensor,
         depth: usize,
         axis: usize,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut AnyObject = msg_send![self.0, oneHotWithIndicesTensor: indices_tensor.0,
+            let result: *mut Tensor = msg_send![
+                self, 
+                oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+}
+
+/// Extension trait for easier access to one-hot operations
+pub trait GraphOneHotOpsExtension {
+    /// Get access to one-hot operations
+    fn one_hot_ops(&self) -> &dyn GraphOneHotOps;
+}
+
+impl GraphOneHotOpsExtension for Graph {
+    fn one_hot_ops(&self) -> &dyn GraphOneHotOps {
+        self
     }
 }

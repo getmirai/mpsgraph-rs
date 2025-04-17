@@ -1,21 +1,20 @@
 use metal::{Device, MTLResourceOptions};
 use mpsgraph::{
-    MPSCommandBuffer, MPSDataType, Graph, ExecutionDescriptor, TensorData,
-    Shape,
+    CommandBufferStatus, DataType, ExecutionDescriptor, Graph, ShapeHelper, TensorData,
 };
 use std::collections::HashMap;
 
-/// A simple example demonstrating how to use MPSGraph with MPSCommandBuffer
+/// A simple example demonstrating how to use MPSGraph with CommandBuffer (modern API version)
 ///
 /// This example shows:
 /// 1. Creation of Metal buffers for inputs and outputs
 /// 2. Wrapping buffers in TensorData
 /// 3. Building a computation graph with 3 operations
-/// 4. Creating an MPSCommandBuffer and encoding the graph
+/// 4. Creating a CommandBuffer and encoding the graph
 /// 5. Committing and waiting for the command buffer
 /// 6. Reading results directly from the Metal buffers
 fn main() {
-    println!("MPSGraph with MPSCommandBuffer example\n");
+    println!("MPSGraph with CommandBuffer example (modern API)\n");
 
     //-- Setup --//
 
@@ -33,19 +32,20 @@ fn main() {
     println!("Building computation graph...");
 
     // 1. Define input tensors
-    let shape = Shape::from_slice(&[2, 2]);
-    let a = graph.placeholder(&shape, MPSDataType::Float32, Some("A"));
-    let b = graph.placeholder(&shape, MPSDataType::Float32, Some("B"));
+    let shape_dimensions = [2, 2];
+    let shape = ShapeHelper::matrix(2, 2);
+    let a = graph.placeholder(DataType::Float32, &shape).unwrap();
+    let b = graph.placeholder(DataType::Float32, &shape).unwrap();
 
     // 2. Define computation operations
     // Operation 1: C = A + B
-    let c = graph.add(&a, &b, Some("C"));
+    let c = graph.add(&a, &b, Some("C")).unwrap();
 
     // Operation 2: D = C * C (element-wise multiply)
-    let d = graph.multiply(&c, &c, Some("D"));
+    let d = graph.multiply(&c, &c, Some("D")).unwrap();
 
     // Operation 3: E = C + D
-    let e = graph.add(&c, &d, Some("E"));
+    let e = graph.add(&c, &d, Some("E")).unwrap();
 
     //-- Create Buffers for Input and Output Data --//
     println!("Creating Metal buffers for inputs and outputs...");
@@ -80,47 +80,48 @@ fn main() {
     println!("Creating TensorData from Metal buffers...");
 
     // Wrap Metal buffers in TensorData
-    let a_data = TensorData::from_buffer(&a_buffer, &shape, MPSDataType::Float32);
-    let b_data = TensorData::from_buffer(&b_buffer, &shape, MPSDataType::Float32);
-    let c_data = TensorData::from_buffer(&c_buffer, &shape, MPSDataType::Float32);
-    let d_data = TensorData::from_buffer(&d_buffer, &shape, MPSDataType::Float32);
-    let e_data = TensorData::from_buffer(&e_buffer, &shape, MPSDataType::Float32);
+    let a_data = TensorData::from_buffer(&a_buffer, &shape_dimensions, DataType::Float32);
+    let b_data = TensorData::from_buffer(&b_buffer, &shape_dimensions, DataType::Float32);
+    let c_data = TensorData::from_buffer(&c_buffer, &shape_dimensions, DataType::Float32);
+    let d_data = TensorData::from_buffer(&d_buffer, &shape_dimensions, DataType::Float32);
+    let e_data = TensorData::from_buffer(&e_buffer, &shape_dimensions, DataType::Float32);
 
     //-- Set Up Feeds and Results --//
     println!("Setting up feeds and results dictionaries...");
 
     // Create feed dictionary (inputs)
     let mut feeds = HashMap::new();
-    feeds.insert(a.clone(), a_data);
-    feeds.insert(b.clone(), b_data);
+    feeds.insert(&*a, &*a_data);
+    feeds.insert(&*b, &*b_data);
 
     // Create results dictionary (outputs)
     let mut results = HashMap::new();
-    results.insert(c.clone(), c_data);
-    results.insert(d.clone(), d_data);
-    results.insert(e.clone(), e_data);
+    results.insert(&*c, &*c_data);
+    results.insert(&*d, &*d_data);
+    results.insert(&*e, &*e_data);
 
     //-- Create Execution Descriptor --//
     let execution_descriptor = ExecutionDescriptor::new();
     execution_descriptor.prefer_synchronous_execution();
 
-    //-- Create MPSCommandBuffer --//
-    println!("Creating MPSCommandBuffer...");
+    //-- Create CommandBuffer --//
+    println!("Creating CommandBuffer...");
 
-    // Create an MPSCommandBuffer from the command queue
-    let mps_command_buffer = MPSCommandBuffer::from_command_queue(&command_queue);
+    // Create a CommandBuffer from the command queue
+    let command_buffer = mpsgraph::CommandBuffer::from_command_queue(&command_queue);
 
     // Set a label for debugging (this sets the label on the underlying MTLCommandBuffer)
-    mps_command_buffer.set_label("MPSGraph Simple Compile");
+    command_buffer.set_label("MPSGraph Simple Compile (Modern)");
 
     //-- Encode Graph to Command Buffer --//
-    println!("Encoding graph to MPSCommandBuffer...");
+    println!("Encoding graph to CommandBuffer...");
 
-    // Encode the graph operations to the command buffer
+    // Encode the graph operations to the command buffer using the version
+    // that takes a results dictionary (better match for our use case)
     graph.encode_to_command_buffer_with_results(
-        &mps_command_buffer,
+        &command_buffer,
         &feeds,
-        None, // No specific target operations - we'll use the results dictionary instead
+        None, // No target operations needed
         &results,
         Some(&execution_descriptor),
     );
@@ -129,17 +130,17 @@ fn main() {
     println!("Committing command buffer and waiting for completion...");
 
     // Commit the command buffer
-    mps_command_buffer.commit();
+    command_buffer.commit();
 
     // Wait for execution to complete
-    mps_command_buffer.wait_until_completed();
+    command_buffer.wait_until_completed();
 
     // Check command buffer status
-    println!("Command buffer status: {:?}", mps_command_buffer.status());
+    println!("Command buffer status: {:?}", command_buffer.status());
 
     // Check for errors
-    if let Some(error) = mps_command_buffer.error() {
-        println!("Error during execution: {}", error);
+    if command_buffer.status() != CommandBufferStatus::Completed {
+        println!("Error during execution: {:?}", command_buffer.status());
     }
 
     //-- Read Results --//
@@ -202,8 +203,6 @@ fn main() {
             println!("- E expected: {:?}", expected_e);
         }
     }
-
-    // Note: GPU timing information is available but not included in this example
 
     println!("\nExecution complete!");
 }

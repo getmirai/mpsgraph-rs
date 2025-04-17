@@ -1,358 +1,673 @@
-use crate::core::create_ns_array_from_i64_slice;
-use crate::core::AsRawObject;
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use objc2_foundation::NSString;
-use std::ptr;
+use crate::tensor::DataType;
+use crate::core::create_ns_array_from_i64_slice;
+use crate::core::create_ns_array_from_slice;
 
-/// Tensor shape operations for Graph
-impl Graph {
+/// Trait for tensor shape operations on Graph
+pub trait GraphTensorShapeOps {
     /// Creates a reshape operation
-    pub fn reshape(&self, x: &Tensor, shape: &[i64], name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let shape_array = create_ns_array_from_i64_slice(shape);
-
-            let tensor: *mut AnyObject = msg_send![self.0, reshapeTensor: x.0,
-                withShape: shape_array,
-                name: name_obj
-            ];
-
-            objc2::ffi::objc_release(shape_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a flatten2D operation
-    pub fn flatten2d(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, flatten2DTensor: x.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a broadcast operation
-    pub fn broadcast(
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `shape` - New shape for the tensor
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reshape(
         &self,
         x: &Tensor,
         shape: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let shape_array = create_ns_array_from_i64_slice(shape);
-
-            let tensor: *mut AnyObject = msg_send![self.0, broadcastTensor: x.0,
-                toShape: shape_array,
-                name: name_obj
-            ];
-
-            objc2::ffi::objc_release(shape_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a shape-of operation
-    pub fn shape_of(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, shapeOfTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a cast operation
-    pub fn cast(
+    /// Creates a flatten2D operation
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axis` - Axis to flatten at
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn flatten2d(
         &self,
         x: &Tensor,
-        data_type: crate::core::MPSDataType,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, castTensor: x.0,
-                toType: data_type as u32,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a stack operation
-    pub fn stack(
-        &self,
-        tensors: &[Tensor],
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            // Create array of raw tensor pointers
-            let raw_tensors: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
+    /// Creates a broadcast operation
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `shape` - Target shape to broadcast to
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn broadcast(
+        &self,
+        x: &Tensor,
+        shape: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
-            // Create NSArray of tensor pointers
-            let tensor_array = crate::core::create_ns_array_from_pointers(&raw_tensors);
+    /// Creates a shape-of operation
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object containing the shape
+    fn shape_of(
+        &self,
+        x: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
-            let tensor: *mut AnyObject = msg_send![self.0, stackTensors: tensor_array,
-                axis: axis,
-                name: name_obj
-            ];
+    /// Creates a cast operation to change tensor data type
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `data_type` - Target data type
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object with the new data type
+    fn cast(
+        &self,
+        x: &Tensor,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
-            objc2::ffi::objc_release(tensor_array as *mut _);
+    /// Creates a stack operation to combine tensors along a new axis
+    ///
+    /// # Arguments
+    ///
+    /// * `tensors` - Array of tensors to stack
+    /// * `axis` - Axis along which to stack
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn stack(
+        &self,
+        tensors: &[&Tensor],
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a split operation
-    pub fn split(
+    /// Creates a split operation to split a tensor into multiple parts
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `num_splits` - Number of splits to create
+    /// * `axis` - Axis along which to split
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A vector of Tensor objects
+    fn split(
         &self,
         x: &Tensor,
         num_splits: i64,
         axis: i64,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Vec<Retained<Tensor>>;
 
-            let result: *mut AnyObject = msg_send![self.0, splitTensor: x.0,
-                numSplits: num_splits,
-                axis: axis,
-                name: name_obj
-            ];
-
-            // Convert NSArray to Vec<Tensor>
-            let count: usize = msg_send![result, count];
-            let mut tensors = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let tensor_obj: *mut AnyObject = msg_send![result, objectAtIndex: i];
-                objc2::ffi::objc_retain(tensor_obj as *mut _);
-                tensors.push(Tensor(tensor_obj));
-            }
-
-            objc2::ffi::objc_release(result as *mut _);
-
-            tensors
-        }
-    }
-
-    /// Creates a squeeze operation
-    pub fn squeeze(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = create_ns_array_from_i64_slice(axes);
-
-            let tensor: *mut AnyObject = msg_send![self.0, squeezeTensor: x.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            objc2::ffi::objc_release(axes_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates an expand_dims operation
-    pub fn expand_dims(
+    /// Creates a squeeze operation to remove dimensions of size 1
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axes` - Axes to squeeze
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn squeeze(
         &self,
         x: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let axes_array = create_ns_array_from_i64_slice(axes);
+    /// Creates an expand_dims operation to insert dimensions of size 1
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axes` - Axes at which to insert new dimensions
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn expand_dims(
+        &self,
+        x: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
 
-            let tensor: *mut AnyObject = msg_send![self.0, expandDimsTensor: x.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            objc2::ffi::objc_release(axes_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a tile operation
-    pub fn tile(
+    /// Creates a tile operation to repeat a tensor along specified dimensions
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `multiples` - Number of times to repeat in each dimension
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn tile(
         &self,
         x: &Tensor,
         multiples: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let multiples_array = create_ns_array_from_i64_slice(multiples);
-
-            let tensor: *mut AnyObject = msg_send![self.0, tileTensor: x.0,
-                withMultiples: multiples_array,
-                name: name_obj
-            ];
-
-            objc2::ffi::objc_release(multiples_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a pad operation
-    pub fn pad(
+    /// Creates a pad operation to pad a tensor
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `padding` - Padding specification
+    /// * `constant` - Value to use for padding
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn pad(
         &self,
         x: &Tensor,
         padding: &[i64],
         constant: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let padding_array = create_ns_array_from_i64_slice(padding);
-
-            let tensor: *mut AnyObject = msg_send![self.0, padTensor: x.0,
-                paddings: padding_array,
-                constantValue: constant as f64,
-                name: name_obj
-            ];
-
-            objc2::ffi::objc_release(padding_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a space-to-depth operation
-    pub fn space_to_depth(
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `block_size` - Size of spatial blocks
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn space_to_depth(
         &self,
         x: &Tensor,
         block_size: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, spaceToDepthWithTensor: x.0,
-                blockSize: block_size,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a depth-to-space operation
-    pub fn depth_to_space(
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `block_size` - Size of spatial blocks
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn depth_to_space(
         &self,
         x: &Tensor,
         block_size: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let tensor: *mut AnyObject = msg_send![self.0, depthToSpaceWithTensor: x.0,
-                blockSize: block_size,
-                name: name_obj
+    /// Creates a reverse operation to reverse a tensor along specified dimensions
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axes` - Axes along which to reverse
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reverse(
+        &self,
+        x: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+}
+
+impl GraphTensorShapeOps for Graph {
+    fn reshape(
+        &self,
+        x: &Tensor,
+        shape: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let shape_array = create_ns_array_from_i64_slice(shape);
+            let shape_ptr = &*shape_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reshapeTensor: x,
+                withShape: shape_ptr,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a reverse operation
-    pub fn reverse(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Tensor {
+    fn flatten2d(
+        &self,
+        x: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let axes_array = create_ns_array_from_i64_slice(axes);
-
-            let tensor: *mut AnyObject = msg_send![self.0, reverseTensor: x.0,
-                axes: axes_array,
-                name: name_obj
+            let result: *mut Tensor = msg_send![
+                self,
+                flatten2DTensor: x,
+                axis: axis,
+                name: name_ptr
             ];
 
-            objc2::ffi::objc_release(axes_array as *mut _);
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn broadcast(
+        &self,
+        x: &Tensor,
+        shape: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let shape_array = create_ns_array_from_i64_slice(shape);
+            let shape_ptr = &*shape_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                broadcastTensor: x,
+                toShape: shape_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn shape_of(
+        &self,
+        x: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                shapeOfTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn cast(
+        &self,
+        x: &Tensor,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                castTensor: x,
+                toType: data_type as u32,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn stack(
+        &self,
+        tensors: &[&Tensor],
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            // Create array of tensors
+            let tensor_ptrs: Vec<*const Tensor> = tensors
+                .iter()
+                .map(|&t| t as *const Tensor)
+                .collect();
+            
+            let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
+            let tensor_array_ptr = &*tensor_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                stackTensors: tensor_array_ptr,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn split(
+        &self,
+        x: &Tensor,
+        num_splits: i64,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Vec<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut objc2_foundation::NSArray<Tensor> = msg_send![
+                self,
+                splitTensor: x,
+                numSplits: num_splits,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result_array.is_null() {
+                return Vec::new();
+            }
+
+            // Convert NSArray to Vec<Retained<Tensor>>
+            let count = (*result_array).count();
+            let mut tensors = Vec::with_capacity(count);
+
+            for i in 0..count {
+                let tensor: *mut Tensor = msg_send![result_array, objectAtIndex: i];
+                if !tensor.is_null() {
+                    tensors.push(Retained::from_raw(tensor).unwrap());
+                }
+            }
+
+            tensors
+        }
+    }
+
+    fn squeeze(
+        &self,
+        x: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                squeezeTensor: x,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn expand_dims(
+        &self,
+        x: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                expandDimsTensor: x,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn tile(
+        &self,
+        x: &Tensor,
+        multiples: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let multiples_array = create_ns_array_from_i64_slice(multiples);
+            let multiples_ptr = &*multiples_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                tileTensor: x,
+                withMultiples: multiples_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn pad(
+        &self,
+        x: &Tensor,
+        padding: &[i64],
+        constant: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let padding_array = create_ns_array_from_i64_slice(padding);
+            let padding_ptr = &*padding_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                padTensor: x,
+                paddings: padding_ptr,
+                constantValue: constant as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn space_to_depth(
+        &self,
+        x: &Tensor,
+        block_size: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                spaceToDepthWithTensor: x,
+                blockSize: block_size,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn depth_to_space(
+        &self,
+        x: &Tensor,
+        block_size: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                depthToSpaceWithTensor: x,
+                blockSize: block_size,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reverse(
+        &self,
+        x: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reverseTensor: x,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait providing a method for Graph to access tensor shape operations
+pub trait GraphTensorShapeOpsExtension {
+    /// Access tensor shape operations for this graph
+    fn tensor_shape_ops(&self) -> &dyn GraphTensorShapeOps;
+}
+
+impl GraphTensorShapeOpsExtension for Graph {
+    fn tensor_shape_ops(&self) -> &dyn GraphTensorShapeOps {
+        self
     }
 }

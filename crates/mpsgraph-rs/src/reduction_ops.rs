@@ -1,571 +1,956 @@
-use crate::core::{create_ns_array_from_i64_slice, AsRawObject};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use objc2_foundation::NSString;
-use std::ptr;
+use crate::core::create_ns_array_from_i64_slice;
 
-/// Reduction operations for Graph
-impl Graph {
+/// Trait for reduction operations on Graph
+pub trait GraphReductionOps {
     /// Creates a reduction sum operation along a single axis
-    pub fn reduction_sum_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_sum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionSumWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction sum operation along multiple axes
-    pub fn reduction_sum_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_sum_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionSumWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction maximum operation along a single axis
-    pub fn reduction_maximum_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_maximum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMaximumWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction maximum operation along multiple axes
-    pub fn reduction_maximum_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_maximum_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMaximumWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction minimum operation along a single axis
-    pub fn reduction_minimum_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_minimum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMinimumWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction minimum operation along multiple axes
-    pub fn reduction_minimum_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_minimum_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMinimumWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction product operation along a single axis
-    pub fn reduction_product_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_product_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionProductWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction product operation along multiple axes
-    pub fn reduction_product_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_product_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionProductWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction maximum propagate NaN operation along a single axis
-    pub fn reduction_maximum_propagate_nan_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_maximum_propagate_nan_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMaximumWithPropagateNaNWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction maximum propagate NaN operation along multiple axes
-    pub fn reduction_maximum_propagate_nan_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_maximum_propagate_nan_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMaximumWithPropagateNaNWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction minimum propagate NaN operation along a single axis
-    pub fn reduction_minimum_propagate_nan_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_minimum_propagate_nan_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMinimumWithPropagateNaNWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction minimum propagate NaN operation along multiple axes
-    pub fn reduction_minimum_propagate_nan_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_minimum_propagate_nan_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionMinimumWithPropagateNaNWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction AND operation along a single axis
-    pub fn reduction_and_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_and_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionANDWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction AND operation along multiple axes
-    pub fn reduction_and_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_and_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionANDWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction OR operation along a single axis
-    pub fn reduction_or_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_or_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionORWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction OR operation along multiple axes
-    pub fn reduction_or_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_or_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionORWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction XOR operation along a single axis
-    pub fn reduction_xor_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_xor_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionXORWithTensor: tensor.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction XOR operation along multiple axes
-    pub fn reduction_xor_with_tensor_axes(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn reduction_xor_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
-
-            let axes_array = match axes {
-                Some(a) => create_ns_array_from_i64_slice(a),
-                None => ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionXORWithTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj
-            ];
-
-            if !axes_array.is_null() {
-                objc2::ffi::objc_release(axes_array as *mut _);
-            }
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a reduction argmax operation along a single axis
-    pub fn reduction_arg_maximum_with_tensor_axis(
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object containing the indices of maximum values
+    fn reduction_arg_maximum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionArgMaximumWithTensor: tensor.0,
+    /// Creates a reduction argmin operation along a single axis
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor
+    /// * `axis` - Axis along which to perform the reduction
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object containing the indices of minimum values
+    fn reduction_arg_minimum_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+}
+
+impl GraphReductionOps for Graph {
+    fn reduction_sum_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionSumWithTensor: tensor,
                 axis: axis,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a reduction argmin operation along a single axis
-    pub fn reduction_arg_minimum_with_tensor_axis(
+    fn reduction_sum_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionSumWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_maximum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut AnyObject = msg_send![self.0,
-                reductionArgMinimumWithTensor: tensor.0,
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMaximumWithTensor: tensor,
                 axis: axis,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn reduction_maximum_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMaximumWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_minimum_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMinimumWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_minimum_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMinimumWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_product_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionProductWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_product_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionProductWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_maximum_propagate_nan_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMaximumWithPropagateNaNWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_maximum_propagate_nan_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMaximumWithPropagateNaNWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_minimum_propagate_nan_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMinimumWithPropagateNaNWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_minimum_propagate_nan_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionMinimumWithPropagateNaNWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_and_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionANDWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_and_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionANDWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_or_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionORWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_or_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionORWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_xor_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionXORWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_xor_with_axes(
+        &self,
+        tensor: &Tensor,
+        axes: Option<&[i64]>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let axes_ptr = match axes {
+                Some(a) => {
+                    let axes_array = create_ns_array_from_i64_slice(a);
+                    &*axes_array as *const _
+                }
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionXORWithTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_arg_maximum_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionArgMaximumWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reduction_arg_minimum_with_axis(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reductionArgMinimumWithTensor: tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait providing a method for Graph to access reduction operations
+pub trait GraphReductionOpsExtension {
+    /// Access reduction operations for this graph
+    fn reduction_ops(&self) -> &dyn GraphReductionOps;
+}
+
+impl GraphReductionOpsExtension for Graph {
+    fn reduction_ops(&self) -> &dyn GraphReductionOps {
+        self
     }
 }

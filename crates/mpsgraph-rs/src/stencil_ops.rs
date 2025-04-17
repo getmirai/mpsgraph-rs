@@ -1,13 +1,20 @@
-use crate::core::{AsRawObject, NSString};
+use objc2::msg_send;
+use objc2::rc::Retained;
+use objc2::runtime::AnyClass;
+use objc2::extern_class;
+use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
+
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
+use crate::CustomDefault;
+
+/// Re-export padding styles from convolution_ops
+pub use crate::convolution_ops::PaddingMode;
 
 /// The reduction mode for stencil operations.
 #[repr(u64)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ReductionMode {
     /// Min reduction
     Min = 0,
@@ -23,62 +30,58 @@ pub enum ReductionMode {
     ArgumentMax = 5,
 }
 
-/// Descriptor for stencil operations
-pub struct StencilOpDescriptor(pub(crate) *mut AnyObject);
-
-impl Default for StencilOpDescriptor {
-    fn default() -> Self {
-        Self::new()
-    }
+/// Padding modes for stencil operations (from sample_grid_ops)
+#[repr(i64)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum BoundaryMode {
+    /// Constant padding
+    Constant = 0,
+    /// Reflect padding
+    Reflect = 1,
+    /// Symmetric padding
+    Symmetric = 2,
+    /// Clamp to edge padding (PyTorch ReplicationPad)
+    ClampToEdge = 3,
+    /// Zero padding
+    Zero = 4,
+    /// Periodic padding (x[-2] -> x[L-3], where L is size of x)
+    Periodic = 5,
+    /// Anti-periodic padding (x[-2] -> -x[L-3])
+    AntiPeriodic = 6,
 }
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphStencilOpDescriptor"]
+    /// Descriptor for stencil operations
+    pub struct StencilOpDescriptor;
+);
+
+unsafe impl NSObjectProtocol for StencilOpDescriptor {}
 
 impl StencilOpDescriptor {
     /// Creates a new stencil operation descriptor with default values
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphStencilOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptor];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                StencilOpDescriptor(descriptor)
-            } else {
-                // Fall back to a null descriptor if class not found
-                StencilOpDescriptor(std::ptr::null_mut())
-            }
+            let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
+            msg_send![cls, descriptor]
         }
     }
 
     /// Creates a new stencil operation descriptor with the specified padding style
-    pub fn with_padding_style(
-        padding_style: crate::convolution_transpose_ops::PaddingStyle,
-    ) -> Self {
+    pub fn with_padding_style(padding_style: PaddingMode) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphStencilOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject =
-                    msg_send![cls, descriptorWithPaddingStyle: padding_style as i64];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                StencilOpDescriptor(descriptor)
-            } else {
-                // Fall back to a null descriptor if class not found
-                StencilOpDescriptor(std::ptr::null_mut())
-            }
+            let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
+            msg_send![cls, descriptorWithPaddingStyle: padding_style as u64]
         }
     }
 
     /// Creates a new stencil operation descriptor with the specified explicit padding
-    pub fn with_explicit_padding(explicit_padding: &Shape) -> Self {
+    pub fn with_explicit_padding(explicit_padding: &Shape) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphStencilOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject =
-                    msg_send![cls, descriptorWithExplicitPadding: explicit_padding.0,];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                StencilOpDescriptor(descriptor)
-            } else {
-                // Fall back to a null descriptor if class not found
-                StencilOpDescriptor(std::ptr::null_mut())
-            }
+            let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
+            msg_send![cls, descriptorWithExplicitPadding: explicit_padding]
         }
     }
 
@@ -86,17 +89,13 @@ impl StencilOpDescriptor {
     pub fn with_offsets_and_explicit_padding(
         offsets: &Shape,
         explicit_padding: &Shape,
-    ) -> Self {
+    ) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphStencilOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptorWithOffsets: offsets.0, explicitPadding: explicit_padding.0,];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                StencilOpDescriptor(descriptor)
-            } else {
-                // Fall back to a null descriptor if class not found
-                StencilOpDescriptor(std::ptr::null_mut())
-            }
+            let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
+            msg_send![cls, 
+                descriptorWithOffsets: offsets, 
+                explicitPadding: explicit_padding
+            ]
         }
     }
 
@@ -107,102 +106,85 @@ impl StencilOpDescriptor {
         strides: &Shape,
         dilation_rates: &Shape,
         explicit_padding: &Shape,
-        boundary_mode: crate::sample_grid_ops::PaddingMode,
-        padding_style: crate::convolution_transpose_ops::PaddingStyle,
+        boundary_mode: BoundaryMode,
+        padding_style: PaddingMode,
         padding_constant: f32,
-    ) -> Self {
+    ) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphStencilOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptorWithReductionMode: reduction_mode as u64,
-                    offsets: offsets.0,
-                    strides: strides.0,
-                    dilationRates: dilation_rates.0,
-                    explicitPadding: explicit_padding.0,
-                    boundaryMode: boundary_mode as i64,
-                    paddingStyle: padding_style as u64,
-                    paddingConstant: padding_constant,
-                ];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                StencilOpDescriptor(descriptor)
-            } else {
-                // Fall back to a null descriptor if class not found
-                StencilOpDescriptor(std::ptr::null_mut())
-            }
+            let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
+            msg_send![cls, 
+                descriptorWithReductionMode: reduction_mode as u64,
+                offsets: offsets,
+                strides: strides,
+                dilationRates: dilation_rates,
+                explicitPadding: explicit_padding,
+                boundaryMode: boundary_mode as i64,
+                paddingStyle: padding_style as u64,
+                paddingConstant: padding_constant
+            ]
         }
     }
 
     /// Sets the reduction mode
     pub fn set_reduction_mode(&self, mode: ReductionMode) {
         unsafe {
-            let _: () = msg_send![self.0, setReductionMode: mode as u64];
+            let _: () = msg_send![self, setReductionMode: mode as u64];
         }
     }
 
     /// Sets the offsets
     pub fn set_offsets(&self, offsets: &Shape) {
         unsafe {
-            let _: () = msg_send![self.0, setOffsets: offsets.0,];
+            let _: () = msg_send![self, setOffsets: offsets];
         }
     }
 
     /// Sets the strides
     pub fn set_strides(&self, strides: &Shape) {
         unsafe {
-            let _: () = msg_send![self.0, setStrides: strides.0,];
+            let _: () = msg_send![self, setStrides: strides];
         }
     }
 
     /// Sets the dilation rates
     pub fn set_dilation_rates(&self, dilation_rates: &Shape) {
         unsafe {
-            let _: () = msg_send![self.0, setDilationRates: dilation_rates.0,];
+            let _: () = msg_send![self, setDilationRates: dilation_rates];
         }
     }
 
     /// Sets the explicit padding
     pub fn set_explicit_padding(&self, explicit_padding: &Shape) {
         unsafe {
-            let _: () = msg_send![self.0, setExplicitPadding: explicit_padding.0,];
+            let _: () = msg_send![self, setExplicitPadding: explicit_padding];
         }
     }
 
     /// Sets the boundary mode
-    pub fn set_boundary_mode(&self, mode: crate::sample_grid_ops::PaddingMode) {
+    pub fn set_boundary_mode(&self, mode: BoundaryMode) {
         unsafe {
-            let _: () = msg_send![self.0, setBoundaryMode: mode as i64];
+            let _: () = msg_send![self, setBoundaryMode: mode as i64];
         }
     }
 
     /// Sets the padding style
-    pub fn set_padding_style(&self, style: crate::convolution_transpose_ops::PaddingStyle) {
+    pub fn set_padding_style(&self, style: PaddingMode) {
         unsafe {
-            let _: () = msg_send![self.0, setPaddingStyle: style as u64];
+            let _: () = msg_send![self, setPaddingStyle: style as u64];
         }
     }
 
     /// Sets the padding constant
     pub fn set_padding_constant(&self, value: f32) {
         unsafe {
-            let _: () = msg_send![self.0, setPaddingConstant: value,];
+            let _: () = msg_send![self, setPaddingConstant: value];
         }
     }
 }
 
-impl Drop for StencilOpDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for StencilOpDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            StencilOpDescriptor(desc)
-        }
+impl CustomDefault for StencilOpDescriptor {
+    fn custom_default() -> Retained<Self> {
+        Self::new()
     }
 }
 
@@ -210,7 +192,7 @@ impl Clone for StencilOpDescriptor {
 impl Graph {
     /// Creates a stencil operation and returns the result tensor.
     ///
-    /// Performs a weighted reduction operation (See `MPSGraphReductionMode`) on the last 4 dimensions of the `source`
+    /// Performs a weighted reduction operation (See `ReductionMode`) on the last 4 dimensions of the `source`
     /// over the window determined by `weights`, according to the value defined in `descriptor`.
     /// The operation can be represented as:
     ///
@@ -232,22 +214,20 @@ impl Graph {
         weights: &Tensor,
         descriptor: &StencilOpDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, stencilWithSourceTensor: source.0,
-                weightsTensor: weights.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            msg_send![
+                self,
+                stencilWithSourceTensor: source,
+                weightsTensor: weights,
+                descriptor: descriptor,
+                name: name_obj
+            ]
         }
     }
 }

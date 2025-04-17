@@ -1,11 +1,12 @@
-use crate::core::{AsRawObject, MPSDataType, NSString};
-use crate::graph::Graph;
-use crate::tensor::Tensor;
+use objc2::rc::Retained;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
+use objc2_foundation::NSString;
 
-/// Quantization operations for Graph
-impl Graph {
+use crate::graph::Graph;
+use crate::tensor::{Tensor, DataType};
+
+/// Trait for performing quantization operations on a graph
+pub trait GraphQuantizationOps {
     /// Creates a Quantize operation and returns the result tensor.
     ///
     /// Convert the float `tensor` to an i8 or u8 tensor by applying a scale + bias transform:
@@ -21,33 +22,15 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor of datatype `data_type`
-    pub fn quantize(
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn quantize(
         &self,
         tensor: &Tensor,
         scale: f64,
         zero_point: f64,
-        data_type: MPSDataType,
+        data_type: DataType,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, quantizeTensor: tensor.0,
-                scale: scale,
-                zeroPoint: zero_point,
-                dataType: data_type as u64,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Dequantize operation and returns the result tensor.
     ///
@@ -64,33 +47,15 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor of datatype `data_type`
-    pub fn dequantize(
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn dequantize(
         &self,
         tensor: &Tensor,
         scale: f64,
         zero_point: f64,
-        data_type: MPSDataType,
+        data_type: DataType,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, dequantizeTensor: tensor.0,
-                scale: scale,
-                zeroPoint: zero_point,
-                dataType: data_type as u64,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Quantize operation with scale tensor and returns the result tensor.
     ///
@@ -108,35 +73,16 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor of datatype `data_type`
-    pub fn quantize_with_scale_tensor(
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn quantize_with_scale_tensor(
         &self,
         tensor: &Tensor,
         scale_tensor: &Tensor,
         zero_point: f64,
-        data_type: MPSDataType,
+        data_type: DataType,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, quantizeTensor: tensor.0,
-                scaleTensor: scale_tensor.0,
-                zeroPoint: zero_point,
-                dataType: data_type as u64,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Dequantize operation with scale tensor and returns the result tensor.
     ///
@@ -154,35 +100,16 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor of datatype `data_type`
-    pub fn dequantize_with_scale_tensor(
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn dequantize_with_scale_tensor(
         &self,
         tensor: &Tensor,
         scale_tensor: &Tensor,
         zero_point: f64,
-        data_type: MPSDataType,
+        data_type: DataType,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, dequantizeTensor: tensor.0,
-                scaleTensor: scale_tensor.0,
-                zeroPoint: zero_point,
-                dataType: data_type as u64,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Quantize operation with scale and zero point tensors and returns the result tensor.
     ///
@@ -200,35 +127,16 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor of datatype `data_type`
-    pub fn quantize_with_tensors(
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn quantize_with_tensors(
         &self,
         tensor: &Tensor,
         scale_tensor: &Tensor,
         zero_point_tensor: &Tensor,
-        data_type: MPSDataType,
+        data_type: DataType,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, quantizeTensor: tensor.0,
-                scaleTensor: scale_tensor.0,
-                zeroPointTensor: zero_point_tensor.0,
-                dataType: data_type as u64,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Dequantize operation with scale and zero point tensors and returns the result tensor.
     ///
@@ -246,35 +154,16 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor of datatype `data_type`
-    pub fn dequantize_with_tensors(
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn dequantize_with_tensors(
         &self,
         tensor: &Tensor,
         scale_tensor: &Tensor,
         zero_point_tensor: &Tensor,
-        data_type: MPSDataType,
+        data_type: DataType,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, dequantizeTensor: tensor.0,
-                scaleTensor: scale_tensor.0,
-                zeroPointTensor: zero_point_tensor.0,
-                dataType: data_type as u64,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a lookup-table based dequantization operation and returns the result tensor.
     ///
@@ -289,29 +178,13 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor object
-    pub fn dequantize_with_lut(
+    /// A valid Tensor object or None if error
+    fn dequantize_with_lut(
         &self,
         tensor: &Tensor,
         lut_tensor: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, dequantizeTensor: tensor.0,
-                LUTTensor: lut_tensor.0,
-                name: name_obj
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a vector lookup-table based dequantization operation and returns the result tensor.
     ///
@@ -326,29 +199,261 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// A valid Tensor object
-    pub fn dequantize_with_lut_axis(
+    /// A valid Tensor object or None if error
+    fn dequantize_with_lut_axis(
         &self,
         tensor: &Tensor,
         lut_tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
+}
 
+/// Implementation of quantization operations for Graph
+impl GraphQuantizationOps for Graph {
+    fn quantize(
+        &self,
+        tensor: &Tensor,
+        scale: f64,
+        zero_point: f64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, dequantizeTensor: tensor.0,
-                LUTTensor: lut_tensor.0,
-                axis: axis,
-                name: name_obj
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                quantizeTensor: tensor,
+                scale: scale,
+                zeroPoint: zero_point,
+                dataType: data_type as u32,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn dequantize(
+        &self,
+        tensor: &Tensor,
+        scale: f64,
+        zero_point: f64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                dequantizeTensor: tensor,
+                scale: scale,
+                zeroPoint: zero_point,
+                dataType: data_type as u32,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn quantize_with_scale_tensor(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point: f64,
+        data_type: DataType,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                quantizeTensor: tensor,
+                scaleTensor: scale_tensor,
+                zeroPoint: zero_point,
+                dataType: data_type as u32,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn dequantize_with_scale_tensor(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point: f64,
+        data_type: DataType,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                dequantizeTensor: tensor,
+                scaleTensor: scale_tensor,
+                zeroPoint: zero_point,
+                dataType: data_type as u32,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn quantize_with_tensors(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point_tensor: &Tensor,
+        data_type: DataType,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                quantizeTensor: tensor,
+                scaleTensor: scale_tensor,
+                zeroPointTensor: zero_point_tensor,
+                dataType: data_type as u32,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn dequantize_with_tensors(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point_tensor: &Tensor,
+        data_type: DataType,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                dequantizeTensor: tensor,
+                scaleTensor: scale_tensor,
+                zeroPointTensor: zero_point_tensor,
+                dataType: data_type as u32,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn dequantize_with_lut(
+        &self,
+        tensor: &Tensor,
+        lut_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                dequantizeTensor: tensor,
+                LUTTensor: lut_tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn dequantize_with_lut_axis(
+        &self,
+        tensor: &Tensor,
+        lut_tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                dequantizeTensor: tensor,
+                LUTTensor: lut_tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait for easier access to quantization operations
+pub trait GraphQuantizationOpsExtension {
+    /// Get access to quantization operations
+    fn quantization_ops(&self) -> &dyn GraphQuantizationOps;
+}
+
+impl GraphQuantizationOpsExtension for Graph {
+    fn quantization_ops(&self) -> &dyn GraphQuantizationOps {
+        self
     }
 }

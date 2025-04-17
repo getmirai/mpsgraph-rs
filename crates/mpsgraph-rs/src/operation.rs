@@ -1,111 +1,101 @@
+use objc2::rc::Retained;
+use objc2::{extern_class, msg_send};
+use objc2::runtime::NSObject;
+use objc2_foundation::{NSArray, NSObjectProtocol, NSString};
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use std::fmt;
-use std::ptr;
 
-/// A wrapper for Metal Performance Shaders Graph operation objects
-pub struct Operation(pub(crate) *mut AnyObject);
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphOperation"]
+    /// A wrapper for MPSGraph operation objects
+    pub struct Operation;
+);
+
+unsafe impl NSObjectProtocol for Operation {}
 
 impl Operation {
     /// Returns the input tensors of this operation
-    pub fn input_tensors(&self) -> Vec<Tensor> {
+    pub fn input_tensors(&self) -> Vec<Retained<Tensor>> {
         unsafe {
-            let input_tensors: *mut AnyObject = msg_send![self.0, inputTensors];
-            let count: usize = msg_send![input_tensors, count];
+            let input_tensors: *mut NSArray<Tensor> = msg_send![self, inputTensors];
+            let array_ptr = input_tensors;
+            let count: usize = msg_send![array_ptr, count];
             let mut result = Vec::with_capacity(count);
 
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![input_tensors, objectAtIndex: i,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
+                let tensor = Retained::from_raw(tensor_ptr).unwrap();
+                result.push(tensor);
             }
+            
+            // Safe to release the array here
+            let _ = Retained::from_raw(array_ptr).unwrap();
 
             result
         }
     }
 
     /// Returns the output tensors of this operation
-    pub fn output_tensors(&self) -> Vec<Tensor> {
+    pub fn output_tensors(&self) -> Vec<Retained<Tensor>> {
         unsafe {
-            let output_tensors: *mut AnyObject = msg_send![self.0, outputTensors];
-            let count: usize = msg_send![output_tensors, count];
+            let output_tensors: *mut NSArray<Tensor> = msg_send![self, outputTensors];
+            let array_ptr = output_tensors;
+            let count: usize = msg_send![array_ptr, count];
             let mut result = Vec::with_capacity(count);
 
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![output_tensors, objectAtIndex: i,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
+                let tensor = Retained::from_raw(tensor_ptr).unwrap();
+                result.push(tensor);
             }
+            
+            // Safe to release the array here
+            let _ = Retained::from_raw(array_ptr).unwrap();
 
             result
         }
     }
 
     /// Returns the graph this operation belongs to
-    pub fn graph(&self) -> Graph {
+    pub fn graph(&self) -> Retained<Graph> {
         unsafe {
-            let graph: *mut AnyObject = msg_send![self.0, graph];
-            let graph = objc2::ffi::objc_retain(graph as *mut _);
-            Graph(graph)
+            let graph_ptr: *mut Graph = msg_send![self, graph];
+            let graph = Retained::from_raw(graph_ptr).unwrap();
+            graph
         }
     }
 
     /// Returns the name of this operation
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> Option<String> {
         unsafe {
-            let name: *mut AnyObject = msg_send![self.0, name];
-            let utf8: *const i8 = msg_send![name, UTF8String];
-            std::ffi::CStr::from_ptr(utf8).to_string_lossy().to_string()
+            let name_ptr: *mut NSString = msg_send![self, name];
+            if name_ptr.is_null() {
+                None
+            } else {
+                let name = Retained::from_raw(name_ptr).unwrap();
+                Some(name.to_string())
+            }
         }
     }
 
     /// Returns the control dependencies of this operation
-    pub fn control_dependencies(&self) -> Vec<Operation> {
+    pub fn control_dependencies(&self) -> Vec<Retained<Operation>> {
         unsafe {
-            let dependencies: *mut AnyObject = msg_send![self.0, controlDependencies];
-            let count: usize = msg_send![dependencies, count];
+            let dependencies_ptr: *mut NSArray<Operation> = msg_send![self, controlDependencies];
+            let array = Retained::from_raw(dependencies_ptr).unwrap();
+            let count = array.len();
             let mut result = Vec::with_capacity(count);
 
             for i in 0..count {
-                let op: *mut AnyObject = msg_send![dependencies, objectAtIndex: i,];
-                let op = objc2::ffi::objc_retain(op as *mut _);
-                result.push(Operation(op));
+                let op_ptr: *mut Operation = msg_send![&*array, objectAtIndex: i];
+                let op = Retained::from_raw(op_ptr).unwrap();
+                result.push(op);
             }
 
             result
         }
-    }
-}
-
-impl Drop for Operation {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.0.is_null() {
-                objc2::ffi::objc_release(self.0 as *mut _);
-            }
-        }
-    }
-}
-
-impl Clone for Operation {
-    fn clone(&self) -> Self {
-        unsafe {
-            if !self.0.is_null() {
-                let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                Operation(obj)
-            } else {
-                Operation(ptr::null_mut())
-            }
-        }
-    }
-}
-
-impl fmt::Debug for Operation {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Operation")
-            .field("name", &self.name())
-            .finish()
     }
 }

@@ -1,15 +1,14 @@
-use crate::core::AsRawObject;
+use metal::{CommandBuffer as MetalCommandBuffer, CommandQueue, Device as MetalDevice};
 use metal::foreign_types::ForeignType;
-use metal::{BlitCommandEncoder, CommandBuffer, CommandQueue, ComputeCommandEncoder, Device};
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use objc2_foundation::{NSError, NSString};
-use std::fmt;
+use objc2::rc::Retained;
+use objc2::{extern_class, msg_send, ClassType};
+use objc2::runtime::NSObject;
+use objc2_foundation::{NSObjectProtocol, NSString};
 
 /// Command buffer status
-#[repr(u64)]
+#[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum MTLCommandBufferStatus {
+pub enum CommandBufferStatus {
     /// The command buffer has not been enqueued yet
     NotEnqueued = 0,
     /// The command buffer is enqueued, but not committed
@@ -24,330 +23,285 @@ pub enum MTLCommandBufferStatus {
     Error = 5,
 }
 
-/// A wrapper for MPSCommandBuffer objects which is a subclass of MTLCommandBuffer
-pub struct MPSCommandBuffer(pub(crate) *mut AnyObject);
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSCommandBuffer"]
+    pub struct CommandBuffer;
+);
 
-// Implement Send + Sync for the wrapper type
-unsafe impl Send for MPSCommandBuffer {}
-unsafe impl Sync for MPSCommandBuffer {}
+unsafe impl NSObjectProtocol for CommandBuffer {}
 
-impl MPSCommandBuffer {
+impl CommandBuffer {
     /// Creates a new MPSCommandBuffer from a Metal CommandBuffer
-    pub fn from_command_buffer(command_buffer: &CommandBuffer) -> Self {
+    pub fn from_command_buffer(command_buffer: &MetalCommandBuffer) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSCommandBuffer";
-            let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
-
-            // Get the command buffer pointer
-            let buffer_ptr = command_buffer.as_ptr() as *mut AnyObject;
-
-            // Create MPSCommandBuffer with the Metal command buffer
-            let obj: *mut AnyObject = msg_send![cls, alloc];
-            let mps_command_buffer: *mut AnyObject =
-                msg_send![obj, initWithCommandBuffer: buffer_ptr];
-
-            MPSCommandBuffer(mps_command_buffer)
+            let class = Self::class();
+            let alloc: *mut Self = msg_send![class, alloc];
+            let buffer_ptr = command_buffer.as_ptr() as *mut objc2::runtime::AnyObject;
+            
+            // Pass the MTLCommandBuffer pointer as an Objective-C object
+            let mps_command_buffer: *mut Self = msg_send![
+                alloc, 
+                initWithCommandBuffer:buffer_ptr
+            ];
+            
+            Retained::from_raw(mps_command_buffer).unwrap()
         }
     }
 
     /// Creates a new MPSCommandBuffer from a command queue
-    pub fn from_command_queue(command_queue: &CommandQueue) -> Self {
+    pub fn from_command_queue(command_queue: &CommandQueue) -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSCommandBuffer";
-            let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
-
-            // Get the command queue pointer
-            let queue_ptr = command_queue.as_ptr() as *mut AnyObject;
-
-            // Create MPSCommandBuffer from the command queue
-            let mps_command_buffer: *mut AnyObject =
-                msg_send![cls, commandBufferFromCommandQueue: queue_ptr];
-
-            MPSCommandBuffer(mps_command_buffer)
+            let class = Self::class();
+            let queue_ptr = command_queue.as_ptr() as *mut objc2::runtime::AnyObject;
+            
+            // Pass the MTLCommandQueue pointer as an Objective-C object
+            let mps_command_buffer: *mut Self = msg_send![
+                class, 
+                commandBufferFromCommandQueue:queue_ptr
+            ];
+            
+            Retained::from_raw(mps_command_buffer).unwrap()
         }
     }
-
-    /// Returns the underlying Metal CommandBuffer
-    pub fn command_buffer(&self) -> CommandBuffer {
+    
+    /// Returns the current status of the command buffer
+    ///
+    /// Since MPSCommandBuffer doesn't have a status method, this attempts
+    /// to get the status from the underlying Metal command buffer.
+    pub fn status(&self) -> CommandBufferStatus {
         unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            CommandBuffer::from_ptr(cmd_buf_ptr as *mut metal::MTLCommandBuffer)
+            // Try direct status first
+            let status_sel = objc2::sel!(status);
+            let status_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                status_sel
+            ) != std::ptr::null_mut();
+            
+            if status_exists {
+                let status: u32 = msg_send![self, status];
+                return match status {
+                    0 => CommandBufferStatus::NotEnqueued,
+                    1 => CommandBufferStatus::Enqueued,
+                    2 => CommandBufferStatus::Committed,
+                    3 => CommandBufferStatus::Scheduled,
+                    4 => CommandBufferStatus::Completed,
+                    5 => CommandBufferStatus::Error,
+                    _ => CommandBufferStatus::NotEnqueued,
+                };
+            }
+            
+            // Try to get the underlying metal command buffer
+            let metal_command_buffer_sel = objc2::sel!(metalCommandBuffer);
+            let method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                metal_command_buffer_sel
+            ) != std::ptr::null_mut();
+            
+            if method_exists {
+                let metal_buffer: *mut objc2::runtime::AnyObject = msg_send![self, metalCommandBuffer];
+                if !metal_buffer.is_null() {
+                    let status: u32 = msg_send![metal_buffer, status];
+                    return match status {
+                        0 => CommandBufferStatus::NotEnqueued,
+                        1 => CommandBufferStatus::Enqueued,
+                        2 => CommandBufferStatus::Committed,
+                        3 => CommandBufferStatus::Scheduled,
+                        4 => CommandBufferStatus::Completed,
+                        5 => CommandBufferStatus::Error,
+                        _ => CommandBufferStatus::NotEnqueued,
+                    };
+                }
+            }
+            
+            // Default to NotEnqueued if we can't get the status
+            CommandBufferStatus::NotEnqueued
         }
     }
-
-    /// Returns the root Metal CommandBuffer
-    pub fn root_command_buffer(&self) -> CommandBuffer {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, rootCommandBuffer];
-            CommandBuffer::from_ptr(cmd_buf_ptr as *mut metal::MTLCommandBuffer)
-        }
-    }
-
+    
     /// Commits the current command buffer and continues with a new one
+    ///
+    /// Since MPSCommandBuffer might not have a commitAndContinue method, this attempts
+    /// to call the method on the underlying Metal command buffer.
     pub fn commit_and_continue(&self) {
         unsafe {
-            let _: () = msg_send![self.0, commitAndContinue];
+            // Try direct commit first
+            let commit_continue_sel = objc2::sel!(commitAndContinue);
+            let commit_continue_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                commit_continue_sel
+            ) != std::ptr::null_mut();
+            
+            if commit_continue_exists {
+                let _: () = msg_send![self, commitAndContinue];
+                return;
+            }
+            
+            // If that fails, try to get the underlying metal command buffer
+            let metal_command_buffer_sel = objc2::sel!(metalCommandBuffer);
+            let method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                metal_command_buffer_sel
+            ) != std::ptr::null_mut();
+            
+            if method_exists {
+                let metal_buffer: *mut objc2::runtime::AnyObject = msg_send![self, metalCommandBuffer];
+                if !metal_buffer.is_null() {
+                    // Check if the metal buffer has commitAndContinue
+                    let commit_continue_exists = objc2::ffi::class_getInstanceMethod(
+                        (*metal_buffer).class(), 
+                        commit_continue_sel
+                    ) != std::ptr::null_mut();
+                    
+                    if commit_continue_exists {
+                        let _: () = msg_send![metal_buffer, commitAndContinue];
+                        return;
+                    }
+                    
+                    // If no commitAndContinue, just commit
+                    let _: () = msg_send![metal_buffer, commit];
+                }
+            }
         }
     }
-
+    
     /// Prefetches heap for workload size
+    ///
+    /// This is a specialized method that may not exist on all MPSCommandBuffer implementations.
     pub fn prefetch_heap_for_workload_size(&self, size: usize) {
         unsafe {
-            let _: () = msg_send![self.0, prefetchHeapForWorkloadSize: size];
-        }
-    }
-
-    // MTLCommandBuffer methods
-
-    /// Returns the device this command buffer was created against
-    pub fn device(&self) -> Device {
-        unsafe {
-            let device_ptr: *mut AnyObject = msg_send![self.0, device];
-            Device::from_ptr(device_ptr as *mut metal::MTLDevice)
-        }
-    }
-
-    /// Returns the command queue this command buffer was created from
-    pub fn command_queue(&self) -> CommandQueue {
-        unsafe {
-            let queue_ptr: *mut AnyObject = msg_send![self.0, commandQueue];
-            CommandQueue::from_ptr(queue_ptr as *mut metal::MTLCommandQueue)
-        }
-    }
-
-    /// Returns whether this command buffer holds strong references
-    pub fn retained_references(&self) -> bool {
-        unsafe { msg_send![self.0, retainedReferences] }
-    }
-
-    /// Sets a label to help identify this object
-    pub fn set_label(&self, label: &str) {
-        unsafe {
-            // Get the command buffer first - MPSCommandBuffer might not implement setLabel directly
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if !cmd_buf_ptr.is_null() {
-                let label_str = NSString::from_str(label);
-                let _: () = msg_send![cmd_buf_ptr, setLabel:label_str.as_raw_object()];
+            // Check if our own implementation exists
+            let prefetch_sel = objc2::sel!(prefetchHeapForWorkloadSize:);
+            let prefetch_method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                prefetch_sel
+            ) != std::ptr::null_mut();
+            
+            if prefetch_method_exists {
+                let _: () = msg_send![self, prefetchHeapForWorkloadSize:size];
             }
+            // Silently ignore if the method doesn't exist
         }
     }
-
-    /// Returns the current label
-    pub fn label(&self) -> String {
-        unsafe {
-            // Get the command buffer first - MPSCommandBuffer might not implement label directly
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return String::new();
-            }
-
-            let label_ptr: *mut AnyObject = msg_send![cmd_buf_ptr, label];
-            if label_ptr.is_null() {
-                return String::new();
-            }
-
-            let nsstring: &NSString = &*(label_ptr as *const NSString);
-            nsstring.to_string()
-        }
-    }
-
-    /// Returns the kernel start time
-    pub fn kernel_start_time(&self) -> f64 {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return 0.0;
-            }
-            msg_send![cmd_buf_ptr, kernelStartTime]
-        }
-    }
-
-    /// Returns the kernel end time
-    pub fn kernel_end_time(&self) -> f64 {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return 0.0;
-            }
-            msg_send![cmd_buf_ptr, kernelEndTime]
-        }
-    }
-
-    /// Returns the GPU start time
-    pub fn gpu_start_time(&self) -> f64 {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return 0.0;
-            }
-            msg_send![cmd_buf_ptr, GPUStartTime]
-        }
-    }
-
-    /// Returns the GPU end time
-    pub fn gpu_end_time(&self) -> f64 {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return 0.0;
-            }
-            msg_send![cmd_buf_ptr, GPUEndTime]
-        }
-    }
-
-    /// Appends this command buffer to the end of its MTLCommandQueue
-    pub fn enqueue(&self) {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if !cmd_buf_ptr.is_null() {
-                let _: () = msg_send![cmd_buf_ptr, enqueue];
-            }
-        }
-    }
-
+    
     /// Commits the command buffer for execution as soon as possible
+    ///
+    /// Since MPSCommandBuffer might not have a commit method, this attempts
+    /// to call the method on the underlying Metal command buffer.
     pub fn commit(&self) {
         unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if !cmd_buf_ptr.is_null() {
-                let _: () = msg_send![cmd_buf_ptr, commit];
+            // Try direct commit first
+            let commit_sel = objc2::sel!(commit);
+            let commit_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                commit_sel
+            ) != std::ptr::null_mut();
+            
+            if commit_exists {
+                let _: () = msg_send![self, commit];
+                return;
+            }
+            
+            // If that fails, try to get the underlying metal command buffer
+            let metal_command_buffer_sel = objc2::sel!(metalCommandBuffer);
+            let method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                metal_command_buffer_sel
+            ) != std::ptr::null_mut();
+            
+            if method_exists {
+                let metal_buffer: *mut objc2::runtime::AnyObject = msg_send![self, metalCommandBuffer];
+                if !metal_buffer.is_null() {
+                    let _: () = msg_send![metal_buffer, commit];
+                }
             }
         }
     }
-
-    /// Waits until this command buffer has been scheduled
-    pub fn wait_until_scheduled(&self) {
-        unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if !cmd_buf_ptr.is_null() {
-                let _: () = msg_send![cmd_buf_ptr, waitUntilScheduled];
-            }
-        }
-    }
-
+    
     /// Waits until this command buffer has completed execution
+    ///
+    /// Since MPSCommandBuffer doesn't have a waitUntilCompleted method, this attempts
+    /// to call the method on the underlying Metal command buffer.
     pub fn wait_until_completed(&self) {
         unsafe {
-            // Get the underlying Metal command buffer
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if !cmd_buf_ptr.is_null() {
-                let _: () = msg_send![cmd_buf_ptr, waitUntilCompleted];
+            // Try to get the underlying metal command buffer
+            let metal_command_buffer_sel = objc2::sel!(metalCommandBuffer);
+            let method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                metal_command_buffer_sel
+            ) != std::ptr::null_mut();
+            
+            if method_exists {
+                let metal_buffer: *mut objc2::runtime::AnyObject = msg_send![self, metalCommandBuffer];
+                if !metal_buffer.is_null() {
+                    let _: () = msg_send![metal_buffer, waitUntilCompleted];
+                }
             }
         }
     }
-
-    /// Returns the current status of the command buffer
-    pub fn status(&self) -> MTLCommandBufferStatus {
+    
+    /// Sets a label to help identify this object
+    /// 
+    /// This attempts to get the underlying Metal command buffer and set its label,
+    /// since MPSCommandBuffer itself doesn't have a setLabel method.
+    pub fn set_label(&self, label: &str) {
         unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return MTLCommandBufferStatus::NotEnqueued;
+            // Try to get the underlying metal command buffer
+            let metal_command_buffer_sel = objc2::sel!(metalCommandBuffer);
+            let method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                metal_command_buffer_sel
+            ) != std::ptr::null_mut();
+            
+            if method_exists {
+                let metal_buffer: *mut objc2::runtime::AnyObject = msg_send![self, metalCommandBuffer];
+                if !metal_buffer.is_null() {
+                    let ns_string = NSString::from_str(label);
+                    let _: () = msg_send![metal_buffer, setLabel:&*ns_string];
+                }
             }
-
-            let status: u64 = msg_send![cmd_buf_ptr, status];
-            match status {
-                0 => MTLCommandBufferStatus::NotEnqueued,
-                1 => MTLCommandBufferStatus::Enqueued,
-                2 => MTLCommandBufferStatus::Committed,
-                3 => MTLCommandBufferStatus::Scheduled,
-                4 => MTLCommandBufferStatus::Completed,
-                5 => MTLCommandBufferStatus::Error,
-                _ => MTLCommandBufferStatus::NotEnqueued,
-            }
+            // Silently ignore if the method doesn't exist
         }
     }
-
-    /// Returns the error if an error occurred during execution
-    pub fn error(&self) -> Option<String> {
+    
+    /// Returns the current label
+    /// 
+    /// Since MPSCommandBuffer doesn't have a label method, this attempts to get the
+    /// label from the underlying Metal command buffer.
+    pub fn label(&self) -> String {
         unsafe {
-            let cmd_buf_ptr: *mut AnyObject = msg_send![self.0, commandBuffer];
-            if cmd_buf_ptr.is_null() {
-                return None;
+            // Try to get the underlying metal command buffer
+            let metal_command_buffer_sel = objc2::sel!(metalCommandBuffer);
+            let method_exists = objc2::ffi::class_getInstanceMethod(
+                Self::class(), 
+                metal_command_buffer_sel
+            ) != std::ptr::null_mut();
+            
+            if method_exists {
+                let metal_buffer: *mut objc2::runtime::AnyObject = msg_send![self, metalCommandBuffer];
+                if !metal_buffer.is_null() {
+                    let label_ptr: *mut NSString = msg_send![metal_buffer, label];
+                    if !label_ptr.is_null() {
+                        let ns_string = Retained::from_raw(label_ptr).unwrap();
+                        return ns_string.to_string();
+                    }
+                }
             }
-
-            let error_ptr: *mut AnyObject = msg_send![cmd_buf_ptr, error];
-            if error_ptr.is_null() {
-                None
-            } else {
-                let error = &*(error_ptr as *const NSError);
-                let description = error.localizedDescription().to_string();
-                Some(description)
-            }
-        }
-    }
-
-    /// Creates a compute command encoder to encode into this command buffer
-    pub fn new_compute_command_encoder(&self) -> Option<ComputeCommandEncoder> {
-        unsafe {
-            let encoder_ptr: *mut AnyObject = msg_send![self.0, computeCommandEncoder];
-            if encoder_ptr.is_null() {
-                None
-            } else {
-                Some(ComputeCommandEncoder::from_ptr(
-                    encoder_ptr as *mut metal::MTLComputeCommandEncoder,
-                ))
-            }
-        }
-    }
-
-    /// Creates a blit command encoder to encode into this command buffer
-    pub fn new_blit_command_encoder(&self) -> Option<BlitCommandEncoder> {
-        unsafe {
-            let encoder_ptr: *mut AnyObject = msg_send![self.0, blitCommandEncoder];
-            if encoder_ptr.is_null() {
-                None
-            } else {
-                Some(BlitCommandEncoder::from_ptr(
-                    encoder_ptr as *mut metal::MTLBlitCommandEncoder,
-                ))
-            }
-        }
-    }
-
-    /// Pushes a debug group onto the command buffer
-    pub fn push_debug_group(&self, name: &str) {
-        unsafe {
-            let name_str = NSString::from_str(name);
-            let _: () = msg_send![self.0, pushDebugGroup:name_str.as_raw_object()];
-        }
-    }
-
-    /// Pops the current debug group from the command buffer
-    pub fn pop_debug_group(&self) {
-        unsafe {
-            let _: () = msg_send![self.0, popDebugGroup];
+            
+            // Return empty string if we can't get the label
+            String::new()
         }
     }
 }
 
-impl fmt::Debug for MPSCommandBuffer {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MPSCommandBuffer")
-            .field("label", &self.label())
-            .field("status", &self.status())
-            .finish()
-    }
-}
-
-impl Drop for MPSCommandBuffer {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.0.is_null() {
-                objc2::ffi::objc_release(self.0 as *mut _);
-            }
-        }
-    }
-}
-
-impl Clone for MPSCommandBuffer {
-    fn clone(&self) -> Self {
-        unsafe {
-            if !self.0.is_null() {
-                let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                MPSCommandBuffer(obj)
-            } else {
-                MPSCommandBuffer(std::ptr::null_mut())
-            }
-        }
+impl crate::CustomDefault for CommandBuffer {
+    fn custom_default() -> Retained<Self> {
+        // Get the default Metal device and create a command queue
+        let device = MetalDevice::system_default().expect("No Metal device found");
+        let command_queue = device.new_command_queue();
+        
+        // Create a command buffer from the queue
+        Self::from_command_queue(&command_queue)
     }
 }

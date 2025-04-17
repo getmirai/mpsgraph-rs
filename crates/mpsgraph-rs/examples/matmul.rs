@@ -1,20 +1,20 @@
 use metal::{Buffer, Device, MTLResourceOptions};
 use mpsgraph::{
-    core::MPSDataType, executable::ExecutionDescriptor, graph::Graph, shape::Shape,
-    tensor_data::TensorData,
+    DataType, ExecutionDescriptor, Graph, ShapeHelper, TensorData,
 };
 use std::collections::HashMap;
+use objc2::rc::Retained;
 
 // A struct that pairs an MTLBuffer with its TensorData
 #[derive(Clone)]
 struct TensorBuffer {
     buffer: Buffer,
-    tensor_data: TensorData,
+    tensor_data: Retained<TensorData>,
 }
 
 impl TensorBuffer {
     // Create a new TensorBuffer from a vector of f32 data
-    fn new(device: &Device, data: &[f32], shape: &Shape, data_type: MPSDataType) -> Self {
+    fn new(device: &Device, data: &[f32], shape: &[usize], data_type: DataType) -> Self {
         // Calculate size in bytes
         let byte_length = data.len() * std::mem::size_of::<f32>();
 
@@ -35,7 +35,7 @@ impl TensorBuffer {
     }
 
     // Create an empty TensorBuffer for results
-    fn new_empty(device: &Device, size: usize, shape: &Shape, data_type: MPSDataType) -> Self {
+    fn new_empty(device: &Device, size: usize, shape: &[usize], data_type: DataType) -> Self {
         // Calculate size in bytes
         let byte_length = size * std::mem::size_of::<f32>();
 
@@ -75,42 +75,60 @@ fn main() {
     let graph = Graph::new();
 
     // Create input placeholders
-    let a_shape = Shape::matrix(m, k);
-    let b_shape = Shape::matrix(k, n);
-    let result_shape = Shape::matrix(m, n);
+    let a_shape = [m, k];  // usize array for TensorData
+    let b_shape = [k, n];
+    let result_shape = [m, n];
 
-    let a = graph.placeholder(&a_shape, MPSDataType::Float32, Some("A"));
-    let b = graph.placeholder(&b_shape, MPSDataType::Float32, Some("B"));
+    // Create shapes for the tensors
+    let a_tensor_shape = ShapeHelper::matrix(m, k);
+    let b_tensor_shape = ShapeHelper::matrix(k, n);
+
+    let a = graph.placeholder(DataType::Float32, &a_tensor_shape).unwrap();
+    let b = graph.placeholder(DataType::Float32, &b_tensor_shape).unwrap();
 
     // Perform matrix multiplication: A * B
-    let result = graph.matmul(&a, &b, None);
+    // The matmul method takes transpose flags for both inputs
+    let result = graph.matmul(&a, &b, false, false, None).unwrap();
 
     // Create TensorBuffers for inputs
-    let a_tensor = TensorBuffer::new(&device, &a_data, &a_shape, MPSDataType::Float32);
-    let b_tensor = TensorBuffer::new(&device, &b_data, &b_shape, MPSDataType::Float32);
+    let a_tensor = TensorBuffer::new(&device, &a_data, &a_shape, DataType::Float32);
+    let b_tensor = TensorBuffer::new(&device, &b_data, &b_shape, DataType::Float32);
 
     // Create TensorBuffer for output
     let result_size = m * n;
-    let result_tensor =
-        TensorBuffer::new_empty(&device, result_size, &result_shape, MPSDataType::Float32);
+    let result_tensor = TensorBuffer::new_empty(&device, result_size, &result_shape, DataType::Float32);
 
     // Create command queue
-    let _command_queue = device.new_command_queue();
+    let command_queue = device.new_command_queue();
 
-    // Prepare feeds and targets
+    // Prepare feeds
     let mut feeds = HashMap::new();
-    feeds.insert(a.clone(), a_tensor.tensor_data.clone());
-    feeds.insert(b.clone(), b_tensor.tensor_data.clone());
+    feeds.insert(&*a, &*a_tensor.tensor_data);
+    feeds.insert(&*b, &*b_tensor.tensor_data);
+
+    // Output tensor
+    let mut results = HashMap::new();
+    results.insert(&*result, &*result_tensor.tensor_data);
 
     println!("Executing matrix multiplication...");
 
-    // Execute graph with our inputs and output buffers
-    // Create execution descriptor that waits until completed
+    // Create and use a command buffer
+    let command_buffer = mpsgraph::CommandBuffer::from_command_queue(&command_queue);
     let execution_descriptor = ExecutionDescriptor::new();
     execution_descriptor.set_wait_until_completed(true);
 
-    // Run the graph directly
-    let _result_map = graph.run_with_feeds(&feeds, &[result.clone()]);
+    // Encode graph to command buffer
+    graph.encode_to_command_buffer_with_results(
+        &command_buffer,
+        &feeds,
+        None, // No specific target tensors
+        &results,
+        Some(&execution_descriptor),
+    );
+
+    // Commit and wait for completion
+    command_buffer.commit();
+    command_buffer.wait_until_completed();
 
     // Wait for GPU work to complete
     println!("Waiting for GPU execution to complete...");
@@ -138,5 +156,27 @@ fn main() {
     for i in 0..m {
         let row: Vec<f32> = result_floats[i * n..(i + 1) * n].to_vec();
         println!("  {:?}", row);
+    }
+
+    // Expected result for matrix multiplication
+    println!("\nVerifying result:");
+    let expected_result = vec![
+        // First row: 1*1 + 2*3 + 3*5, 1*2 + 2*4 + 3*6
+        1.0 * 1.0 + 2.0 * 3.0 + 3.0 * 5.0, 1.0 * 2.0 + 2.0 * 4.0 + 3.0 * 6.0,
+        // Second row: 4*1 + 5*3 + 6*5, 4*2 + 5*4 + 6*6
+        4.0 * 1.0 + 5.0 * 3.0 + 6.0 * 5.0, 4.0 * 2.0 + 5.0 * 4.0 + 6.0 * 6.0,
+    ];
+    println!("Expected: {:?}", expected_result);
+    
+    // Check if results match
+    let result_correct = result_floats
+        .iter()
+        .zip(expected_result.iter())
+        .all(|(a, b)| (a - b).abs() < 0.00001);
+    
+    if result_correct {
+        println!("✅ Result is correct!");
+    } else {
+        println!("❌ Result doesn't match expected values.");
     }
 }

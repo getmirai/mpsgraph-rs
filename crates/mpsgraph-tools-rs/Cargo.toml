@@ -43,7 +43,7 @@ doctest = true
 crate-type = ["rlib", "staticlib"]
 
 [dependencies]
-# Mixed approach: Uses local path during development, but ensures compatibility with published version
+# Use the modern version of mpsgraph with NSObject-based types
 mpsgraph = { path = "../mpsgraph-rs", version = "0.1.0" }
 objc2 = "0.6.0"
 objc2-foundation = "0.3.0"

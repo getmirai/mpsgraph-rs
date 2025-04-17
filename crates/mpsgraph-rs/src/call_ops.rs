@@ -1,12 +1,14 @@
-use crate::core::AsRawObject;
-use crate::graph::Graph;
-use crate::tensor::Tensor;
+use objc2::rc::Retained;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
 use objc2_foundation::{NSArray, NSString};
 
-/// Call operations for Graph
-impl Graph {
+use crate::graph::Graph;
+use crate::tensor::Tensor;
+use crate::data_types::ShapedType;
+use crate::utils::block_wrapper::convert_nsarray_to_vec;
+
+/// Trait for call operations on Graph
+pub trait GraphCallOps {
     /// Creates an operation which invokes another executable.
     ///
     /// # Arguments
@@ -18,85 +20,49 @@ impl Graph {
     ///
     /// # Returns
     ///
-    /// An array of Tensor objects representing the return tensors of the invoked executable
-    pub fn call(
+    /// A vector of Tensor objects representing the return tensors of the invoked executable
+    fn call(
         &self,
         symbol_name: &str,
         input_tensors: &[&Tensor],
-        output_types: &[&crate::data_types::ShapedType],
+        output_types: &[&ShapedType],
         name: Option<&str>,
-    ) -> Vec<Tensor> {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Vec<Retained<Tensor>>;
+}
 
-        let symbol_name_obj = NSString::from_str(symbol_name).as_raw_object();
-
-        // Create NSArray of input tensors using objc2_foundation
-        let input_tensors_array = unsafe {
-            // Convert to slice of references to AnyObject
-            let refs: Vec<&objc2::runtime::AnyObject> = input_tensors
-                .iter()
-                .map(|tensor| &*tensor.0.cast::<objc2::runtime::AnyObject>())
-                .collect();
-
-            // Create NSArray from references
-            let array = NSArray::from_slice(&refs);
-            let ns_array: *mut AnyObject =
-                array.as_ref() as *const objc2_foundation::NSArray as *mut AnyObject;
-            ns_array
-        };
-
-        // Create NSArray of output types using objc2_foundation
-        let output_types_array = unsafe {
-            // Convert to slice of references to AnyObject
-            let refs: Vec<&objc2::runtime::AnyObject> = output_types
-                .iter()
-                .map(|type_obj| &*type_obj.0.cast::<objc2::runtime::AnyObject>())
-                .collect();
-
-            // Create NSArray from references
-            let array = NSArray::from_slice(&refs);
-            let ns_array: *mut AnyObject =
-                array.as_ref() as *const objc2_foundation::NSArray as *mut AnyObject;
-            ns_array
-        };
-
-        // Call the Objective-C method and get the result array
-        let result_array = unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, callSymbolName: symbol_name_obj,
-                inputTensors: input_tensors_array,
-                outputTypes: output_types_array,
-                name: name_obj,
-            ];
-            result
-        };
-
-        // Convert the result array to a Vec of Tensor using objc2_foundation
+impl GraphCallOps for Graph {
+    fn call(
+        &self,
+        symbol_name: &str,
+        input_tensors: &[&Tensor],
+        output_types: &[&ShapedType],
+        name: Option<&str>,
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
-            // Convert to NSArray
-            let array_ref: &NSArray<objc2::runtime::AnyObject> =
-                &*(result_array as *const objc2_foundation::NSArray);
-            let count = array_ref.len();
-
-            let mut results = Vec::with_capacity(count);
-
-            for i in 0..count {
-                // NSArray in objc2-foundation may have different methods in different versions
-                // Directly get object at index
-                if i < count {
-                    let obj: &objc2::runtime::AnyObject = msg_send![array_ref, objectAtIndex: i,];
-                    // Get the object and convert it to a raw pointer
-                    let tensor_ptr: *mut AnyObject =
-                        obj as *const objc2::runtime::AnyObject as *mut AnyObject;
-                    let tensor = objc2::ffi::objc_retain(tensor_ptr as *mut _);
-                    results.push(Tensor(tensor));
-                }
-            }
-
-            results
+            // Convert name to NSString if provided
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            // Convert symbol_name to NSString
+            let symbol_name_ns = NSString::from_str(symbol_name);
+            
+            // Create NSArray of input tensors
+            let input_tensors_array = NSArray::from_slice(input_tensors);
+            
+            // Create NSArray of output types
+            let output_types_array = NSArray::from_slice(output_types);
+            
+            // Call the Objective-C method and get the result array
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                callSymbolName: &*symbol_name_ns,
+                inputTensors: &*input_tensors_array,
+                outputTypes: &*output_types_array,
+                name: name_ptr,
+            ];
+            
+            // Convert the result array to a Vec of Retained<Tensor>
+            convert_nsarray_to_vec(result_array)
         }
     }
 }

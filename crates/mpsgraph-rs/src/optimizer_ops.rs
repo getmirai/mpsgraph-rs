@@ -1,54 +1,47 @@
-use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
 use crate::operation::Operation;
 use crate::tensor::Tensor;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
+use objc2::rc::Retained;
+use objc2::{extern_class};
+use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 use std::ptr;
 
-/// Represents a variable operation in MPSGraph.
-///
-/// In MPSGraph, a variable operation is a special operation that creates a tensor
-/// which can be updated during the graph execution. This is particularly useful for
-/// trainable parameters in machine learning models.
-pub struct VariableOp(pub(crate) *mut AnyObject);
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphVariableOp"]
+    /// Represents a variable operation in MPSGraph.
+    ///
+    /// In MPSGraph, a variable operation is a special operation that creates a tensor
+    /// which can be updated during the graph execution. This is particularly useful for
+    /// trainable parameters in machine learning models.
+    pub struct VariableOp;
+);
+
+unsafe impl NSObjectProtocol for VariableOp {}
 
 impl VariableOp {
     /// Returns the operation associated with this variable.
-    pub fn operation(&self) -> Operation {
+    pub fn operation(&self) -> Retained<Operation> {
         unsafe {
-            let op: *mut AnyObject = msg_send![self.0, operation];
-            let op = objc2::ffi::objc_retain(op as *mut _);
-            Operation(op)
+            msg_send![self, operation]
         }
     }
 
     /// Returns the tensor associated with this variable.
-    pub fn tensor(&self) -> Tensor {
+    pub fn tensor(&self) -> Retained<Tensor> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, tensor];
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            msg_send![self, tensor]
         }
     }
 }
 
-impl Drop for VariableOp {
-    fn drop(&mut self) {
-        unsafe {
-            if !self.0.is_null() {
-                objc2::ffi::objc_release(self.0 as *mut _);
-            }
-        }
-    }
-}
-
-impl Clone for VariableOp {
-    fn clone(&self) -> Self {
-        unsafe {
-            let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-            VariableOp(obj)
-        }
+impl crate::device::CustomDefault for VariableOp {
+    fn custom_default() -> Retained<Self> {
+        // This is a placeholder. In practice, variables should be
+        // created with Graph::variable_op_for_tensor
+        panic!("VariableOp cannot be created with custom_default. Use Graph::variable_op_for_tensor instead");
     }
 }
 
@@ -68,47 +61,26 @@ impl Graph {
     /// # Returns
     ///
     /// A tensor containing the updated values
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use mpsgraph::prelude::*;
-    /// # let graph = Graph::new();
-    /// # let shape = Shape::from_slice(&[2, 3]);
-    /// # let weights = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let gradients = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let learning_rate = graph.constant_scalar(0.01, MPSDataType::Float32);
-    ///
-    /// // Update weights using SGD
-    /// let updated_weights = graph.stochastic_gradient_descent(
-    ///     &learning_rate,
-    ///     &weights,
-    ///     &gradients,
-    ///     None
-    /// );
-    /// ```
     pub fn stochastic_gradient_descent(
         &self,
         learning_rate: &Tensor,
         values: &Tensor,
         gradient: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
             };
 
-            let tensor: *mut AnyObject = msg_send![
-                self.0, stochasticGradientDescentWithLearningRateTensor: learning_rate.0,
-                valuesTensor: values.0,
-                gradientTensor: gradient.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            msg_send![
+                self, 
+                stochasticGradientDescentWithLearningRateTensor: learning_rate,
+                valuesTensor: values,
+                gradientTensor: gradient,
+                name: name_obj
+            ]
         }
     }
 
@@ -146,46 +118,6 @@ impl Graph {
     /// - New momentum
     /// - New velocity
     /// - New maximum velocity (if maximum_velocity is provided)
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use mpsgraph::prelude::*;
-    /// # let graph = Graph::new();
-    /// # let shape = Shape::from_slice(&[2, 3]);
-    /// # let weights = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let gradients = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let learning_rate = graph.constant_scalar(0.001, MPSDataType::Float32);
-    /// # let beta1 = graph.constant_scalar(0.9, MPSDataType::Float32);
-    /// # let beta2 = graph.constant_scalar(0.999, MPSDataType::Float32);
-    /// # let epsilon = graph.constant_scalar(1e-8, MPSDataType::Float32);
-    /// # let beta1_power = graph.constant_scalar(0.9, MPSDataType::Float32);
-    /// # let beta2_power = graph.constant_scalar(0.999, MPSDataType::Float32);
-    /// # let dims = shape.dimensions();
-    /// # let zeros = vec![0.0f32; dims.iter().product()];
-    /// # let momentum = graph.constant_with_shape(&zeros, &dims, MPSDataType::Float32);
-    /// # let velocity = graph.constant_with_shape(&zeros, &dims, MPSDataType::Float32);
-    ///
-    /// // Update weights using Adam
-    /// let results = graph.adam(
-    ///     &learning_rate,
-    ///     &beta1,
-    ///     &beta2,
-    ///     &epsilon,
-    ///     &beta1_power,
-    ///     &beta2_power,
-    ///     &weights,
-    ///     &momentum,
-    ///     &velocity,
-    ///     None, // no maximum velocity
-    ///     &gradients,
-    ///     None
-    /// );
-    ///
-    /// let updated_weights = &results[0];
-    /// let new_momentum = &results[1];
-    /// let new_velocity = &results[2];
-    /// ```
     pub fn adam(
         &self,
         learning_rate: &Tensor,
@@ -200,42 +132,43 @@ impl Graph {
         maximum_velocity: Option<&Tensor>,
         gradient: &Tensor,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
             let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
             };
 
             let max_velocity_obj = match maximum_velocity {
-                Some(m) => m.0,
-                None => std::ptr::null_mut(),
+                Some(m) => m as *const _,
+                None => std::ptr::null(),
             };
 
-            let result_array: *mut AnyObject = msg_send![
-                self.0, adamWithLearningRateTensor: learning_rate.0,
-                beta1Tensor: beta1.0,
-                beta2Tensor: beta2.0,
-                epsilonTensor: epsilon.0,
-                beta1PowerTensor: beta1_power.0,
-                beta2PowerTensor: beta2_power.0,
-                valuesTensor: values.0,
-                momentumTensor: momentum.0,
-                velocityTensor: velocity.0,
+            let result_array: Retained<NSArray<Tensor>> = msg_send![
+                self, 
+                adamWithLearningRateTensor: learning_rate,
+                beta1Tensor: beta1,
+                beta2Tensor: beta2,
+                epsilonTensor: epsilon,
+                beta1PowerTensor: beta1_power,
+                beta2PowerTensor: beta2_power,
+                valuesTensor: values,
+                momentumTensor: momentum,
+                velocityTensor: velocity,
                 maximumVelocityTensor: max_velocity_obj,
-                gradientTensor: gradient.0,
-                name: name_obj,
+                gradientTensor: gradient,
+                name: name_obj
             ];
 
             // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
+            let count = result_array.count();
 
             // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: i];
+                let tensor = Retained::retain(tensor_ptr).unwrap();
+                result.push(tensor);
             }
 
             result
@@ -286,40 +219,41 @@ impl Graph {
         maximum_velocity: Option<&Tensor>,
         gradient: &Tensor,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
             let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
             };
 
             let max_velocity_obj = match maximum_velocity {
-                Some(m) => m.0,
-                None => std::ptr::null_mut(),
+                Some(m) => m as *const _,
+                None => std::ptr::null(),
             };
 
-            let result_array: *mut AnyObject = msg_send![
-                self.0, adamWithCurrentLearningRateTensor: current_learning_rate.0,
-                beta1Tensor: beta1.0,
-                beta2Tensor: beta2.0,
-                epsilonTensor: epsilon.0,
-                valuesTensor: values.0,
-                momentumTensor: momentum.0,
-                velocityTensor: velocity.0,
+            let result_array: Retained<NSArray<Tensor>> = msg_send![
+                self, 
+                adamWithCurrentLearningRateTensor: current_learning_rate,
+                beta1Tensor: beta1,
+                beta2Tensor: beta2,
+                epsilonTensor: epsilon,
+                valuesTensor: values,
+                momentumTensor: momentum,
+                velocityTensor: velocity,
                 maximumVelocityTensor: max_velocity_obj,
-                gradientTensor: gradient.0,
-                name: name_obj,
+                gradientTensor: gradient,
+                name: name_obj
             ];
 
             // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
+            let count = result_array.count();
 
             // Convert NSArray to Vec<Tensor>
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: i];
+                let tensor = Retained::retain(tensor_ptr).unwrap();
+                result.push(tensor);
             }
 
             result
@@ -343,20 +277,18 @@ impl Graph {
         &self,
         tensor: &Tensor,
         name: Option<&str>,
-    ) -> VariableOp {
+    ) -> Retained<VariableOp> {
         unsafe {
             let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
+                Some(s) => &*NSString::from_str(s),
+                None => ptr::null(),
             };
 
-            let variable_op: *mut AnyObject = msg_send![
-                self.0, variableOpWithTensor: tensor.0,
-                name: name_obj,
-            ];
-
-            let variable_op = objc2::ffi::objc_retain(variable_op as *mut _);
-            VariableOp(variable_op)
+            msg_send![
+                self, 
+                variableOpWithTensor: tensor,
+                name: name_obj
+            ]
         }
     }
 
@@ -374,50 +306,26 @@ impl Graph {
     /// # Returns
     ///
     /// A tensor representing the updated value of the variable
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use mpsgraph::prelude::*;
-    /// # let graph = Graph::new();
-    /// # let shape = Shape::from_slice(&[2, 3]);
-    /// # let weights = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let gradients = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let learning_rate = graph.constant_scalar(0.01, MPSDataType::Float32);
-    ///
-    /// // Create a variable operation for the weights
-    /// let weights_var = graph.variable_op_for_tensor(&weights, Some("weights_var"));
-    ///
-    /// // Update the variable in-place using SGD
-    /// let updated_weights = graph.apply_stochastic_gradient_descent(
-    ///     &learning_rate,
-    ///     &weights_var,
-    ///     &gradients,
-    ///     None
-    /// );
-    /// ```
     pub fn apply_stochastic_gradient_descent(
         &self,
         learning_rate: &Tensor,
         variable_op: &VariableOp,
         gradient: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => ptr::null_mut(),
+                Some(s) => &*NSString::from_str(s),
+                None => ptr::null(),
             };
 
-            let tensor: *mut AnyObject = msg_send![
-                self.0, applyStochasticGradientDescentWithLearningRateTensor: learning_rate.0,
-                variableOp: variable_op.0,
-                gradientTensor: gradient.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            msg_send![
+                self, 
+                applyStochasticGradientDescentWithLearningRateTensor: learning_rate,
+                variableOp: variable_op,
+                gradientTensor: gradient,
+                name: name_obj
+            ]
         }
     }
 }

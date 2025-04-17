@@ -1,11 +1,12 @@
-use crate::core::{AsRawObject, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
 
 /// Linear algebra operations for Graph
-impl Graph {
+pub trait GraphLinearAlgebraOps {
     /// Creates a matrix multiplication operation.
     ///
     /// # Arguments
@@ -17,28 +18,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn matmul(
+    fn matmul(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, matrixMultiplicationWithPrimaryTensor: primary.0,
-                secondaryTensor: secondary.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a matrix multiplication operation with transposed operands.
     ///
@@ -53,32 +38,14 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn matmul_with_transpose(
+    fn matmul_with_transpose(
         &self,
         primary: &Tensor,
         primary_transpose: bool,
         secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, matrixMultiplicationWithPrimaryTensor: primary.0,
-                transposePrimary: primary_transpose,
-                secondaryTensor: secondary.0,
-                transposeSecondary: secondary_transpose,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a vector inner product operation.
     ///
@@ -91,28 +58,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn inner_product(
+    fn inner_product(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, innerProductWithPrimaryTensor: primary.0,
-                secondaryTensor: secondary.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a vector outer product operation.
     ///
@@ -125,28 +76,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn outer_product(
+    fn outer_product(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, outerProductWithPrimaryTensor: primary.0,
-                secondaryTensor: secondary.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a batch matrix multiplication operation.
     ///
@@ -159,28 +94,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn batch_matmul(
+    fn batch_matmul(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, matrixMultiplicationWithPrimaryTensor: primary.0,
-                secondaryTensor: secondary.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a batch matrix multiplication operation with transposed operands.
     ///
@@ -195,33 +114,14 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object.
-    pub fn batch_matmul_with_transpose(
+    fn batch_matmul_with_transpose(
         &self,
         primary: &Tensor,
         primary_transpose: bool,
         secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                matrixMultiplicationWithPrimaryTensor: primary.0,
-                transposePrimary: primary_transpose,
-                secondaryTensor: secondary.0,
-                transposeSecondary: secondary_transpose,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a tensor with a band part extracted from the input tensor.
     ///
@@ -239,31 +139,13 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object with the band part extracted.
-    pub fn band_part(
+    fn band_part(
         &self,
         input: &Tensor,
         num_lower: &Tensor,
         num_upper: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                bandPartWithTensor: input.0,
-                numLower: num_lower.0,
-                numUpper: num_upper.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a tensor with a band part extracted from the input tensor using scalar values.
     ///
@@ -281,31 +163,13 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object with the band part extracted.
-    pub fn band_part_with_scalars(
+    fn band_part_with_scalars(
         &self,
         input: &Tensor,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                bandPartWithTensor: input.0,
-                numLowerScalar: num_lower,
-                numUpperScalar: num_upper,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Calculates the Hamming distance between two tensors.
     ///
@@ -321,29 +185,12 @@ impl Graph {
     /// # Returns
     ///
     /// A new tensor with the Hamming distance between the inputs.
-    pub fn hamming_distance(
+    fn hamming_distance(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                hammingDistanceWithPrimaryTensor: primary.0,
-                secondaryTensor: secondary.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs scaled dot-product attention on the input tensors.
     ///
@@ -364,33 +211,14 @@ impl Graph {
     /// # Returns
     ///
     /// A new tensor containing the result of the attention operation
-    pub fn scaled_dot_product_attention(
+    fn scaled_dot_product_attention(
         &self,
         query: &Tensor,
         key: &Tensor,
         value: &Tensor,
         scale: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                scaledDotProductAttentionWithQueryTensor: query.0,
-                keyTensor: key.0,
-                valueTensor: value.0,
-                scaleTensor: scale.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs scaled dot-product attention with a scalar scaling factor.
     ///
@@ -408,33 +236,14 @@ impl Graph {
     /// # Returns
     ///
     /// A new tensor containing the result of the attention operation
-    pub fn scaled_dot_product_attention_with_scalar(
+    fn scaled_dot_product_attention_with_scalar(
         &self,
         query: &Tensor,
         key: &Tensor,
         value: &Tensor,
         scale: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                scaledDotProductAttentionWithQueryTensor: query.0,
-                keyTensor: key.0,
-                valueTensor: value.0,
-                scaleScalar: scale as f64,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs masked scaled dot-product attention.
     ///
@@ -453,7 +262,7 @@ impl Graph {
     /// # Returns
     ///
     /// A new tensor containing the result of the attention operation
-    pub fn masked_scaled_dot_product_attention(
+    fn masked_scaled_dot_product_attention(
         &self,
         query: &Tensor,
         key: &Tensor,
@@ -461,27 +270,7 @@ impl Graph {
         mask: &Tensor,
         scale: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                scaledDotProductAttentionWithQueryTensor: query.0,
-                keyTensor: key.0,
-                valueTensor: value.0,
-                maskTensor: mask.0,
-                scaleTensor: scale.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs masked scaled dot-product attention with a scalar scaling factor.
     ///
@@ -500,7 +289,7 @@ impl Graph {
     /// # Returns
     ///
     /// A new tensor containing the result of the attention operation
-    pub fn masked_scaled_dot_product_attention_with_scalar(
+    fn masked_scaled_dot_product_attention_with_scalar(
         &self,
         query: &Tensor,
         key: &Tensor,
@@ -508,25 +297,377 @@ impl Graph {
         mask: &Tensor,
         scale: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
+}
 
+/// Implementation of linear algebra operations for Graph
+impl GraphLinearAlgebraOps for Graph {
+    fn matmul(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                scaledDotProductAttentionWithQueryTensor: query.0,
-                keyTensor: key.0,
-                valueTensor: value.0,
-                maskTensor: mask.0,
-                scaleScalar: scale as f64,
-                name: name_obj,
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                matrixMultiplicationWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn matmul_with_transpose(
+        &self,
+        primary: &Tensor,
+        primary_transpose: bool,
+        secondary: &Tensor,
+        secondary_transpose: bool,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                matrixMultiplicationWithPrimaryTensor: primary,
+                transposePrimary: primary_transpose,
+                secondaryTensor: secondary,
+                transposeSecondary: secondary_transpose,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn inner_product(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                innerProductWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn outer_product(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                outerProductWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn batch_matmul(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                matrixMultiplicationWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn batch_matmul_with_transpose(
+        &self,
+        primary: &Tensor,
+        primary_transpose: bool,
+        secondary: &Tensor,
+        secondary_transpose: bool,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                matrixMultiplicationWithPrimaryTensor: primary,
+                transposePrimary: primary_transpose,
+                secondaryTensor: secondary,
+                transposeSecondary: secondary_transpose,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn band_part(
+        &self,
+        input: &Tensor,
+        num_lower: &Tensor,
+        num_upper: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                bandPartWithTensor: input,
+                numLowerTensor: num_lower,
+                numUpperTensor: num_upper,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn band_part_with_scalars(
+        &self,
+        input: &Tensor,
+        num_lower: i64,
+        num_upper: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                bandPartWithTensor: input,
+                numLower: num_lower,
+                numUpper: num_upper,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn hamming_distance(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                hammingDistanceWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn scaled_dot_product_attention(
+        &self,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        scale: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                scaledDotProductAttentionWithQueryTensor: query,
+                keyTensor: key,
+                valueTensor: value,
+                scaleTensor: scale,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn scaled_dot_product_attention_with_scalar(
+        &self,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        scale: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                scaledDotProductAttentionWithQueryTensor: query,
+                keyTensor: key,
+                valueTensor: value,
+                scaleScalar: scale as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn masked_scaled_dot_product_attention(
+        &self,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        mask: &Tensor,
+        scale: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                scaledDotProductAttentionWithQueryTensor: query,
+                keyTensor: key,
+                valueTensor: value,
+                maskTensor: mask,
+                scaleTensor: scale,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn masked_scaled_dot_product_attention_with_scalar(
+        &self,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        mask: &Tensor,
+        scale: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                scaledDotProductAttentionWithQueryTensor: query,
+                keyTensor: key,
+                valueTensor: value,
+                maskTensor: mask,
+                scaleScalar: scale as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait for easier access to linear algebra operations
+pub trait GraphLinearAlgebraOpsExtension {
+    /// Get access to linear algebra operations
+    fn linear_algebra_ops(&self) -> &dyn GraphLinearAlgebraOps;
+}
+
+impl GraphLinearAlgebraOpsExtension for Graph {
+    fn linear_algebra_ops(&self) -> &dyn GraphLinearAlgebraOps {
+        self
     }
 }

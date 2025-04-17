@@ -1,12 +1,14 @@
-use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
 use crate::tensor::Tensor;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
+use objc2::rc::Retained;
+use objc2::runtime::AnyClass;
+use objc2::extern_class;
+use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 
 /// Activation functions for RNN operations
 #[repr(u64)]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum RNNActivation {
     /// No activation
     None = 0,
@@ -20,27 +22,42 @@ pub enum RNNActivation {
     HardSigmoid = 4,
 }
 
-/// Descriptor for single-gate RNN operations
-pub struct SingleGateRNNDescriptor(pub(crate) *mut AnyObject);
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphSingleGateRNNDescriptor"]
+    /// Descriptor for single-gate RNN operations
+    pub struct SingleGateRNNDescriptor;
+);
 
-impl Default for SingleGateRNNDescriptor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+unsafe impl NSObjectProtocol for SingleGateRNNDescriptor {}
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphLSTMDescriptor"]
+    /// Descriptor for LSTM operations
+    pub struct LSTMDescriptor;
+);
+
+unsafe impl NSObjectProtocol for LSTMDescriptor {}
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphGRUDescriptor"]
+    /// Descriptor for GRU operations
+    pub struct GRUDescriptor;
+);
+
+unsafe impl NSObjectProtocol for GRUDescriptor {}
 
 impl SingleGateRNNDescriptor {
     /// Creates a new single-gate RNN descriptor with default settings
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphSingleGateRNNDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptor];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                SingleGateRNNDescriptor(descriptor)
-            } else {
-                panic!("Class MPSGraphSingleGateRNNDescriptor not found")
-            }
+            let cls = AnyClass::get(c"MPSGraphSingleGateRNNDescriptor").unwrap();
+            msg_send![cls, descriptor]
         }
     }
 
@@ -49,10 +66,11 @@ impl SingleGateRNNDescriptor {
     /// If set to `true` then the input sequence is passed in reverse time order to the layer.
     /// Note: Ignored when `bidirectional = true`.
     /// Default value: `false`.
-    pub fn set_reverse(&self, reverse: bool) {
+    pub fn set_reverse(&self, reverse: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setReverse: reverse];
+            let _: () = msg_send![self, setReverse: reverse];
         }
+        self
     }
 
     /// A parameter that defines a bidirectional RNN layer.
@@ -60,93 +78,71 @@ impl SingleGateRNNDescriptor {
     /// If set to `true` then the input sequence is traversed in both directions and the two results
     /// are concatenated together on the channel-axis.
     /// Default value: `false`.
-    pub fn set_bidirectional(&self, bidirectional: bool) {
+    pub fn set_bidirectional(&self, bidirectional: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setBidirectional: bidirectional];
+            let _: () = msg_send![self, setBidirectional: bidirectional];
         }
+        self
     }
 
     /// A parameter that makes the RNN layer support training.
     ///
     /// If set to `true` then the layer will produce training state tensor as a secondary output.
     /// Default value: `false`.
-    pub fn set_training(&self, training: bool) {
+    pub fn set_training(&self, training: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setTraining: training];
+            let _: () = msg_send![self, setTraining: training];
         }
+        self
     }
 
     /// A parameter that defines the activation function to use with the RNN operation.
     ///
     /// Default value: `RNNActivation::ReLU`.
-    pub fn set_activation(&self, activation: RNNActivation) {
+    pub fn set_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setActivation: activation as u64];
+            let _: () = msg_send![self, setActivation: activation as u64];
         }
+        self
     }
 
     /// Returns the reverse setting.
     pub fn reverse(&self) -> bool {
-        unsafe { msg_send![self.0, reverse] }
+        unsafe { msg_send![self, reverse] }
     }
 
     /// Returns the bidirectional setting.
     pub fn bidirectional(&self) -> bool {
-        unsafe { msg_send![self.0, bidirectional] }
+        unsafe { msg_send![self, bidirectional] }
     }
 
     /// Returns the training setting.
     pub fn training(&self) -> bool {
-        unsafe { msg_send![self.0, training] }
+        unsafe { msg_send![self, training] }
     }
 
     /// Returns the activation function setting.
     pub fn activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, activation];
+            let activation_val: u64 = msg_send![self, activation];
             std::mem::transmute(activation_val)
         }
     }
 }
 
-impl Drop for SingleGateRNNDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for SingleGateRNNDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            SingleGateRNNDescriptor(desc)
-        }
-    }
-}
-
-/// Descriptor for LSTM operations
-pub struct LSTMDescriptor(pub(crate) *mut AnyObject);
-
-impl Default for LSTMDescriptor {
-    fn default() -> Self {
+// Instead of implementing Default directly, we can use a CustomDefault trait
+impl crate::device::CustomDefault for SingleGateRNNDescriptor {
+    fn custom_default() -> Retained<Self> {
         Self::new()
     }
 }
 
 impl LSTMDescriptor {
     /// Creates a new LSTM descriptor with default settings
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphLSTMDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptor];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                LSTMDescriptor(descriptor)
-            } else {
-                panic!("Class MPSGraphLSTMDescriptor not found")
-            }
+            let cls = AnyClass::get(c"MPSGraphLSTMDescriptor").unwrap();
+            msg_send![cls, descriptor]
         }
     }
 
@@ -155,10 +151,11 @@ impl LSTMDescriptor {
     /// If set to `true` then the input sequence is passed in reverse time order to the layer.
     /// Note: Ignored when `bidirectional = true`.
     /// Default value: `false`.
-    pub fn set_reverse(&self, reverse: bool) {
+    pub fn set_reverse(&self, reverse: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setReverse: reverse];
+            let _: () = msg_send![self, setReverse: reverse];
         }
+        self
     }
 
     /// A parameter that defines a bidirectional LSTM layer.
@@ -166,118 +163,127 @@ impl LSTMDescriptor {
     /// If set to `true` then the input sequence is traversed in both directions and the two results
     /// are concatenated together on the channel-axis.
     /// Default value: `false`.
-    pub fn set_bidirectional(&self, bidirectional: bool) {
+    pub fn set_bidirectional(&self, bidirectional: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setBidirectional: bidirectional];
+            let _: () = msg_send![self, setBidirectional: bidirectional];
         }
+        self
     }
 
     /// A parameter that controls whether or not to return the output cell from the LSTM layer.
     ///
     /// If set to `true` then this layer will produce the internal cell of the LSTM unit as secondary output.
     /// Default value: `false`.
-    pub fn set_produce_cell(&self, produce_cell: bool) {
+    pub fn set_produce_cell(&self, produce_cell: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setProduceCell: produce_cell];
+            let _: () = msg_send![self, setProduceCell: produce_cell];
         }
+        self
     }
 
     /// A parameter that enables the LSTM layer to support training.
     ///
     /// If set to `true` then the layer will produce training state tensor as a secondary output.
     /// Default value: `false`.
-    pub fn set_training(&self, training: bool) {
+    pub fn set_training(&self, training: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setTraining: training];
+            let _: () = msg_send![self, setTraining: training];
         }
+        self
     }
 
     /// A parameter that controls the internal order of the LSTM gates.
     ///
     /// If set to `true` then the layer will use the gate-ordering `[ i, z, f, o ]` instead of default `[ i, f, z, o ]`.
     /// Default value: `false`
-    pub fn set_forget_gate_last(&self, forget_gate_last: bool) {
+    pub fn set_forget_gate_last(&self, forget_gate_last: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setForgetGateLast: forget_gate_last];
+            let _: () = msg_send![self, setForgetGateLast: forget_gate_last];
         }
+        self
     }
 
     /// A parameter that defines the activation function used with the input gate of the LSTM operation.
     ///
     /// Default value: `RNNActivation::Sigmoid`.
-    pub fn set_input_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_input_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setInputGateActivation: activation as u64];
+            let _: () = msg_send![self, setInputGateActivation: activation as u64];
         }
+        self
     }
 
     /// A parameter that defines the activation function used with the forget gate of the LSTM operation.
     ///
     /// Default value: `RNNActivation::Sigmoid`.
-    pub fn set_forget_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_forget_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setForgetGateActivation: activation as u64];
+            let _: () = msg_send![self, setForgetGateActivation: activation as u64];
         }
+        self
     }
 
     /// A parameter that defines the activation function used with the cell gate of the LSTM operation.
     ///
     /// Default value: `RNNActivation::TanH`.
-    pub fn set_cell_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_cell_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setCellGateActivation: activation as u64];
+            let _: () = msg_send![self, setCellGateActivation: activation as u64];
         }
+        self
     }
 
     /// A parameter that defines the activation function used with the output gate of the LSTM operation.
     ///
     /// Default value: `RNNActivation::Sigmoid`.
-    pub fn set_output_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_output_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setOutputGateActivation: activation as u64];
+            let _: () = msg_send![self, setOutputGateActivation: activation as u64];
         }
+        self
     }
 
     /// A parameter that defines the activation function used with the current cell value of the LSTM operation.
     ///
     /// Default value: `RNNActivation::TanH`.
-    pub fn set_activation(&self, activation: RNNActivation) {
+    pub fn set_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setActivation: activation as u64];
+            let _: () = msg_send![self, setActivation: activation as u64];
         }
+        self
     }
 
     // Getter methods
 
     /// Returns the reverse setting.
     pub fn reverse(&self) -> bool {
-        unsafe { msg_send![self.0, reverse] }
+        unsafe { msg_send![self, reverse] }
     }
 
     /// Returns the bidirectional setting.
     pub fn bidirectional(&self) -> bool {
-        unsafe { msg_send![self.0, bidirectional] }
+        unsafe { msg_send![self, bidirectional] }
     }
 
     /// Returns the produce cell setting.
     pub fn produce_cell(&self) -> bool {
-        unsafe { msg_send![self.0, produceCell] }
+        unsafe { msg_send![self, produceCell] }
     }
 
     /// Returns the training setting.
     pub fn training(&self) -> bool {
-        unsafe { msg_send![self.0, training] }
+        unsafe { msg_send![self, training] }
     }
 
     /// Returns the forget gate last setting.
     pub fn forget_gate_last(&self) -> bool {
-        unsafe { msg_send![self.0, forgetGateLast] }
+        unsafe { msg_send![self, forgetGateLast] }
     }
 
     /// Returns the input gate activation setting.
     pub fn input_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, inputGateActivation];
+            let activation_val: u64 = msg_send![self, inputGateActivation];
             std::mem::transmute(activation_val)
         }
     }
@@ -285,7 +291,7 @@ impl LSTMDescriptor {
     /// Returns the forget gate activation setting.
     pub fn forget_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, forgetGateActivation];
+            let activation_val: u64 = msg_send![self, forgetGateActivation];
             std::mem::transmute(activation_val)
         }
     }
@@ -293,7 +299,7 @@ impl LSTMDescriptor {
     /// Returns the cell gate activation setting.
     pub fn cell_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, cellGateActivation];
+            let activation_val: u64 = msg_send![self, cellGateActivation];
             std::mem::transmute(activation_val)
         }
     }
@@ -301,7 +307,7 @@ impl LSTMDescriptor {
     /// Returns the output gate activation setting.
     pub fn output_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, outputGateActivation];
+            let activation_val: u64 = msg_send![self, outputGateActivation];
             std::mem::transmute(activation_val)
         }
     }
@@ -309,50 +315,24 @@ impl LSTMDescriptor {
     /// Returns the activation setting.
     pub fn activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, activation];
+            let activation_val: u64 = msg_send![self, activation];
             std::mem::transmute(activation_val)
         }
     }
 }
 
-impl Drop for LSTMDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for LSTMDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            LSTMDescriptor(desc)
-        }
-    }
-}
-
-/// Descriptor for GRU operations
-pub struct GRUDescriptor(pub(crate) *mut AnyObject);
-
-impl Default for GRUDescriptor {
-    fn default() -> Self {
+impl crate::device::CustomDefault for LSTMDescriptor {
+    fn custom_default() -> Retained<Self> {
         Self::new()
     }
 }
 
 impl GRUDescriptor {
     /// Creates a new GRU descriptor with default settings
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         unsafe {
-            let class_name = c"MPSGraphGRUDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![cls, descriptor];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                GRUDescriptor(descriptor)
-            } else {
-                panic!("Class MPSGraphGRUDescriptor not found")
-            }
+            let cls = AnyClass::get(c"MPSGraphGRUDescriptor").unwrap();
+            msg_send![cls, descriptor]
         }
     }
 
@@ -361,10 +341,11 @@ impl GRUDescriptor {
     /// If set to `true` then the input sequence is passed in reverse time order to the layer.
     /// Note: Ignored when `bidirectional = true`.
     /// Default value: `false`.
-    pub fn set_reverse(&self, reverse: bool) {
+    pub fn set_reverse(&self, reverse: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setReverse: reverse];
+            let _: () = msg_send![self, setReverse: reverse];
         }
+        self
     }
 
     /// A parameter that defines a bidirectional GRU layer.
@@ -372,30 +353,33 @@ impl GRUDescriptor {
     /// If set to `true` then the input sequence is traversed in both directions and the two results
     /// are concatenated together on the channel-axis.
     /// Default value: `false`.
-    pub fn set_bidirectional(&self, bidirectional: bool) {
+    pub fn set_bidirectional(&self, bidirectional: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setBidirectional: bidirectional];
+            let _: () = msg_send![self, setBidirectional: bidirectional];
         }
+        self
     }
 
     /// A parameter that enables the GRU layer to support training.
     ///
     /// If set to `true` then the layer will produce training state tensor as a secondary output.
     /// Default value: `false`.
-    pub fn set_training(&self, training: bool) {
+    pub fn set_training(&self, training: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setTraining: training];
+            let _: () = msg_send![self, setTraining: training];
         }
+        self
     }
 
     /// A parameter that controls the internal order of the GRU gates.
     ///
     /// If set to `true` then the layer will use the gate-ordering `[ r, z, o ]` instead of default `[ z, r, o ]`.
     /// Default value: `false`.
-    pub fn set_reset_gate_first(&self, reset_gate_first: bool) {
+    pub fn set_reset_gate_first(&self, reset_gate_first: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setResetGateFirst: reset_gate_first];
+            let _: () = msg_send![self, setResetGateFirst: reset_gate_first];
         }
+        self
     }
 
     /// A parameter that chooses between two variants for the reset gate computation.
@@ -403,10 +387,11 @@ impl GRUDescriptor {
     /// If set to `true` then the layer will compute the intermediate value as `c[t] = ( b + (h[t-1] m ) R^T) r[t]`.
     /// Otherwise it's computed as `c[t] = (h[t-1] r[t] m) R^T`.
     /// Default value: `false`.
-    pub fn set_reset_after(&self, reset_after: bool) {
+    pub fn set_reset_after(&self, reset_after: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setResetAfter: reset_after];
+            let _: () = msg_send![self, setResetAfter: reset_after];
         }
+        self
     }
 
     /// A parameter that chooses between two variants for the final output computation.
@@ -414,75 +399,79 @@ impl GRUDescriptor {
     /// If set to `true` then the layer will compute the final value as `h[t] = z[t] h[t-1] + (1-z[t]) o[t]`.
     /// Otherwise it's computed as `h[t] = (1-z[t]) h[t-1] + z[t] o[t]`.
     /// Default value: `false`.
-    pub fn set_flip_z(&self, flip_z: bool) {
+    pub fn set_flip_z(&self, flip_z: bool) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setFlipZ: flip_z];
+            let _: () = msg_send![self, setFlipZ: flip_z];
         }
+        self
     }
 
     /// A parameter that defines the activation function to use with the update-gate of the GRU operation.
     ///
     /// Default value: `RNNActivation::Sigmoid`.
-    pub fn set_update_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_update_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setUpdateGateActivation: activation as u64];
+            let _: () = msg_send![self, setUpdateGateActivation: activation as u64];
         }
+        self
     }
 
     /// A parameter that defines the activation function to use with the reset-gate of the GRU operation.
     ///
     /// Default value: `RNNActivation::Sigmoid`.
-    pub fn set_reset_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_reset_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setResetGateActivation: activation as u64];
+            let _: () = msg_send![self, setResetGateActivation: activation as u64];
         }
+        self
     }
 
     /// A parameter that defines the activation function to use with the output-gate of the GRU operation.
     ///
     /// Default value: `RNNActivation::TanH`.
-    pub fn set_output_gate_activation(&self, activation: RNNActivation) {
+    pub fn set_output_gate_activation(&self, activation: RNNActivation) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setOutputGateActivation: activation as u64];
+            let _: () = msg_send![self, setOutputGateActivation: activation as u64];
         }
+        self
     }
 
     // Getter methods
 
     /// Returns the reverse setting.
     pub fn reverse(&self) -> bool {
-        unsafe { msg_send![self.0, reverse] }
+        unsafe { msg_send![self, reverse] }
     }
 
     /// Returns the bidirectional setting.
     pub fn bidirectional(&self) -> bool {
-        unsafe { msg_send![self.0, bidirectional] }
+        unsafe { msg_send![self, bidirectional] }
     }
 
     /// Returns the training setting.
     pub fn training(&self) -> bool {
-        unsafe { msg_send![self.0, training] }
+        unsafe { msg_send![self, training] }
     }
 
     /// Returns the reset gate first setting.
     pub fn reset_gate_first(&self) -> bool {
-        unsafe { msg_send![self.0, resetGateFirst] }
+        unsafe { msg_send![self, resetGateFirst] }
     }
 
     /// Returns the reset after setting.
     pub fn reset_after(&self) -> bool {
-        unsafe { msg_send![self.0, resetAfter] }
+        unsafe { msg_send![self, resetAfter] }
     }
 
     /// Returns the flip Z setting.
     pub fn flip_z(&self) -> bool {
-        unsafe { msg_send![self.0, flipZ] }
+        unsafe { msg_send![self, flipZ] }
     }
 
     /// Returns the update gate activation setting.
     pub fn update_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, updateGateActivation];
+            let activation_val: u64 = msg_send![self, updateGateActivation];
             std::mem::transmute(activation_val)
         }
     }
@@ -490,7 +479,7 @@ impl GRUDescriptor {
     /// Returns the reset gate activation setting.
     pub fn reset_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, resetGateActivation];
+            let activation_val: u64 = msg_send![self, resetGateActivation];
             std::mem::transmute(activation_val)
         }
     }
@@ -498,26 +487,15 @@ impl GRUDescriptor {
     /// Returns the output gate activation setting.
     pub fn output_gate_activation(&self) -> RNNActivation {
         unsafe {
-            let activation_val: u64 = msg_send![self.0, outputGateActivation];
+            let activation_val: u64 = msg_send![self, outputGateActivation];
             std::mem::transmute(activation_val)
         }
     }
 }
 
-impl Drop for GRUDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for GRUDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            GRUDescriptor(desc)
-        }
+impl crate::device::CustomDefault for GRUDescriptor {
+    fn custom_default() -> Retained<Self> {
+        Self::new()
     }
 }
 
@@ -562,56 +540,56 @@ impl Graph {
         mask: Option<&Tensor>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let input_weight_obj = match input_weight {
-            Some(w) => w.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let bias_obj = match bias {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let init_state_obj = match init_state {
-            Some(s) => s.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let mask_obj = match mask {
-            Some(m) => m.0,
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, singleGateRNNWithSourceTensor: input.0,
-                recurrentWeight: recurrent_weight.0,
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            let input_weight_obj = match input_weight {
+                Some(w) => w as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let bias_obj = match bias {
+                Some(b) => b as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let init_state_obj = match init_state {
+                Some(s) => s as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let mask_obj = match mask {
+                Some(m) => m as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: Retained<NSArray<Tensor>> = msg_send![
+                self,
+                singleGateRNNWithSourceTensor: input,
+                recurrentWeight: recurrent_weight,
                 inputWeight: input_weight_obj,
                 bias: bias_obj,
                 initState: init_state_obj,
                 mask: mask_obj,
-                descriptor: descriptor.0,
-                name: name_obj,
+                descriptor: descriptor,
+                name: name_obj
             ];
 
-            // Count the number of result tensors (can be 1 or 2 depending on training flag)
-            let count: usize = msg_send![result, count];
+            // Count the number of result tensors
+            let count = result.count();
             let mut tensors = Vec::with_capacity(count);
 
             // Extract all tensors from the array
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: i];
+                let tensor = Retained::retain(tensor_ptr).unwrap();
+                tensors.push(tensor);
             }
 
-            objc2::ffi::objc_release(result as *mut _);
             tensors
         }
     }
@@ -653,50 +631,50 @@ impl Graph {
         init_state: Option<&Tensor>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let input_weight_obj = match input_weight {
-            Some(w) => w.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let bias_obj = match bias {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let init_state_obj = match init_state {
-            Some(s) => s.0,
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, singleGateRNNWithSourceTensor: input.0,
-                recurrentWeight: recurrent_weight.0,
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            let input_weight_obj = match input_weight {
+                Some(w) => w as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let bias_obj = match bias {
+                Some(b) => b as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let init_state_obj = match init_state {
+                Some(s) => s as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: Retained<NSArray<Tensor>> = msg_send![
+                self,
+                singleGateRNNWithSourceTensor: input,
+                recurrentWeight: recurrent_weight,
                 inputWeight: input_weight_obj,
                 bias: bias_obj,
                 initState: init_state_obj,
-                descriptor: descriptor.0,
-                name: name_obj,
+                descriptor: descriptor,
+                name: name_obj
             ];
 
-            // Count the number of result tensors (can be 1 or 2 depending on training flag)
-            let count: usize = msg_send![result, count];
+            // Count the number of result tensors
+            let count = result.count();
             let mut tensors = Vec::with_capacity(count);
 
             // Extract all tensors from the array
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: i];
+                let tensor = Retained::retain(tensor_ptr).unwrap();
+                tensors.push(tensor);
             }
 
-            objc2::ffi::objc_release(result as *mut _);
             tensors
         }
     }
@@ -731,38 +709,38 @@ impl Graph {
         init_state: Option<&Tensor>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let init_state_obj = match init_state {
-            Some(s) => s.0,
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, singleGateRNNWithSourceTensor: input.0,
-                recurrentWeight: recurrent_weight.0,
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            let init_state_obj = match init_state {
+                Some(s) => s as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: Retained<NSArray<Tensor>> = msg_send![
+                self,
+                singleGateRNNWithSourceTensor: input,
+                recurrentWeight: recurrent_weight,
                 initState: init_state_obj,
-                descriptor: descriptor.0,
-                name: name_obj,
+                descriptor: descriptor,
+                name: name_obj
             ];
 
-            // Count the number of result tensors (can be 1 or 2 depending on training flag)
-            let count: usize = msg_send![result, count];
+            // Count the number of result tensors
+            let count = result.count();
             let mut tensors = Vec::with_capacity(count);
 
             // Extract all tensors from the array
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: i];
+                let tensor = Retained::retain(tensor_ptr).unwrap();
+                tensors.push(tensor);
             }
 
-            objc2::ffi::objc_release(result as *mut _);
             tensors
         }
     }
@@ -801,64 +779,64 @@ impl Graph {
         mask: Option<&Tensor>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
-    ) -> Vec<Tensor> {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let state_gradient_obj = match state_gradient {
-            Some(sg) => sg.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let input_weight_obj = match input_weight {
-            Some(w) => w.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let bias_obj = match bias {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let init_state_obj = match init_state {
-            Some(s) => s.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let mask_obj = match mask {
-            Some(m) => m.0,
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Vec<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, singleGateRNNGradientsWithSourceTensor: input.0,
-                recurrentWeight: recurrent_weight.0,
-                sourceGradient: source_gradient.0,
-                zState: z_state.0,
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            let state_gradient_obj = match state_gradient {
+                Some(sg) => sg as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let input_weight_obj = match input_weight {
+                Some(w) => w as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let bias_obj = match bias {
+                Some(b) => b as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let init_state_obj = match init_state {
+                Some(s) => s as *const _,
+                None => std::ptr::null(),
+            };
+            
+            let mask_obj = match mask {
+                Some(m) => m as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: Retained<NSArray<Tensor>> = msg_send![
+                self,
+                singleGateRNNGradientsWithSourceTensor: input,
+                recurrentWeight: recurrent_weight,
+                sourceGradient: source_gradient,
+                zState: z_state,
                 stateGradient: state_gradient_obj,
                 inputWeight: input_weight_obj,
                 bias: bias_obj,
                 initState: init_state_obj,
                 mask: mask_obj,
-                descriptor: descriptor.0,
-                name: name_obj,
+                descriptor: descriptor,
+                name: name_obj
             ];
 
-            // Count the number of result tensors (depends on which inputs were provided)
-            let count: usize = msg_send![result, count];
+            // Count the number of result tensors
+            let count = result.count();
             let mut tensors = Vec::with_capacity(count);
 
             // Extract all tensors from the array
             for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result, objectAtIndex: i];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                tensors.push(Tensor(tensor));
+                let tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: i];
+                let tensor = Retained::retain(tensor_ptr).unwrap();
+                tensors.push(tensor);
             }
 
-            objc2::ffi::objc_release(result as *mut _);
             tensors
         }
     }
@@ -889,48 +867,46 @@ impl Graph {
         biases: Option<&Tensor>,
         descriptor: &LSTMDescriptor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor, Tensor) {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let biases_obj = match biases {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> (Retained<Tensor>, Retained<Tensor>, Retained<Tensor>) {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, LSTMWithSourceTensor: input.0,
-                recurrentSourceTensor: initial_hidden_state.0,
-                cellSourceTensor: initial_cell_state.0,
-                weightsTensor: weights.0,
-                recurrentWeightsTensor: recurrent_weights.0,
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            let biases_obj = match biases {
+                Some(b) => b as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: Retained<NSArray<Tensor>> = msg_send![
+                self,
+                LSTMWithSourceTensor: input,
+                recurrentSourceTensor: initial_hidden_state,
+                cellSourceTensor: initial_cell_state,
+                weightsTensor: weights,
+                recurrentWeightsTensor: recurrent_weights,
                 biasesTensor: biases_obj,
-                descriptor: descriptor.0,
-                name: name_obj,
+                descriptor: descriptor,
+                name: name_obj
             ];
 
             // This returns an NSArray with three tensors: output, output_hidden_state, and output_cell_state
-            // Extract all three tensors from the array
-            let count: usize = msg_send![result, count];
+            let count = result.count();
             assert_eq!(count, 3, "Expected 3 result tensors from LSTM");
 
-            let output_tensor: *mut AnyObject = msg_send![result, objectAtIndex: 0];
-            let output_hidden_state_tensor: *mut AnyObject = msg_send![result, objectAtIndex: 1];
-            let output_cell_state_tensor: *mut AnyObject = msg_send![result, objectAtIndex: 2];
+            let output_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 0];
+            let output_hidden_state_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 1];
+            let output_cell_state_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 2];
 
-            let output_tensor = objc2::ffi::objc_retain(output_tensor as *mut _);
-            let output_hidden_state_tensor =
-                objc2::ffi::objc_retain(output_hidden_state_tensor as *mut _);
-            let output_cell_state_tensor =
-                objc2::ffi::objc_retain(output_cell_state_tensor as *mut _);
+            let output_tensor = Retained::retain(output_tensor_ptr).unwrap();
+            let output_hidden_state_tensor = Retained::retain(output_hidden_state_tensor_ptr).unwrap();
+            let output_cell_state_tensor = Retained::retain(output_cell_state_tensor_ptr).unwrap();
 
             (
-                Tensor(output_tensor),
-                Tensor(output_hidden_state_tensor),
-                Tensor(output_cell_state_tensor),
+                output_tensor,
+                output_hidden_state_tensor,
+                output_cell_state_tensor,
             )
         }
     }
@@ -959,42 +935,42 @@ impl Graph {
         biases: Option<&Tensor>,
         descriptor: &GRUDescriptor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let biases_obj = match biases {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> (Retained<Tensor>, Retained<Tensor>) {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, GRUWithSourceTensor: input.0,
-                recurrentSourceTensor: initial_state.0,
-                weightsTensor: weights.0,
-                recurrentWeightsTensor: recurrent_weights.0,
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+            
+            let biases_obj = match biases {
+                Some(b) => b as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: Retained<NSArray<Tensor>> = msg_send![
+                self,
+                GRUWithSourceTensor: input,
+                recurrentSourceTensor: initial_state,
+                weightsTensor: weights,
+                recurrentWeightsTensor: recurrent_weights,
                 biasesTensor: biases_obj,
-                descriptor: descriptor.0,
-                name: name_obj,
+                descriptor: descriptor,
+                name: name_obj
             ];
 
             // This returns an NSArray with two tensors: output and output_state
-            // Extract both tensors from the array
-            let count: usize = msg_send![result, count];
+            let count = result.count();
             assert_eq!(count, 2, "Expected 2 result tensors from GRU");
 
-            let output_tensor: *mut AnyObject = msg_send![result, objectAtIndex: 0];
-            let output_state_tensor: *mut AnyObject = msg_send![result, objectAtIndex: 1];
+            let output_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 0];
+            let output_state_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 1];
 
-            let output_tensor = objc2::ffi::objc_retain(output_tensor as *mut _);
-            let output_state_tensor = objc2::ffi::objc_retain(output_state_tensor as *mut _);
+            let output_tensor = Retained::retain(output_tensor_ptr).unwrap();
+            let output_state_tensor = Retained::retain(output_state_tensor_ptr).unwrap();
 
             (
-                Tensor(output_tensor),
-                Tensor(output_state_tensor),
+                output_tensor,
+                output_state_tensor,
             )
         }
     }

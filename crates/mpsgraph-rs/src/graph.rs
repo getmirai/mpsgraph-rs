@@ -1,33 +1,27 @@
-#![allow(clippy::let_and_return)]
-
-use crate::command_buffer::MPSCommandBuffer;
-use crate::core::{AsRawObject, MPSDataType, Options};
-use crate::device::Device;
-use crate::executable::{
-    CompilationDescriptor, Executable, ExecutionDescriptor,
-};
-use crate::operation::Operation;
-use crate::shape::Shape;
-use crate::tensor::Tensor;
-use crate::tensor_data::TensorData;
-use metal::foreign_types::ForeignType;
-use metal::{CommandBuffer, CommandQueue, SharedEvent};
-use objc2::msg_send;
 use objc2::rc::Retained;
-use objc2::runtime::AnyObject;
-use objc2_foundation::NSData;
-use objc2_foundation::NSString;
+use objc2::{extern_class, ClassType, msg_send};
+use objc2::runtime::NSObject;
+use objc2_foundation::{NSArray, NSMutableDictionary, NSObjectProtocol, NSString};
 use std::collections::HashMap;
-use std::fmt;
+
+use crate::tensor::{Tensor, DataType};
+use crate::shape::Shape;
+use crate::tensor_data::TensorData;
+use crate::operation::Operation;
+use crate::executable::{
+    Executable, 
+    ExecutionDescriptor, 
+    CompilationDescriptor
+};
+use crate::command_buffer::CommandBuffer;
+use crate::device::Device;
+use crate::shape::{ShapeExtensions, ShapeHelper};
 
 /// Trait for scalar types that can be used in Graph operations
 /// This trait is used for both single scalar values and arrays of values
 pub trait TensorDataScalar: Copy {
     /// Convert a scalar value to f64 for use with Objective-C scalar methods
     fn to_f64(&self) -> f64;
-
-    /// Convert a slice of values to an NSData object that can be used with Graph
-    fn to_nsdata(values: &[Self]) -> Retained<NSData>;
 }
 
 // Implement for common numeric types
@@ -35,29 +29,11 @@ impl TensorDataScalar for f32 {
     fn to_f64(&self) -> f64 {
         *self as f64
     }
-
-    fn to_nsdata(values: &[Self]) -> Retained<NSData> {
-        unsafe {
-            NSData::with_bytes(std::slice::from_raw_parts(
-                values.as_ptr() as *const u8,
-                std::mem::size_of_val(values),
-            ))
-        }
-    }
 }
 
 impl TensorDataScalar for f64 {
     fn to_f64(&self) -> f64 {
         *self
-    }
-
-    fn to_nsdata(values: &[Self]) -> Retained<NSData> {
-        unsafe {
-            NSData::with_bytes(std::slice::from_raw_parts(
-                values.as_ptr() as *const u8,
-                std::mem::size_of_val(values),
-            ))
-        }
     }
 }
 
@@ -65,29 +41,11 @@ impl TensorDataScalar for i32 {
     fn to_f64(&self) -> f64 {
         *self as f64
     }
-
-    fn to_nsdata(values: &[Self]) -> Retained<NSData> {
-        unsafe {
-            NSData::with_bytes(std::slice::from_raw_parts(
-                values.as_ptr() as *const u8,
-                std::mem::size_of_val(values),
-            ))
-        }
-    }
 }
 
 impl TensorDataScalar for i64 {
     fn to_f64(&self) -> f64 {
         *self as f64 // This may lose precision for large values
-    }
-
-    fn to_nsdata(values: &[Self]) -> Retained<NSData> {
-        unsafe {
-            NSData::with_bytes(std::slice::from_raw_parts(
-                values.as_ptr() as *const u8,
-                std::mem::size_of_val(values),
-            ))
-        }
     }
 }
 
@@ -95,1418 +53,951 @@ impl TensorDataScalar for u32 {
     fn to_f64(&self) -> f64 {
         *self as f64
     }
-
-    fn to_nsdata(values: &[Self]) -> Retained<NSData> {
-        unsafe {
-            NSData::with_bytes(std::slice::from_raw_parts(
-                values.as_ptr() as *const u8,
-                std::mem::size_of_val(values),
-            ))
-        }
-    }
 }
 
 impl TensorDataScalar for u64 {
     fn to_f64(&self) -> f64 {
         *self as f64 // This may lose precision for large values
     }
-
-    fn to_nsdata(values: &[Self]) -> Retained<NSData> {
-        unsafe {
-            NSData::with_bytes(std::slice::from_raw_parts(
-                values.as_ptr() as *const u8,
-                std::mem::size_of_val(values),
-            ))
-        }
-    }
 }
 
-#[link(name = "MetalPerformanceShadersGraph", kind = "framework")]
-extern "C" {
-    #[allow(dead_code)]
-    fn MPSGraphCreate() -> *mut AnyObject;
-}
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraph"]
+    pub struct Graph;
+);
 
-/// A wrapper for MPSGraph objects
-pub struct Graph(pub(crate) *mut AnyObject);
-
-// Implement Send + Sync for the wrapper type
-unsafe impl Send for Graph {}
-unsafe impl Sync for Graph {}
-
-impl Default for Graph {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+unsafe impl NSObjectProtocol for Graph {}
 
 impl Graph {
     /// Creates a new Graph
-    pub fn new() -> Self {
+    pub fn new() -> Retained<Self> {
         unsafe {
-            // Create without using external MPSGraphCreate function
-            let class_name = c"MPSGraph";
-            let cls = objc2::runtime::AnyClass::get(class_name).unwrap();
-            let obj: *mut AnyObject = msg_send![cls, alloc];
-            let graph: *mut AnyObject = msg_send![obj, init];
-            Graph(graph)
+            let class = Self::class();
+            let obj: Retained<Self> = msg_send![class, new];
+            obj
         }
     }
-
-    /// Sets the options for this graph
-    pub fn set_options(&self, options: Options) {
-        unsafe {
-            let _: () = msg_send![self.0, setOptions:options as u64];
-        }
-    }
-
-    /// Creates a placeholder tensor with dimensions
-    pub fn placeholder_with_shape(
-        &self,
-        shape_dims: &[usize],
-        data_type: MPSDataType,
-        name: Option<&str>,
-    ) -> Tensor {
-        let shape = Shape::from_slice(shape_dims);
-        self.placeholder(&shape, data_type, name)
-    }
-
-    /// Creates a placeholder tensor in the graph
+    
+    /// Creates a placeholder tensor with the given data type and shape
     pub fn placeholder(
         &self,
+        data_type: DataType,
         shape: &Shape,
-        data_type: MPSDataType,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            // Use null for the name parameter
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                placeholderWithShape: shape,
+                dataType: data_type as u32,
+                name: std::ptr::null::<NSString>()
+            ];
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+    
+    /// Creates a placeholder tensor with the given data type, shape, and name
+    pub fn placeholder_with_name(
+        &self,
+        data_type: DataType,
+        shape: &Shape,
+        name: &str,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = NSString::from_str(name);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                placeholderWithShape: shape,
+                dataType: data_type as u32,
+                name: &*name_ns
+            ];
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+    
+    /// Performs matrix multiplication of two tensors
+    pub fn matmul(
+        &self,
+        lhs: &Tensor,
+        rhs: &Tensor,
+        _transpose_lhs: bool,
+        _transpose_rhs: bool,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut::<AnyObject>(),
+            let result_ptr: *mut Tensor = match name {
+                Some(name_str) => {
+                    let name_ns = NSString::from_str(name_str);
+                    msg_send![
+                        self,
+                        matrixMultiplicationWithPrimaryTensor: lhs,
+                        secondaryTensor: rhs,
+                        name: &*name_ns
+                    ]
+                },
+                None => {
+                    msg_send![
+                        self,
+                        matrixMultiplicationWithPrimaryTensor: lhs,
+                        secondaryTensor: rhs,
+                        name: std::ptr::null::<NSString>()
+                    ]
+                }
             };
-
-            let tensor: *mut AnyObject = msg_send![self.0, placeholderWithShape: shape.0,
-                dataType:  data_type as u32,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            
+            if result_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(result_ptr)
+            }
         }
     }
-
-    // This is a convenience method not in the original API
-    // Kept for compatibility with existing code
-    /// Creates a constant tensor with given values and dimensions
-    pub fn constant_with_shape<T: TensorDataScalar>(
+    
+    /// Execute the graph with feeds and get results
+    ///
+    /// - Parameters:
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - output_tensors: An array of tensors whose values should be computed
+    ///
+    /// - Returns: A dictionary mapping output tensors to their computed values
+    pub fn run_with_feeds(
         &self,
-        values: &[T],
-        shape_dims: &[usize],
-        data_type: MPSDataType,
-    ) -> Tensor {
-        let shape = Shape::from_slice(shape_dims);
-        self.constant(values, &shape, data_type)
+        feeds: &HashMap<&Tensor, &TensorData>,
+        output_tensors: &[&Tensor],
+    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
+        self.run_with_feeds_and_descriptor(feeds, output_tensors, None)
     }
-
-    /// Creates a constant tensor with given values and shape
-    pub fn constant<T: TensorDataScalar>(
+    
+    /// Execute the graph with feeds and execution descriptor
+    ///
+    /// - Parameters:
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - output_tensors: An array of tensors whose values should be computed
+    ///   - execution_descriptor: Optional descriptor controlling execution options
+    ///
+    /// - Returns: A dictionary mapping output tensors to their computed values
+    pub fn run_with_feeds_and_descriptor(
         &self,
-        values: &[T],
-        shape: &Shape,
-        data_type: MPSDataType,
-    ) -> Tensor {
+        feeds: &HashMap<&Tensor, &TensorData>,
+        output_tensors: &[&Tensor],
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
         unsafe {
-            // Create NSData with buffer values
-            let data = T::to_nsdata(values);
-
-            // Get raw NSData pointer for Objective-C
-            let data_ptr: *mut AnyObject =
-                data.as_ref() as *const objc2_foundation::NSData as *mut AnyObject;
-
-            // Create constant tensor
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                constantWithData: data_ptr,
-                shape: shape.0,
-                dataType: data_type as u32
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for output tensors
+            let output_array = NSArray::from_slice(output_tensors);
+            
+            // Run the graph
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = match execution_descriptor {
+                Some(desc) => {
+                    msg_send![
+                        self,
+                        runWithFeeds: dictionary_ptr,
+                        targetTensors: &*output_array,
+                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                        executionDescriptor: desc
+                    ]
+                }
+                None => {
+                    msg_send![
+                        self,
+                        runWithFeeds: dictionary_ptr,
+                        targetTensors: &*output_array,
+                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                        executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
+                    ]
+                }
+            };
+            
+            let _results_dict = Retained::from_raw(results_ptr).unwrap();
+            
+            // Convert NSDictionary to HashMap
+            let mut result = HashMap::new();
+            let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
+            
+            let keys_count: usize = msg_send![keys, count];
+            
+            for i in 0..keys_count {
+                let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
+                let key = Retained::from_raw(key_ptr as *mut _).unwrap();
+                
+                let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
+                let value = Retained::from_raw(value_ptr as *mut _).unwrap();
+                
+                result.insert(key, value);
+            }
+            
+            result
         }
     }
-
-    /// Creates a constant with given scalar value (wraps constantWithScalar:dataType:)
-    pub fn constant_scalar<T: TensorDataScalar>(
+    
+    /// Creates a constant tensor with the given data
+    /// Adds two tensors element-wise
+    pub fn add(
         &self,
-        value: T,
-        data_type: MPSDataType,
-    ) -> Tensor {
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                constantWithScalar: value.to_f64(),
-                dataType: data_type as u32
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                additionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
             ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
         }
     }
-
-    /// Creates a constant with given scalar value and shape (wraps constantWithScalar:shape:dataType:)
+    
+    /// Multiplies two tensors element-wise
+    pub fn multiply(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                multiplicationWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+    
+    /// Subtracts one tensor from another element-wise
+    pub fn subtract(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                subtractionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+    
+    /// Divides one tensor by another element-wise
+    pub fn divide(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                divisionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+    
+    /// Creates a constant tensor with scalar value and shape
     pub fn constant_scalar_with_shape<T: TensorDataScalar>(
         &self,
         value: T,
+        data_type: DataType,
         shape: &Shape,
-        data_type: MPSDataType,
-    ) -> Tensor {
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                constantWithScalar: value.to_f64(),
-                shape: shape.0,
-                dataType: data_type as u32
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            let value_f64 = value.to_f64();
+            
+            let tensor_ptr: *mut Tensor = match name {
+                Some(name_str) => {
+                    let name_ns = NSString::from_str(name_str);
+                    msg_send![
+                        self,
+                        constantWithScalar: value_f64,
+                        dataType: data_type as u64,
+                        shape: shape,
+                        name: &*name_ns
+                    ]
+                },
+                None => {
+                    msg_send![
+                        self,
+                        constantWithScalar: value_f64,
+                        dataType: data_type as u64,
+                        shape: shape,
+                        name: std::ptr::null::<NSString>()
+                    ]
+                }
+            };
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
         }
     }
-
-    /// Creates a random uniform tensor with given shape
+    
+    /// Creates a constant scalar tensor
+    pub fn constant_scalar<T: TensorDataScalar>(
+        &self,
+        value: T,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let value_f64 = value.to_f64();
+            
+            let tensor_ptr: *mut Tensor = match name {
+                Some(name_str) => {
+                    let name_ns = NSString::from_str(name_str);
+                    msg_send![
+                        self,
+                        constantWithScalar: value_f64,
+                        dataType: data_type as u64,
+                        name: &*name_ns
+                    ]
+                },
+                None => {
+                    msg_send![
+                        self,
+                        constantWithScalar: value_f64,
+                        dataType: data_type as u64,
+                        name: std::ptr::null::<NSString>()
+                    ]
+                }
+            };
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+    
+    /// Creates a constant tensor with array values and shape
+    pub fn constant_with_shape<T: TensorDataScalar>(
+        &self,
+        values: &[T],
+        data_type: DataType,
+        shape: &Shape,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        // Create TensorData from values
+        let dims = shape.dimensions();
+        let data = TensorData::from_bytes(values, &dims, data_type);
+        
+        // Create constant with data
+        self.constant_with_data(&data, Some(shape), name)
+    }
+    
+    /// Creates a constant tensor with array values, inferring shape from array dimensions
+    pub fn constant<T: TensorDataScalar>(
+        &self,
+        values: &[T],
+        shape_dimensions: &[usize],
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        // Create shape
+        let shape = ShapeHelper::from_dimensions(shape_dimensions);
+        
+        // Create constant with shape
+        self.constant_with_shape(values, data_type, &shape, name)
+    }
+    
+    /// Creates a constant tensor with the given data
+    pub fn constant_with_data(
+        &self,
+        data: &TensorData,
+        shape: Option<&Shape>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            match (shape, name) {
+                (Some(s), Some(n)) => {
+                    let name_ns = NSString::from_str(n);
+                    let tensor_ptr: *mut Tensor = msg_send![
+                        self, 
+                        constantWithData: data,
+                        shape: s,
+                        name: &*name_ns
+                    ];
+                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
+                },
+                (Some(s), None) => {
+                    let tensor_ptr: *mut Tensor = msg_send![
+                        self, 
+                        constantWithData: data,
+                        shape: s,
+                        name: std::ptr::null::<NSString>()
+                    ];
+                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
+                },
+                (None, Some(n)) => {
+                    let name_ns = NSString::from_str(n);
+                    let tensor_ptr: *mut Tensor = msg_send![
+                        self, 
+                        constantWithData: data,
+                        shape: std::ptr::null::<Shape>(),
+                        name: &*name_ns
+                    ];
+                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
+                },
+                (None, None) => {
+                    let tensor_ptr: *mut Tensor = msg_send![
+                        self, 
+                        constantWithData: data,
+                        shape: std::ptr::null::<Shape>(),
+                        name: std::ptr::null::<NSString>()
+                    ];
+                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
+                }
+            }
+        }
+    }
+    
+    /// Compiles the graph against a given set of feeds and targets
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to compile for
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - targets: An array of tensors whose values should be computed
+    ///   - descriptor: Optional compilation descriptor
+    ///
+    /// - Returns: A compiled executable
+    pub fn compile(
+        &self,
+        device: &Device,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        targets: &[&Tensor],
+        descriptor: Option<&CompilationDescriptor>,
+    ) -> Option<Retained<Executable>> {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for target tensors
+            let targets_array = NSArray::from_slice(targets);
+            
+            // Get descriptor pointer if provided
+            let desc_ptr = match descriptor {
+                Some(desc) => desc as *const _,
+                None => std::ptr::null(),
+            };
+            
+            // Compile the graph
+            let executable_ptr: *mut Executable = msg_send![
+                self,
+                compileWithDevice: device,
+                feeds: dictionary_ptr,
+                targetTensors: &*targets_array,
+                targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                compilationDescriptor: desc_ptr
+            ];
+            
+            if executable_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(executable_ptr)
+            }
+        }
+    }
+    
+    /// Compiles the graph against a given set of feeds, targets, and target operations
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to compile for
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - targets: An array of tensors whose values should be computed
+    ///   - target_ops: An array of operations to be completed
+    ///   - descriptor: Optional compilation descriptor
+    ///
+    /// - Returns: A compiled executable
+    pub fn compile_with_targets_and_ops(
+        &self,
+        device: &Device,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        targets: &[&Tensor],
+        target_ops: &[&Operation],
+        descriptor: Option<&CompilationDescriptor>,
+    ) -> Option<Retained<Executable>> {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for target tensors
+            let targets_array = NSArray::from_slice(targets);
+            
+            // Create NSArray for target operations
+            let ops_array = NSArray::from_slice(target_ops);
+            
+            // Get descriptor pointer if provided
+            let desc_ptr = match descriptor {
+                Some(desc) => desc as *const _,
+                None => std::ptr::null(),
+            };
+            
+            // Compile the graph
+            let executable_ptr: *mut Executable = msg_send![
+                self,
+                compileWithDevice: device,
+                feeds: dictionary_ptr,
+                targetTensors: &*targets_array,
+                targetOperations: &*ops_array,
+                compilationDescriptor: desc_ptr
+            ];
+            
+            if executable_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(executable_ptr)
+            }
+        }
+    }
+    
+    /// Encodes the graph to a command buffer for execution
+    ///
+    /// - Parameters:
+    ///   - command_buffer: Command buffer to encode operations into
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - target_tensors: Tensors whose values should be computed
+    ///   - target_operations: Optional operations to be completed
+    ///   - execution_descriptor: Optional execution descriptor
+    ///
+    /// - Returns: A dictionary mapping output tensors to their computed values
+    pub fn encode_to_command_buffer(
+        &self,
+        command_buffer: &CommandBuffer,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        target_tensors: Option<&[&Tensor]>,
+        target_operations: Option<&[&Operation]>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for target tensors if provided
+            let targets_array_ptr = match target_tensors {
+                Some(tensors) => {
+                    let array = NSArray::from_slice(tensors);
+                    &*array as *const _
+                },
+                None => std::ptr::null(),
+            };
+            
+            // Create NSArray for target operations if provided
+            let ops_array_ptr = match target_operations {
+                Some(ops) => {
+                    let array = NSArray::from_slice(ops);
+                    &*array as *const _
+                },
+                None => std::ptr::null(),
+            };
+            
+            // Get descriptor pointer if provided
+            let desc_ptr = match execution_descriptor {
+                Some(desc) => desc as *const _,
+                None => std::ptr::null(),
+            };
+            
+            // Encode the graph to the command buffer
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![
+                self,
+                encodeToCommandBuffer: command_buffer,
+                feeds: dictionary_ptr,
+                targetTensors: targets_array_ptr,
+                targetOperations: ops_array_ptr,
+                executionDescriptor: desc_ptr
+            ];
+            
+            // Convert NSMutableDictionary to HashMap
+            let _results_dict = Retained::from_raw(results_ptr).unwrap();
+            
+            let mut result = HashMap::new();
+            let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
+            
+            let keys_count: usize = msg_send![keys, count];
+            
+            for i in 0..keys_count {
+                let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
+                let key = Retained::from_raw(key_ptr as *mut _).unwrap();
+                
+                let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
+                let value = Retained::from_raw(value_ptr as *mut _).unwrap();
+                
+                result.insert(key, value);
+            }
+            
+            result
+        }
+    }
+    
+    /// Encodes the graph to a command buffer with a results dictionary
+    ///
+    /// - Parameters:
+    ///   - command_buffer: Command buffer to encode operations into
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - target_operations: Optional operations to be completed
+    ///   - results_dict: Dictionary mapping tensors to TensorData where results will be stored
+    ///   - execution_descriptor: Optional execution descriptor
+    pub fn encode_to_command_buffer_with_results(
+        &self,
+        command_buffer: &CommandBuffer,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        target_operations: Option<&[&Operation]>,
+        results_dict: &HashMap<&Tensor, &TensorData>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let feeds_dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let feeds_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![feeds_dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to feeds dictionary
+            for (tensor, data) in feeds {
+                let _: () = msg_send![feeds_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSMutableDictionary for results
+            let results_dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![results_dictionary_class, dictionaryWithCapacity: results_dict.len()];
+            
+            // Add entries to results dictionary
+            for (tensor, data) in results_dict {
+                let _: () = msg_send![results_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for target operations if provided
+            let ops_array_ptr = match target_operations {
+                Some(ops) => {
+                    let array = NSArray::from_slice(ops);
+                    &*array as *const _
+                },
+                None => std::ptr::null(),
+            };
+            
+            // Get descriptor pointer if provided
+            let desc_ptr = match execution_descriptor {
+                Some(desc) => desc as *const _,
+                None => std::ptr::null(),
+            };
+            
+            // Encode the graph to the command buffer with results
+            let _: () = msg_send![
+                self,
+                encodeToCommandBuffer: command_buffer,
+                feeds: feeds_ptr,
+                targetOperations: ops_array_ptr,
+                resultsDictionary: results_ptr,
+                executionDescriptor: desc_ptr
+            ];
+        }
+    }
+    
+    /// Execute the graph with feeds on a specific device
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to run on
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - output_tensors: Tensors whose values should be computed
+    ///   - execution_descriptor: Optional execution descriptor
+    ///
+    /// - Returns: A dictionary mapping output tensors to their computed values
+    pub fn run_with_feeds_on_device(
+        &self,
+        device: &Device,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        output_tensors: &[&Tensor],
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
+        unsafe {
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
+            for (tensor, data) in feeds {
+                let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
+            }
+            
+            // Create NSArray for output tensors
+            let output_array = NSArray::from_slice(output_tensors);
+            
+            // Run the graph on device
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = match execution_descriptor {
+                Some(desc) => {
+                    msg_send![
+                        self,
+                        runWithFeeds: dictionary_ptr,
+                        targetTensors: &*output_array,
+                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                        onDevice: device,
+                        executionDescriptor: desc
+                    ]
+                }
+                None => {
+                    msg_send![
+                        self,
+                        runWithFeeds: dictionary_ptr,
+                        targetTensors: &*output_array,
+                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                        onDevice: device,
+                        executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
+                    ]
+                }
+            };
+            
+            let _results_dict = Retained::from_raw(results_ptr).unwrap();
+            
+            // Convert NSDictionary to HashMap
+            let mut result = HashMap::new();
+            let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
+            
+            let keys_count: usize = msg_send![keys, count];
+            
+            for i in 0..keys_count {
+                let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
+                let key = Retained::from_raw(key_ptr as *mut _).unwrap();
+                
+                let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
+                let value = Retained::from_raw(value_ptr as *mut _).unwrap();
+                
+                result.insert(key, value);
+            }
+            
+            result
+        }
+    }
+    
+    /// Execute the graph with feeds and target operations on a specific device
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to run on
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - output_tensors: Tensors whose values should be computed
+    ///   - target_operations: Operations to be executed
+    ///   - execution_descriptor: Optional execution descriptor
+    ///
+    /// - Returns: A dictionary mapping output tensors to their computed values
+    /// Creates a tensor with random uniform values
     pub fn random_uniform(
         &self,
         shape: &Shape,
-        lower_bound: f32,
-        upper_bound: f32,
-        data_type: MPSDataType,
+        min: f32,
+        max: f32,
+        data_type: DataType,
         seed: u32,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Create the random tensor
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                randomUniformTensorWithShape: shape.0,
-                lowerBound: lower_bound as f64,
-                upperBound: upper_bound as f64,
-                dataType: data_type as u32,
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                randomUniformTensorWithShape: shape,
+                min: min,
+                max: max,
+                dataType: data_type as u64,
                 seed: seed,
-                name: name_obj
+                name: name_ptr
             ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
         }
     }
-
-    /// Creates a random normal tensor with given shape
+    
+    /// Creates a tensor with random normal values
     pub fn random_normal(
         &self,
         shape: &Shape,
         mean: f32,
-        stddev: f32,
-        data_type: MPSDataType,
+        std_dev: f32,
+        data_type: DataType,
         seed: u32,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Create the random tensor
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                randomNormalTensorWithShape: shape.0,
-                mean: mean as f64,
-                standardDeviation: stddev as f64,
-                dataType: data_type as u32,
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                randomNormalTensorWithShape: shape,
+                mean: mean,
+                standardDeviation: std_dev,
+                dataType: data_type as u64,
                 seed: seed,
-                name: name_obj
+                name: name_ptr
             ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Compiles the graph against a given set of feeds and targets
-    pub fn compile(
-        &self,
-        device: &Device,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        descriptor: Option<&CompilationDescriptor>,
-    ) -> Executable {
-        unsafe {
-            // Get the device pointer
-            let device_obj = device.0;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Get descriptor pointer if provided
-            let descriptor_ptr = match descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Compile the graph
-            let executable: *mut AnyObject = msg_send![
-                self.0,
-                compileWithDevice: device_obj,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: std::ptr::null_mut::<AnyObject>(),
-                compilationDescriptor: descriptor_ptr
-            ];
-
-            let executable = objc2::ffi::objc_retain(executable as *mut _);
-            Executable(executable)
-        }
-    }
-
-    /// Compiles the graph against a given set of feeds, targets, and target operations
-    pub fn compile_with_targets_and_ops(
-        &self,
-        device: &Device,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        target_ops: &[Operation],
-        descriptor: Option<&CompilationDescriptor>,
-    ) -> Executable {
-        unsafe {
-            // Get the device pointer
-            let device_obj = device.0;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Create ops array
-            let ops_raw: Vec<*mut AnyObject> = target_ops.iter().map(|op| op.0).collect();
-
-            let ops_array = crate::core::create_ns_array_from_pointers(&ops_raw);
-
-            // Get descriptor pointer if provided
-            let descriptor_ptr = match descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Compile the graph
-            let executable: *mut AnyObject = msg_send![
-                self.0,
-                compileWithDevice: device_obj,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: ops_array,
-                compilationDescriptor: descriptor_ptr
-            ];
-
-            let executable = objc2::ffi::objc_retain(executable as *mut _);
-            Executable(executable)
-        }
-    }
-
-    /// Runs the graph synchronously against a given set of feeds and returns a result dictionary
-    pub fn run_with_feeds(
-        &self,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Run the graph
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                runWithFeeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: std::ptr::null_mut::<AnyObject>()
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Runs the graph synchronously against a given set of feeds and returns a result dictionary
-    /// with target operations specified
-    pub fn run_with_feeds_and_ops(
-        &self,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        target_ops: &[Operation],
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            println!("DEBUG: Creating feed dictionary");
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            println!("DEBUG: Creating targets array");
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Create ops array
-            println!("DEBUG: Creating ops array");
-            let ops_raw: Vec<*mut AnyObject> = target_ops.iter().map(|op| op.0).collect();
-            let ops_array = crate::core::create_ns_array_from_pointers(&ops_raw);
-
-            println!("DEBUG: About to run graph with feeds");
-
-            // Run the graph - explicitly wrap just the Objective-C call in an autoreleasepool
-            let results = objc2::rc::autoreleasepool(|_| {
-                println!("DEBUG: Inside autoreleasepool for graph execution");
-                let results: *mut AnyObject = msg_send![
-                    self.0,
-                    runWithFeeds: feed_dict,
-                    targetTensors: targets_array,
-                    targetOperations: ops_array
-                ];
-                println!("DEBUG: Graph run completed, results pointer: {:p}", results);
-                results
-            });
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = if !results.is_null() {
-                println!("DEBUG: Converting results to HashMap");
-                let hash = self.convert_dictionary_to_hash_map(results);
-
-                // Don't release the results dictionary - caused crashes (since we got it from autoreleasepool)
-                // objc2::ffi::objc_release(results as *mut _);
-                println!("DEBUG: Released results dictionary");
-
-                hash
+            
+            if tensor_ptr.is_null() {
+                None
             } else {
-                println!("WARNING: Graph run returned null results!");
-                HashMap::new()
-            };
-
-            println!("DEBUG: Returning result hash");
-            result_hash
-        }
-    }
-
-    /// Runs the graph synchronized against a given device
-    pub fn run_with_feeds_on_device(
-        &self,
-        device: &Device,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the device pointer
-            let device_obj = device.0;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
+                Retained::from_raw(tensor_ptr)
             }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Run the graph
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                runWithFeeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: std::ptr::null_mut::<AnyObject>(),
-                onDevice: device_obj
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
         }
     }
-
-    /// Runs the graph synchronously on a device with both target tensors and operations
+    
     pub fn run_with_feeds_and_ops_on_device(
         &self,
         device: &Device,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        target_ops: &[Operation],
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the device pointer
-            let device_obj = device.0;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Create ops array
-            let ops_raw: Vec<*mut AnyObject> = target_ops.iter().map(|op| op.0).collect();
-
-            let ops_array = crate::core::create_ns_array_from_pointers(&ops_raw);
-
-            // Run the graph
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                runWithFeeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: ops_array,
-                onDevice: device_obj
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Runs the graph asynchronously with feeds and returns the target tensor values
-    ///  
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid Tensor : TensorData dictionary with results
-    pub fn run_async_with_feeds(
-        &self,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_tensors: &[Tensor],
-        target_operations: Option<&[Operation]>,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        output_tensors: &[&Tensor],
+        target_operations: &[&Operation],
         execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Tensor, TensorData> {
+    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
         unsafe {
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
+            // Create NSMutableDictionary for feeds
+            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+            
+            // Add entries to dictionary
             for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
+                let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
             }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = target_tensors.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Create operations array if provided
-            let ops_array = match target_operations {
-                Some(ops) => {
-                    let ops_raw: Vec<*mut AnyObject> = ops.iter().map(|op| op.0).collect();
-                    crate::core::create_ns_array_from_pointers(&ops_raw)
+            
+            // Create NSArray for output tensors
+            let output_array = NSArray::from_slice(output_tensors);
+            
+            // Create NSArray for target operations
+            let ops_array = NSArray::from_slice(target_operations);
+            
+            // Run the graph on device with operations
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = match execution_descriptor {
+                Some(desc) => {
+                    msg_send![
+                        self,
+                        runWithFeeds: dictionary_ptr,
+                        targetTensors: &*output_array,
+                        targetOperations: &*ops_array,
+                        onDevice: device,
+                        executionDescriptor: desc
+                    ]
                 }
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Run the graph asynchronously
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                runAsyncWithFeeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: ops_array,
-                executionDescriptor: descriptor_ptr
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Runs the graph asynchronously on a command queue
-    ///
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - command_queue: CommandQueue passed to execute the graph on
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid Tensor : TensorData dictionary with results
-    pub fn run_async_with_command_queue(
-        &self,
-        command_queue: &CommandQueue,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_tensors: &[Tensor],
-        target_operations: Option<&[Operation]>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the command queue pointer
-            let queue_ptr = command_queue.as_ptr() as *mut AnyObject;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = target_tensors.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Create operations array if provided
-            let ops_array = match target_operations {
-                Some(ops) => {
-                    let ops_raw: Vec<*mut AnyObject> = ops.iter().map(|op| op.0).collect();
-                    crate::core::create_ns_array_from_pointers(&ops_raw)
+                None => {
+                    msg_send![
+                        self,
+                        runWithFeeds: dictionary_ptr,
+                        targetTensors: &*output_array,
+                        targetOperations: &*ops_array,
+                        onDevice: device,
+                        executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
+                    ]
                 }
-                None => std::ptr::null_mut::<AnyObject>(),
             };
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Run the graph asynchronously with command queue
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                runAsyncWithMTLCommandQueue: queue_ptr,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: ops_array,
-                executionDescriptor: descriptor_ptr
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Runs the graph asynchronously with a command queue and results dictionary
-    ///
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - command_queue: CommandQueue passed to execute the graph on
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - results_dict: Dictionary of tensors to receive the results
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    pub fn run_async_with_command_queue_results_dict(
-        &self,
-        command_queue: &CommandQueue,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_operations: Option<&[Operation]>,
-        results_dict: &HashMap<Tensor, TensorData>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) {
-        unsafe {
-            // Get the command queue pointer
-            let queue_ptr = command_queue.as_ptr() as *mut AnyObject;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
+            
+            let _results_dict = Retained::from_raw(results_ptr).unwrap();
+            
+            // Convert NSDictionary to HashMap
+            let mut result = HashMap::new();
+            let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
+            
+            let keys_count: usize = msg_send![keys, count];
+            
+            for i in 0..keys_count {
+                let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
+                let key = Retained::from_raw(key_ptr as *mut _).unwrap();
+                
+                let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
+                let value = Retained::from_raw(value_ptr as *mut _).unwrap();
+                
+                result.insert(key, value);
             }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create the results dictionary
-            let mut results_keys = Vec::with_capacity(results_dict.len());
-            let mut results_values = Vec::with_capacity(results_dict.len());
-
-            for (tensor, data) in results_dict {
-                results_keys.push(tensor.0);
-                results_values.push(data.0);
-            }
-
-            let results_dict_obj =
-                crate::core::create_ns_dictionary_from_pointers(&results_keys, &results_values);
-
-            // Create operations array if provided
-            let ops_array = match target_operations {
-                Some(ops) => {
-                    let ops_raw: Vec<*mut AnyObject> = ops.iter().map(|op| op.0).collect();
-                    crate::core::create_ns_array_from_pointers(&ops_raw)
-                }
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Run the graph asynchronously with supplied results dictionary
-            let _: () = msg_send![
-                self.0,
-                runAsyncWithMTLCommandQueue: queue_ptr,
-                feeds: feed_dict,
-                targetOperations: ops_array,
-                resultsDictionary: results_dict_obj,
-                executionDescriptor: descriptor_ptr
-            ];
-
-            // Release dictionaries
-            objc2::ffi::objc_release(feed_dict as *mut _);
-            objc2::ffi::objc_release(results_dict_obj as *mut _);
-        }
-    }
-
-    /// Encodes the graph to a command buffer for execution (MTLCommandBuffer version)
-    ///
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - command_buffer: CommandBuffer to encode the graph execution into
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid Tensor : TensorData dictionary with results
-    pub fn encode_to_metal_command_buffer(
-        &self,
-        command_buffer: &CommandBuffer,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_tensors: &[Tensor],
-        target_operations: Option<&[Operation]>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Tensor, TensorData> {
-        // Create MPSCommandBuffer from the Metal command buffer
-        let mps_command_buffer = MPSCommandBuffer::from_command_buffer(command_buffer);
-
-        // Call the MPSCommandBuffer version
-        self.encode_to_command_buffer(
-            &mps_command_buffer,
-            feeds,
-            target_tensors,
-            target_operations,
-            execution_descriptor,
-        )
-    }
-
-    /// Encodes the graph to a command buffer with results dictionary (MTLCommandBuffer version)
-    ///
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - command_buffer: CommandBuffer to encode the graph execution into
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - results_dict: Dictionary of tensors to receive the results
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    pub fn encode_to_metal_command_buffer_with_results(
-        &self,
-        command_buffer: &CommandBuffer,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_operations: Option<&[Operation]>,
-        results_dict: &HashMap<Tensor, TensorData>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) {
-        // Create MPSCommandBuffer from the Metal command buffer
-        let mps_command_buffer = MPSCommandBuffer::from_command_buffer(command_buffer);
-
-        // Call the MPSCommandBuffer version
-        self.encode_to_command_buffer_with_results(
-            &mps_command_buffer,
-            feeds,
-            target_operations,
-            results_dict,
-            execution_descriptor,
-        )
-    }
-
-    /// Encodes the graph to a MPSCommandBuffer for execution
-    ///
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - command_buffer: MPSCommandBuffer to encode the graph execution into
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_tensors: Tensors for which the caller wishes TensorData to be returned
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    /// - Returns: A valid Tensor : TensorData dictionary with results
-    pub fn encode_to_command_buffer(
-        &self,
-        command_buffer: &MPSCommandBuffer,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_tensors: &[Tensor],
-        target_operations: Option<&[Operation]>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the command buffer pointer
-            let buffer_ptr = command_buffer.0;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = target_tensors.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Create operations array if provided
-            let ops_array = match target_operations {
-                Some(ops) => {
-                    let ops_raw: Vec<*mut AnyObject> = ops.iter().map(|op| op.0).collect();
-                    crate::core::create_ns_array_from_pointers(&ops_raw)
-                }
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Encode the graph to command buffer
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                encodeToCommandBuffer: buffer_ptr,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: ops_array,
-                executionDescriptor: descriptor_ptr
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Encodes the graph to a MPSCommandBuffer with results dictionary
-    ///
-    /// This call is asynchronous and will return immediately if a completionHandler is set
-    /// in the execution descriptor.
-    ///
-    /// - Parameters:
-    ///   - command_buffer: MPSCommandBuffer to encode the graph execution into
-    ///   - feeds: Feeds dictionary for the placeholder tensors
-    ///   - target_operations: Operations to be completed at the end of the run
-    ///   - results_dict: Dictionary of tensors to receive the results
-    ///   - execution_descriptor: ExecutionDescriptor to be passed in and used
-    pub fn encode_to_command_buffer_with_results(
-        &self,
-        command_buffer: &MPSCommandBuffer,
-        feeds: &HashMap<Tensor, TensorData>,
-        target_operations: Option<&[Operation]>,
-        results_dict: &HashMap<Tensor, TensorData>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) {
-        unsafe {
-            // Get the command buffer pointer
-            let buffer_ptr = command_buffer.0;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create the results dictionary
-            let mut results_keys = Vec::with_capacity(results_dict.len());
-            let mut results_values = Vec::with_capacity(results_dict.len());
-
-            for (tensor, data) in results_dict {
-                results_keys.push(tensor.0);
-                results_values.push(data.0);
-            }
-
-            let results_dict_obj =
-                crate::core::create_ns_dictionary_from_pointers(&results_keys, &results_values);
-
-            // Create operations array if provided
-            let ops_array = match target_operations {
-                Some(ops) => {
-                    let ops_raw: Vec<*mut AnyObject> = ops.iter().map(|op| op.0).collect();
-                    crate::core::create_ns_array_from_pointers(&ops_raw)
-                }
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Encode the graph to command buffer with results dictionary
-            let _: () = msg_send![
-                self.0,
-                encodeToCommandBuffer: buffer_ptr,
-                feeds: feed_dict,
-                targetOperations: ops_array,
-                resultsDictionary: results_dict_obj,
-                executionDescriptor: descriptor_ptr
-            ];
-
-            // Release dictionaries
-            objc2::ffi::objc_release(feed_dict as *mut _);
-            objc2::ffi::objc_release(results_dict_obj as *mut _);
-        }
-    }
-
-    /// Enqueue a graph run on a command queue
-    pub fn encode_to_command_queue(
-        &self,
-        device: &Device,
-        command_queue: &CommandQueue,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the device pointer
-            let _device_obj = device.0; // Keep reference for safety
-
-            // Get the queue pointer
-            let queue_ptr = command_queue.as_ptr() as *mut AnyObject;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Encode and run the graph
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                encodeToCommandQueueAndReturnError: queue_ptr,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: std::ptr::null_mut::<AnyObject>(),
-                executionDescriptor: descriptor_ptr,
-                error: std::ptr::null_mut::<AnyObject>()
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Encode and run a graph on a command buffer (legacy method)
-    pub fn encode_to_command_buffer_legacy(
-        &self,
-        command_buffer: &CommandBuffer,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the buffer pointer
-            let buffer_ptr = command_buffer.as_ptr() as *mut AnyObject;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Encode and run the graph
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                encodeToCommandBuffer: buffer_ptr,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: std::ptr::null_mut::<AnyObject>(),
-                executionDescriptor: descriptor_ptr
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Encodes and runs a graph on a command buffer with a completed event
-    pub fn encode_to_command_buffer_with_event(
-        &self,
-        command_buffer: &CommandBuffer,
-        feeds: &HashMap<Tensor, TensorData>,
-        targets: &[Tensor],
-        execution_descriptor: Option<&ExecutionDescriptor>,
-        event: Option<&SharedEvent>,
-    ) -> HashMap<Tensor, TensorData> {
-        unsafe {
-            // Get the buffer pointer
-            let buffer_ptr = command_buffer.as_ptr() as *mut AnyObject;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create targets array
-            let targets_raw: Vec<*mut AnyObject> = targets.iter().map(|t| t.0).collect();
-
-            let targets_array = crate::core::create_ns_array_from_pointers(&targets_raw);
-
-            // Get execution descriptor pointer if provided
-            let descriptor_ptr = match execution_descriptor {
-                Some(desc) => desc.0,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Get event pointer if provided
-            let event_ptr = match event {
-                Some(evt) => evt.as_ptr() as *mut AnyObject,
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Encode and run the graph
-            let results: *mut AnyObject = msg_send![
-                self.0,
-                encodeToCommandBuffer: buffer_ptr,
-                feeds: feed_dict,
-                targetTensors: targets_array,
-                targetOperations: std::ptr::null_mut::<AnyObject>(),
-                executionDescriptor: descriptor_ptr,
-                waitEvent: event_ptr,
-                signalEvent: event_ptr,
-                signalValue: 1
-            ];
-
-            // Convert the result dictionary to a Rust HashMap
-            let result_hash = self.convert_dictionary_to_hash_map(results);
-
-            // Don't release the results dictionary - caused crashes
-            // objc2::ffi::objc_release(results as *mut _);
-
-            result_hash
-        }
-    }
-
-    /// Runs the graph with a command queue, feeds and outputs specified
-    pub fn run_with_command_queue_feeds_outputs(
-        &self,
-        command_queue: &CommandQueue,
-        feeds: HashMap<&Tensor, &TensorData>,
-        results_dict: HashMap<&Tensor, &TensorData>,
-        _execution_descriptor: Option<&ExecutionDescriptor>, // Ignored for now, not supported in this API
-    ) {
-        unsafe {
-            // Get the queue pointer
-            let queue_ptr = command_queue.as_ptr() as *mut AnyObject;
-
-            // Create the feeds dictionary
-            let mut feed_keys = Vec::with_capacity(feeds.len());
-            let mut feed_values = Vec::with_capacity(feeds.len());
-
-            for (tensor, data) in feeds {
-                feed_keys.push(tensor.0);
-                feed_values.push(data.0);
-            }
-
-            let feed_dict =
-                crate::core::create_ns_dictionary_from_pointers(&feed_keys, &feed_values);
-
-            // Create the results dictionary
-            let mut results_keys = Vec::with_capacity(results_dict.len());
-            let mut results_values = Vec::with_capacity(results_dict.len());
-
-            for (tensor, data) in results_dict {
-                results_keys.push(tensor.0);
-                results_values.push(data.0);
-            }
-
-            let results_dict_obj =
-                crate::core::create_ns_dictionary_from_pointers(&results_keys, &results_values);
-
-            // Run the graph with both feeds and results dictionaries
-            // Note: ExecutionDescriptor is not supported in this API method
-            let _: () = msg_send![
-                self.0,
-                runWithMTLCommandQueue: queue_ptr,
-                feeds: feed_dict,
-                targetOperations: std::ptr::null_mut::<AnyObject>(),
-                resultsDictionary: results_dict_obj
-            ];
-
-            // Release dictionaries
-            objc2::ffi::objc_release(feed_dict as *mut _);
-            objc2::ffi::objc_release(results_dict_obj as *mut _);
-        }
-    }
-
-    /// Helper method to convert an NSDictionary to a Rust HashMap
-    fn convert_dictionary_to_hash_map(
-        &self,
-        dictionary: *mut AnyObject,
-    ) -> HashMap<Tensor, TensorData> {
-        // Wrap the entire operation in an autoreleasepool to ensure proper memory management
-        objc2::rc::autoreleasepool(|_| {
-            println!("DEBUG: Inside autoreleasepool for dictionary conversion");
-
-            unsafe {
-                if dictionary.is_null() {
-                    println!("WARNING: Dictionary pointer is NULL!");
-                    return HashMap::new();
-                }
-
-                println!("DEBUG: Converting dictionary: {:p}", dictionary);
-                let mut result = HashMap::new();
-
-                // Get an enumerator for the dictionary keys
-                println!("DEBUG: Getting key enumerator");
-                let enumerator: *mut AnyObject = msg_send![dictionary, keyEnumerator];
-
-                if enumerator.is_null() {
-                    println!("WARNING: Key enumerator is NULL!");
-                    return HashMap::new();
-                }
-
-                println!("DEBUG: Got enumerator: {:p}", enumerator);
-
-                // Use a mutable variable for the key outside the loop condition
-                let mut key: *mut AnyObject;
-                let mut entry_count = 0;
-
-                println!("DEBUG: Starting dictionary enumeration");
-                while {
-                    // nextObject both advances the enumerator AND returns the current object
-                    key = msg_send![enumerator, nextObject];
-                    let has_next = !key.is_null();
-                    if has_next {
-                        println!("DEBUG: Got key: {:p} (entry {})", key, entry_count);
-                        entry_count += 1;
-                    } else {
-                        println!("DEBUG: No more keys");
-                    }
-                    has_next
-                } {
-                    println!("DEBUG: Getting value for key: {:p}", key);
-                    let value: *mut AnyObject = msg_send![dictionary, objectForKey: key];
-
-                    if value.is_null() {
-                        println!("WARNING: Value for key {:p} is NULL! Skipping entry.", key);
-                        continue;
-                    }
-
-                    println!("DEBUG: Got value: {:p}", value);
-
-                    // Create Rust wrappers WITHOUT retaining the objects, since we're in an autorelease pool
-                    // and we've adjusted the tensor implementation to not release
-                    let tensor = Tensor(key);
-                    let tensor_data = TensorData(value);
-
-                    println!(
-                        "DEBUG: Created Rust wrappers: tensor={:p}, data={:p}",
-                        key, value
-                    );
-
-                    // Add to the result HashMap
-                    result.insert(tensor, tensor_data);
-                    println!("DEBUG: Added entry to HashMap");
-                }
-
-                println!(
-                    "DEBUG: Dictionary conversion complete with {} entries",
-                    result.len()
-                );
-                result
-            }
-        })
-    }
-}
-
-// Concatenation operations extension
-impl Graph {
-    /// Creates a concatenation operation
-    pub fn concatenate(
-        &self,
-        tensors: &[Tensor],
-        dimension: i64,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Create array of tensors
-            let tensors_raw: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
-
-            let tensors_array = crate::core::create_ns_array_from_pointers(&tensors_raw);
-
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                concatenationWithTensors: tensors_array,
-                dimension: dimension,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            
+            result
         }
     }
 }
 
-// Matrix operations extension
-impl Graph {
-    /// Creates a transpose operation
-    pub fn transpose(
-        &self,
-        x: &Tensor,
-        dimensions: &[usize],
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut::<AnyObject>(),
-            };
-
-            // Create a shape object from the dimensions for convenience
-            let dimensions_shape = Shape::from_slice(dimensions);
-
-            // Create the operation
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                transposeTensor: x.0,
-                permutation: dimensions_shape.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
+// Implement CustomDefault for Graph
+impl crate::CustomDefault for Graph {
+    fn custom_default() -> Retained<Self> {
+        Self::new()
     }
-}
-
-impl Drop for Graph {
-    fn drop(&mut self) {
-        unsafe {
-            // Convert to NSObject and release
-            if !self.0.is_null() {
-                objc2::ffi::objc_release(self.0 as *mut _);
-            }
-        }
-    }
-}
-
-impl Clone for Graph {
-    fn clone(&self) -> Self {
-        unsafe {
-            // Retain and return new instance
-            if !self.0.is_null() {
-                let obj = objc2::ffi::objc_retain(self.0 as *mut _);
-                Graph(obj)
-            } else {
-                Graph(std::ptr::null_mut::<AnyObject>())
-            }
-        }
-    }
-}
-
-impl fmt::Debug for Graph {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Graph").finish()
-    }
-}
-
-// Helper function to create NSArray from dimensions
-#[allow(dead_code)]
-fn create_dimensions(dimensions: &[usize]) -> *mut AnyObject {
-    let shape = Shape::from_slice(dimensions);
-    shape.0
 }

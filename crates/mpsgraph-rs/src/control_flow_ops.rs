@@ -1,24 +1,19 @@
-use objc2::runtime::AnyObject;
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::{NSArray, NSMutableArray, NSString};
 use std::ops::Fn;
 use std::ffi::c_void;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use crate::operation::MPSGraphOperation;
-use objc2_foundation::{NSArray, NSString};
-use crate::core::{AsRawObject, NSArrayContainer};
-use objc2::msg_send;
+use crate::operation::Operation;
+use crate::utils::block_wrapper::{
+    create_tensor_block, create_condition_block, create_index_tensor_array_block,
+    create_tensor_array_block, create_ns_array_from_tensors, convert_nsarray_to_vec
+};
 
-// Import the block_kit crate for Objective-C blocks
-use block_kit::{Block, RcBlock};
-
-/// Control flow operations for Graph
-///
-/// These operations allow for dynamic control flow within the graph, including:
-/// - Control dependencies
-/// - Conditional execution (if-then-else)
-/// - While loops
-/// - For loops
-impl Graph {
+/// Trait for control flow operations on Graph
+pub trait GraphControlFlowOps {
     /// Creates a control dependency between operations.
     ///
     /// This ensures that operations in the dependent_block are executed
@@ -33,56 +28,13 @@ impl Graph {
     /// # Returns
     ///
     /// A vector of tensors that are the result of the dependent_block
-    pub fn control_dependency<F>(&self, 
-                              operations:  &[&MPSGraphOperation],
-                              dependent_block:  F,
-                              name:  Option<&str>) -> Vec<Tensor>
+    fn control_dependency<F>(&self, 
+                         operations: &[&Operation],
+                         dependent_block: F,
+                         name: Option<&str>) -> Vec<Retained<Tensor>>
     where
-        F:  Fn() -> Vec<Tensor>
-    {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-            
-            // Convert operations to NSArray
-            let operations_ptr: Vec<*mut AnyObject> = operations.iter().map(|op| op.0).collect();
-            let operations_array = crate::core::create_ns_array_from_pointers(&operations_ptr);
-            
-            // Create the block callback
-            let block = RcBlock::new(move || {
-                // Call the user's block
-                let tensors = dependent_block();
-                // Convert Vec<Tensor> to NSArray of pointers
-                let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
-                let tensor_array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
-                // Return the NSArray pointer
-                tensor_array
-            });
-            
-            // Call the Objective-C method
-            let result_array: *mut AnyObject = msg_send![
-                self.0, controlDependencyWithOperations: operations_array.0,
-                dependentBlock: &*block,
-                name: name_obj,
-            ];
-            
-            // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
-            
-            // Convert NSArray to Vec<Tensor>
-            let mut result = Vec::with_capacity(count);
-            for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,,,,,,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
-            }
-            
-            result
-        }
-    }
-    
+        F: Fn() -> Vec<Retained<Tensor>> + 'static;
+
     /// Creates an if-then-else operation.
     ///
     /// This allows for conditional execution of operations based on a predicate tensor.
@@ -98,71 +50,15 @@ impl Graph {
     ///
     /// A vector of tensors that are the result of either the then_block or else_block,
     /// depending on the value of the predicate tensor
-    pub fn if_op<F, G>(&self,
-                    predicate:  &Tensor,
-                    then_block:  F,
-                    else_block:  Option<G>,
-                    name:  Option<&str>) -> Vec<Tensor>
+    fn if_op<F, G>(&self,
+               predicate: &Tensor,
+               then_block: F,
+               else_block: Option<G>,
+               name: Option<&str>) -> Vec<Retained<Tensor>>
     where
-        F:  Fn() -> Vec<Tensor>,
-        G:  Fn() -> Vec<Tensor>
-    {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-            
-            // Create the then block callback
-            let then_callback = RcBlock::new(move || {
-                // Call the user's block
-                let tensors = then_block();
-                // Convert Vec<Tensor> to NSArray of pointers
-                let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
-                let tensor_array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
-                // Return the NSArray pointer
-                tensor_array
-            });
-            
-            // Create the else block callback if provided
-            let else_callback = if let Some(else_fn) = else_block {
-                let block = RcBlock::new(move || {
-                    // Call the user's block
-                    let tensors = else_fn();
-                    // Convert Vec<Tensor> to NSArray of pointers
-                    let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|t| t.0).collect();
-                    let tensor_array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
-                    // Return the NSArray pointer
-                    tensor_array
-                });
-                Some(block)
-            } else {
-                None
-            };
-            
-            // Call the Objective-C method
-            let result_array: *mut AnyObject = msg_send![
-                self.0, ifWithPredicateTensor: predicate.0,
-                thenBlock: &*then_callback,
-                elseBlock: else_callback,
-                name: name_obj,
-            ];
-            
-            // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
-            
-            // Convert NSArray to Vec<Tensor>
-            let mut result = Vec::with_capacity(count);
-            for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
-            }
-            
-            result
-        }
-    }
-    
+        F: Fn() -> Vec<Retained<Tensor>> + 'static,
+        G: Fn() -> Vec<Retained<Tensor>> + 'static;
+
     /// Creates a while loop operation.
     ///
     /// This allows for iterative execution of operations until a condition is met.
@@ -177,98 +73,15 @@ impl Graph {
     /// # Returns
     ///
     /// A vector of tensors that are the final result of the while loop
-    pub fn while_loop<F, G>(&self,
-                         initial_inputs:  &[&Tensor],
-                         before_block:  F,
-                         after_block:  G,
-                         name:  Option<&str>) -> Vec<Tensor>
+    fn while_loop<F, G>(&self,
+                     initial_inputs: &[&Tensor],
+                     before_block: F,
+                     after_block: G,
+                     name: Option<&str>) -> Vec<Retained<Tensor>>
     where
-        F:  Fn(&[Tensor], &mut Vec<Tensor>) -> Tensor,
-        G:  Fn(&[Tensor]) -> Vec<Tensor>
-    {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-            
-            // Convert initial inputs to NSArray
-            let initial_inputs_array = NSArrayContainer::from_objects(
-                &initial_inputs.iter().map(|t| t.0).collect::<Vec<_>>()
-            );
-            
-            // Create the before block callback
-            let before_callback = ConcreteBlock::new(move |inputs: *mut AnyObject, results: *mut AnyObject| -> *mut AnyObject {
-                // Convert NSArray to Vec<Tensor>
-                let inputs_count: usize = msg_send![inputs, count];
-                let mut input_tensors = Vec::with_capacity(inputs_count);
-                for i in 0..inputs_count {
-                    let tensor: *mut AnyObject = msg_send![inputs, objectAtIndex: i];
-                    input_tensors.push(Tensor(tensor));
-                }
-                
-                // Create a mutable Vec to hold result tensors
-                let mut result_tensors = Vec::new();
-                
-                // Call the user's block
-                let condition = before_block(&input_tensors, &mut result_tensors);
-                
-                // Set results array
-                if !result_tensors.is_empty() {
-                    let result_ptrs: Vec<*mut Object> = result_tensors.iter().map(|t| t.0).collect();
-                    for i in 0..result_ptrs.len() {
-                        let _: () = msg_send![results, addObject: result_ptrs[i]];
-                    }
-                }
-                
-                // Return the condition tensor
-                condition.0
-            }).copy();
-            
-            // Create the after block callback
-            let after_callback = ConcreteBlock::new(move |body_args: *mut AnyObject| -> *mut AnyObject {
-                // Convert NSArray to Vec<Tensor>
-                let args_count: usize = msg_send![body_args, count];
-                let mut body_arguments = Vec::with_capacity(args_count);
-                for i in 0..args_count {
-                    let tensor: *mut AnyObject = msg_send![body_args, objectAtIndex: i];
-                    body_arguments.push(Tensor(tensor));
-                }
-                
-                // Call the user's block
-                let result_tensors = after_block(&body_arguments);
-                
-                // Convert Vec<Tensor> to NSArray
-                let result_ptrs: Vec<*mut AnyObject> = result_tensors.iter().map(|t| t.0).collect();
-                let result_array = NSArrayContainer::from_objects(&result_ptrs);
-                
-                // Return the NSArray
-                result_array.as_ptr()
-            }).copy();
-            
-            // Call the Objective-C method
-            let result_array: *mut AnyObject = msg_send![
-                self.0, whileWithInitialInputs: initial_inputs_array.as_ptr(),
-                before: &*before_callback,
-                after: &*after_callback,
-                name: name_obj,
-            ];
-            
-            // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
-            
-            // Convert NSArray to Vec<Tensor>
-            let mut result = Vec::with_capacity(count);
-            for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,,,,,,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
-            }
-            
-            result
-        }
-    }
-    
+        F: Fn(&[Retained<Tensor>], &mut Vec<Retained<Tensor>>) -> Retained<Tensor> + 'static,
+        G: Fn(&[Retained<Tensor>]) -> Vec<Retained<Tensor>> + 'static;
+
     /// Creates a for loop operation.
     ///
     /// This allows for iterative execution of operations for a specified range.
@@ -285,76 +98,16 @@ impl Graph {
     /// # Returns
     ///
     /// A vector of tensors that are the final result of the for loop
-    pub fn for_loop<F>(&self, 
-                    lower_bound:  &Tensor,
-                    upper_bound:  &Tensor,
-                    step:  &Tensor,
-                    initial_body_arguments:  &[&Tensor],
-                    body_block:  F,
-                    name:  Option<&str>) -> Vec<Tensor>
+    fn for_loop<F>(&self, 
+                lower_bound: &Tensor,
+                upper_bound: &Tensor,
+                step: &Tensor,
+                initial_body_arguments: &[&Tensor],
+                body_block: F,
+                name: Option<&str>) -> Vec<Retained<Tensor>>
     where
-        F:  Fn(&Tensor, &[Tensor]) -> Vec<Tensor>
-    {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-            
-            // Convert initial body arguments to NSArray
-            let initial_args_array = NSArrayContainer::from_objects(
-                &initial_body_arguments.iter().map(|t| t.0).collect::<Vec<_>>()
-            );
-            
-            // Create the body block callback
-            let body_callback = ConcreteBlock::new(move |index: *mut AnyObject, args: *mut AnyObject| -> *mut AnyObject {
-                // Convert to Tensor
-                let index_tensor = Tensor(index);
-                
-                // Convert NSArray to Vec<Tensor>
-                let args_count: usize = msg_send![args, count];
-                let mut body_arguments = Vec::with_capacity(args_count);
-                for i in 0..args_count {
-                    let tensor: *mut AnyObject = msg_send![args, objectAtIndex: i];
-                    body_arguments.push(Tensor(tensor));
-                }
-                
-                // Call the user's block
-                let result_tensors = body_block(&index_tensor, &body_arguments);
-                
-                // Convert Vec<Tensor> to NSArray
-                let result_ptrs: Vec<*mut AnyObject> = result_tensors.iter().map(|t| t.0).collect();
-                let result_array = NSArrayContainer::from_objects(&result_ptrs);
-                
-                // Return the NSArray
-                result_array.as_ptr()
-            }).copy();
-            
-            // Call the Objective-C method
-            let result_array: *mut AnyObject = msg_send![
-                self.0, forLoopWithLowerBound: lower_bound.0,
-                upperBound: upper_bound.0,
-                step: step.0,
-                initialBodyArguments: initial_args_array.as_ptr(),
-                body: &*body_callback,
-                name: name_obj,
-            ];
-            
-            // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
-            
-            // Convert NSArray to Vec<Tensor>
-            let mut result = Vec::with_capacity(count);
-            for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
-            }
-            
-            result
-        }
-    }
-    
+        F: Fn(&Tensor, &[Retained<Tensor>]) -> Vec<Retained<Tensor>> + 'static;
+
     /// Creates a for loop operation with a specific number of iterations.
     ///
     /// This is a more direct version of the for loop that just specifies the total number of iterations.
@@ -369,168 +122,284 @@ impl Graph {
     /// # Returns
     ///
     /// A vector of tensors that are the final result of the for loop
-    pub fn for_loop_with_iterations<F>(&self,
-                                    num_iterations:  &Tensor,
-                                    initial_body_arguments:  &[&Tensor],
-                                    body_block:  F,
-                                    name:  Option<&str>) -> Vec<Tensor>
+    fn for_loop_with_iterations<F>(&self,
+                                num_iterations: &Tensor,
+                                initial_body_arguments: &[&Tensor],
+                                body_block: F,
+                                name: Option<&str>) -> Vec<Retained<Tensor>>
     where
-        F:  Fn(&Tensor, &[Tensor]) -> Vec<Tensor>
+        F: Fn(&Tensor, &[Retained<Tensor>]) -> Vec<Retained<Tensor>> + 'static;
+}
+
+impl GraphControlFlowOps for Graph {
+    fn control_dependency<F>(&self, 
+                         operations: &[&Operation],
+                         dependent_block: F,
+                         name: Option<&str>) -> Vec<Retained<Tensor>>
+    where
+        F: Fn() -> Vec<Retained<Tensor>> + 'static
     {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            // Convert operations to NSArray
+            let operations_array = NSArray::from_slice(operations);
+            
+            // Create the wrapped block
+            let wrapped_block = create_tensor_block(move || {
+                // Call the user's block
+                let tensors = dependent_block();
+                // Convert Vec<Retained<Tensor>> to NSArray
+                let tensor_array = create_ns_array_from_tensors(tensors);
+                // Return the NSArray as a pointer
+                &*tensor_array as *const _ as *mut c_void
+            });
+            
+            // Call the Objective-C method
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                controlDependencyWithOperations: &*operations_array,
+                dependentBlock: &wrapped_block,
+                name: name_ptr,
+            ];
+            
+            // Convert NSArray to Vec<Retained<Tensor>> using the helper function
+            convert_nsarray_to_vec(result_array)
+        }
+    }
+    
+    fn if_op<F, G>(&self,
+               predicate: &Tensor,
+               then_block: F,
+               else_block: Option<G>,
+               name: Option<&str>) -> Vec<Retained<Tensor>>
+    where
+        F: Fn() -> Vec<Retained<Tensor>> + 'static,
+        G: Fn() -> Vec<Retained<Tensor>> + 'static
+    {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            // Create the then block callback with our wrapper
+            let then_wrapped_block = create_tensor_block(move || {
+                // Call the user's block
+                let tensors = then_block();
+                // Convert Vec<Retained<Tensor>> to NSArray
+                let tensor_array = create_ns_array_from_tensors(tensors);
+                // Return the NSArray as a pointer
+                &*tensor_array as *const _ as *mut c_void
+            });
+            
+            // Create the else block callback if provided
+            let else_wrapped_block_opt = else_block.map(|else_fn| {
+                create_tensor_block(move || {
+                    // Call the user's block
+                    let tensors = else_fn();
+                    // Convert Vec<Retained<Tensor>> to NSArray
+                    let tensor_array = create_ns_array_from_tensors(tensors);
+                    // Return the NSArray as a pointer
+                    &*tensor_array as *const _ as *mut c_void
+                })
+            });
+            
+            // Get a pointer to the else block or null
+            let else_block_ptr = match &else_wrapped_block_opt {
+                Some(block) => block.as_block_ptr(),
+                None => std::ptr::null(),
             };
             
-            // Convert initial body arguments to NSArray
-            let initial_args_array = NSArrayContainer::from_objects(
-                &initial_body_arguments.iter().map(|t| t.0).collect::<Vec<_>>()
-            );
+            // Call the Objective-C method
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                ifWithPredicateTensor: predicate,
+                thenBlock: then_wrapped_block.as_block_ptr(),
+                elseBlock: else_block_ptr,
+                name: name_ptr,
+            ];
             
-            // Create the body block callback
-            let body_callback = ConcreteBlock::new(move |index: *mut AnyObject, args: *mut AnyObject| -> *mut AnyObject {
-                // Convert to Tensor
-                let index_tensor = Tensor(index);
+            // Convert NSArray to Vec<Retained<Tensor>> using the helper function
+            convert_nsarray_to_vec(result_array)
+        }
+    }
+    
+    fn while_loop<F, G>(&self,
+                     initial_inputs: &[&Tensor],
+                     before_block: F,
+                     after_block: G,
+                     name: Option<&str>) -> Vec<Retained<Tensor>>
+    where
+        F: Fn(&[Retained<Tensor>], &mut Vec<Retained<Tensor>>) -> Retained<Tensor> + 'static,
+        G: Fn(&[Retained<Tensor>]) -> Vec<Retained<Tensor>> + 'static
+    {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            // Convert initial inputs to NSArray
+            let initial_inputs_array = NSArray::from_slice(initial_inputs);
+            
+            // Create the before block callback with our wrapper
+            let before_wrapped_block = create_condition_block(move |inputs_array_ptr: *mut c_void, results_array_ptr: *mut c_void| {
+                // Convert raw pointers to NSArray and NSMutableArray
+                let inputs_array = inputs_array_ptr as *mut NSArray<Tensor>;
+                let results_array = results_array_ptr as *mut NSMutableArray<Tensor>;
                 
-                // Convert NSArray to Vec<Tensor>
-                let args_count: usize = msg_send![args, count];
-                let mut body_arguments = Vec::with_capacity(args_count);
-                for i in 0..args_count {
-                    let tensor: *mut AnyObject = msg_send![args, objectAtIndex: i];
-                    body_arguments.push(Tensor(tensor));
+                // Convert NSArray to Vec<Retained<Tensor>>
+                let inputs = convert_nsarray_to_vec(inputs_array);
+                
+                // Create a mutable Vec to hold result tensors
+                let mut result_tensors = Vec::new();
+                
+                // Call the user's block
+                let condition = before_block(&inputs, &mut result_tensors);
+                
+                // Set results array
+                let results_ns = Retained::from_raw(results_array).unwrap();
+                for tensor in result_tensors {
+                    let _: () = msg_send![&*results_ns, addObject: &*tensor];
                 }
+                
+                // Return the condition tensor as a void pointer
+                (&*condition) as *const Tensor as *mut c_void
+            });
+            
+            // Create the after block callback with our wrapper
+            let after_wrapped_block = create_tensor_array_block(move |body_args_array_ptr: *mut c_void| {
+                // Convert raw pointer to NSArray
+                let body_args_array = body_args_array_ptr as *mut NSArray<Tensor>;
+                
+                // Convert NSArray to Vec<Retained<Tensor>>
+                let body_arguments = convert_nsarray_to_vec(body_args_array);
+                
+                // Call the user's block
+                let result_tensors = after_block(&body_arguments);
+                
+                // Convert Vec<Retained<Tensor>> to NSArray
+                let tensor_array = create_ns_array_from_tensors(result_tensors);
+                
+                // Return the NSArray as a pointer
+                &*tensor_array as *const _ as *mut c_void
+            });
+            
+            // Call the Objective-C method
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                whileWithInitialInputs: &*initial_inputs_array,
+                before: before_wrapped_block.as_block_ptr(),
+                after: after_wrapped_block.as_block_ptr(),
+                name: name_ptr,
+            ];
+            
+            // Convert NSArray to Vec<Retained<Tensor>> using the helper function
+            convert_nsarray_to_vec(result_array)
+        }
+    }
+    
+    fn for_loop<F>(&self, 
+                lower_bound: &Tensor,
+                upper_bound: &Tensor,
+                step: &Tensor,
+                initial_body_arguments: &[&Tensor],
+                body_block: F,
+                name: Option<&str>) -> Vec<Retained<Tensor>>
+    where
+        F: Fn(&Tensor, &[Retained<Tensor>]) -> Vec<Retained<Tensor>> + 'static
+    {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            // Convert initial body arguments to NSArray
+            let initial_args_array = NSArray::from_slice(initial_body_arguments);
+            
+            // Create the body block callback with our wrapper
+            let body_wrapped_block = create_index_tensor_array_block(move |index_ptr: *mut c_void, args_array_ptr: *mut c_void| {
+                // Convert raw pointers to Tensor and NSArray
+                let index = index_ptr as *mut Tensor;
+                let args_array = args_array_ptr as *mut NSArray<Tensor>;
+                
+                // Convert to Tensor
+                let index_tensor = Retained::from_raw(index).unwrap();
+                
+                // Convert NSArray to Vec<Retained<Tensor>>
+                let body_arguments = convert_nsarray_to_vec(args_array);
                 
                 // Call the user's block
                 let result_tensors = body_block(&index_tensor, &body_arguments);
                 
-                // Convert Vec<Tensor> to NSArray
-                let result_ptrs: Vec<*mut AnyObject> = result_tensors.iter().map(|t| t.0).collect();
-                let result_array = NSArrayContainer::from_objects(&result_ptrs);
+                // Convert Vec<Retained<Tensor>> to NSArray
+                let tensor_array = create_ns_array_from_tensors(result_tensors);
                 
-                // Return the NSArray
-                result_array.as_ptr()
-            }).copy();
+                // Return the NSArray as a pointer
+                &*tensor_array as *const _ as *mut c_void
+            });
             
             // Call the Objective-C method
-            let result_array: *mut AnyObject = msg_send![
-                self.0, forLoopWithNumberOfIterations: num_iterations.0,
-                initialBodyArguments: initial_args_array.as_ptr(),
-                body: &*body_callback,
-                name: name_obj,
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                forLoopWithLowerBound: lower_bound,
+                upperBound: upper_bound,
+                step: step,
+                initialBodyArguments: &*initial_args_array,
+                body: body_wrapped_block.as_block_ptr(),
+                name: name_ptr,
             ];
             
-            // Get the count of result tensors
-            let count: usize = msg_send![result_array, count];
-            
-            // Convert NSArray to Vec<Tensor>
-            let mut result = Vec::with_capacity(count);
-            for i in 0..count {
-                let tensor: *mut AnyObject = msg_send![result_array, objectAtIndex: i,,,,,,,];
-                let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-                result.push(Tensor(tensor));
-            }
-            
-            result
+            // Convert NSArray to Vec<Retained<Tensor>> using the helper function
+            convert_nsarray_to_vec(result_array)
         }
     }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::core::MPSDataType;
-    use crate::device::Device;
-    use std::collections::HashMap;
     
-    #[test]
-    fn test_if_op() {
-        // This test will be skipped in environments without Metal
-        if crate::tests::should_skip_test("test_if_op") {
-            return;
-        }
-        
-        let graph = Graph::new();
-        let device = Device::new();
-        
-        // Create a predicate tensor (true)
-        let predicate = graph.constant_scalar_value(1, MPSDataType::Bool, Some("predicate"));
-        
-        // Create tensors for the then branch
-        let then_value = graph.constant_scalar_value(42.0f32, MPSDataType::Float32, Some("then_value"));
-        
-        // Create tensors for the else branch
-        let else_value = graph.constant_scalar_value(-42.0f32, MPSDataType::Float32, Some("else_value"));
-        
-        // Create the if-then-else operation
-        let result = graph.if_op(
-            &predicate,
-            || vec![then_value.clone()],
-            Some(|| vec![else_value.clone()]),
-            Some("if_op")
-        );
-        
-        // Verify that we got one result
-        assert_eq!(result.len(), 1, "If operation should return 1 tensor");
-        
-        // Run the graph
-        let results = graph.run_graph(&result, &device, None);
-        
-        // Get the result
-        let output = results.get(&result[0]).unwrap().to_vec::<f32>();
-        
-        // Since predicate is true, the result should be the then_value
-        assert_eq!(output[0], 42.0f32, "Result should be the then_value");
-    }
-    
-    #[test]
-    fn test_for_loop() {
-        // This test will be skipped in environments without Metal
-        if crate::tests::should_skip_test("test_for_loop") {
-            return;
-        }
-        
-        let graph = Graph::new();
-        let device = Device::new();
-        
-        // Create bounds and step for the loop
-        let lower_bound = graph.constant_scalar_value(0i32, MPSDataType::Int32, Some("lower_bound"));
-        let upper_bound = graph.constant_scalar_value(5i32, MPSDataType::Int32, Some("upper_bound"));
-        let step = graph.constant_scalar_value(1i32, MPSDataType::Int32, Some("step"));
-        
-        // Create initial value for accumulator (0.0)
-        let initial_value = graph.constant_scalar_value(0.0f32, MPSDataType::Float32, Some("initial"));
-        
-        // Create the for loop to sum numbers from 0 to 4
-        let result = graph.for_loop(
-            &lower_bound,
-            &upper_bound,
-            &step,
-            &[&initial_value],
-            |index, args| {
-                // Convert index to float
-                let index_float = graph.cast(index, MPSDataType::Float32, None);
+    fn for_loop_with_iterations<F>(&self,
+                                num_iterations: &Tensor,
+                                initial_body_arguments: &[&Tensor],
+                                body_block: F,
+                                name: Option<&str>) -> Vec<Retained<Tensor>>
+    where
+        F: Fn(&Tensor, &[Retained<Tensor>]) -> Vec<Retained<Tensor>> + 'static
+    {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            // Convert initial body arguments to NSArray
+            let initial_args_array = NSArray::from_slice(initial_body_arguments);
+            
+            // Create the body block callback with our wrapper
+            let body_wrapped_block = create_index_tensor_array_block(move |index_ptr: *mut c_void, args_array_ptr: *mut c_void| {
+                // Convert raw pointers to Tensor and NSArray
+                let index = index_ptr as *mut Tensor;
+                let args_array = args_array_ptr as *mut NSArray<Tensor>;
                 
-                // Add the current index to the accumulator
-                let new_acc = graph.add(&args[0], &index_float, None);
+                // Convert to Tensor
+                let index_tensor = Retained::from_raw(index).unwrap();
                 
-                // Return the updated accumulator
-                vec![new_acc]
-            },
-            Some("for_loop")
-        );
-        
-        // Verify that we got one result
-        assert_eq!(result.len(), 1, "For loop should return 1 tensor");
-        
-        // Run the graph
-        let results = graph.run_graph(&result, &device, None);
-        
-        // Get the result
-        let output = results.get(&result[0]).unwrap().to_vec::<f32>();
-        
-        // The sum of 0 + 1 + 2 + 3 + 4 = 10
-        assert_eq!(output[0], 10.0f32, "Result should be the sum 0+1+2+3+4=10");
+                // Convert NSArray to Vec<Retained<Tensor>>
+                let body_arguments = convert_nsarray_to_vec(args_array);
+                
+                // Call the user's block
+                let result_tensors = body_block(&index_tensor, &body_arguments);
+                
+                // Convert Vec<Retained<Tensor>> to NSArray
+                let tensor_array = create_ns_array_from_tensors(result_tensors);
+                
+                // Return the NSArray as a pointer
+                &*tensor_array as *const _ as *mut c_void
+            });
+            
+            // Call the Objective-C method
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                forLoopWithNumberOfIterations: num_iterations,
+                initialBodyArguments: &*initial_args_array,
+                body: body_wrapped_block.as_block_ptr(),
+                name: name_ptr,
+            ];
+            
+            // Convert NSArray to Vec<Retained<Tensor>> using the helper function
+            convert_nsarray_to_vec(result_array)
+        }
     }
 }

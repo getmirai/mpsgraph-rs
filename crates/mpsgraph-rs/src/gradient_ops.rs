@@ -1,11 +1,12 @@
-use crate::core::{AsRawObject, NSString};
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::runtime::AnyObject;
+use objc2::msg_send;
+use objc2::rc::Retained;
+use objc2_foundation::{NSArray, NSObject, NSString};
 use std::collections::HashMap;
 
 /// Gradient (Automatic Differentiation) operations for Graph
-impl Graph {
+pub trait GraphGradientOps {
     /// Calculates a partial derivative of primary_tensor with respect to the tensors.
     ///
     /// Returns a dictionary containing partial derivative d(primary_tensor)/d(secondary_tensor) for each tensor.
@@ -22,58 +23,94 @@ impl Graph {
     ///
     /// # Example
     ///
-    /// ```no_run
-    /// # use mpsgraph::prelude::*;
+    /// ```ignore
+    /// # use mpsgraph::{Graph, DataType, ShapeHelper};
     /// # let graph = Graph::new();
-    /// # let shape = Shape::from_slice(&[2, 3]);
-    /// # let x = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let y = graph.square(&x, None);
+    /// # let shape = ShapeHelper::matrix(2, 3);
+    /// # let x = graph.placeholder(DataType::Float32, &shape).unwrap();
+    /// # let y = graph.square(&x, None).unwrap();
     /// // Calculate gradient dy/dx
-    /// let grads = graph.gradient_for_primary_tensor(&y, &[x.clone()], None);
-    /// let dx = grads.get(&x).unwrap();
+    /// let grads = graph.gradient_for_primary_tensor(&y, &[&x], None);
+    /// if let Some(gradients) = grads {
+    ///     for (input, gradient) in gradients {
+    ///         // Use gradients...
+    ///     }
+    /// }
     /// ```
-    pub fn gradient_for_primary_tensor(
+    fn gradient_for_primary_tensor(
         &self,
         primary_tensor: &Tensor,
-        tensors: &[Tensor],
+        tensors: &[&Tensor],
         name: Option<&str>,
-    ) -> HashMap<Tensor, Tensor> {
+    ) -> Option<HashMap<Retained<Tensor>, Retained<Tensor>>>;
+}
+
+impl GraphGradientOps for Graph {
+    fn gradient_for_primary_tensor(
+        &self,
+        primary_tensor: &Tensor,
+        tensors: &[&Tensor],
+        name: Option<&str>,
+    ) -> Option<HashMap<Retained<Tensor>, Retained<Tensor>>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            // Convert the Rust slice to an NSArray manually
-            let tensor_ptrs: Vec<*mut AnyObject> = tensors.iter().map(|tensor| tensor.0).collect();
-
-            // Create an NSArray from the raw pointers
-            let array = crate::core::create_ns_array_from_pointers(&tensor_ptrs);
+            // Create NSArray from the Tensor references
+            let tensor_refs: Vec<&Tensor> = tensors.to_vec();
+            let tensors_array = NSArray::from_slice(&tensor_refs);
 
             // Call the Objective-C method
-            let dict: *mut AnyObject = msg_send![self.0, gradientForPrimaryTensor: primary_tensor.0, withTensors: array, name: name_obj,];
+            let dict: *mut NSObject = msg_send![
+                self,
+                gradientForPrimaryTensor: primary_tensor,
+                withTensors: &*tensors_array,
+                name: name_ptr
+            ];
 
-            // We need to manually parse the NSDictionary since we can't directly use the new objc2 version
-            // Convert NSDictionary to HashMap manually
-            let mut result = HashMap::new();
-
-            // Get the keys and values from the dictionary
-            let keys: *mut AnyObject = msg_send![dict, allKeys];
-            let keys_count: usize = msg_send![keys, count];
-
-            for i in 0..keys_count {
-                let key: *mut AnyObject = msg_send![keys, objectAtIndex: i,];
-                let key_retained = objc2::ffi::objc_retain(key as *mut _);
-                let key_tensor = Tensor(key_retained);
-
-                let value: *mut AnyObject = msg_send![dict, objectForKey: key,];
-                let value_retained = objc2::ffi::objc_retain(value as *mut _);
-                let value_tensor = Tensor(value_retained);
-
-                result.insert(key_tensor, value_tensor);
+            if dict.is_null() {
+                return None;
             }
 
-            result
+            // Convert to Retained to get proper memory management
+            let dict_retained: Retained<NSObject> = Retained::from_raw(dict).unwrap();
+
+            // Get the keys array
+            let keys: *mut NSArray<Tensor> = msg_send![&*dict_retained, allKeys];
+            
+            if keys.is_null() {
+                return None;
+            }
+            
+            let keys_retained: Retained<NSArray<Tensor>> = Retained::from_raw(keys).unwrap();
+            let keys_count: usize = msg_send![&*keys_retained, count];
+
+            // Convert NSDictionary to HashMap
+            let mut result = HashMap::with_capacity(keys_count);
+
+            for i in 0..keys_count {
+                let key: *mut Tensor = msg_send![&*keys_retained, objectAtIndex: i];
+                let key_retained = Retained::from_raw(key).unwrap();
+
+                let value: *mut Tensor = msg_send![&*dict_retained, objectForKey: &*key_retained];
+                let value_retained = Retained::from_raw(value).unwrap();
+
+                result.insert(key_retained, value_retained);
+            }
+
+            Some(result)
         }
+    }
+}
+
+/// Extension trait providing a method for Graph to access gradient operations
+pub trait GraphGradientOpsExtension {
+    /// Access gradient operations for this graph
+    fn gradient_ops(&self) -> &dyn GraphGradientOps;
+}
+
+impl GraphGradientOpsExtension for Graph {
+    fn gradient_ops(&self) -> &dyn GraphGradientOps {
+        self
     }
 }

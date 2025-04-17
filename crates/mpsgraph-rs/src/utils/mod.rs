@@ -1,4 +1,6 @@
-use metal::{Device, DeviceRef, Buffer, MTLResourceOptions};
+use metal::{Buffer, DeviceRef, MTLResourceOptions};
+
+pub mod block_wrapper;
 
 /// Helper functions for working with Metal buffers and data transfer
 pub mod buffer {
@@ -10,7 +12,7 @@ pub mod buffer {
         let buffer = device.new_buffer_with_data(
             data.as_ptr() as *const _,
             buffer_size,
-            MTLResourceOptions::StorageModeShared
+            MTLResourceOptions::StorageModeShared,
         );
         buffer
     }
@@ -18,14 +20,14 @@ pub mod buffer {
     /// Read data from a Metal buffer into a Vec
     pub fn read_buffer_data<T: Copy>(buffer: &Buffer, len: usize) -> Vec<T> {
         let mut result = Vec::with_capacity(len);
-        
+
         unsafe {
             let ptr = buffer.contents() as *const T;
             for i in 0..len {
                 result.push(*ptr.add(i));
             }
         }
-        
+
         result
     }
 
@@ -41,30 +43,42 @@ pub mod buffer {
 
 /// Helper functions for tensor operations
 pub mod tensor {
-    use crate::data_types::{MPSDataType, MPSShapeDescriptor};
-    
+    use crate::data_types::ShapeDescriptor;
+    use crate::tensor::DataType;
+
     /// Create a shape descriptor for a scalar value
-    pub fn scalar_shape(data_type: MPSDataType) -> MPSShapeDescriptor {
-        MPSShapeDescriptor::new(vec![1], data_type)
+    pub fn scalar_shape(data_type: DataType) -> ShapeDescriptor {
+        ShapeDescriptor::new(vec![1], data_type)
     }
-    
+
     /// Create a shape descriptor for a vector
-    pub fn vector_shape(length: u64, data_type: MPSDataType) -> MPSShapeDescriptor {
-        MPSShapeDescriptor::new(vec![length], data_type)
+    pub fn vector_shape(length: u64, data_type: DataType) -> ShapeDescriptor {
+        ShapeDescriptor::new(vec![length], data_type)
     }
-    
+
     /// Create a shape descriptor for a matrix
-    pub fn matrix_shape(rows: u64, cols: u64, data_type: MPSDataType) -> MPSShapeDescriptor {
-        MPSShapeDescriptor::new(vec![rows, cols], data_type)
+    pub fn matrix_shape(rows: u64, cols: u64, data_type: DataType) -> ShapeDescriptor {
+        ShapeDescriptor::new(vec![rows, cols], data_type)
     }
-    
+
     /// Create a shape descriptor for a 3D tensor
-    pub fn tensor3d_shape(dim1: u64, dim2: u64, dim3: u64, data_type: MPSDataType) -> MPSShapeDescriptor {
-        MPSShapeDescriptor::new(vec![dim1, dim2, dim3], data_type)
+    pub fn tensor3d_shape(
+        dim1: u64,
+        dim2: u64,
+        dim3: u64,
+        data_type: DataType,
+    ) -> ShapeDescriptor {
+        ShapeDescriptor::new(vec![dim1, dim2, dim3], data_type)
     }
-    
+
     /// Create a shape descriptor for a 4D tensor (typically used for images: [batch, height, width, channels])
-    pub fn tensor4d_shape(batch: u64, height: u64, width: u64, channels: u64, data_type: MPSDataType) -> MPSShapeDescriptor {
-        MPSShapeDescriptor::new(vec![batch, height, width, channels], data_type)
+    pub fn tensor4d_shape(
+        batch: u64,
+        height: u64,
+        width: u64,
+        channels: u64,
+        data_type: DataType,
+    ) -> ShapeDescriptor {
+        ShapeDescriptor::new(vec![batch, height, width, channels], data_type)
     }
 }

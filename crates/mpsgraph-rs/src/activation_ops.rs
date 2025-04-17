@@ -1,238 +1,351 @@
-use crate::core::AsRawObject;
-use crate::graph::Graph;
-use crate::tensor::Tensor;
+use objc2::rc::Retained;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
 use objc2_foundation::NSString;
 
-/// Activation operations for Graph
-impl Graph {
+use crate::graph::Graph;
+use crate::tensor::Tensor;
+
+/// Trait for activation operations on Graph
+pub trait GraphActivationOps {
     /// Creates a ReLU operation
-    pub fn relu(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                reLUWithTensor: x.0,
-                name: name_obj
-            ];
-
-            if !tensor.is_null() {
-                Tensor(tensor)
-            } else {
-                Tensor(std::ptr::null_mut())
-            }
-        }
-    }
-
+    fn relu(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    
     /// Creates a ReLU gradient operation
-    pub fn relu_gradient_with_incoming_gradient(
+    fn relu_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                reLUGradientWithIncomingGradient: gradient.0,
-                sourceTensor: source.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
+    ) -> Option<Retained<Tensor>>;
+    
     /// Creates a Sigmoid operation
-    pub fn sigmoid(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            // Call the Sigmoid operation with null name
-            let tensor: *mut AnyObject = msg_send![self.0,
-                sigmoidWithTensor: x.0,
-                name: name_obj
-            ];
-
-            if !tensor.is_null() {
-                Tensor(tensor)
-            } else {
-                // Return null tensor if the operation failed
-                Tensor(std::ptr::null_mut())
-            }
-        }
-    }
-
+    fn sigmoid(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    
     /// Creates a Sigmoid gradient operation
-    pub fn sigmoid_gradient_with_incoming_gradient(
+    fn sigmoid_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, sigmoidGradientWithIncomingGradient: gradient.0,
-                sourceTensor: source.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
+    ) -> Option<Retained<Tensor>>;
+    
     /// Creates a Tanh operation
-    pub fn tanh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, tanhWithTensor: x.0, name: name_obj];
-
-            if !tensor.is_null() {
-                Tensor(tensor)
-            } else {
-                Tensor(std::ptr::null_mut())
-            }
-        }
-    }
-
+    fn tanh(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    
     /// Creates a SoftMax operation
-    pub fn softmax(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            // Call the SoftMax operation with null name
-            let tensor: *mut AnyObject = msg_send![self.0, softMaxWithTensor: x.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            if !tensor.is_null() {
-                Tensor(tensor)
-            } else {
-                Tensor(std::ptr::null_mut())
-            }
-        }
-    }
-
+    fn softmax(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Option<Retained<Tensor>>;
+    
     /// Creates a SoftMax gradient operation
-    pub fn softmax_gradient_with_incoming_gradient(
+    fn softmax_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         axis: i64,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, softMaxGradientWithIncomingGradient: gradient.0,
-                sourceTensor: source.0,
-                axis: axis,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
+    ) -> Option<Retained<Tensor>>;
+    
     /// Creates a Leaky ReLU operation
-    pub fn leaky_relu(&self, x: &Tensor, alpha: f32, name: Option<&str>) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, leakyReLUWithTensor: x.0,
-                alpha: alpha as f64,
-                name: name_obj
-            ];
-
-            if !tensor.is_null() {
-                Tensor(tensor)
-            } else {
-                Tensor(std::ptr::null_mut())
-            }
-        }
-    }
-
+    fn leaky_relu(&self, x: &Tensor, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>>;
+    
     /// Creates a Leaky ReLU with alpha tensor
-    pub fn leaky_relu_with_alpha_tensor(
+    fn leaky_relu_with_alpha_tensor(
         &self,
         x: &Tensor,
         alpha_tensor: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, leakyReLUWithTensor: x.0,
-                alphaTensor: alpha_tensor.0,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
+    ) -> Option<Retained<Tensor>>;
+    
     /// Creates a Leaky ReLU gradient operation
-    pub fn leaky_relu_gradient_with_incoming_gradient(
+    fn leaky_relu_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         alpha: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
 
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                leakyReLUGradientWithIncomingGradient: gradient.0,
-                sourceTensor: source.0,
-                alpha: alpha as f64,
-                name: name_obj
+    /// Creates an ELU (Exponential Linear Unit) operation
+    fn elu(&self, x: &Tensor, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>>;
+
+    /// Creates a GELU (Gaussian Error Linear Unit) operation
+    fn gelu(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+}
+
+impl GraphActivationOps for Graph {
+    fn relu(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reLUWithTensor: x,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+    
+    fn relu_gradient(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reLUGradientWithIncomingGradient: gradient,
+                sourceTensor: source,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn sigmoid(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                sigmoidWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn sigmoid_gradient(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                sigmoidGradientWithIncomingGradient: gradient,
+                sourceTensor: source,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn tanh(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                tanhWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn softmax(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                softMaxWithTensor: x,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn softmax_gradient(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                softMaxGradientWithIncomingGradient: gradient,
+                sourceTensor: source,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn leaky_relu(&self, x: &Tensor, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                leakyReLUWithTensor: x,
+                alpha: alpha as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn leaky_relu_with_alpha_tensor(
+        &self,
+        x: &Tensor,
+        alpha_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                leakyReLUWithTensor: x,
+                alphaTensor: alpha_tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+    
+    fn leaky_relu_gradient(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        alpha: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                leakyReLUGradientWithIncomingGradient: gradient,
+                sourceTensor: source,
+                alpha: alpha as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn elu(&self, x: &Tensor, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                eluWithTensor: x,
+                alpha: alpha as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn gelu(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                geluWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait providing a method for Graph to access activation operations
+pub trait GraphActivationOpsExtension {
+    /// Access activation operations for this graph
+    fn activation_ops(&self) -> &dyn GraphActivationOps;
+}
+
+impl GraphActivationOpsExtension for Graph {
+    fn activation_ops(&self) -> &dyn GraphActivationOps {
+        self
     }
 }

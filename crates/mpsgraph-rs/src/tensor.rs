@@ -1,59 +1,101 @@
-use crate::core::MPSDataType;
-use crate::operation::Operation;
-use crate::shape::Shape;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use std::convert::AsRef;
-use std::fmt;
+use objc2::rc::Retained;
+use objc2::{extern_class, msg_send};
+use objc2::runtime::NSObject;
+use objc2_foundation::{NSObjectProtocol, NSString};
 use std::hash::{Hash, Hasher};
-use std::ptr;
 
-/// A wrapper for Metal Performance Shaders Graph tensor objects
-pub struct Tensor(pub(crate) *mut AnyObject);
+use crate::shape::{Shape, ShapeExtensions};
 
-// Implement Send + Sync for the wrapper type
-unsafe impl Send for Tensor {}
-unsafe impl Sync for Tensor {}
+/// Data type for Metal Performance Shaders Graph tensors
+/// 
+/// These values match the MPSDataType definitions in the Metal Performance Shaders framework.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[repr(u32)]
+pub enum DataType {
+    Invalid = 0,
+    
+    // Floating point types
+    Float32 = 0x10000000 | 32,
+    Float16 = 0x10000000 | 16,
+    Float64 = 0x10000000 | 64,
+    
+    // Signed integer types
+    Int8 = 0x20000000 | 8,
+    Int16 = 0x20000000 | 16,
+    Int32 = 0x20000000 | 32,
+    Int64 = 0x20000000 | 64,
+    
+    // Unsigned integer types
+    Uint8 = 8,
+    Uint16 = 16,
+    Uint32 = 32,
+    Uint64 = 64,
+    
+    // Boolean type
+    Bool = 0x40000000 | 8,
+    
+    // Complex types
+    Complex32 = 0x10000000 | 0x80000000 | 32,
+    Complex64 = 0x10000000 | 0x80000000 | 64,
+}
+
+impl DataType {
+    /// Convert from u64 to DataType
+    pub fn from(value: u64) -> Self {
+        match value as u32 {
+            val if val == DataType::Float32 as u32 => DataType::Float32,
+            val if val == DataType::Float16 as u32 => DataType::Float16,
+            val if val == DataType::Float64 as u32 => DataType::Float64,
+            val if val == DataType::Int8 as u32 => DataType::Int8,
+            val if val == DataType::Int16 as u32 => DataType::Int16,
+            val if val == DataType::Int32 as u32 => DataType::Int32,
+            val if val == DataType::Int64 as u32 => DataType::Int64,
+            val if val == DataType::Uint8 as u32 => DataType::Uint8,
+            val if val == DataType::Uint16 as u32 => DataType::Uint16,
+            val if val == DataType::Uint32 as u32 => DataType::Uint32,
+            val if val == DataType::Uint64 as u32 => DataType::Uint64,
+            val if val == DataType::Bool as u32 => DataType::Bool,
+            val if val == DataType::Complex32 as u32 => DataType::Complex32,
+            val if val == DataType::Complex64 as u32 => DataType::Complex64,
+            _ => DataType::Invalid,
+        }
+    }
+}
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphTensor"]
+    pub struct Tensor;
+);
+
+unsafe impl NSObjectProtocol for Tensor {}
 
 impl Tensor {
     /// Returns the data type of this tensor
-    pub fn data_type(&self) -> MPSDataType {
+    pub fn data_type(&self) -> DataType {
         unsafe {
-            let data_type_val: u32 = msg_send![self.0, dataType];
+            let data_type_val: u32 = msg_send![self, dataType];
             std::mem::transmute(data_type_val)
         }
     }
 
     /// Returns the shape of this tensor
-    pub fn shape(&self) -> Shape {
+    pub fn shape(&self) -> Retained<Shape> {
         unsafe {
-            let shape: *mut AnyObject = msg_send![self.0, shape];
-            // Check if shape is null (unranked tensor)
-            if shape.is_null() {
-                return Shape::from_slice(&[]);
-            }
-            let shape = objc2::ffi::objc_retain(shape as *mut _);
-            Shape(shape)
-        }
-    }
-
-    /// Returns the operation that produced this tensor
-    pub fn operation(&self) -> Operation {
-        unsafe {
-            let operation: *mut AnyObject = msg_send![self.0, operation];
-            let operation = objc2::ffi::objc_retain(operation as *mut _);
-            Operation(operation)
+            let shape: Retained<Shape> = msg_send![self, shape];
+            shape
         }
     }
 
     /// Returns the dimensions of the tensor
     pub fn dimensions(&self) -> Vec<usize> {
-        self.shape().dimensions().to_vec()
+        self.shape().dimensions()
     }
 
     /// Returns the rank (number of dimensions) of this tensor
     pub fn rank(&self) -> usize {
-        self.shape().rank()
+        self.shape().len()
     }
 
     /// Returns the total number of elements in this tensor
@@ -62,68 +104,16 @@ impl Tensor {
     }
 
     /// Returns the name of this tensor
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> Option<String> {
         unsafe {
-            let name: *mut AnyObject = msg_send![self.0, name];
-
-            // Handle case where name is nil
-            if name.is_null() {
-                return String::from("<unnamed>");
-            }
-
-            let utf8: *const i8 = msg_send![name, UTF8String];
-            std::ffi::CStr::from_ptr(utf8).to_string_lossy().to_string()
+            let name: Option<Retained<NSString>> = msg_send![self, name];
+            name.map(|s| s.to_string())
         }
     }
 }
-
-impl Drop for Tensor {
-    fn drop(&mut self) {
-        if !self.0.is_null() {
-            // We need to skip object release to avoid crashes
-            self.0 = std::ptr::null_mut();
-        }
-    }
-}
-
-impl Clone for Tensor {
-    fn clone(&self) -> Self {
-        if !self.0.is_null() {
-            // We need to skip object retain to avoid memory management issues
-            let obj = self.0;
-            Tensor(obj)
-        } else {
-            Tensor(ptr::null_mut())
-        }
-    }
-}
-
-impl PartialEq for Tensor {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl Eq for Tensor {}
 
 impl Hash for Tensor {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        (self.0 as usize).hash(state);
-    }
-}
-
-impl fmt::Debug for Tensor {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Tensor")
-            .field("name", &self.name())
-            .field("data_type", &self.data_type())
-            .field("dimensions", &self.dimensions())
-            .finish()
-    }
-}
-
-impl AsRef<Tensor> for Tensor {
-    fn as_ref(&self) -> &Tensor {
-        self
+        (self as *const Self as usize).hash(state);
     }
 }

@@ -1,7 +1,9 @@
-use crate::core::{AsRawObject, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::runtime::AnyObject;
 
 /// The type of reduction applied in loss operations
 #[repr(u64)]
@@ -19,8 +21,8 @@ pub enum LossReductionType {
 #[allow(non_upper_case_globals)]
 pub const Axis: LossReductionType = LossReductionType::None;
 
-/// Loss operations for Graph
-impl Graph {
+/// Trait for loss operations on Graph
+pub trait GraphLossOps {
     /// Creates a softmax cross-entropy loss operation and returns the result tensor.
     ///
     /// The softmax cross-entropy operation computes:
@@ -40,50 +42,14 @@ impl Graph {
     /// # Returns
     ///
     /// A tensor containing the computed loss
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use mpsgraph::prelude::*;
-    /// # use mpsgraph::loss_ops::LossReductionType;
-    /// # let graph = Graph::new();
-    /// # let shape = Shape::from_slice(&[2, 3]);
-    /// # let logits = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let labels = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// // Calculate softmax cross entropy loss
-    /// let loss = graph.softmax_cross_entropy(
-    ///     &logits,
-    ///     &labels,
-    ///     1,
-    ///     LossReductionType::Mean,
-    ///     None
-    /// );
-    /// ```
-    pub fn softmax_cross_entropy(
+    fn softmax_cross_entropy(
         &self,
         source_tensor: &Tensor,
         labels_tensor: &Tensor,
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, softMaxCrossEntropyWithSourceTensor: source_tensor.0,
-                labelsTensor: labels_tensor.0,
-                axis: axis,
-                reductionType: reduction_type as u64,
-                name: name_obj,
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates the gradient of a softmax cross-entropy loss operation and returns the result tensor.
     ///
@@ -99,31 +65,7 @@ impl Graph {
     /// # Returns
     ///
     /// A tensor containing the gradient with respect to the source tensor
-    ///
-    /// # Example
-    ///
-    /// ```no_run
-    /// # use mpsgraph::prelude::*;
-    /// # use mpsgraph::loss_ops::LossReductionType;
-    /// # let graph = Graph::new();
-    /// # let shape = Shape::from_slice(&[2, 3]);
-    /// # let logits = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let labels = graph.placeholder(&shape, MPSDataType::Float32, None);
-    /// # let loss = graph.softmax_cross_entropy(&logits, &labels, 1, LossReductionType::Mean, None);
-    /// // Create gradient of 1.0 for the loss (scalar)
-    /// let grad_const = graph.constant_scalar(1.0, MPSDataType::Float32);
-    ///
-    /// // Calculate gradient of loss with respect to logits
-    /// let logits_grad = graph.softmax_cross_entropy_gradient(
-    ///     &grad_const,
-    ///     &logits,
-    ///     &labels,
-    ///     1,
-    ///     LossReductionType::Mean,
-    ///     None
-    /// );
-    /// ```
-    pub fn softmax_cross_entropy_gradient(
+    fn softmax_cross_entropy_gradient(
         &self,
         gradient_tensor: &Tensor,
         source_tensor: &Tensor,
@@ -131,23 +73,80 @@ impl Graph {
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
+}
 
-            let tensor: *mut AnyObject = msg_send![self.0, softMaxCrossEntropyGradientWithIncomingGradientTensor: gradient_tensor.0,
-                sourceTensor: source_tensor.0,
-                labelsTensor: labels_tensor.0,
+/// Implementation of loss operations for Graph
+impl GraphLossOps for Graph {
+    fn softmax_cross_entropy(
+        &self,
+        source_tensor: &Tensor,
+        labels_tensor: &Tensor,
+        axis: i64,
+        reduction_type: LossReductionType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                softMaxCrossEntropyWithSourceTensor: source_tensor,
+                labelsTensor: labels_tensor,
                 axis: axis,
                 reductionType: reduction_type as u64,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn softmax_cross_entropy_gradient(
+        &self,
+        gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
+        labels_tensor: &Tensor,
+        axis: i64,
+        reduction_type: LossReductionType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self, 
+                softMaxCrossEntropyGradientWithIncomingGradientTensor: gradient_tensor,
+                sourceTensor: source_tensor,
+                labelsTensor: labels_tensor,
+                axis: axis,
+                reductionType: reduction_type as u64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait for easier access to loss operations
+pub trait GraphLossOpsExtension {
+    /// Get access to loss operations
+    fn loss_ops(&self) -> &dyn GraphLossOps;
+}
+
+impl GraphLossOpsExtension for Graph {
+    fn loss_ops(&self) -> &dyn GraphLossOps {
+        self
     }
 }

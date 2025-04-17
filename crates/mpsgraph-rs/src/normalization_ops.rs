@@ -1,12 +1,13 @@
-use crate::core::AsRawObject;
-use crate::graph::Graph;
-use crate::tensor::Tensor;
+use objc2::rc::Retained;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
 use objc2_foundation::NSString;
 
-/// Normalization operations for Graph
-impl Graph {
+use crate::graph::Graph;
+use crate::tensor::Tensor;
+use crate::core::create_ns_array_from_i64_slice;
+
+/// Trait for normalization operations on Graph
+pub trait GraphNormalizationOps {
     /// Returns the mean of the input tensor along the specified axes.
     ///
     /// # Arguments
@@ -18,30 +19,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn mean(
+    fn mean(
         &self,
         tensor: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert the axes to NSArray of NSNumbers
-        let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![self.0, meanOfTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns the variance of the input tensor along the specified axes when the mean has been precomputed.
     ///
@@ -55,32 +38,13 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn variance_with_mean(
+    fn variance_with_mean(
         &self,
         tensor: &Tensor,
         mean_tensor: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert the axes to NSArray of NSNumbers
-        let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![self.0, varianceOfTensor: tensor.0,
-                meanTensor: mean_tensor.0,
-                axes: axes_array,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns the variance of the input tensor along the specified axes.
     ///
@@ -93,30 +57,12 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn variance(
+    fn variance(
         &self,
         tensor: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert the axes to NSArray of NSNumbers
-        let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![self.0, varianceOfTensor: tensor.0,
-                axes: axes_array,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a batch normalization operation and returns the result tensor.
     ///
@@ -133,7 +79,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn normalize(
+    fn normalize(
         &self,
         tensor: &Tensor,
         mean: &Tensor,
@@ -142,36 +88,7 @@ impl Graph {
         beta: Option<&Tensor>,
         epsilon: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let gamma_obj = match gamma {
-            Some(g) => g.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let beta_obj = match beta {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![self.0, normalizationWithTensor: tensor.0,
-                meanTensor: mean.0,
-                varianceTensor: variance.0,
-                gammaTensor: gamma_obj,
-                betaTensor: beta_obj,
-                epsilon: epsilon,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a normalization gamma-gradient operation and returns the result tensor.
     ///
@@ -188,7 +105,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn normalization_gamma_gradient(
+    fn normalization_gamma_gradient(
         &self,
         incoming_gradient: &Tensor,
         source: &Tensor,
@@ -197,29 +114,7 @@ impl Graph {
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert the axes to NSArray of NSNumbers
-        let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![self.0, normalizationGammaGradientWithIncomingGradientTensor: incoming_gradient.0,
-                sourceTensor: source.0,
-                meanTensor: mean.0,
-                varianceTensor: variance.0,
-                reductionAxes: axes_array,
-                epsilon: epsilon,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a normalization beta-gradient operation and returns the result tensor.
     ///
@@ -233,32 +128,13 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn normalization_beta_gradient(
+    fn normalization_beta_gradient(
         &self,
         incoming_gradient: &Tensor,
         source: &Tensor,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert the axes to NSArray of NSNumbers
-        let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
-
-        unsafe {
-            let result: *mut AnyObject = msg_send![self.0, normalizationBetaGradientWithIncomingGradientTensor: incoming_gradient.0,
-                sourceTensor: source.0,
-                reductionAxes: axes_array,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a normalization input gradient operation and returns the result tensor.
     ///
@@ -278,7 +154,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid Tensor object
-    pub fn normalization_gradient(
+    fn normalization_gradient(
         &self,
         incoming_gradient: &Tensor,
         source: &Tensor,
@@ -290,45 +166,247 @@ impl Graph {
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
+}
 
-        let gamma_obj = match gamma {
-            Some(g) => g.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let gamma_gradient_obj = match gamma_gradient {
-            Some(g) => g.0,
-            None => std::ptr::null_mut(),
-        };
-
-        let beta_gradient_obj = match beta_gradient {
-            Some(b) => b.0,
-            None => std::ptr::null_mut(),
-        };
-
-        // Convert the axes to NSArray of NSNumbers
-        let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
-
+impl GraphNormalizationOps for Graph {
+    fn mean(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let result: *mut AnyObject = msg_send![self.0, normalizationGradientWithIncomingGradientTensor: incoming_gradient.0,
-                sourceTensor: source.0,
-                meanTensor: mean.0,
-                varianceTensor: variance.0,
-                gammaTensor: gamma_obj,
-                gammaGradientTensor: gamma_gradient_obj,
-                betaGradientTensor: beta_gradient_obj,
-                reductionAxes: axes_array,
-                epsilon: epsilon,
-                name: name_obj,
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            // Convert the axes to NSArray of NSNumbers
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                meanOfTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn variance_with_mean(
+        &self,
+        tensor: &Tensor,
+        mean_tensor: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            // Convert the axes to NSArray of NSNumbers
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                varianceOfTensor: tensor,
+                meanTensor: mean_tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn variance(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            // Convert the axes to NSArray of NSNumbers
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                varianceOfTensor: tensor,
+                axes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn normalize(
+        &self,
+        tensor: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let gamma_ptr = gamma.map_or(std::ptr::null(), |g| g as *const _);
+            let beta_ptr = beta.map_or(std::ptr::null(), |b| b as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                normalizationWithTensor: tensor,
+                meanTensor: mean,
+                varianceTensor: variance,
+                gammaTensor: gamma_ptr,
+                betaTensor: beta_ptr,
+                epsilon: epsilon as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn normalization_gamma_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        axes: &[i64],
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            // Convert the axes to NSArray of NSNumbers
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                normalizationGammaGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source,
+                meanTensor: mean,
+                varianceTensor: variance,
+                reductionAxes: axes_ptr,
+                epsilon: epsilon as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn normalization_beta_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        axes: &[i64],
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            // Convert the axes to NSArray of NSNumbers
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                normalizationBetaGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source,
+                reductionAxes: axes_ptr,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        gamma_gradient: Option<&Tensor>,
+        beta_gradient: Option<&Tensor>,
+        axes: &[i64],
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let gamma_ptr = gamma.map_or(std::ptr::null(), |g| g as *const _);
+            let gamma_gradient_ptr = gamma_gradient.map_or(std::ptr::null(), |g| g as *const _);
+            let beta_gradient_ptr = beta_gradient.map_or(std::ptr::null(), |b| b as *const _);
+
+            // Convert the axes to NSArray of NSNumbers
+            let axes_array = create_ns_array_from_i64_slice(axes);
+            let axes_ptr = &*axes_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                normalizationGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source,
+                meanTensor: mean,
+                varianceTensor: variance,
+                gammaTensor: gamma_ptr,
+                gammaGradientTensor: gamma_gradient_ptr,
+                betaGradientTensor: beta_gradient_ptr,
+                reductionAxes: axes_ptr,
+                epsilon: epsilon as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 }

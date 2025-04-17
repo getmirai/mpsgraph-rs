@@ -1,16 +1,15 @@
-use objc2::runtime::AnyObject;
-// In objc2, use false as NO and true as YES
-const NO: bool = false;
-const YES: bool = true;
-use crate::convolution_transpose_ops::TensorNamedDataLayout;
-use crate::core::{AsRawObject, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
+use crate::TensorNamedDataLayout;
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
 
 /// The resize mode to use for resizing.
 #[repr(u64)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum ResizeMode {
     /// Samples the nearest neighbor to the pixel coordinate.
     Nearest = 0,
@@ -20,7 +19,7 @@ pub enum ResizeMode {
 
 /// The rounding mode to use when using nearest resize mode.
 #[repr(u64)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum ResizeNearestRoundingMode {
     /// Rounds values to the nearest integer value, with 0.5f offset rounding toward +inf.
     RoundPreferCeil = 0,
@@ -36,8 +35,8 @@ pub enum ResizeNearestRoundingMode {
     RoundToOdd = 5,
 }
 
-/// Resize operations for Graph
-impl Graph {
+/// Trait for resize operations on Graph
+pub trait GraphResizeOps {
     /// Creates a Resize operation and returns the result tensor.
     ///
     /// Resamples input images to given size. Result images will be distorted if size is of different aspect ratio.
@@ -51,7 +50,7 @@ impl Graph {
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize(
+    fn resize(
         &self,
         images_tensor: &Tensor,
         size: &Shape,
@@ -60,29 +59,7 @@ impl Graph {
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeTensor: images_tensor.0,
-                size: size.0,
-                mode: mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation using a tensor for size specification and returns the result tensor.
     ///
@@ -95,7 +72,7 @@ impl Graph {
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_with_size_tensor(
+    fn resize_with_size_tensor(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -104,29 +81,7 @@ impl Graph {
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                mode: mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation using a tensor for size specification and returns the result tensor.
     ///
@@ -140,7 +95,7 @@ impl Graph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_rank_agnostic(
+    fn resize_rank_agnostic(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -148,28 +103,7 @@ impl Graph {
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                mode: mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation with nearest neighbor sampling and a specific rounding mode.
     ///
@@ -182,7 +116,7 @@ impl Graph {
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_nearest(
+    fn resize_nearest(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -191,29 +125,7 @@ impl Graph {
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeNearestWithTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                nearestRoundingMode: nearest_rounding_mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation with nearest neighbor sampling and a specific rounding mode.
     ///
@@ -227,7 +139,7 @@ impl Graph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_nearest_rank_agnostic(
+    fn resize_nearest_rank_agnostic(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -235,28 +147,7 @@ impl Graph {
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeNearestWithTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                nearestRoundingMode: nearest_rounding_mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation with bilinear interpolation.
     ///
@@ -268,7 +159,7 @@ impl Graph {
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_bilinear(
+    fn resize_bilinear(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -276,28 +167,7 @@ impl Graph {
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeBilinearWithTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation with bilinear interpolation.
     ///
@@ -310,34 +180,14 @@ impl Graph {
     ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_bilinear_rank_agnostic(
+    fn resize_bilinear_rank_agnostic(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
         center_result: bool,
         align_corners: bool,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeBilinearWithTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation using explicit scale and offset tensors.
     ///
@@ -349,7 +199,7 @@ impl Graph {
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_with_scale_offset(
+    fn resize_with_scale_offset(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -357,25 +207,7 @@ impl Graph {
         mode: ResizeMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                scaleOffsetTensor: scale_offset_tensor.0,
-                mode: mode as u64,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize operation using separate scale and offset tensors.
     ///
@@ -389,7 +221,7 @@ impl Graph {
     ///   - mode: The resampling mode to use.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    pub fn resize_with_separate_scale_offset(
+    fn resize_with_separate_scale_offset(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -397,102 +229,7 @@ impl Graph {
         offset_tensor: &Tensor,
         mode: ResizeMode,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                scaleTensor: scale_tensor.0,
-                offsetTensor: offset_tensor.0,
-                mode: mode as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a Resize operation with nearest neighbor sampling using separate scale and offset tensors.
-    ///
-    /// Available on iOS 17+/macOS 14+.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
-    ///   - scale_tensor: 1D float tensor of size equal to rank of input.
-    ///   - offset_tensor: 1D float tensor of size equal to rank of input.
-    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    pub fn resize_nearest_with_separate_scale_offset(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        scale_tensor: &Tensor,
-        offset_tensor: &Tensor,
-        nearest_rounding_mode: ResizeNearestRoundingMode,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeNearestWithTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                scaleTensor: scale_tensor.0,
-                offsetTensor: offset_tensor.0,
-                nearestRoundingMode: nearest_rounding_mode as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a Resize operation with bilinear interpolation using separate scale and offset tensors.
-    ///
-    /// Available on iOS 17+/macOS 14+.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
-    ///   - scale_tensor: 1D float tensor of size equal to rank of input.
-    ///   - offset_tensor: 1D float tensor of size equal to rank of input.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    pub fn resize_bilinear_with_separate_scale_offset(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        scale_tensor: &Tensor,
-        offset_tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeBilinearWithTensor: images_tensor.0,
-                sizeTensor: size_tensor.0,
-                scaleTensor: scale_tensor.0,
-                offsetTensor: offset_tensor.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a Resize gradient operation for backpropagation.
     ///
@@ -505,7 +242,7 @@ impl Graph {
     ///   - layout: Specifies what layout the provided tensor is in
     ///   - name: The name for the operation
     /// - Returns: A valid Tensor object
-    pub fn resize_gradient(
+    fn resize_gradient(
         &self,
         gradient: &Tensor,
         input: &Tensor,
@@ -514,340 +251,323 @@ impl Graph {
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>>;
+}
+
+impl GraphResizeOps for Graph {
+    fn resize(
+        &self,
+        images_tensor: &Tensor,
+        size: &Shape,
+        mode: ResizeMode,
+        center_result: bool,
+        align_corners: bool,
+        layout: TensorNamedDataLayout,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeWithGradientTensor: gradient.0,
-                input: input.0,
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeTensor: images_tensor,
+                size: size,
                 mode: mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
+                centerResult: center_result,
+                alignCorners: align_corners,
                 layout: layout as u64,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a Resize gradient operation for nearest neighbor sampling with a specific rounding mode.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling
-    ///   - center_result: Controls if the result image is centered on the input image
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners
-    ///   - layout: Specifies what layout the provided tensor is in
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_nearest_gradient(
+    fn resize_with_size_tensor(
         &self,
-        gradient: &Tensor,
-        input: &Tensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        mode: ResizeMode,
+        center_result: bool,
+        align_corners: bool,
+        layout: TensorNamedDataLayout,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeTensor: images_tensor,
+                sizeTensor: size_tensor,
+                mode: mode as u64,
+                centerResult: center_result,
+                alignCorners: align_corners,
+                layout: layout as u64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn resize_rank_agnostic(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        mode: ResizeMode,
+        center_result: bool,
+        align_corners: bool,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeTensor: images_tensor,
+                sizeTensor: size_tensor,
+                mode: mode as u64,
+                centerResult: center_result,
+                alignCorners: align_corners,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn resize_nearest(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         nearest_rounding_mode: ResizeNearestRoundingMode,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeNearestWithGradientTensor: gradient.0,
-                input: input.0,
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeNearestWithTensor: images_tensor,
+                sizeTensor: size_tensor,
                 nearestRoundingMode: nearest_rounding_mode as u64,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
+                centerResult: center_result,
+                alignCorners: align_corners,
                 layout: layout as u64,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a Resize gradient operation for bilinear interpolation.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - center_result: Controls if the result image is centered on the input image
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners
-    ///   - layout: Specifies what layout the provided tensor is in
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_bilinear_gradient(
+    fn resize_nearest_rank_agnostic(
         &self,
-        gradient: &Tensor,
-        input: &Tensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
+        center_result: bool,
+        align_corners: bool,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeNearestWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                nearestRoundingMode: nearest_rounding_mode as u64,
+                centerResult: center_result,
+                alignCorners: align_corners,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn resize_bilinear(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         center_result: bool,
         align_corners: bool,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let center_result_val = if center_result { YES } else { NO };
-            let align_corners_val = if align_corners { YES } else { NO };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeBilinearWithGradientTensor: gradient.0,
-                input: input.0,
-                centerResult: center_result_val,
-                alignCorners: align_corners_val,
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeBilinearWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                centerResult: center_result,
+                alignCorners: align_corners,
                 layout: layout as u64,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a Resize gradient operation using explicit scale and offset tensors.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - scale_offset_tensor: 1D float tensor. A 4-element shape as [scaleY, scaleX, offsetY, offsetX]
-    ///   - mode: The resampling mode to use
-    ///   - layout: Specifies what layout the provided tensor is in
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_gradient_with_scale_offset(
+    fn resize_bilinear_rank_agnostic(
         &self,
-        gradient: &Tensor,
-        input: &Tensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        center_result: bool,
+        align_corners: bool,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeBilinearWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                centerResult: center_result,
+                alignCorners: align_corners,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn resize_with_scale_offset(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         scale_offset_tensor: &Tensor,
         mode: ResizeMode,
         layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor: *mut AnyObject = msg_send![self.0, resizeWithGradientTensor: gradient.0,
-                input: input.0,
-                scaleOffsetTensor: scale_offset_tensor.0,
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeTensor: images_tensor,
+                sizeTensor: size_tensor,
+                scaleOffsetTensor: scale_offset_tensor,
                 mode: mode as u64,
                 layout: layout as u64,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a Resize gradient operation for nearest sampling using explicit scale and offset tensors.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - scale_offset_tensor: 1D float tensor. A 4-element shape as [scaleY, scaleX, offsetY, offsetX]
-    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling
-    ///   - layout: Specifies what layout the provided tensor is in
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_nearest_gradient_with_scale_offset(
+    fn resize_with_separate_scale_offset(
         &self,
-        gradient: &Tensor,
-        input: &Tensor,
-        scale_offset_tensor: &Tensor,
-        nearest_rounding_mode: ResizeNearestRoundingMode,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeNearestWithGradientTensor: gradient.0,
-                input: input.0,
-                scaleOffsetTensor: scale_offset_tensor.0,
-                nearestRoundingMode: nearest_rounding_mode as u64,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a Resize gradient operation for bilinear sampling using explicit scale and offset tensors.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - scale_offset_tensor: 1D float tensor. A 4-element shape as [scaleY, scaleX, offsetY, offsetX]
-    ///   - layout: Specifies what layout the provided tensor is in
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_bilinear_gradient_with_scale_offset(
-        &self,
-        gradient: &Tensor,
-        input: &Tensor,
-        scale_offset_tensor: &Tensor,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeBilinearWithGradientTensor: gradient.0,
-                input: input.0,
-                scaleOffsetTensor: scale_offset_tensor.0,
-                layout: layout as u64,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a Resize gradient operation using separate scale and offset tensors.
-    ///
-    /// Available on iOS 17+/macOS 14+.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - scale_tensor: 1D float tensor of size equal to rank of input
-    ///   - offset_tensor: 1D float tensor of size equal to rank of input
-    ///   - mode: The resampling mode to use
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_gradient_with_separate_scale_offset(
-        &self,
-        gradient: &Tensor,
-        input: &Tensor,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
         scale_tensor: &Tensor,
         offset_tensor: &Tensor,
         mode: ResizeMode,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor: *mut AnyObject = msg_send![self.0, resizeWithGradientTensor: gradient.0,
-                input: input.0,
-                scaleTensor: scale_tensor.0,
-                offsetTensor: offset_tensor.0,
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeTensor: images_tensor,
+                sizeTensor: size_tensor,
+                scaleTensor: scale_tensor,
+                offsetTensor: offset_tensor,
                 mode: mode as u64,
-                name: name_obj
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a Resize gradient operation for nearest sampling using separate scale and offset tensors.
-    ///
-    /// Available on iOS 17+/macOS 14+.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - scale_tensor: 1D float tensor of size equal to rank of input
-    ///   - offset_tensor: 1D float tensor of size equal to rank of input
-    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_nearest_gradient_with_separate_scale_offset(
+    fn resize_gradient(
         &self,
         gradient: &Tensor,
         input: &Tensor,
-        scale_tensor: &Tensor,
-        offset_tensor: &Tensor,
-        nearest_rounding_mode: ResizeNearestRoundingMode,
+        mode: ResizeMode,
+        center_result: bool,
+        align_corners: bool,
+        layout: TensorNamedDataLayout,
         name: Option<&str>,
-    ) -> Tensor {
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor: *mut AnyObject = msg_send![self.0, resizeNearestWithGradientTensor: gradient.0,
-                input: input.0,
-                scaleTensor: scale_tensor.0,
-                offsetTensor: offset_tensor.0,
-                nearestRoundingMode: nearest_rounding_mode as u64,
-                name: name_obj
+            let result: *mut Tensor = msg_send![
+                self,
+                resizeWithGradientTensor: gradient,
+                input: input,
+                mode: mode as u64,
+                centerResult: center_result,
+                alignCorners: align_corners,
+                layout: layout as u64,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Creates a Resize gradient operation for bilinear sampling using separate scale and offset tensors.
-    ///
-    /// Available on iOS 17+/macOS 14+.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - scale_tensor: 1D float tensor of size equal to rank of input
-    ///   - offset_tensor: 1D float tensor of size equal to rank of input
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn resize_bilinear_gradient_with_separate_scale_offset(
-        &self,
-        gradient: &Tensor,
-        input: &Tensor,
-        scale_tensor: &Tensor,
-        offset_tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let tensor: *mut AnyObject = msg_send![self.0, resizeBilinearWithGradientTensor: gradient.0,
-                input: input.0,
-                scaleTensor: scale_tensor.0,
-                offsetTensor: offset_tensor.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 }

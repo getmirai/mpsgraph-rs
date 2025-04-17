@@ -1,14 +1,16 @@
-use crate::core::{AsRawObject, MPSDataType};
+use crate::core::DataType;
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
 use objc2::msg_send;
-use objc2::runtime::AnyObject;
-use objc2_foundation::{NSArray, NSString};
+use objc2::rc::Retained;
+use objc2::runtime::AnyClass;
+use objc2::{extern_class};
+use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 
 /// The sparse storage options for MPSGraph sparse operations.
 #[repr(u64)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum SparseStorageType {
     /// COO (Coordinate) Storage format
     COO = 0,
@@ -18,8 +20,15 @@ pub enum SparseStorageType {
     CSR = 2,
 }
 
-/// Descriptor for sparse tensor creation
-pub struct CreateSparseOpDescriptor(pub(crate) *mut AnyObject);
+extern_class!(
+    #[derive(Debug, PartialEq, Eq, Hash)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSGraphCreateSparseOpDescriptor"]
+    /// Descriptor for sparse tensor creation
+    pub struct CreateSparseOpDescriptor;
+);
+
+unsafe impl NSObjectProtocol for CreateSparseOpDescriptor {}
 
 impl CreateSparseOpDescriptor {
     /// Creates a new descriptor for a sparse tensor.
@@ -32,53 +41,30 @@ impl CreateSparseOpDescriptor {
     /// # Returns
     ///
     /// A new sparse tensor descriptor
-    pub fn new(storage_type: SparseStorageType, data_type: MPSDataType) -> Self {
+    pub fn new(storage_type: SparseStorageType, data_type: DataType) -> Retained<Self> {
         unsafe {
-            // Get the class, unwrap it, then use it in msg_send
-            let class_name = c"MPSGraphCreateSparseOpDescriptor";
-            if let Some(cls) = objc2::runtime::AnyClass::get(class_name) {
-                let descriptor: *mut AnyObject = msg_send![
-                    cls, descriptorWithStorageType: storage_type as u64,
-                    dataType: data_type as u64
-                ];
-                let descriptor = objc2::ffi::objc_retain(descriptor as *mut _);
-                CreateSparseOpDescriptor(descriptor)
-            } else {
-                // Fall back to creating an empty object if class not found
-                let empty_obj: *mut AnyObject = std::ptr::null_mut();
-                CreateSparseOpDescriptor(empty_obj)
-            }
+            let cls = AnyClass::get(c"MPSGraphCreateSparseOpDescriptor").unwrap();
+            msg_send![
+                cls, 
+                descriptorWithStorageType: storage_type as u64,
+                dataType: data_type as u32
+            ]
         }
     }
 
     /// Sets the sparse storage type
-    pub fn set_sparse_storage_type(&self, storage_type: SparseStorageType) {
+    pub fn set_sparse_storage_type(&self, storage_type: SparseStorageType) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setSparseStorageType: storage_type as u64];
+            let _: () = msg_send![self, setSparseStorageType: storage_type as u64];
+            self
         }
     }
 
     /// Sets the data type
-    pub fn set_data_type(&self, data_type: MPSDataType) {
+    pub fn set_data_type(&self, data_type: DataType) -> &Self {
         unsafe {
-            let _: () = msg_send![self.0, setDataType: data_type as u64];
-        }
-    }
-}
-
-impl Drop for CreateSparseOpDescriptor {
-    fn drop(&mut self) {
-        unsafe {
-            objc2::ffi::objc_release(self.0 as *mut _);
-        }
-    }
-}
-
-impl Clone for CreateSparseOpDescriptor {
-    fn clone(&self) -> Self {
-        unsafe {
-            let desc: *mut AnyObject = msg_send![self.0, copy];
-            CreateSparseOpDescriptor(desc)
+            let _: () = msg_send![self, setDataType: data_type as u32];
+            self
         }
     }
 }
@@ -101,39 +87,26 @@ impl Graph {
         &self,
         tensors: &[&Tensor],
         shape: &Shape,
-        data_type: MPSDataType,
+        data_type: DataType,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Create NSArray of input tensors using objc2_foundation
-        let tensors_array = unsafe {
-            // Convert to slice of references to AnyObject
-            let tensors_refs: Vec<&objc2::runtime::AnyObject> = tensors
-                .iter()
-                .map(|tensor| &*tensor.0.cast::<objc2::runtime::AnyObject>())
-                .collect();
-
-            // Create NSArray from references
-            let array = NSArray::from_slice(&tensors_refs);
-            let ns_array: *mut AnyObject =
-                array.as_ref() as *const NSArray<objc2::runtime::AnyObject> as *mut AnyObject;
-            ns_array
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, sparseTensorWithType: data_type as u64,
-                tensors: tensors_array,
-                shape: shape.0,
-                name: name_obj,
-            ];
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            // Create NSArray of input tensors
+            let tensor_refs: Vec<&Tensor> = tensors.iter().copied().collect();
+            let tensors_array = NSArray::from_slice(&tensor_refs);
+            
+            msg_send![
+                self, 
+                sparseTensorWithType: data_type as u32,
+                tensors: &*tensors_array,
+                shape: shape,
+                name: name_obj
+            ]
         }
     }
 
@@ -155,41 +128,28 @@ impl Graph {
         tensors: &[&Tensor],
         shape: &Shape,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Create NSArray of input tensors using objc2_foundation
-        let tensors_array = unsafe {
-            // Convert to slice of references to AnyObject
-            let tensors_refs: Vec<&objc2::runtime::AnyObject> = tensors
-                .iter()
-                .map(|tensor| &*tensor.0.cast::<objc2::runtime::AnyObject>())
-                .collect();
-
-            // Create NSArray from references
-            let array = NSArray::from_slice(&tensors_refs);
-            let ns_array: *mut AnyObject =
-                array.as_ref() as *const NSArray<objc2::runtime::AnyObject> as *mut AnyObject;
-            ns_array
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, sparseTensorWithDescriptor: descriptor.0,
-                tensors: tensors_array,
-                shape: shape.0,
-                name: name_obj,
-            ];
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            // Create NSArray of input tensors
+            let tensor_refs: Vec<&Tensor> = tensors.iter().copied().collect();
+            let tensors_array = NSArray::from_slice(&tensor_refs);
+            
+            msg_send![
+                self, 
+                sparseTensorWithDescriptor: descriptor,
+                tensors: &*tensors_array,
+                shape: shape,
+                name: name_obj
+            ]
         }
     }
 
-    /// Creates a sparse tensor with the specified indices and values (legacy method).
+    /// Creates a sparse tensor with the specified indices and values.
     ///
     /// # Arguments
     ///
@@ -202,11 +162,6 @@ impl Graph {
     /// # Returns
     ///
     /// A new Tensor representing the sparse tensor
-    ///
-    /// # Deprecated
-    ///
-    /// This method uses a custom approach that doesn't match the Objective-C API.
-    /// Please use `sparse_tensor_with_type` or `sparse_tensor_with_descriptor` instead.
     pub fn sparse_tensor_with_indices_and_values(
         &self,
         indices: &[&Tensor],
@@ -214,38 +169,25 @@ impl Graph {
         dense_shape: &Shape,
         descriptor: &CreateSparseOpDescriptor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        // Create NSArray of input tensors using objc2_foundation
-        let input_tensors_array = unsafe {
-            // Convert to slice of references to AnyObject
-            let indices_refs: Vec<&objc2::runtime::AnyObject> = indices
-                .iter()
-                .map(|tensor| &*tensor.0.cast::<objc2::runtime::AnyObject>())
-                .collect();
-
-            // Create NSArray from references
-            let array = NSArray::from_slice(&indices_refs);
-            let ns_array: *mut AnyObject =
-                array.as_ref() as *const NSArray<objc2::runtime::AnyObject> as *mut AnyObject;
-            ns_array
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, sparseTensorWithIndicesTensors: input_tensors_array,
-                valuesTensor: values.0,
-                denseShape: dense_shape.0,
-                descriptor: descriptor.0,
-                name: name_obj,
-            ];
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            // Create NSArray of indices tensors
+            let indices_refs: Vec<&Tensor> = indices.iter().copied().collect();
+            let indices_array = NSArray::from_slice(&indices_refs);
+            
+            msg_send![
+                self, 
+                sparseTensorWithIndicesTensors: &*indices_array,
+                valuesTensor: values,
+                denseShape: dense_shape,
+                descriptor: descriptor,
+                name: name_obj
+            ]
         }
     }
 
@@ -267,36 +209,24 @@ impl Graph {
         values: &Tensor,
         dense_shape: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        let input_tensors_array = unsafe {
-            // Convert to slice of references to AnyObject
-            let indices_refs: Vec<&objc2::runtime::AnyObject> = indices
-                .iter()
-                .map(|tensor| &*tensor.0.cast::<objc2::runtime::AnyObject>())
-                .collect();
-
-            // Create NSArray from references
-            let array = NSArray::from_slice(&indices_refs);
-            let ns_array: *mut AnyObject =
-                array.as_ref() as *const NSArray<objc2::runtime::AnyObject> as *mut AnyObject;
-            ns_array
-        };
-
+    ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut AnyObject = msg_send![
-                self.0, sparseToDenseWithIndicesTensors: input_tensors_array,
-                valuesTensor: values.0,
-                denseShapeTensor: dense_shape.0,
-                name: name_obj,
-            ];
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            // Create NSArray of indices tensors
+            let indices_refs: Vec<&Tensor> = indices.iter().copied().collect();
+            let indices_array = NSArray::from_slice(&indices_refs);
+            
+            msg_send![
+                self, 
+                sparseToDenseWithIndicesTensors: &*indices_array,
+                valuesTensor: values,
+                denseShapeTensor: dense_shape,
+                name: name_obj
+            ]
         }
     }
 }

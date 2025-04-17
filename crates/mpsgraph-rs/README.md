@@ -1,119 +1,123 @@
-# mpsgraph-rs
+# mpsgraph
 
-A Rust wrapper for Apple's MetalPerformanceShadersGraph (MPSGraph) API, enabling high-performance, GPU-accelerated machine learning and numerical computing on Apple platforms.
+Modern Rust bindings for Apple's Metal Performance Shaders Graph framework (MPSGraph).
+
+## Overview
+
+This crate provides Rust bindings for the Metal Performance Shaders Graph framework, a high-level graph-based API for defining neural network models that run on the GPU. It uses:
+
+- Modern `extern_class!` pattern from objc2 for class definitions
+- Automatic memory management with `Retained<T>` instead of manual retain/release
+- More idiomatic Rust API with improved type safety
+- Better Debug and display support via standard traits
+- Cleaner FFI boundary between Rust and Objective-C
+
+## Status
+
+This crate is stable and ready for production use. It is the result of a completed migration effort from the original AnyObject-based implementation to a modern Objective-C integration approach. See the [Migration Progress](../../../MIGRATION-PROGRESS.md) document for details.
 
 ## Features
 
-- **Complete API Coverage**: Comprehensive bindings to MetalPerformanceShadersGraph
-- **Safe Memory Management**: Proper Rust ownership semantics with automatic resource cleanup
-- **Efficient Graph Execution**: Synchronous and asynchronous execution options
-- **Type Safety**: Strong typing with Rust's type system
-- **Tensor Operations**: Full suite of tensor operations for numerical computing and machine learning
+- Create and manipulate graph-based neural network models
+- Define tensor operations with strong typing
+- Execute models on Metal-compatible GPUs
+- Automatic memory management for Objective-C objects
 
 ## Requirements
 
-- macOS, iOS, tvOS or other Apple platform with Metal support
-- Rust 1.58+
+- macOS 10.15 or newer
+- Rust 1.56 or newer
+- Metal-compatible GPU
 
-## Installation
-
-Add this to your `Cargo.toml`:
-
-```toml
-[dependencies]
-mpsgraph = "0.1.0"
-```
-
-For development with the latest version:
-
-```toml
-[dependencies]
-mpsgraph = { git = "https://github.com/computer-graphics-tools/mpsgraph-rs", package = "mpsgraph" }
-```
-
-## Dependencies
-
-This crate depends on:
-
-- **objc2** (0.6.0): Safe Rust bindings to Objective-C
-- **objc2-foundation** (0.3.0): Rust bindings for Apple's Foundation framework
-- **metal** (0.32.0): Rust bindings for Apple's Metal API
-- **bitflags** (2.9.0): Macro for generating bitflag structures
-- **foreign-types** (0.5): FFI type handling utilities
-- **block** (0.1.6): Support for Objective-C blocks
-- **rand** (0.9.0): Random number generation utilities
-
-The crate also requires linking against:
-
-- MetalPerformanceShaders.framework
-- Metal.framework
-- Foundation.framework
-
-## Example
+## Usage Example
 
 ```rust
-use mpsgraph::{Graph, MPSShapeDescriptor, MPSDataType};
-use metal::{Device, MTLResourceOptions};
+use mpsgraph::{
+    DataType, Device, ExecutionDescriptor, Graph, ShapeHelper, TensorData
+};
 use std::collections::HashMap;
+use objc2::rc::Retained;
 
 fn main() {
-    // Get the Metal device
-    let device = Device::system_default().expect("No Metal device found");
+    // Create a Metal device and MPS graph
+    let metal_device = metal::Device::system_default().expect("No Metal device found");
+    let device = Device::with_device(&metal_device);
+    let graph = Graph::new();
     
-    // Create a graph
-    let graph = Graph::new().expect("Failed to create graph");
+    // Create a 2x2 matrix shape and tensors
+    let matrix_shape = ShapeHelper::matrix(2, 2);
+    let input_a = graph.placeholder(DataType::Float32, &matrix_shape).unwrap();
+    let input_b = graph.placeholder(DataType::Float32, &matrix_shape).unwrap();
     
-    // Create input tensors
-    let shape = MPSShapeDescriptor::new(vec![2, 3], MPSDataType::Float32);
-    let x = graph.placeholder(&shape, Some("x"));
-    let y = graph.placeholder(&shape, Some("y"));
+    // Create a matrix multiplication operation
+    let output = graph.matmul(
+        &input_a, &input_b, 
+        false, false, 
+        None
+    ).unwrap();
     
-    // Define the computation: z = x + y
-    let z = graph.add(&x, &y, Some("z"));
+    // Create input tensor data
+    let a_data = vec![1.0f32, 2.0, 3.0, 4.0];
+    let b_data = vec![5.0f32, 6.0, 7.0, 8.0];
     
-    // Create input data
-    let x_data = [1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]; // 2x3 matrix
-    let y_data = [7.0f32, 8.0, 9.0, 10.0, 11.0, 12.0]; // 2x3 matrix
+    let a_tensor_data = TensorData::with_bytes(
+        &a_data,
+        &matrix_shape,
+        DataType::Float32,
+    ).unwrap();
     
-    // Create Metal buffers
-    let buffer_size = (6 * std::mem::size_of::<f32>()) as u64;
-    let x_buffer = device.new_buffer_with_data(
-        x_data.as_ptr() as *const _, 
-        buffer_size, 
-        MTLResourceOptions::StorageModeShared
+    let b_tensor_data = TensorData::with_bytes(
+        &b_data,
+        &matrix_shape,
+        DataType::Float32,
+    ).unwrap();
+    
+    // Set up execution
+    let exec_desc = ExecutionDescriptor::new();
+    exec_desc.prefer_synchronous_execution();
+    
+    // Create feeds dictionary and run graph
+    let mut feeds = HashMap::new();
+    feeds.insert(&*input_a, &*a_tensor_data);
+    feeds.insert(&*input_b, &*b_tensor_data);
+    
+    let results = graph.run_with_feeds_and_descriptor(
+        &feeds,
+        &[&*output],
+        Some(&exec_desc)
     );
-    let y_buffer = device.new_buffer_with_data(
-        y_data.as_ptr() as *const _, 
-        buffer_size, 
-        MTLResourceOptions::StorageModeShared
-    );
-    
-    // Create feed dictionary
-    let mut feed_dict = HashMap::new();
-    feed_dict.insert(&x, x_buffer.deref());
-    feed_dict.insert(&y, y_buffer.deref());
-    
-    // Run the graph
-    let results = graph.run(&device, feed_dict, &[&z]);
     
     // Process results
-    unsafe {
-        let result_ptr = results[0].contents() as *const f32;
-        let result_values = std::slice::from_raw_parts(result_ptr, 6);
-        println!("Result: {:?}", result_values);
-        // Outputs: [8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
+    if let Some(result_data) = results.get(&output) {
+        if let Some(result_array) = result_data.bytes_as::<f32>() {
+            println!("Result matrix:");
+            for i in 0..2 {
+                for j in 0..2 {
+                    print!("{} ", result_array[i * 2 + j]);
+                }
+                println!();
+            }
+        }
     }
 }
 ```
 
-## Additional Features
+## Key Features
 
-- Matrix multiplication and other linear algebra operations
-- Activation functions (ReLU, sigmoid, tanh, etc.)
-- Reduction operations (sum, mean, max, min)
-- Tensor reshaping and transposition
-- Graph compilation for repeated execution
+The main features of this crate are:
+
+1. **Memory Management**: Uses `Retained<T>` for automatic memory management instead of raw pointers and manual retain/release
+2. **Type Safety**: Strong type safety through the use of generics and proper Objective-C class wrappers
+3. **API Design**: Idiomatic Rust API with methods returning `Option<T>` and `Result<T, E>` where appropriate
+4. **Naming**: Uses simpler type names without the MPS prefix (e.g., `Device` instead of `MPSGraphDevice`)
+5. **Error Handling**: Comprehensive error handling with better Rust integration
+6. **Block Support**: Full support for Objective-C blocks with proper type safety and memory management
 
 ## License
 
-Licensed under the MIT License.
+Licensed under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.

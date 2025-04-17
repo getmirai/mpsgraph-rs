@@ -1,11 +1,12 @@
-use crate::core::{AsRawObject, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::{NSArray, NSString};
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
 
-/// TopK operations for Graph
-impl Graph {
+/// Trait defining TopK operations for a Graph
+pub trait GraphTopKOps {
     /// Finds the k largest values along the minor dimension of the input.
     ///
     /// The source must have at least k elements along its minor dimension.
@@ -13,335 +14,515 @@ impl Graph {
     /// - values: The top k values
     /// - indices: The indices of those values
     ///
-    /// - Parameters:
-    ///   - source: Tensor containing source data
-    ///   - k: The number of largest values to return
-    ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of Tensor objects
-    pub fn top_k(
+    /// # Parameters
+    ///
+    /// * `source` - Tensor containing source data
+    /// * `k` - The number of largest values to return
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple (values, indices) of Tensor objects or None if error
+    fn top_k(
         &self,
         source: &Tensor,
         k: usize,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result_array: *mut AnyObject = msg_send![self.0, topKWithSourceTensor: source.0,
-                k: k,
-                name: name_obj,
-            ];
-
-            // Get the two tensors from the NSArray
-            let values: *mut AnyObject = msg_send![result_array, objectAtIndex: 0];
-            let indices: *mut AnyObject = msg_send![result_array, objectAtIndex: 1];
-
-            // Retain the tensors
-            let values = objc2::ffi::objc_retain(values as *mut _);
-            let indices = objc2::ffi::objc_retain(indices as *mut _);
-
-            (Tensor(values), Tensor(indices))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Finds the k largest values along the specified axis of the input.
     ///
     /// The source must have at least k elements along the specified axis.
     ///
-    /// - Parameters:
-    ///   - source: Tensor containing source data
-    ///   - axis: The dimension along which to compute the TopK values
-    ///   - k: The number of largest values to return
-    ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of Tensor objects
-    pub fn top_k_axis(
+    /// # Parameters
+    ///
+    /// * `source` - Tensor containing source data
+    /// * `axis` - The dimension along which to compute the TopK values
+    /// * `k` - The number of largest values to return
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple (values, indices) of Tensor objects or None if error
+    fn top_k_axis(
         &self,
         source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result_array: *mut AnyObject = msg_send![self.0, topKWithSourceTensor: source.0,
-                axis: axis,
-                k: k,
-                name: name_obj,
-            ];
-
-            // Get the two tensors from the NSArray
-            let values: *mut AnyObject = msg_send![result_array, objectAtIndex: 0];
-            let indices: *mut AnyObject = msg_send![result_array, objectAtIndex: 1];
-
-            // Retain the tensors
-            let values = objc2::ffi::objc_retain(values as *mut _);
-            let indices = objc2::ffi::objc_retain(indices as *mut _);
-
-            (Tensor(values), Tensor(indices))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Finds the k smallest values along the specified axis of the input.
     ///
     /// The source must have at least k elements along the specified axis.
     ///
-    /// - Parameters:
-    ///   - source: Tensor containing source data
-    ///   - axis: The dimension along which to compute the BottomK values
-    ///   - k: The number of smallest values to return
-    ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of Tensor objects
-    pub fn bottom_k_axis(
+    /// # Parameters
+    ///
+    /// * `source` - Tensor containing source data
+    /// * `axis` - The dimension along which to compute the BottomK values
+    /// * `k` - The number of smallest values to return
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple (values, indices) of Tensor objects or None if error
+    fn bottom_k_axis(
         &self,
         source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result_array: *mut AnyObject = msg_send![self.0, bottomKWithSourceTensor: source.0,
-                axis: axis,
-                k: k,
-                name: name_obj,
-            ];
-
-            // Get the two tensors from the NSArray
-            let values: *mut AnyObject = msg_send![result_array, objectAtIndex: 0];
-            let indices: *mut AnyObject = msg_send![result_array, objectAtIndex: 1];
-
-            // Retain the tensors
-            let values = objc2::ffi::objc_retain(values as *mut _);
-            let indices = objc2::ffi::objc_retain(indices as *mut _);
-
-            (Tensor(values), Tensor(indices))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Finds the k largest values using tensors for parameters.
     ///
-    /// - Parameters:
-    ///   - source: Tensor containing source data
-    ///   - k_tensor: Tensor containing the value of k
-    ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of Tensor objects
-    pub fn top_k_with_tensor(
+    /// # Parameters
+    ///
+    /// * `source` - Tensor containing source data
+    /// * `k_tensor` - Tensor containing the value of k
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple (values, indices) of Tensor objects or None if error
+    fn top_k_with_tensor(
         &self,
         source: &Tensor,
         k_tensor: &Tensor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result_array: *mut AnyObject = msg_send![self.0, topKWithSourceTensor: source.0,
-                kTensor: k_tensor.0,
-                name: name_obj,
-            ];
-
-            // Get the two tensors from the NSArray
-            let values: *mut AnyObject = msg_send![result_array, objectAtIndex: 0];
-            let indices: *mut AnyObject = msg_send![result_array, objectAtIndex: 1];
-
-            // Retain the tensors
-            let values = objc2::ffi::objc_retain(values as *mut _);
-            let indices = objc2::ffi::objc_retain(indices as *mut _);
-
-            (Tensor(values), Tensor(indices))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Finds the k largest values using tensors for axis and k parameters.
     ///
-    /// - Parameters:
-    ///   - source: Tensor containing source data
-    ///   - axis_tensor: Tensor containing the axis along which to compute TopK
-    ///   - k_tensor: Tensor containing the value of k
-    ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of Tensor objects
-    pub fn top_k_with_axis_tensor(
+    /// # Parameters
+    ///
+    /// * `source` - Tensor containing source data
+    /// * `axis_tensor` - Tensor containing the axis along which to compute TopK
+    /// * `k_tensor` - Tensor containing the value of k
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple (values, indices) of Tensor objects or None if error
+    fn top_k_with_axis_tensor(
         &self,
         source: &Tensor,
         axis_tensor: &Tensor,
         k_tensor: &Tensor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result_array: *mut AnyObject = msg_send![self.0, topKWithSourceTensor: source.0,
-                axisTensor: axis_tensor.0,
-                kTensor: k_tensor.0,
-                name: name_obj,
-            ];
-
-            // Get the two tensors from the NSArray
-            let values: *mut AnyObject = msg_send![result_array, objectAtIndex: 0];
-            let indices: *mut AnyObject = msg_send![result_array, objectAtIndex: 1];
-
-            // Retain the tensors
-            let values = objc2::ffi::objc_retain(values as *mut _);
-            let indices = objc2::ffi::objc_retain(indices as *mut _);
-
-            (Tensor(values), Tensor(indices))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Finds the k smallest values using tensors for axis and k parameters.
     ///
-    /// - Parameters:
-    ///   - source: Tensor containing source data
-    ///   - axis_tensor: Tensor containing the axis along which to compute BottomK
-    ///   - k_tensor: Tensor containing the value of k
-    ///   - name: The name for the operation
-    /// - Returns: A tuple (values, indices) of Tensor objects
-    pub fn bottom_k_with_axis_tensor(
+    /// # Parameters
+    ///
+    /// * `source` - Tensor containing source data
+    /// * `axis_tensor` - Tensor containing the axis along which to compute BottomK
+    /// * `k_tensor` - Tensor containing the value of k
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple (values, indices) of Tensor objects or None if error
+    fn bottom_k_with_axis_tensor(
         &self,
         source: &Tensor,
         axis_tensor: &Tensor,
         k_tensor: &Tensor,
         name: Option<&str>,
-    ) -> (Tensor, Tensor) {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result_array: *mut AnyObject = msg_send![self.0, bottomKWithSourceTensor: source.0,
-                axisTensor: axis_tensor.0,
-                kTensor: k_tensor.0,
-                name: name_obj,
-            ];
-
-            // Get the two tensors from the NSArray
-            let values: *mut AnyObject = msg_send![result_array, objectAtIndex: 0];
-            let indices: *mut AnyObject = msg_send![result_array, objectAtIndex: 1];
-
-            // Retain the tensors
-            let values = objc2::ffi::objc_retain(values as *mut _);
-            let indices = objc2::ffi::objc_retain(indices as *mut _);
-
-            (Tensor(values), Tensor(indices))
-        }
-    }
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
 
     /// Computes the gradient for a TopK operation.
     ///
-    /// - Parameters:
-    ///   - gradient: Tensor containing the incoming gradient
-    ///   - source: Tensor containing source data
-    ///   - k: The number of largest values used in the forward pass
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn top_k_gradient(
+    /// # Parameters
+    ///
+    /// * `gradient` - Tensor containing the incoming gradient
+    /// * `source` - Tensor containing source data
+    /// * `k` - The number of largest values used in the forward pass
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn top_k_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         k: usize,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0, topKWithGradientTensor: gradient.0,
-                source: source.0,
-                k: k,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Computes the gradient for a TopK operation with specified axis.
     ///
-    /// - Parameters:
-    ///   - gradient: Tensor containing the incoming gradient
-    ///   - source: Tensor containing source data
-    ///   - axis: The dimension along which TopK was computed
-    ///   - k: The number of largest values used in the forward pass
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn top_k_gradient_axis(
+    /// # Parameters
+    ///
+    /// * `gradient` - Tensor containing the incoming gradient
+    /// * `source` - Tensor containing source data
+    /// * `axis` - The dimension along which TopK was computed
+    /// * `k` - The number of largest values used in the forward pass
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn top_k_gradient_axis(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
-
-            let result: *mut AnyObject = msg_send![self.0, topKWithGradientTensor: gradient.0,
-                source: source.0,
-                axis: axis,
-                k: k,
-                name: name_obj,
-            ];
-
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Computes the gradient for a BottomK operation with specified axis.
     ///
-    /// - Parameters:
-    ///   - gradient: Tensor containing the incoming gradient
-    ///   - source: Tensor containing source data
-    ///   - axis: The dimension along which BottomK was computed
-    ///   - k: The number of smallest values used in the forward pass
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    pub fn bottom_k_gradient_axis(
+    /// # Parameters
+    ///
+    /// * `gradient` - Tensor containing the incoming gradient
+    /// * `source` - Tensor containing source data
+    /// * `axis` - The dimension along which BottomK was computed
+    /// * `k` - The number of smallest values used in the forward pass
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object or None if error
+    fn bottom_k_gradient_axis(
         &self,
         gradient: &Tensor,
         source: &Tensor,
         axis: isize,
         k: usize,
         name: Option<&str>,
-    ) -> Tensor {
-        unsafe {
-            let name_obj = match name {
-                Some(s) => NSString::from_str(s).as_raw_object(),
-                None => std::ptr::null_mut(),
-            };
+    ) -> Option<Retained<Tensor>>;
+}
 
-            let result: *mut AnyObject = msg_send![self.0, bottomKWithGradientTensor: gradient.0,
-                source: source.0,
-                axis: axis,
+/// Implementation of TopK operations for Graph
+impl GraphTopKOps for Graph {
+    fn top_k(
+        &self,
+        source: &Tensor,
+        k: usize,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                topKWithSourceTensor: source,
                 k: k,
-                name: name_obj,
+                name: name_ptr
             ];
 
-            let result = objc2::ffi::objc_retain(result as *mut _);
-            Tensor(result)
+            if result_array.is_null() {
+                return None;
+            }
+
+            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            if result_array_retained.count() < 2 {
+                return None;
+            }
+
+            // Get the two tensors from the NSArray
+            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
+            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
+            
+            let values = Retained::from_raw(values_ptr).unwrap();
+            let indices = Retained::from_raw(indices_ptr).unwrap();
+
+            Some((values, indices))
         }
+    }
+
+    fn top_k_axis(
+        &self,
+        source: &Tensor,
+        axis: isize,
+        k: usize,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                topKWithSourceTensor: source,
+                axis: axis,
+                k: k,
+                name: name_ptr
+            ];
+
+            if result_array.is_null() {
+                return None;
+            }
+
+            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            if result_array_retained.count() < 2 {
+                return None;
+            }
+
+            // Get the two tensors from the NSArray
+            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
+            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
+            
+            let values = Retained::from_raw(values_ptr).unwrap();
+            let indices = Retained::from_raw(indices_ptr).unwrap();
+
+            Some((values, indices))
+        }
+    }
+
+    fn bottom_k_axis(
+        &self,
+        source: &Tensor,
+        axis: isize,
+        k: usize,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                bottomKWithSourceTensor: source,
+                axis: axis,
+                k: k,
+                name: name_ptr
+            ];
+
+            if result_array.is_null() {
+                return None;
+            }
+
+            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            if result_array_retained.count() < 2 {
+                return None;
+            }
+
+            // Get the two tensors from the NSArray
+            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
+            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
+            
+            let values = Retained::from_raw(values_ptr).unwrap();
+            let indices = Retained::from_raw(indices_ptr).unwrap();
+
+            Some((values, indices))
+        }
+    }
+
+    fn top_k_with_tensor(
+        &self,
+        source: &Tensor,
+        k_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                topKWithSourceTensor: source,
+                kTensor: k_tensor,
+                name: name_ptr
+            ];
+
+            if result_array.is_null() {
+                return None;
+            }
+
+            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            if result_array_retained.count() < 2 {
+                return None;
+            }
+
+            // Get the two tensors from the NSArray
+            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
+            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
+            
+            let values = Retained::from_raw(values_ptr).unwrap();
+            let indices = Retained::from_raw(indices_ptr).unwrap();
+
+            Some((values, indices))
+        }
+    }
+
+    fn top_k_with_axis_tensor(
+        &self,
+        source: &Tensor,
+        axis_tensor: &Tensor,
+        k_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                topKWithSourceTensor: source,
+                axisTensor: axis_tensor,
+                kTensor: k_tensor,
+                name: name_ptr
+            ];
+
+            if result_array.is_null() {
+                return None;
+            }
+
+            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            if result_array_retained.count() < 2 {
+                return None;
+            }
+
+            // Get the two tensors from the NSArray
+            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
+            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
+            
+            let values = Retained::from_raw(values_ptr).unwrap();
+            let indices = Retained::from_raw(indices_ptr).unwrap();
+
+            Some((values, indices))
+        }
+    }
+
+    fn bottom_k_with_axis_tensor(
+        &self,
+        source: &Tensor,
+        axis_tensor: &Tensor,
+        k_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: *mut NSArray<Tensor> = msg_send![
+                self,
+                bottomKWithSourceTensor: source,
+                axisTensor: axis_tensor,
+                kTensor: k_tensor,
+                name: name_ptr
+            ];
+
+            if result_array.is_null() {
+                return None;
+            }
+
+            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            if result_array_retained.count() < 2 {
+                return None;
+            }
+
+            // Get the two tensors from the NSArray
+            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
+            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
+            
+            let values = Retained::from_raw(values_ptr).unwrap();
+            let indices = Retained::from_raw(indices_ptr).unwrap();
+
+            Some((values, indices))
+        }
+    }
+
+    fn top_k_gradient(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        k: usize,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                topKWithGradientTensor: gradient,
+                source: source,
+                k: k,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn top_k_gradient_axis(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        axis: isize,
+        k: usize,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                topKWithGradientTensor: gradient,
+                source: source,
+                axis: axis,
+                k: k,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn bottom_k_gradient_axis(
+        &self,
+        gradient: &Tensor,
+        source: &Tensor,
+        axis: isize,
+        k: usize,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                bottomKWithGradientTensor: gradient,
+                source: source,
+                axis: axis,
+                k: k,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait for easier access to TopK operations
+pub trait GraphTopKOpsExtension {
+    /// Get access to TopK operations
+    fn top_k_ops(&self) -> &dyn GraphTopKOps;
+}
+
+impl GraphTopKOpsExtension for Graph {
+    fn top_k_ops(&self) -> &dyn GraphTopKOps {
+        self
     }
 }

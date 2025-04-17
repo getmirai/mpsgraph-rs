@@ -1,5 +1,5 @@
 use crate::{
-    core::MPSDataType,
+    core::DataType,
     graph::Graph,
     pooling_ops::{
         PaddingStyle, Pooling2DOpDescriptor, Pooling4DOpDescriptor,
@@ -10,15 +10,16 @@ use crate::{
     tensor_data::TensorData,
 };
 use std::collections::HashMap;
+use objc2::rc::Retained;
 
 // Simple verification helper that checks if result exists
 fn verify_result_exists(
-    results: &HashMap<Tensor, TensorData>,
-    tensor: &Tensor,
+    results: &HashMap<Retained<Tensor>, Retained<TensorData>>,
+    tensor: &Retained<Tensor>,
     name: &str,
 ) {
     assert!(
-        results.contains_key(tensor),
+        results.iter().any(|(key, _)| *key == *tensor),
         "Results should contain {} tensor",
         name
     );
@@ -59,7 +60,7 @@ fn test_pooling_2d_descriptors() {
     descriptor1.set_return_indices_mode(PoolingReturnIndicesMode::GlobalFlatten2D);
 
     // Test setting return indices data type
-    descriptor1.set_return_indices_data_type(MPSDataType::Int32);
+    descriptor1.set_return_indices_data_type(DataType::Int32);
 
     // Test setting ceil mode
     descriptor1.set_ceil_mode(true);
@@ -80,7 +81,7 @@ fn test_pooling_4d_descriptors() {
     );
 
     // Test creating simplified 4D pooling descriptors
-    let _descriptor2 = Pooling4DOpDescriptor::new_simple(
+    let descriptor2 = Pooling4DOpDescriptor::new_simple(
         &[3, 3, 3, 3], // kernel sizes
         PaddingStyle::TfValid,
     );
@@ -89,7 +90,7 @@ fn test_pooling_4d_descriptors() {
     descriptor1.set_return_indices_mode(PoolingReturnIndicesMode::GlobalFlatten4D);
 
     // Test setting return indices data type
-    descriptor1.set_return_indices_data_type(MPSDataType::Int32);
+    descriptor1.set_return_indices_data_type(DataType::Int32);
 
     // Test setting ceil mode
     descriptor1.set_ceil_mode(true);
@@ -104,7 +105,7 @@ fn test_max_pooling_2d() {
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
     let shape = Shape::from_slice(&[1, 3, 6, 6]);
-    let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
+    let input = graph.placeholder(&shape, DataType::Float32, Some("Input"));
 
     // Create pooling descriptor
     let descriptor = Pooling2DOpDescriptor::new_simple(
@@ -125,7 +126,7 @@ fn test_max_pooling_2d() {
         data.push(i as f32);
     }
 
-    let input_data = TensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 3, 6, 6], DataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -139,20 +140,12 @@ fn test_max_pooling_2d() {
 }
 
 #[test]
-fn test_max_pooling_2d_return_indices() {
-    // Skipping test - Issues with NSArray indices access
-    println!(
-        "Skipping test_max_pooling_2d_return_indices due to NSArray implementation constraints"
-    );
-}
-
-#[test]
 fn test_avg_pooling_2d() {
     let graph = Graph::new();
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
     let shape = Shape::from_slice(&[1, 3, 6, 6]);
-    let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
+    let input = graph.placeholder(&shape, DataType::Float32, Some("Input"));
 
     // Create pooling descriptor
     let descriptor = Pooling2DOpDescriptor::new_simple(
@@ -176,7 +169,7 @@ fn test_avg_pooling_2d() {
         data.push(i as f32);
     }
 
-    let input_data = TensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 3, 6, 6], DataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -197,7 +190,7 @@ fn test_l2_norm_pooling_2d() {
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
     let shape = Shape::from_slice(&[1, 3, 6, 6]);
-    let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
+    let input = graph.placeholder(&shape, DataType::Float32, Some("Input"));
 
     // Create pooling descriptor
     let descriptor = Pooling2DOpDescriptor::new_simple(
@@ -218,7 +211,7 @@ fn test_l2_norm_pooling_2d() {
         data.push(i as f32);
     }
 
-    let input_data = TensorData::new(&data, &[1, 3, 6, 6], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 3, 6, 6], DataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -237,7 +230,7 @@ fn test_pooling_gradients() {
 
     // Create input tensor (NCHW: 1, 3, 6, 6)
     let shape = Shape::from_slice(&[1, 3, 6, 6]);
-    let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
+    let input = graph.placeholder(&shape, DataType::Float32, Some("Input"));
 
     // Create pooling descriptor
     let descriptor = Pooling2DOpDescriptor::new_simple(
@@ -255,7 +248,7 @@ fn test_pooling_gradients() {
 
     // Create gradient placeholder (for output of pooling operations)
     let max_pool_shape = Shape::from_slice(&[1, 3, 3, 3]); // Output will be 3x3 with stride 2
-    let grad = graph.placeholder(&max_pool_shape, MPSDataType::Float32, Some("Grad"));
+    let grad = graph.placeholder(&max_pool_shape, DataType::Float32, Some("Grad"));
 
     // Define gradient operations - only testing max and avg pooling
     let max_pool_grad =
@@ -275,8 +268,8 @@ fn test_pooling_gradients() {
         grad_data_vec.push(1.0);
     }
 
-    let input_data = TensorData::new(&input_data_vec, &[1, 3, 6, 6], MPSDataType::Float32);
-    let grad_data = TensorData::new(&grad_data_vec, &[1, 3, 3, 3], MPSDataType::Float32);
+    let input_data = TensorData::new(&input_data_vec, &[1, 3, 6, 6], DataType::Float32);
+    let grad_data = TensorData::new(&grad_data_vec, &[1, 3, 3, 3], DataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -307,7 +300,7 @@ fn test_max_pooling_4d() {
 
     // Create input tensor (4D: 1, 2, 3, 4)
     let shape = Shape::from_slice(&[1, 2, 3, 4]);
-    let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
+    let input = graph.placeholder(&shape, DataType::Float32, Some("Input"));
 
     // Create pooling descriptor
     let descriptor = Pooling4DOpDescriptor::new_simple(
@@ -324,7 +317,7 @@ fn test_max_pooling_4d() {
         data.push(i as f32);
     }
 
-    let input_data = TensorData::new(&data, &[1, 2, 3, 4], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 2, 3, 4], DataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();
@@ -343,7 +336,7 @@ fn test_avg_pooling_4d() {
 
     // Create input tensor (4D: 1, 2, 3, 4)
     let shape = Shape::from_slice(&[1, 2, 3, 4]);
-    let input = graph.placeholder(&shape, MPSDataType::Float32, Some("Input"));
+    let input = graph.placeholder(&shape, DataType::Float32, Some("Input"));
 
     // Create pooling descriptor
     let descriptor = Pooling4DOpDescriptor::new(
@@ -363,7 +356,7 @@ fn test_avg_pooling_4d() {
         data.push(i as f32);
     }
 
-    let input_data = TensorData::new(&data, &[1, 2, 3, 4], MPSDataType::Float32);
+    let input_data = TensorData::new(&data, &[1, 2, 3, 4], DataType::Float32);
 
     // Create feeds
     let mut feeds = HashMap::new();

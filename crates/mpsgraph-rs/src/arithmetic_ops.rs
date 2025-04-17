@@ -1,1570 +1,1019 @@
-use crate::core::{AsRawObject, NSString};
+use objc2::rc::Retained;
+use objc2::msg_send;
+use objc2_foundation::NSString;
+
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::msg_send;
-use objc2::runtime::AnyObject;
 
-/// Arithmetic operations for Graph
-impl Graph {
+/// Trait for arithmetic operations on Graph
+pub trait GraphArithmeticOps {
     // MARK: - Unary Operations
 
     /// Creates an identity operation
-    pub fn identity(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                identityWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn identity(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns e raised to the power of the input tensor
-    pub fn exp(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                exponentWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn exp(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns 2 raised to the power of the input tensor
-    pub fn exp2(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                exponentBase2WithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns 10 raised to the power of the input tensor
-    pub fn exp10(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                exponentBase10WithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn exp2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the natural logarithm of the input tensor
-    pub fn log(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                logarithmWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn log(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the base-2 logarithm of the input tensor
-    pub fn log2(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                logarithmBase2WithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the base-10 logarithm of the input tensor
-    pub fn log10(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                logarithmBase10WithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn log2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the square of the input tensor
-    pub fn square(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                squareWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn square(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the square root of the input tensor
-    pub fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                squareRootWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the reciprocal square root of the input tensor
-    pub fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                reciprocalSquareRootWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the reciprocal of the input tensor
-    pub fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                reciprocalWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the absolute value of the input tensor
-    pub fn abs(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                absoluteWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the absolute square of the input tensor (equivalent to squaring the absolute value)
-    pub fn abs_square(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                absoluteSquareWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn abs(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the negation of the input tensor
-    pub fn negative(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                negativeWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn negative(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns a tensor with the sign of each element in the input tensor
     /// -1 for negative, 0 for zero, 1 for positive
-    pub fn sign(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                signWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns a tensor with 1 where sign bit is set, 0 otherwise
-    pub fn signbit(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                signbitWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn sign(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the ceiling of the input tensor
-    pub fn ceil(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                ceilWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn ceil(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the floor of the input tensor
-    pub fn floor(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                floorWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn floor(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the rounded value of the input tensor
-    pub fn round(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                roundWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the rounded to nearest integral value of the input tensor using current rounding mode
-    pub fn rint(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                rintWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the sine of the input tensor
-    pub fn sin(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                sinWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the cosine of the input tensor
-    pub fn cos(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                cosWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the tangent of the input tensor
-    pub fn tan(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                tanWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the hyperbolic sine of the input tensor
-    pub fn sinh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                sinhWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the hyperbolic cosine of the input tensor
-    pub fn cosh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                coshWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the hyperbolic tangent of the input tensor (arithmetic version)
-    ///
-    /// Note: This operation is also available in activation_ops.rs.
-    /// This is provided for completeness of the arithmetic operations module.
-    pub fn tanh_arithmetic(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                tanhWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the inverse sine (arcsine) of the input tensor
-    pub fn asin(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                asinWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the inverse cosine (arccosine) of the input tensor
-    pub fn acos(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                acosWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the inverse tangent (arctangent) of the input tensor
-    pub fn atan(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0, atanWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the inverse hyperbolic sine of the input tensor
-    pub fn asinh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                asinhWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the inverse hyperbolic cosine of the input tensor
-    pub fn acosh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                acoshWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the inverse hyperbolic tangent of the input tensor
-    pub fn atanh(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                atanhWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the error function of the input tensor
-    pub fn erf(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                erfWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns a tensor that is 1 if the input is infinite, 0 otherwise
-    pub fn is_infinite(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                isInfiniteWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns a tensor that is 1 if the input is finite, 0 otherwise
-    pub fn is_finite(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                isFiniteWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns a tensor that is 1 if the input is NaN, 0 otherwise
-    pub fn is_nan(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                isNaNWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Truncates the input tensor value
-    pub fn truncate(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                truncateWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs bitwise NOT on the input tensor
-    pub fn bitwise_not(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                bitwiseNOTWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Counts the number of 1 bits in each element of the input tensor
-    pub fn bitwise_population_count(
-        &self,
-        x: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                bitwisePopulationCountWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the logical NOT of the input tensor
-    pub fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                logicalNOTWithTensor: x.0,
-                name: name_obj
-            ];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    fn round(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     // MARK: - Binary Operations
 
     /// Performs addition of two tensors
-    pub fn add(
+    fn add(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, additionWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs subtraction of two tensors
-    pub fn subtract(
+    fn subtract(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, subtractionWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs multiplication of two tensors
-    pub fn multiply(
+    fn multiply(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, multiplicationWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs division of two tensors
-    pub fn divide(
+    fn divide(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, divisionWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs division of two tensors but returns 0 if secondary is 0
-    pub fn division_no_nan(
+    fn division_no_nan(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, divisionNoNaNWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs modulo operation between two tensors
-    pub fn modulo(
+    fn modulo(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, moduloWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs floor modulo operation
-    pub fn floor_modulo(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, floorModuloWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Raises primary tensor to the power of secondary tensor
-    pub fn power(
+    fn power(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
 
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, powerWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the smaller of two tensors
-    pub fn minimum(
+    /// Returns the minimum of two tensors
+    fn minimum(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
 
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, minimumWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the greater of two tensors
-    pub fn maximum(
+    /// Returns the maximum of two tensors
+    fn maximum(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
 
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, maximumWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the smaller of two tensors, propagating NaNs
-    pub fn minimum_with_nan_propagation(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, minimumWithNaNPropagationWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Returns the greater of two tensors, propagating NaNs
-    pub fn maximum_with_nan_propagation(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, maximumWithNaNPropagationWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    // MARK: - Comparison Operations
 
     /// Returns element-wise equal comparison
-    pub fn equal(
+    fn equal(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, equalWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise not equal comparison
-    pub fn not_equal(
+    fn not_equal(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, notEqualWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise less than comparison
-    pub fn less_than(
+    fn less_than(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, lessThanWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise less than or equal comparison
-    pub fn less_than_or_equal_to(
+    fn less_than_or_equal(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, lessThanOrEqualWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise greater than comparison
-    pub fn greater_than(
+    fn greater_than(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, greaterThanWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise greater than or equal comparison
-    pub fn greater_than_or_equal_to(
+    fn greater_than_or_equal(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
 
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, greaterThanOrEqualWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    // MARK: - Logical Operations
 
     /// Performs logical AND of two tensors
-    pub fn logical_and(
+    fn logical_and(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, logicalANDWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Performs logical OR of two tensors
-    pub fn logical_or(
+    fn logical_or(
         &self,
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
 
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, logicalORWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs logical NAND of two tensors
-    pub fn logical_nand(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, logicalNANDWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs logical NOR of two tensors
-    pub fn logical_nor(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, logicalNORWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs logical XOR of two tensors
-    pub fn logical_xor(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, logicalXORWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs logical XNOR of two tensors
-    pub fn logical_xnor(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, logicalXNORWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs atan2 operation (arctangent of y/x)
-    pub fn atan2(
-        &self,
-        y: &Tensor,
-        x: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, atan2WithPrimaryTensor: y.0,
-                                                  secondaryTensor: x.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs bitwise AND of two tensors
-    pub fn bitwise_and(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, bitwiseANDWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs bitwise OR of two tensors
-    pub fn bitwise_or(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, bitwiseORWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs bitwise XOR of two tensors
-    pub fn bitwise_xor(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, bitwiseXORWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs bitwise left shift
-    pub fn left_shift(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, leftShiftWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    /// Performs bitwise right shift
-    pub fn right_shift(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, rightShiftWithPrimaryTensor: primary.0,
-                                                  secondaryTensor: secondary.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    /// Returns the logical NOT of the input tensor
+    fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     // MARK: - Ternary Operations
 
     /// Creates a select operation which chooses values from true or false tensor based on predicate
-    pub fn select(
+    fn select(
         &self,
         predicate: &Tensor,
         true_tensor: &Tensor,
         false_tensor: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, selectWithPredicateTensor: predicate.0,
-                                                  truePredicateTensor: true_tensor.0,
-                                                  falsePredicateTensor: false_tensor.0,
-                                                  name: name_obj];
-
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
+    ) -> Option<Retained<Tensor>>;
 
     /// Creates a clamp operation that clamps values to the given min and max
-    pub fn clamp(
+    fn clamp(
         &self,
         tensor: &Tensor,
         min_tensor: &Tensor,
         max_tensor: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
+    ) -> Option<Retained<Tensor>>;
+}
 
+impl GraphArithmeticOps for Graph {
+    fn identity(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, clampWithTensor: tensor.0,
-                                                  minValueTensor: min_tensor.0,
-                                                  maxValueTensor: max_tensor.0,
-                                                  name: name_obj];
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
-        }
-    }
-
-    // MARK: - Complex Number Operations
-
-    /// Returns the real part of a complex tensor
-    pub fn real_part(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
-        unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                realPartOfTensor: x.0,
-                name: name_obj
+            let result: *mut Tensor = msg_send![
+                self,
+                identityWithTensor: x,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Returns the imaginary part of a complex tensor
-    pub fn imaginary_part(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
+    fn exp(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                imaginaryPartOfTensor: x.0,
-                name: name_obj
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                exponentWithTensor: x,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Creates a complex tensor from real and imaginary parts
-    pub fn complex_with_real_imaginary(
+    fn exp2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                exponentBase2WithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn log(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                logarithmWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn log2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                logarithmBase2WithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn square(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                squareWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                squareRootWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reciprocalSquareRootWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                reciprocalWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn abs(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                absoluteWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn negative(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                negativeWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn sign(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                signWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn ceil(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                ceilWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn floor(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                floorWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn round(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                roundWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn add(
         &self,
-        real_tensor: &Tensor,
-        imaginary_tensor: &Tensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
-    ) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![self.0, complexTensorWithRealTensor: real_tensor.0,
-                                                  imaginaryTensor: imaginary_tensor.0,
-                                                  name: name_obj];
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            let result: *mut Tensor = msg_send![
+                self,
+                additionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
     }
 
-    /// Returns the complex conjugate of a complex tensor
-    pub fn conjugate(&self, x: &Tensor, name: Option<&str>) -> Tensor {
-        let name_obj = match name {
-            Some(s) => NSString::from_str(s).as_raw_object(),
-            None => std::ptr::null_mut(),
-        };
-
+    fn subtract(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
         unsafe {
-            let tensor: *mut AnyObject = msg_send![
-                self.0,
-                conjugateWithTensor: x.0,
-                name: name_obj
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                subtractionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
             ];
 
-            let tensor = objc2::ffi::objc_retain(tensor as *mut _);
-            Tensor(tensor)
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
         }
+    }
+
+    fn multiply(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                multiplicationWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn divide(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                divisionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn division_no_nan(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                divisionNoNaNWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn modulo(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                moduloWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn power(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                powerWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn minimum(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                minimumWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn maximum(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                maximumWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn equal(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                equalWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn not_equal(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                notEqualWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn less_than(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                lessThanWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn less_than_or_equal(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                lessThanOrEqualWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn greater_than(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                greaterThanWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn greater_than_or_equal(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                greaterThanOrEqualWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn logical_and(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                logicalANDWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn logical_or(
+        &self,
+        primary: &Tensor,
+        secondary: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                logicalORWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                logicalNOTWithTensor: x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn select(
+        &self,
+        predicate: &Tensor,
+        true_tensor: &Tensor,
+        false_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                selectWithPredicateTensor: predicate,
+                truePredicateTensor: true_tensor,
+                falsePredicateTensor: false_tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn clamp(
+        &self,
+        tensor: &Tensor,
+        min_tensor: &Tensor,
+        max_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                clampWithTensor: tensor,
+                minValueTensor: min_tensor,
+                maxValueTensor: max_tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                None
+            } else {
+                Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+}
+
+/// Extension trait providing a method for Graph to access arithmetic operations
+pub trait GraphArithmeticOpsExtension {
+    /// Access arithmetic operations for this graph
+    fn arithmetic_ops(&self) -> &dyn GraphArithmeticOps;
+}
+
+impl GraphArithmeticOpsExtension for Graph {
+    fn arithmetic_ops(&self) -> &dyn GraphArithmeticOps {
+        self
     }
 }
