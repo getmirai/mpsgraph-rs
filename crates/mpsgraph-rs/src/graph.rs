@@ -581,7 +581,7 @@ impl Graph {
     pub fn compile(
         &self,
         device: &Device,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<ShapedType>>,
+        feeds: &HashMap<Retained<Tensor>, Retained<ShapedType>>,
         targets: &[&Retained<Tensor>],
         descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Retained<Executable>> {
