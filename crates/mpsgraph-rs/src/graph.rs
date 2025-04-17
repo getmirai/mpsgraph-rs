@@ -1,7 +1,7 @@
 use objc2::rc::Retained;
 use objc2::{extern_class, ClassType, msg_send};
 use objc2::runtime::NSObject;
-use objc2_foundation::{NSArray, NSMutableDictionary, NSObjectProtocol, NSString};
+use objc2_foundation::{NSArray, NSData, NSMutableDictionary, NSObjectProtocol, NSString};
 use std::collections::HashMap;
 
 use crate::tensor::{Tensor, DataType};
@@ -516,6 +516,47 @@ impl Graph {
                 }
             }
         }
+    }
+    
+    /// Creates a constant tensor with the given raw bytes
+    pub fn constant_with_raw_data(
+        &self,
+        data: &[u8],
+        shape: &Shape,
+        data_type: DataType,
+    ) -> Option<Retained<Tensor>> {
+        // Create TensorData from the raw bytes
+        let tensor_data = unsafe {
+            // Get the default Metal device
+            let device = metal::Device::system_default().expect("No Metal device found");
+            
+            // Create NSData with our data
+            let ns_data = NSData::with_bytes(data);
+            
+            // Create MPSGraphDevice from MTLDevice
+            let mps_device = Device::with_device(&device);
+            
+            // Create the TensorData with NSData
+            let tensor_data_class = TensorData::class();
+            let data_type_val = data_type as u32;
+            
+            let alloc: *mut TensorData = msg_send![tensor_data_class, alloc];
+            let tensor_data: *mut TensorData = msg_send![alloc, 
+                initWithDevice:&*mps_device, 
+                data:&*ns_data, 
+                shape:shape, 
+                dataType:data_type_val
+            ];
+            
+            if tensor_data.is_null() {
+                return None;
+            }
+            
+            Retained::from_raw(tensor_data).unwrap()
+        };
+        
+        // Use the existing constant_with_data method with the created TensorData
+        self.constant_with_data(&tensor_data, Some(shape), None)
     }
     
     /// Compiles the graph against a given set of feeds and targets
