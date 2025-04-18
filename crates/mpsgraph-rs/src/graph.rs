@@ -458,17 +458,19 @@ impl Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let shape_ptr = shape.map_or(std::ptr::null(), |s| s as *const _);
-            
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 constantWithData: &**data,
                 shape: shape_ptr,
                 name: name_ptr
             ];
-            
+
             if tensor_ptr.is_null() {
                 panic!("Failed to create constant tensor with data");
             } else {
@@ -530,7 +532,7 @@ impl Graph {
     pub fn compile(
         &self,
         device: &Device,
-        feeds: &HashMap<Retained<Tensor>, Retained<ShapedType>>,
+        feeds: &HashMap<&Retained<Tensor>, &Retained<ShapedType>>,
         targets: &[&Retained<Tensor>],
         descriptor: Option<&CompilationDescriptor>,
     ) -> Retained<Executable> {
@@ -542,15 +544,8 @@ impl Graph {
 
             // Add entries to dictionary
             for (tensor, shaped_type) in feeds {
-                // Get raw pointers to the inner Objective-C objects
-                let tensor_ptr = tensor.as_ref() as *const Tensor;
-                let shape_ptr = shaped_type.as_ref() as *const ShapedType;
-
-                // Create temporary references for message sending
-                let tensor_ref: &Tensor = &*tensor_ptr;
-                let shape_ref: &ShapedType = &*shape_ptr;
-
-                let _: () = msg_send![dictionary_ptr, setObject: shape_ref, forKey: tensor_ref];
+                let _: () =
+                    msg_send![dictionary_ptr, setObject: &***shaped_type, forKey: &***tensor];
             }
 
             // Create NSArray for target tensors
