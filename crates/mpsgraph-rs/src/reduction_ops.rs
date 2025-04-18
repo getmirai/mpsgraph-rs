@@ -21,7 +21,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_sum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -39,7 +39,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_sum_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -57,7 +57,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -75,7 +75,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -93,7 +93,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -111,7 +111,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -129,7 +129,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_product_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -147,7 +147,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_product_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -165,7 +165,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_propagate_nan_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -183,7 +183,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_propagate_nan_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -201,7 +201,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_propagate_nan_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -219,7 +219,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_propagate_nan_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -237,7 +237,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_and_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -255,7 +255,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_and_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -273,7 +273,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_or_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -291,7 +291,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_or_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -309,7 +309,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_xor_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -327,7 +327,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_xor_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -345,7 +345,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object containing the indices of maximum values
     fn reduction_arg_maximum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -363,7 +363,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object containing the indices of minimum values
     fn reduction_arg_minimum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -372,7 +372,7 @@ pub trait GraphReductionOps {
 impl GraphReductionOps for Graph {
     fn reduction_sum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -382,7 +382,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionSumWithTensor: tensor,
+                reductionSumWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -397,7 +397,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_sum_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -415,7 +415,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionSumWithTensor: tensor,
+                reductionSumWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -430,7 +430,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_maximum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -440,7 +440,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMaximumWithTensor: tensor,
+                reductionMaximumWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -455,7 +455,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_maximum_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -473,7 +473,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMaximumWithTensor: tensor,
+                reductionMaximumWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -488,7 +488,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_minimum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -498,7 +498,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMinimumWithTensor: tensor,
+                reductionMinimumWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -513,7 +513,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_minimum_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -531,7 +531,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMinimumWithTensor: tensor,
+                reductionMinimumWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -546,7 +546,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_product_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -556,7 +556,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionProductWithTensor: tensor,
+                reductionProductWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -571,7 +571,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_product_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -589,7 +589,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionProductWithTensor: tensor,
+                reductionProductWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -604,7 +604,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_maximum_propagate_nan_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -614,7 +614,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMaximumWithPropagateNaNWithTensor: tensor,
+                reductionMaximumWithPropagateNaNWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -629,7 +629,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_maximum_propagate_nan_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -647,7 +647,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMaximumWithPropagateNaNWithTensor: tensor,
+                reductionMaximumWithPropagateNaNWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -662,7 +662,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_minimum_propagate_nan_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -672,7 +672,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMinimumWithPropagateNaNWithTensor: tensor,
+                reductionMinimumWithPropagateNaNWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -687,7 +687,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_minimum_propagate_nan_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -705,7 +705,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionMinimumWithPropagateNaNWithTensor: tensor,
+                reductionMinimumWithPropagateNaNWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -720,7 +720,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_and_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -730,7 +730,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionANDWithTensor: tensor,
+                reductionANDWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -745,7 +745,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_and_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -763,7 +763,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionANDWithTensor: tensor,
+                reductionANDWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -778,7 +778,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_or_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -788,7 +788,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionORWithTensor: tensor,
+                reductionORWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -803,7 +803,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_or_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -821,7 +821,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionORWithTensor: tensor,
+                reductionORWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -836,7 +836,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_xor_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -846,7 +846,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionXORWithTensor: tensor,
+                reductionXORWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -861,7 +861,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_xor_with_axes(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -879,7 +879,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionXORWithTensor: tensor,
+                reductionXORWithTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -894,7 +894,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_arg_maximum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -904,7 +904,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionArgMaximumWithTensor: tensor,
+                reductionArgMaximumWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];
@@ -919,7 +919,7 @@ impl GraphReductionOps for Graph {
 
     fn reduction_arg_minimum_with_axis(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -929,7 +929,7 @@ impl GraphReductionOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reductionArgMinimumWithTensor: tensor,
+                reductionArgMinimumWithTensor: &**tensor,
                 axis: axis,
                 name: name_ptr
             ];

@@ -20,7 +20,7 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn transpose(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         dimensions: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -38,8 +38,8 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -58,9 +58,9 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -78,8 +78,8 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn inner_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -96,8 +96,8 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn outer_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -114,8 +114,8 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn batch_matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -134,9 +134,9 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object.
     fn batch_matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -159,9 +159,9 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object with the band part extracted.
     fn band_part(
         &self,
-        input: &Tensor,
-        num_lower: &Tensor,
-        num_upper: &Tensor,
+        input: &Retained<Tensor>,
+        num_lower: &Retained<Tensor>,
+        num_upper: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -183,7 +183,7 @@ pub trait GraphMatrixOps {
     /// A valid Tensor object with the band part extracted.
     fn band_part_with_scalars(
         &self,
-        input: &Tensor,
+        input: &Retained<Tensor>,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
@@ -193,7 +193,7 @@ pub trait GraphMatrixOps {
 impl GraphMatrixOps for Graph {
     fn transpose(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         dimensions: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -207,7 +207,7 @@ impl GraphMatrixOps for Graph {
             // Create the operation
             let result: *mut Tensor = msg_send![
                 self,
-                transposeTensor: x,
+                transposeTensor: &**x,
                 permutation: &*dimensions_shape,
                 name: name_ptr
             ];
@@ -222,8 +222,8 @@ impl GraphMatrixOps for Graph {
 
     fn matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -232,8 +232,8 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -247,9 +247,9 @@ impl GraphMatrixOps for Graph {
 
     fn matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -259,9 +259,9 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: primary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
                 transposePrimary: primary_transpose,
-                secondaryTensor: secondary,
+                secondaryTensor: &**secondary,
                 transposeSecondary: secondary_transpose,
                 name: name_ptr
             ];
@@ -276,8 +276,8 @@ impl GraphMatrixOps for Graph {
 
     fn inner_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -286,8 +286,8 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                innerProductWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                innerProductWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -301,8 +301,8 @@ impl GraphMatrixOps for Graph {
 
     fn outer_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -311,8 +311,8 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                outerProductWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                outerProductWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -326,8 +326,8 @@ impl GraphMatrixOps for Graph {
 
     fn batch_matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -336,8 +336,8 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -351,9 +351,9 @@ impl GraphMatrixOps for Graph {
 
     fn batch_matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -363,9 +363,9 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: primary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
                 transposePrimary: primary_transpose,
-                secondaryTensor: secondary,
+                secondaryTensor: &**secondary,
                 transposeSecondary: secondary_transpose,
                 name: name_ptr
             ];
@@ -380,9 +380,9 @@ impl GraphMatrixOps for Graph {
 
     fn band_part(
         &self,
-        input: &Tensor,
-        num_lower: &Tensor,
-        num_upper: &Tensor,
+        input: &Retained<Tensor>,
+        num_lower: &Retained<Tensor>,
+        num_upper: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -391,9 +391,9 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                bandPartWithTensor: input,
-                numLower: num_lower,
-                numUpper: num_upper,
+                bandPartWithTensor: &**input,
+                numLower: &**num_lower,
+                numUpper: &**num_upper,
                 name: name_ptr
             ];
 
@@ -407,7 +407,7 @@ impl GraphMatrixOps for Graph {
 
     fn band_part_with_scalars(
         &self,
-        input: &Tensor,
+        input: &Retained<Tensor>,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
@@ -418,7 +418,7 @@ impl GraphMatrixOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                bandPartWithTensor: input,
+                bandPartWithTensor: &**input,
                 numLowerScalar: num_lower,
                 numUpperScalar: num_upper,
                 name: name_ptr

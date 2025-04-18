@@ -40,8 +40,8 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn variance_with_mean(
         &self,
-        tensor: &Tensor,
-        mean_tensor: &Tensor,
+        tensor: &Retained<Tensor>,
+        mean_tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -59,7 +59,7 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn variance(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -81,11 +81,11 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn normalize(
         &self,
-        tensor: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
+        tensor: &Retained<Tensor>,
+        mean: &Retained<Tensor>,
+        variance: &Retained<Tensor>,
+        gamma: Option<&Retained<Tensor>>,
+        beta: Option<&Retained<Tensor>>,
         epsilon: f32,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -107,10 +107,10 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn normalization_gamma_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
+        mean: &Retained<Tensor>,
+        variance: &Retained<Tensor>,
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
@@ -130,8 +130,8 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn normalization_beta_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -156,13 +156,13 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn normalization_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
-        gamma: Option<&Tensor>,
-        gamma_gradient: Option<&Tensor>,
-        beta_gradient: Option<&Tensor>,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
+        mean: &Retained<Tensor>,
+        variance: &Retained<Tensor>,
+        gamma: Option<&Retained<Tensor>>,
+        gamma_gradient: Option<&Retained<Tensor>>,
+        beta_gradient: Option<&Retained<Tensor>>,
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
@@ -201,8 +201,8 @@ impl GraphNormalizationOps for Graph {
 
     fn variance_with_mean(
         &self,
-        tensor: &Tensor,
-        mean_tensor: &Tensor,
+        tensor: &Retained<Tensor>,
+        mean_tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -216,8 +216,8 @@ impl GraphNormalizationOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                varianceOfTensor: tensor,
-                meanTensor: mean_tensor,
+                varianceOfTensor: &**tensor,
+                meanTensor: &**mean_tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -232,7 +232,7 @@ impl GraphNormalizationOps for Graph {
 
     fn variance(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -246,7 +246,7 @@ impl GraphNormalizationOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                varianceOfTensor: tensor,
+                varianceOfTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -261,11 +261,11 @@ impl GraphNormalizationOps for Graph {
 
     fn normalize(
         &self,
-        tensor: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
+        tensor: &Retained<Tensor>,
+        mean: &Retained<Tensor>,
+        variance: &Retained<Tensor>,
+        gamma: Option<&Retained<Tensor>>,
+        beta: Option<&Retained<Tensor>>,
         epsilon: f32,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -273,14 +273,14 @@ impl GraphNormalizationOps for Graph {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let gamma_ptr = gamma.map_or(std::ptr::null(), |g| g as *const _);
-            let beta_ptr = beta.map_or(std::ptr::null(), |b| b as *const _);
+            let gamma_ptr = gamma.map_or(std::ptr::null(), |g| &**g as *const _);
+            let beta_ptr = beta.map_or(std::ptr::null(), |b| &**b as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                normalizationWithTensor: tensor,
-                meanTensor: mean,
-                varianceTensor: variance,
+                normalizationWithTensor: &**tensor,
+                meanTensor: &**mean,
+                varianceTensor: &**variance,
                 gammaTensor: gamma_ptr,
                 betaTensor: beta_ptr,
                 epsilon: epsilon as f64,
@@ -297,10 +297,10 @@ impl GraphNormalizationOps for Graph {
 
     fn normalization_gamma_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
+        mean: &Retained<Tensor>,
+        variance: &Retained<Tensor>,
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
@@ -315,10 +315,10 @@ impl GraphNormalizationOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                normalizationGammaGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
-                meanTensor: mean,
-                varianceTensor: variance,
+                normalizationGammaGradientWithIncomingGradientTensor: &**incoming_gradient,
+                sourceTensor: &**source,
+                meanTensor: &**mean,
+                varianceTensor: &**variance,
                 reductionAxes: axes_ptr,
                 epsilon: epsilon as f64,
                 name: name_ptr
@@ -334,8 +334,8 @@ impl GraphNormalizationOps for Graph {
 
     fn normalization_beta_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -349,8 +349,8 @@ impl GraphNormalizationOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                normalizationBetaGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
+                normalizationBetaGradientWithIncomingGradientTensor: &**incoming_gradient,
+                sourceTensor: &**source,
                 reductionAxes: axes_ptr,
                 name: name_ptr
             ];
@@ -365,13 +365,13 @@ impl GraphNormalizationOps for Graph {
 
     fn normalization_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
-        gamma: Option<&Tensor>,
-        gamma_gradient: Option<&Tensor>,
-        beta_gradient: Option<&Tensor>,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
+        mean: &Retained<Tensor>,
+        variance: &Retained<Tensor>,
+        gamma: Option<&Retained<Tensor>>,
+        gamma_gradient: Option<&Retained<Tensor>>,
+        beta_gradient: Option<&Retained<Tensor>>,
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
@@ -380,9 +380,9 @@ impl GraphNormalizationOps for Graph {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
-            let gamma_ptr = gamma.map_or(std::ptr::null(), |g| g as *const _);
-            let gamma_gradient_ptr = gamma_gradient.map_or(std::ptr::null(), |g| g as *const _);
-            let beta_gradient_ptr = beta_gradient.map_or(std::ptr::null(), |b| b as *const _);
+            let gamma_ptr = gamma.map_or(std::ptr::null(), |g| &**g as *const _);
+            let gamma_gradient_ptr = gamma_gradient.map_or(std::ptr::null(), |g| &**g as *const _);
+            let beta_gradient_ptr = beta_gradient.map_or(std::ptr::null(), |b| &**b as *const _);
 
             // Convert the axes to NSArray of NSNumbers
             let axes_array = create_ns_array_from_i64_slice(axes);
@@ -390,10 +390,10 @@ impl GraphNormalizationOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                normalizationGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
-                meanTensor: mean,
-                varianceTensor: variance,
+                normalizationGradientWithIncomingGradientTensor: &**incoming_gradient,
+                sourceTensor: &**source,
+                meanTensor: &**mean,
+                varianceTensor: &**variance,
                 gammaTensor: gamma_ptr,
                 gammaGradientTensor: gamma_gradient_ptr,
                 betaGradientTensor: beta_gradient_ptr,

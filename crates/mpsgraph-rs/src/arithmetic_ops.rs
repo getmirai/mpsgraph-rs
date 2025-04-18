@@ -10,122 +10,122 @@ pub trait GraphArithmeticOps {
     // MARK: - Unary Operations
 
     /// Creates an identity operation
-    fn identity(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn identity(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns e raised to the power of the input tensor
-    fn exp(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn exp(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns 2 raised to the power of the input tensor
-    fn exp2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn exp2(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the natural logarithm of the input tensor
-    fn log(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn log(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the base-2 logarithm of the input tensor
-    fn log2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn log2(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the square of the input tensor
-    fn square(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn square(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the square root of the input tensor
-    fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn sqrt(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the reciprocal square root of the input tensor
-    fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn rsqrt(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the reciprocal of the input tensor
-    fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn reciprocal(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the absolute value of the input tensor
-    fn abs(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn abs(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the negation of the input tensor
-    fn negative(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn negative(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns a tensor with the sign of each element in the input tensor
     /// -1 for negative, 0 for zero, 1 for positive
-    fn sign(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn sign(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the ceiling of the input tensor
-    fn ceil(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn ceil(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the floor of the input tensor
-    fn floor(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn floor(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     /// Returns the rounded value of the input tensor
-    fn round(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn round(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     // MARK: - Binary Operations
 
     /// Performs addition of two tensors
     fn add(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Performs subtraction of two tensors
     fn subtract(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Performs multiplication of two tensors
     fn multiply(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Performs division of two tensors
     fn divide(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Performs division of two tensors but returns 0 if secondary is 0
     fn division_no_nan(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Performs modulo operation between two tensors
     fn modulo(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Raises primary tensor to the power of secondary tensor
     fn power(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns the minimum of two tensors
     fn minimum(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns the maximum of two tensors
     fn maximum(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -134,48 +134,48 @@ pub trait GraphArithmeticOps {
     /// Returns element-wise equal comparison
     fn equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise not equal comparison
     fn not_equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise less than comparison
     fn less_than(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise less than or equal comparison
     fn less_than_or_equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise greater than comparison
     fn greater_than(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns element-wise greater than or equal comparison
     fn greater_than_or_equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -184,52 +184,52 @@ pub trait GraphArithmeticOps {
     /// Performs logical AND of two tensors
     fn logical_and(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Performs logical OR of two tensors
     fn logical_or(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Returns the logical NOT of the input tensor
-    fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn logical_not(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 
     // MARK: - Ternary Operations
 
     /// Creates a select operation which chooses values from true or false tensor based on predicate
     fn select(
         &self,
-        predicate: &Tensor,
-        true_tensor: &Tensor,
-        false_tensor: &Tensor,
+        predicate: &Retained<Tensor>,
+        true_tensor: &Retained<Tensor>,
+        false_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
     /// Creates a clamp operation that clamps values to the given min and max
     fn clamp(
         &self,
-        tensor: &Tensor,
-        min_tensor: &Tensor,
-        max_tensor: &Tensor,
+        tensor: &Retained<Tensor>,
+        min_tensor: &Retained<Tensor>,
+        max_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 }
 
 impl GraphArithmeticOps for Graph {
-    fn identity(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn identity(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                identityWithTensor: x,
+                identityWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -241,14 +241,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn exp(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn exp(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                exponentWithTensor: x,
+                exponentWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -260,14 +260,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn exp2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn exp2(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                exponentBase2WithTensor: x,
+                exponentBase2WithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -279,14 +279,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn log(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn log(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                logarithmWithTensor: x,
+                logarithmWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -298,14 +298,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn log2(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn log2(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                logarithmBase2WithTensor: x,
+                logarithmBase2WithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -317,14 +317,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn square(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn square(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                squareWithTensor: x,
+                squareWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -336,14 +336,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn sqrt(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                squareRootWithTensor: x,
+                squareRootWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -355,14 +355,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn rsqrt(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                reciprocalSquareRootWithTensor: x,
+                reciprocalSquareRootWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -374,14 +374,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn reciprocal(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                reciprocalWithTensor: x,
+                reciprocalWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -393,14 +393,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn abs(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn abs(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                absoluteWithTensor: x,
+                absoluteWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -412,14 +412,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn negative(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn negative(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                negativeWithTensor: x,
+                negativeWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -431,14 +431,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn sign(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn sign(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                signWithTensor: x,
+                signWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -450,14 +450,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn ceil(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn ceil(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                ceilWithTensor: x,
+                ceilWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -469,14 +469,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn floor(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn floor(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                floorWithTensor: x,
+                floorWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -488,14 +488,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn round(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn round(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                roundWithTensor: x,
+                roundWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -509,8 +509,8 @@ impl GraphArithmeticOps for Graph {
 
     fn add(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -519,8 +519,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                additionWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                additionWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -534,8 +534,8 @@ impl GraphArithmeticOps for Graph {
 
     fn subtract(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -544,8 +544,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                subtractionWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                subtractionWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -559,8 +559,8 @@ impl GraphArithmeticOps for Graph {
 
     fn multiply(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -569,8 +569,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                multiplicationWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                multiplicationWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -584,8 +584,8 @@ impl GraphArithmeticOps for Graph {
 
     fn divide(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -594,8 +594,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                divisionWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                divisionWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -609,8 +609,8 @@ impl GraphArithmeticOps for Graph {
 
     fn division_no_nan(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -619,8 +619,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                divisionNoNaNWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                divisionNoNaNWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -634,8 +634,8 @@ impl GraphArithmeticOps for Graph {
 
     fn modulo(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -644,8 +644,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                moduloWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                moduloWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -659,8 +659,8 @@ impl GraphArithmeticOps for Graph {
 
     fn power(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -669,8 +669,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                powerWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                powerWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -684,8 +684,8 @@ impl GraphArithmeticOps for Graph {
 
     fn minimum(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -694,8 +694,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                minimumWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                minimumWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -709,8 +709,8 @@ impl GraphArithmeticOps for Graph {
 
     fn maximum(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -719,8 +719,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                maximumWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                maximumWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -734,8 +734,8 @@ impl GraphArithmeticOps for Graph {
 
     fn equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -744,8 +744,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                equalWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                equalWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -759,8 +759,8 @@ impl GraphArithmeticOps for Graph {
 
     fn not_equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -769,8 +769,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                notEqualWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                notEqualWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -784,8 +784,8 @@ impl GraphArithmeticOps for Graph {
 
     fn less_than(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -794,8 +794,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                lessThanWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                lessThanWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -809,8 +809,8 @@ impl GraphArithmeticOps for Graph {
 
     fn less_than_or_equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -819,8 +819,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                lessThanOrEqualWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                lessThanOrEqualWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -834,8 +834,8 @@ impl GraphArithmeticOps for Graph {
 
     fn greater_than(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -844,8 +844,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                greaterThanWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                greaterThanWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -859,8 +859,8 @@ impl GraphArithmeticOps for Graph {
 
     fn greater_than_or_equal(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -869,8 +869,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                greaterThanOrEqualWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                greaterThanOrEqualWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -884,8 +884,8 @@ impl GraphArithmeticOps for Graph {
 
     fn logical_and(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -894,8 +894,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                logicalANDWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                logicalANDWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -909,8 +909,8 @@ impl GraphArithmeticOps for Graph {
 
     fn logical_or(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -919,8 +919,8 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                logicalORWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                logicalORWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -932,14 +932,14 @@ impl GraphArithmeticOps for Graph {
         }
     }
 
-    fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn logical_not(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                logicalNOTWithTensor: x,
+                logicalNOTWithTensor: &**x,
                 name: name_ptr
             ];
 
@@ -953,9 +953,9 @@ impl GraphArithmeticOps for Graph {
 
     fn select(
         &self,
-        predicate: &Tensor,
-        true_tensor: &Tensor,
-        false_tensor: &Tensor,
+        predicate: &Retained<Tensor>,
+        true_tensor: &Retained<Tensor>,
+        false_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -964,9 +964,9 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                selectWithPredicateTensor: predicate,
-                truePredicateTensor: true_tensor,
-                falsePredicateTensor: false_tensor,
+                selectWithPredicateTensor: &**predicate,
+                truePredicateTensor: &**true_tensor,
+                falsePredicateTensor: &**false_tensor,
                 name: name_ptr
             ];
 
@@ -980,9 +980,9 @@ impl GraphArithmeticOps for Graph {
 
     fn clamp(
         &self,
-        tensor: &Tensor,
-        min_tensor: &Tensor,
-        max_tensor: &Tensor,
+        tensor: &Retained<Tensor>,
+        min_tensor: &Retained<Tensor>,
+        max_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -991,9 +991,9 @@ impl GraphArithmeticOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                clampWithTensor: tensor,
-                minValueTensor: min_tensor,
-                maxValueTensor: max_tensor,
+                clampWithTensor: &**tensor,
+                minValueTensor: &**min_tensor,
+                maxValueTensor: &**max_tensor,
                 name: name_ptr
             ];
 

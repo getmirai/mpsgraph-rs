@@ -23,7 +23,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn reshape(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -41,7 +41,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn flatten2d(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -59,7 +59,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn broadcast(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -76,7 +76,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object containing the shape
     fn shape_of(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -93,7 +93,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object with the new data type
     fn cast(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         data_type: DataType,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -111,7 +111,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn stack(
         &self,
-        tensors: &[&Tensor],
+        tensors: &[&Retained<Tensor>],
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -130,7 +130,7 @@ pub trait GraphTensorShapeOps {
     /// A vector of Tensor objects
     fn split(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         num_splits: i64,
         axis: i64,
         name: Option<&str>,
@@ -149,7 +149,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn squeeze(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -167,7 +167,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn expand_dims(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -185,7 +185,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn tile(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         multiples: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -204,7 +204,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn pad(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         padding: &[i64],
         constant: f32,
         name: Option<&str>,
@@ -223,7 +223,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn space_to_depth(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -241,7 +241,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn depth_to_space(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -259,7 +259,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn reverse(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -268,7 +268,7 @@ pub trait GraphTensorShapeOps {
 impl GraphTensorShapeOps for Graph {
     fn reshape(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -281,7 +281,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reshapeTensor: x,
+                reshapeTensor: &**x,
                 withShape: shape_ptr,
                 name: name_ptr
             ];
@@ -296,7 +296,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn flatten2d(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -306,7 +306,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                flatten2DTensor: x,
+                flatten2DTensor: &**x,
                 axis: axis,
                 name: name_ptr
             ];
@@ -321,7 +321,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn broadcast(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -334,7 +334,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                broadcastTensor: x,
+                broadcastTensor: &**x,
                 toShape: shape_ptr,
                 name: name_ptr
             ];
@@ -349,7 +349,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn shape_of(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -358,7 +358,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                shapeOfTensor: x,
+                shapeOfTensor: &**x,
                 name: name_ptr
             ];
 
@@ -372,7 +372,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn cast(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         data_type: DataType,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -382,7 +382,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                castTensor: x,
+                castTensor: &**x,
                 toType: data_type as u32,
                 name: name_ptr
             ];
@@ -397,7 +397,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn stack(
         &self,
-        tensors: &[&Tensor],
+        tensors: &[&Retained<Tensor>],
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -408,7 +408,7 @@ impl GraphTensorShapeOps for Graph {
             // Create array of tensors
             let tensor_ptrs: Vec<*const Tensor> = tensors
                 .iter()
-                .map(|&t| t as *const Tensor)
+                .map(|t| &***t as *const Tensor)
                 .collect();
             
             let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
@@ -431,7 +431,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn split(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         num_splits: i64,
         axis: i64,
         name: Option<&str>,
@@ -442,7 +442,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result_array: *mut objc2_foundation::NSArray<Tensor> = msg_send![
                 self,
-                splitTensor: x,
+                splitTensor: &**x,
                 numSplits: num_splits,
                 axis: axis,
                 name: name_ptr
@@ -469,7 +469,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn squeeze(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -482,7 +482,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                squeezeTensor: x,
+                squeezeTensor: &**x,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -497,7 +497,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn expand_dims(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -510,7 +510,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                expandDimsTensor: x,
+                expandDimsTensor: &**x,
                 axes: axes_ptr,
                 name: name_ptr
             ];
@@ -525,7 +525,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn tile(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         multiples: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -538,7 +538,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                tileTensor: x,
+                tileTensor: &**x,
                 withMultiples: multiples_ptr,
                 name: name_ptr
             ];
@@ -553,7 +553,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn pad(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         padding: &[i64],
         constant: f32,
         name: Option<&str>,
@@ -567,7 +567,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                padTensor: x,
+                padTensor: &**x,
                 paddings: padding_ptr,
                 constantValue: constant as f64,
                 name: name_ptr
@@ -583,7 +583,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn space_to_depth(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -593,7 +593,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                spaceToDepthWithTensor: x,
+                spaceToDepthWithTensor: &**x,
                 blockSize: block_size,
                 name: name_ptr
             ];
@@ -608,7 +608,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn depth_to_space(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -618,7 +618,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                depthToSpaceWithTensor: x,
+                depthToSpaceWithTensor: &**x,
                 blockSize: block_size,
                 name: name_ptr
             ];
@@ -633,7 +633,7 @@ impl GraphTensorShapeOps for Graph {
 
     fn reverse(
         &self,
-        x: &Tensor,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -646,7 +646,7 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                reverseTensor: x,
+                reverseTensor: &**x,
                 axes: axes_ptr,
                 name: name_ptr
             ];
