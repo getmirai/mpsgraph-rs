@@ -23,8 +23,8 @@ pub trait GraphGatherOps {
     /// A valid Tensor object
     fn gather_nd(
         &self,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         batch_dimensions: usize,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -46,8 +46,8 @@ pub trait GraphGatherOps {
     /// A valid Tensor object
     fn gather(
         &self,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
@@ -73,8 +73,8 @@ pub trait GraphGatherOps {
     fn gather_along_axis(
         &self,
         axis: isize,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -97,9 +97,9 @@ pub trait GraphGatherOps {
     /// A valid Tensor object
     fn gather_along_axis_tensor(
         &self,
-        axis_tensor: &Tensor,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        axis_tensor: &Retained<Tensor>,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 }
@@ -108,8 +108,8 @@ pub trait GraphGatherOps {
 impl GraphGatherOps for Graph {
     fn gather_nd(
         &self,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         batch_dimensions: usize,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -119,8 +119,8 @@ impl GraphGatherOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                gatherNDWithUpdatesTensor: updates_tensor,
-                indicesTensor: indices_tensor,
+                gatherNDWithUpdatesTensor: &**updates_tensor,
+                indicesTensor: &**indices_tensor,
                 batchDimensions: batch_dimensions,
                 name: name_ptr
             ];
@@ -135,8 +135,8 @@ impl GraphGatherOps for Graph {
 
     fn gather(
         &self,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
@@ -147,8 +147,8 @@ impl GraphGatherOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                gatherWithUpdatesTensor: updates_tensor,
-                indicesTensor: indices_tensor,
+                gatherWithUpdatesTensor: &**updates_tensor,
+                indicesTensor: &**indices_tensor,
                 axis: axis,
                 batchDimensions: batch_dimensions,
                 name: name_ptr
@@ -165,8 +165,8 @@ impl GraphGatherOps for Graph {
     fn gather_along_axis(
         &self,
         axis: isize,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -176,8 +176,8 @@ impl GraphGatherOps for Graph {
             let result: *mut Tensor = msg_send![
                 self, 
                 gatherAlongAxis: axis,
-                withUpdatesTensor: updates_tensor,
-                indicesTensor: indices_tensor,
+                withUpdatesTensor: &**updates_tensor,
+                indicesTensor: &**indices_tensor,
                 name: name_ptr
             ];
 
@@ -191,9 +191,9 @@ impl GraphGatherOps for Graph {
 
     fn gather_along_axis_tensor(
         &self,
-        axis_tensor: &Tensor,
-        updates_tensor: &Tensor,
-        indices_tensor: &Tensor,
+        axis_tensor: &Retained<Tensor>,
+        updates_tensor: &Retained<Tensor>,
+        indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -202,9 +202,9 @@ impl GraphGatherOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                gatherAlongAxisTensor: axis_tensor,
-                withUpdatesTensor: updates_tensor,
-                indicesTensor: indices_tensor,
+                gatherAlongAxisTensor: &**axis_tensor,
+                withUpdatesTensor: &**updates_tensor,
+                indicesTensor: &**indices_tensor,
                 name: name_ptr
             ];
 

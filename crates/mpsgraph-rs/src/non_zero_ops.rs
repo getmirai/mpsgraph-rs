@@ -28,7 +28,7 @@ pub trait GraphNonZeroOps {
     /// # Returns
     ///
     /// A valid Tensor containing indices in signed int32 data type.
-    fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn non_zero_indices(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
 }
 
 /// Implementation of NonZero operations for Graph
@@ -54,14 +54,14 @@ impl GraphNonZeroOps for Graph {
     /// # Returns
     ///
     /// A valid Tensor containing indices in signed int32 data type.
-    fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn non_zero_indices(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self, 
-                nonZeroIndicesOfTensor: tensor,
+                nonZeroIndicesOfTensor: &**tensor,
                 name: name_ptr
             ];
 

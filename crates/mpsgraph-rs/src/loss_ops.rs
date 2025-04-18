@@ -44,8 +44,8 @@ pub trait GraphLossOps {
     /// A tensor containing the computed loss
     fn softmax_cross_entropy(
         &self,
-        source_tensor: &Tensor,
-        labels_tensor: &Tensor,
+        source_tensor: &Retained<Tensor>,
+        labels_tensor: &Retained<Tensor>,
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
@@ -67,9 +67,9 @@ pub trait GraphLossOps {
     /// A tensor containing the gradient with respect to the source tensor
     fn softmax_cross_entropy_gradient(
         &self,
-        gradient_tensor: &Tensor,
-        source_tensor: &Tensor,
-        labels_tensor: &Tensor,
+        gradient_tensor: &Retained<Tensor>,
+        source_tensor: &Retained<Tensor>,
+        labels_tensor: &Retained<Tensor>,
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
@@ -80,8 +80,8 @@ pub trait GraphLossOps {
 impl GraphLossOps for Graph {
     fn softmax_cross_entropy(
         &self,
-        source_tensor: &Tensor,
-        labels_tensor: &Tensor,
+        source_tensor: &Retained<Tensor>,
+        labels_tensor: &Retained<Tensor>,
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
@@ -92,8 +92,8 @@ impl GraphLossOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                softMaxCrossEntropyWithSourceTensor: source_tensor,
-                labelsTensor: labels_tensor,
+                softMaxCrossEntropyWithSourceTensor: &**source_tensor,
+                labelsTensor: &**labels_tensor,
                 axis: axis,
                 reductionType: reduction_type as u64,
                 name: name_ptr
@@ -109,9 +109,9 @@ impl GraphLossOps for Graph {
 
     fn softmax_cross_entropy_gradient(
         &self,
-        gradient_tensor: &Tensor,
-        source_tensor: &Tensor,
-        labels_tensor: &Tensor,
+        gradient_tensor: &Retained<Tensor>,
+        source_tensor: &Retained<Tensor>,
+        labels_tensor: &Retained<Tensor>,
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
@@ -122,9 +122,9 @@ impl GraphLossOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                softMaxCrossEntropyGradientWithIncomingGradientTensor: gradient_tensor,
-                sourceTensor: source_tensor,
-                labelsTensor: labels_tensor,
+                softMaxCrossEntropyGradientWithIncomingGradientTensor: &**gradient_tensor,
+                sourceTensor: &**source_tensor,
+                labelsTensor: &**labels_tensor,
                 axis: axis,
                 reductionType: reduction_type as u64,
                 name: name_ptr

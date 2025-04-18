@@ -96,7 +96,7 @@ pub trait GraphMemoryOps {
     /// A valid Tensor object representing the variable.
     fn variable_from_tensor(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -112,7 +112,7 @@ pub trait GraphMemoryOps {
     /// A valid Tensor object.
     fn read_variable(
         &self,
-        variable: &Tensor,
+        variable: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -129,8 +129,8 @@ pub trait GraphMemoryOps {
     /// A valid MPSGraphOperation object.
     fn assign_variable(
         &self,
-        variable: &Tensor,
-        tensor: &Tensor,
+        variable: &Retained<Tensor>,
+        tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Operation>>;
 }
@@ -239,7 +239,7 @@ impl GraphMemoryOps for Graph {
 
     fn variable_from_tensor(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -248,7 +248,7 @@ impl GraphMemoryOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                variableFromTensorWithTensor: tensor,
+                variableFromTensorWithTensor: &**tensor,
                 name: name_ptr
             ];
 
@@ -262,7 +262,7 @@ impl GraphMemoryOps for Graph {
 
     fn read_variable(
         &self,
-        variable: &Tensor,
+        variable: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -271,7 +271,7 @@ impl GraphMemoryOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                readVariable: variable,
+                readVariable: &**variable,
                 name: name_ptr
             ];
 
@@ -285,8 +285,8 @@ impl GraphMemoryOps for Graph {
 
     fn assign_variable(
         &self,
-        variable: &Tensor,
-        tensor: &Tensor,
+        variable: &Retained<Tensor>,
+        tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Operation>> {
         unsafe {
@@ -295,8 +295,8 @@ impl GraphMemoryOps for Graph {
 
             let result: *mut Operation = msg_send![
                 self,
-                assignVariable: variable,
-                withValueOfTensor: tensor,
+                assignVariable: &**variable,
+                withValueOfTensor: &**tensor,
                 name: name_ptr
             ];
 

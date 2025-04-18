@@ -20,8 +20,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -40,9 +40,9 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -60,8 +60,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn inner_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -78,8 +78,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn outer_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
@@ -304,8 +304,8 @@ pub trait GraphLinearAlgebraOps {
 impl GraphLinearAlgebraOps for Graph {
     fn matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -314,8 +314,8 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                matrixMultiplicationWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -329,9 +329,9 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -341,9 +341,9 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                matrixMultiplicationWithPrimaryTensor: primary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
                 transposePrimary: primary_transpose,
-                secondaryTensor: secondary,
+                secondaryTensor: &**secondary,
                 transposeSecondary: secondary_transpose,
                 name: name_ptr
             ];
@@ -358,8 +358,8 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn inner_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -368,8 +368,8 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                innerProductWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                innerProductWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -383,8 +383,8 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn outer_product(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
@@ -393,8 +393,8 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self, 
-                outerProductWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                outerProductWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 

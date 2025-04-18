@@ -24,22 +24,22 @@ use std::ops;
 /// This trait adds arithmetic operations to the Tensor type.
 pub trait TensorOps {
     /// Get the underlying tensor
-    fn tensor(&self) -> &Tensor;
+    fn tensor(&self) -> &Retained<Tensor>;
     
     /// Get the associated graph for this tensor
     fn graph(&self) -> Retained<Graph>;
 
     /// Add this tensor to another tensor
-    fn add(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+    fn add(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Subtract another tensor from this tensor
-    fn sub(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+    fn sub(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Multiply this tensor by another tensor
-    fn mul(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+    fn mul(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Divide this tensor by another tensor
-    fn div(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+    fn div(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Negate this tensor
     fn neg(&self, name: Option<&str>) -> Retained<Tensor>;
@@ -101,16 +101,15 @@ impl GraphTensor {
     
     /// Create a new GraphTensor from a TensorOps object
     pub fn from_ops(ops: &impl TensorOps) -> Self {
-        let tensor = unsafe { Retained::from_raw(ops.tensor() as *const _ as *mut _) }.unwrap();
         GraphTensor {
-            tensor,
+            tensor: ops.tensor().clone(),
             graph: ops.graph(),
         }
     }
 }
 
 impl TensorOps for GraphTensor {
-    fn tensor(&self) -> &Tensor {
+    fn tensor(&self) -> &Retained<Tensor> {
         &self.tensor
     }
     
@@ -118,75 +117,75 @@ impl TensorOps for GraphTensor {
         self.graph.clone()
     }
     
-    fn add(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor> {
-        self.graph.add(self.tensor.as_ref(), rhs, name)
+    fn add(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        self.graph.add(&self.tensor, rhs, name)
             .expect("Failed to add tensors")
     }
     
-    fn sub(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor> {
-        self.graph.subtract(self.tensor.as_ref(), rhs, name)
+    fn sub(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        self.graph.subtract(&self.tensor, rhs, name)
             .expect("Failed to subtract tensors")
     }
     
-    fn mul(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor> {
-        self.graph.multiply(self.tensor.as_ref(), rhs, name)
+    fn mul(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        self.graph.multiply(&self.tensor, rhs, name)
             .expect("Failed to multiply tensors")
     }
     
-    fn div(&self, rhs: &Tensor, name: Option<&str>) -> Retained<Tensor> {
-        self.graph.divide(self.tensor.as_ref(), rhs, name)
+    fn div(&self, rhs: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        self.graph.divide(&self.tensor, rhs, name)
             .expect("Failed to divide tensors")
     }
     
     fn neg(&self, name: Option<&str>) -> Retained<Tensor> {
-        self.graph.negative(self.tensor.as_ref(), name)
+        self.graph.negative(&self.tensor, name)
             .expect("Failed to negate tensor")
     }
     
     fn square(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.square(self.tensor.as_ref(), name)
+        let tensor = self.graph.square(&self.tensor, name)
             .expect("Failed to square tensor");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn sqrt(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.sqrt(self.tensor.as_ref(), name)
+        let tensor = self.graph.sqrt(&self.tensor, name)
             .expect("Failed to compute square root");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn abs(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.abs(self.tensor.as_ref(), name)
+        let tensor = self.graph.abs(&self.tensor, name)
             .expect("Failed to compute absolute value");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn exp(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.exp(self.tensor.as_ref(), name)
+        let tensor = self.graph.exp(&self.tensor, name)
             .expect("Failed to compute exponential");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn log(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.log(self.tensor.as_ref(), name)
+        let tensor = self.graph.log(&self.tensor, name)
             .expect("Failed to compute logarithm");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn sigmoid(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.sigmoid(self.tensor.as_ref(), name)
+        let tensor = self.graph.sigmoid(&self.tensor, name)
             .expect("Failed to compute sigmoid");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn tanh(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.tanh(self.tensor.as_ref(), name)
+        let tensor = self.graph.tanh(&self.tensor, name)
             .expect("Failed to compute tanh");
         GraphTensor::new(tensor, self.graph())
     }
     
     fn relu(&self, name: Option<&str>) -> GraphTensor {
-        let tensor = self.graph.relu(self.tensor.as_ref(), name)
+        let tensor = self.graph.relu(&self.tensor, name)
             .expect("Failed to compute ReLU");
         GraphTensor::new(tensor, self.graph())
     }
@@ -194,19 +193,19 @@ impl TensorOps for GraphTensor {
 
 impl TensorOpOverloads for GraphTensor {
     fn add_op(&self, rhs: &Self) -> Retained<Tensor> {
-        self.add(rhs.tensor.as_ref(), None)
+        self.add(&rhs.tensor, None)
     }
     
     fn sub_op(&self, rhs: &Self) -> Retained<Tensor> {
-        self.sub(rhs.tensor.as_ref(), None)
+        self.sub(&rhs.tensor, None)
     }
     
     fn mul_op(&self, rhs: &Self) -> Retained<Tensor> {
-        self.mul(rhs.tensor.as_ref(), None)
+        self.mul(&rhs.tensor, None)
     }
     
     fn div_op(&self, rhs: &Self) -> Retained<Tensor> {
-        self.div(rhs.tensor.as_ref(), None)
+        self.div(&rhs.tensor, None)
     }
     
     fn neg_op(&self) -> Retained<Tensor> {
@@ -649,7 +648,7 @@ pub fn silu(tensor: &GraphTensor, name_prefix: Option<&str>) -> GraphTensor {
     let sigmoid_name = name_prefix.map(|p| format!("{}_sigmoid", p));
     let sigmoid_tensor = tensor.sigmoid(sigmoid_name.as_deref());
     
-    let result = tensor.mul(sigmoid_tensor.tensor.as_ref(), name_prefix);
+    let result = tensor.mul(&sigmoid_tensor.tensor, name_prefix);
     GraphTensor::new(result, tensor.graph())
 }
 
@@ -689,23 +688,23 @@ pub fn gelu(tensor: &GraphTensor, name_prefix: Option<&str>) -> GraphTensor {
     let x_squared = tensor.square(square_name.as_deref());
     
     let cube_name = name_prefix.map(|p| format!("{}_cube", p));
-    let x_cubed_tensor = tensor.mul(x_squared.tensor.as_ref(), cube_name.as_deref());
+    let x_cubed_tensor = tensor.mul(&x_squared.tensor, cube_name.as_deref());
     let x_cubed = GraphTensor::new(x_cubed_tensor, graph.clone());
 
     // Compute coeff * x^3
     let scaled_cube_name = name_prefix.map(|p| format!("{}_scaled_cube", p));
-    let scaled_x_cubed_tensor = graph.multiply(&const_coeff, x_cubed.tensor.as_ref(), scaled_cube_name.as_deref())
+    let scaled_x_cubed_tensor = graph.multiply(&const_coeff, &x_cubed.tensor, scaled_cube_name.as_deref())
         .expect("Failed to compute coefficient * x^3");
     let scaled_x_cubed = GraphTensor::new(scaled_x_cubed_tensor, graph.clone());
 
     // Compute x + coeff * x^3
     let inner_name = name_prefix.map(|p| format!("{}_inner", p));
-    let inner_tensor = tensor.add(scaled_x_cubed.tensor.as_ref(), inner_name.as_deref());
+    let inner_tensor = tensor.add(&scaled_x_cubed.tensor, inner_name.as_deref());
     let inner = GraphTensor::new(inner_tensor, graph.clone());
 
     // Compute sqrt(2/π) * (x + coeff * x^3)
     let scaled_inner_name = name_prefix.map(|p| format!("{}_scaled_inner", p));
-    let scaled_inner_tensor = graph.multiply(&const_sqrt_2_pi, inner.tensor.as_ref(), scaled_inner_name.as_deref())
+    let scaled_inner_tensor = graph.multiply(&const_sqrt_2_pi, &inner.tensor, scaled_inner_name.as_deref())
         .expect("Failed to compute scaled inner term");
     let scaled_inner = GraphTensor::new(scaled_inner_tensor, graph.clone());
 
@@ -715,18 +714,18 @@ pub fn gelu(tensor: &GraphTensor, name_prefix: Option<&str>) -> GraphTensor {
 
     // Compute 1 + tanh(...)
     let one_plus_tanh_name = name_prefix.map(|p| format!("{}_one_plus_tanh", p));
-    let one_plus_tanh_tensor = graph.add(&const_1, tanh_tensor.tensor.as_ref(), one_plus_tanh_name.as_deref())
+    let one_plus_tanh_tensor = graph.add(&const_1, &tanh_tensor.tensor, one_plus_tanh_name.as_deref())
         .expect("Failed to compute 1 + tanh");
     let one_plus_tanh = GraphTensor::new(one_plus_tanh_tensor, graph.clone());
 
     // Compute 0.5 * (1 + tanh(...))
     let half_term_name = name_prefix.map(|p| format!("{}_half_term", p));
-    let half_term_tensor = graph.multiply(&const_0_5, one_plus_tanh.tensor.as_ref(), half_term_name.as_deref())
+    let half_term_tensor = graph.multiply(&const_0_5, &one_plus_tanh.tensor, half_term_name.as_deref())
         .expect("Failed to compute half term");
     let half_term = GraphTensor::new(half_term_tensor, graph.clone());
 
     // Compute x * 0.5 * (1 + tanh(...))
-    let result_tensor = tensor.mul(half_term.tensor.as_ref(), name_prefix);
+    let result_tensor = tensor.mul(&half_term.tensor, name_prefix);
     GraphTensor::new(result_tensor, graph)
 }
 
@@ -745,7 +744,7 @@ pub fn gelu(tensor: &GraphTensor, name_prefix: Option<&str>) -> GraphTensor {
 /// A new tensor with each element raised to the specified power
 pub fn pow(tensor: &GraphTensor, exponent: &GraphTensor, name: Option<&str>) -> GraphTensor {
     let graph = tensor.graph();
-    let result_opt = graph.power(tensor.tensor.as_ref(), exponent.tensor.as_ref(), name);
+    let result_opt = graph.power(&tensor.tensor, &exponent.tensor, name);
     let result = result_opt.expect("Failed to compute power operation");
     GraphTensor::new(result, graph)
 }
@@ -766,12 +765,12 @@ pub fn clip(tensor: &GraphTensor, min_val: &GraphTensor, max_val: &GraphTensor, 
     // First clip to minimum (max of tensor and min_val)
     let graph = tensor.graph();
     let name_min = name.map(|n| format!("{}_min", n));
-    let clipped_min_opt = graph.maximum(tensor.tensor.as_ref(), min_val.tensor.as_ref(), name_min.as_deref());
+    let clipped_min_opt = graph.maximum(&tensor.tensor, &min_val.tensor, name_min.as_deref());
     let clipped_min = clipped_min_opt.expect("Failed to compute maximum for clipping");
 
     // Then clip to maximum (min of clipped_min and max_val)
     let name_max = name.map(|n| format!("{}_max", n));
-    let result_opt = graph.minimum(&clipped_min, max_val.tensor.as_ref(), name_max.as_deref());
+    let result_opt = graph.minimum(&clipped_min, &max_val.tensor, name_max.as_deref());
     let result = result_opt.expect("Failed to compute minimum for clipping");
     
     GraphTensor::new(result, graph)
