@@ -1,21 +1,17 @@
 use objc2::rc::Retained;
-use objc2::{extern_class, ClassType, msg_send};
 use objc2::runtime::NSObject;
+use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::{NSArray, NSData, NSMutableDictionary, NSObjectProtocol, NSString};
 use std::collections::HashMap;
 
-use crate::tensor::{Tensor, DataType};
-use crate::shape::Shape;
-use crate::tensor_data::TensorData;
-use crate::operation::Operation;
-use crate::executable::{
-    Executable, 
-    ExecutionDescriptor, 
-    CompilationDescriptor
-};
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
+use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
+use crate::operation::Operation;
+use crate::shape::Shape;
 use crate::shape::{ShapeExtensions, ShapeHelper};
+use crate::tensor::{DataType, Tensor};
+use crate::tensor_data::TensorData;
 use crate::ShapedType;
 
 /// Trait for scalar types that can be used in Graph operations
@@ -80,13 +76,9 @@ impl Graph {
             obj
         }
     }
-    
+
     /// Creates a placeholder tensor with the given data type and shape
-    pub fn placeholder(
-        &self,
-        data_type: DataType,
-        shape: &Shape,
-    ) -> Option<Retained<Tensor>> {
+    pub fn placeholder(&self, data_type: DataType, shape: &Shape) -> Option<Retained<Tensor>> {
         unsafe {
             // Use null for the name parameter
             let tensor_ptr: *mut Tensor = msg_send![
@@ -95,7 +87,7 @@ impl Graph {
                 dataType: data_type as u32,
                 name: std::ptr::null::<NSString>()
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -103,7 +95,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Creates a placeholder tensor with the given data type, shape, and name
     pub fn placeholder_with_name(
         &self,
@@ -113,14 +105,14 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = NSString::from_str(name);
-            
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 placeholderWithShape: shape,
                 dataType: data_type as u32,
                 name: &*name_ns
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -128,7 +120,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Performs matrix multiplication of two tensors
     pub fn matmul(
         &self,
@@ -148,7 +140,7 @@ impl Graph {
                         secondaryTensor: rhs,
                         name: &*name_ns
                     ]
-                },
+                }
                 None => {
                     msg_send![
                         self,
@@ -158,7 +150,7 @@ impl Graph {
                     ]
                 }
             };
-            
+
             if result_ptr.is_null() {
                 None
             } else {
@@ -166,7 +158,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Execute the graph with feeds and get results
     ///
     /// - Parameters:
@@ -181,7 +173,7 @@ impl Graph {
     ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
         self.run_with_feeds_and_descriptor(feeds, output_tensors, None)
     }
-    
+
     /// Execute the graph with feeds and execution descriptor
     ///
     /// - Parameters:
@@ -199,60 +191,62 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to dictionary
             for (tensor, data) in feeds {
                 let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
             }
-            
+
             // Create NSArray for output tensors
             let output_array = NSArray::from_slice(output_tensors);
-            
+
             // Run the graph
-            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = match execution_descriptor {
-                Some(desc) => {
-                    msg_send![
-                        self,
-                        runWithFeeds: dictionary_ptr,
-                        targetTensors: &*output_array,
-                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                        executionDescriptor: desc
-                    ]
-                }
-                None => {
-                    msg_send![
-                        self,
-                        runWithFeeds: dictionary_ptr,
-                        targetTensors: &*output_array,
-                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                        executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
-                    ]
-                }
-            };
-            
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                match execution_descriptor {
+                    Some(desc) => {
+                        msg_send![
+                            self,
+                            runWithFeeds: dictionary_ptr,
+                            targetTensors: &*output_array,
+                            targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                            executionDescriptor: desc
+                        ]
+                    }
+                    None => {
+                        msg_send![
+                            self,
+                            runWithFeeds: dictionary_ptr,
+                            targetTensors: &*output_array,
+                            targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                            executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
+                        ]
+                    }
+                };
+
             let _results_dict = Retained::from_raw(results_ptr).unwrap();
-            
+
             // Convert NSDictionary to HashMap
             let mut result = HashMap::new();
             let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
-            
+
             let keys_count: usize = msg_send![keys, count];
-            
+
             for i in 0..keys_count {
                 let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
                 let key = Retained::from_raw(key_ptr as *mut _).unwrap();
-                
+
                 let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
                 let value = Retained::from_raw(value_ptr as *mut _).unwrap();
-                
+
                 result.insert(key, value);
             }
-            
+
             result
         }
     }
-    
+
     /// Creates a constant tensor with the given data
     /// Adds two tensors element-wise
     pub fn add(
@@ -263,15 +257,17 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 additionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
                 name: name_ptr
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -279,7 +275,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Multiplies two tensors element-wise
     pub fn multiply(
         &self,
@@ -289,15 +285,17 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 multiplicationWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
                 name: name_ptr
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -305,7 +303,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Subtracts one tensor from another element-wise
     pub fn subtract(
         &self,
@@ -315,15 +313,17 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 subtractionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
                 name: name_ptr
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -331,7 +331,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Divides one tensor by another element-wise
     pub fn divide(
         &self,
@@ -341,12 +341,131 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 divisionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+
+    /// Creates a constant tensor with scalar value and shape
+    pub fn constant_scalar_with_shape(
+        &self,
+        value: f64,
+        data_type: DataType,
+        shape: &Shape,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                constantWithScalar: value,
+                dataType: data_type as u64,
+                shape: shape,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+
+    /// Creates a constant scalar tensor
+    pub fn constant_scalar(
+        &self,
+        value: f64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                constantWithScalar: value,
+                dataType: data_type as u64,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                None
+            } else {
+                Retained::from_raw(tensor_ptr)
+            }
+        }
+    }
+
+    /// Creates a constant tensor with array values and shape
+    pub fn constant_with_shape(
+        &self,
+        values: &[f64],
+        data_type: DataType,
+        shape: &Shape,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        // Create TensorData from values
+        let dims = shape.dimensions();
+        let data = TensorData::from_bytes(values, &dims, data_type);
+
+        // Create constant with data
+        self.constant_with_data(&data, Some(shape), name)
+    }
+
+    /// Creates a constant tensor with array values, inferring shape from array dimensions
+    pub fn constant(
+        &self,
+        values: &[f64],
+        shape_dimensions: &[i64],
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        // Create shape
+        let shape = ShapeHelper::from_dimensions(shape_dimensions);
+
+        // Create constant with shape
+        self.constant_with_shape(values, data_type, &shape, name)
+    }
+
+    /// Creates a constant tensor with the given data
+    pub fn constant_with_data(
+        &self,
+        data: &Retained<TensorData>,
+        shape: Option<&Shape>,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            
+            let shape_ptr = shape.map_or(std::ptr::null(), |s| s as *const _);
+            
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                constantWithData: &**data,
+                shape: shape_ptr,
                 name: name_ptr
             ];
             
@@ -357,168 +476,7 @@ impl Graph {
             }
         }
     }
-    
-    /// Creates a constant tensor with scalar value and shape
-    pub fn constant_scalar_with_shape<T: TensorDataScalar>(
-        &self,
-        value: T,
-        data_type: DataType,
-        shape: &Shape,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
-        unsafe {
-            let value_f64 = value.to_f64();
-            
-            let tensor_ptr: *mut Tensor = match name {
-                Some(name_str) => {
-                    let name_ns = NSString::from_str(name_str);
-                    msg_send![
-                        self,
-                        constantWithScalar: value_f64,
-                        dataType: data_type as u64,
-                        shape: shape,
-                        name: &*name_ns
-                    ]
-                },
-                None => {
-                    msg_send![
-                        self,
-                        constantWithScalar: value_f64,
-                        dataType: data_type as u64,
-                        shape: shape,
-                        name: std::ptr::null::<NSString>()
-                    ]
-                }
-            };
-            
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Retained::from_raw(tensor_ptr)
-            }
-        }
-    }
-    
-    /// Creates a constant scalar tensor
-    pub fn constant_scalar<T: TensorDataScalar>(
-        &self,
-        value: T,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
-        unsafe {
-            let value_f64 = value.to_f64();
-            
-            let tensor_ptr: *mut Tensor = match name {
-                Some(name_str) => {
-                    let name_ns = NSString::from_str(name_str);
-                    msg_send![
-                        self,
-                        constantWithScalar: value_f64,
-                        dataType: data_type as u64,
-                        name: &*name_ns
-                    ]
-                },
-                None => {
-                    msg_send![
-                        self,
-                        constantWithScalar: value_f64,
-                        dataType: data_type as u64,
-                        name: std::ptr::null::<NSString>()
-                    ]
-                }
-            };
-            
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Retained::from_raw(tensor_ptr)
-            }
-        }
-    }
-    
-    /// Creates a constant tensor with array values and shape
-    pub fn constant_with_shape<T: TensorDataScalar>(
-        &self,
-        values: &[T],
-        data_type: DataType,
-        shape: &Shape,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
-        // Create TensorData from values
-        let dims = shape.dimensions();
-        let data = TensorData::from_bytes(values, &dims, data_type);
-        
-        // Create constant with data
-        self.constant_with_data(&data, Some(shape), name)
-    }
-    
-    /// Creates a constant tensor with array values, inferring shape from array dimensions
-    pub fn constant<T: TensorDataScalar>(
-        &self,
-        values: &[T],
-        shape_dimensions: &[i64],
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
-        // Create shape
-        let shape = ShapeHelper::from_dimensions(shape_dimensions);
-        
-        // Create constant with shape
-        self.constant_with_shape(values, data_type, &shape, name)
-    }
-    
-    /// Creates a constant tensor with the given data
-    pub fn constant_with_data(
-        &self,
-        data: &TensorData,
-        shape: Option<&Shape>,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
-        unsafe {
-            match (shape, name) {
-                (Some(s), Some(n)) => {
-                    let name_ns = NSString::from_str(n);
-                    let tensor_ptr: *mut Tensor = msg_send![
-                        self, 
-                        constantWithData: data,
-                        shape: s,
-                        name: &*name_ns
-                    ];
-                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
-                },
-                (Some(s), None) => {
-                    let tensor_ptr: *mut Tensor = msg_send![
-                        self, 
-                        constantWithData: data,
-                        shape: s,
-                        name: std::ptr::null::<NSString>()
-                    ];
-                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
-                },
-                (None, Some(n)) => {
-                    let name_ns = NSString::from_str(n);
-                    let tensor_ptr: *mut Tensor = msg_send![
-                        self, 
-                        constantWithData: data,
-                        shape: std::ptr::null::<Shape>(),
-                        name: &*name_ns
-                    ];
-                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
-                },
-                (None, None) => {
-                    let tensor_ptr: *mut Tensor = msg_send![
-                        self, 
-                        constantWithData: data,
-                        shape: std::ptr::null::<Shape>(),
-                        name: std::ptr::null::<NSString>()
-                    ];
-                    if tensor_ptr.is_null() { None } else { Retained::from_raw(tensor_ptr) }
-                }
-            }
-        }
-    }
-    
+
     /// Creates a constant tensor with the given raw bytes
     pub fn constant_with_raw_data(
         &self,
@@ -530,36 +488,36 @@ impl Graph {
         let tensor_data = unsafe {
             // Get the default Metal device
             let device = metal::Device::system_default().expect("No Metal device found");
-            
+
             // Create NSData with our data
             let ns_data = NSData::with_bytes(data);
-            
+
             // Create MPSGraphDevice from MTLDevice
             let mps_device = Device::with_device(&device);
-            
+
             // Create the TensorData with NSData
             let tensor_data_class = TensorData::class();
             let data_type_val = data_type as u32;
-            
+
             let alloc: *mut TensorData = msg_send![tensor_data_class, alloc];
-            let tensor_data: *mut TensorData = msg_send![alloc, 
-                initWithDevice:&*mps_device, 
-                data:&*ns_data, 
-                shape:shape, 
+            let tensor_data: *mut TensorData = msg_send![alloc,
+                initWithDevice:&*mps_device,
+                data:&*ns_data,
+                shape:shape,
                 dataType:data_type_val
             ];
-            
+
             if tensor_data.is_null() {
                 return None;
             }
-            
+
             Retained::from_raw(tensor_data).unwrap()
         };
-        
+
         // Use the existing constant_with_data method with the created TensorData
         self.constant_with_data(&tensor_data, Some(shape), None)
     }
-    
+
     /// Compiles the graph against a given set of feeds and targets
     ///
     /// - Parameters:
@@ -588,34 +546,36 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> =
+                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to dictionary
             for (tensor, shaped_type) in feeds {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
                 let shape_ptr = shaped_type.as_ref() as *const ShapedType;
-                
+
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
                 let shape_ref: &ShapedType = &*shape_ptr;
-                
+
                 let _: () = msg_send![dictionary_ptr, setObject: shape_ref, forKey: tensor_ref];
             }
-            
+
             // Create NSArray for target tensors
             // Need to convert &[&Retained<Tensor>] to a slice of &Tensor for NSArray::from_slice
-            let targets_refs: Vec<&Tensor> = targets.iter()
+            let targets_refs: Vec<&Tensor> = targets
+                .iter()
                 .map(|retained_tensor| retained_tensor.as_ref())
                 .collect();
             let targets_array = NSArray::from_slice(&targets_refs);
-            
+
             // Get descriptor pointer if provided
             let desc_ptr = match descriptor {
                 Some(desc) => desc as *const _,
                 None => std::ptr::null(),
             };
-            
+
             // Compile the graph
             let executable_ptr: *mut Executable = msg_send![
                 self,
@@ -625,7 +585,7 @@ impl Graph {
                 targetOperations: std::ptr::null::<NSArray<Operation>>(),
                 compilationDescriptor: desc_ptr
             ];
-            
+
             if executable_ptr.is_null() {
                 None
             } else {
@@ -633,7 +593,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Compiles the graph against a given set of feeds, targets, and target operations
     ///
     /// - Parameters:
@@ -655,37 +615,39 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> =
+                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to dictionary
             for (tensor, shaped_type) in feeds {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
                 let shape_ptr = shaped_type.as_ref() as *const ShapedType;
-                
+
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
                 let shape_ref: &ShapedType = &*shape_ptr;
-                
+
                 let _: () = msg_send![dictionary_ptr, setObject: shape_ref, forKey: tensor_ref];
             }
-            
+
             // Create NSArray for target tensors
             // Need to convert &[&Retained<Tensor>] to a slice of &Tensor for NSArray::from_slice
-            let targets_refs: Vec<&Tensor> = targets.iter()
+            let targets_refs: Vec<&Tensor> = targets
+                .iter()
                 .map(|retained_tensor| retained_tensor.as_ref())
                 .collect();
             let targets_array = NSArray::from_slice(&targets_refs);
-            
+
             // Create NSArray for target operations
             let ops_array = NSArray::from_slice(target_ops);
-            
+
             // Get descriptor pointer if provided
             let desc_ptr = match descriptor {
                 Some(desc) => desc as *const _,
                 None => std::ptr::null(),
             };
-            
+
             // Compile the graph
             let executable_ptr: *mut Executable = msg_send![
                 self,
@@ -695,7 +657,7 @@ impl Graph {
                 targetOperations: &*ops_array,
                 compilationDescriptor: desc_ptr
             ];
-            
+
             if executable_ptr.is_null() {
                 None
             } else {
@@ -716,7 +678,7 @@ impl Graph {
     ///   - descriptor: Optional compilation descriptor
     ///
     /// - Returns: A compiled executable
-    
+
     /// Encodes the graph to a command buffer for execution
     ///
     /// - Parameters:
@@ -738,49 +700,51 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to dictionary
             for (tensor, data) in feeds {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
                 let data_ptr = data.as_ref() as *const TensorData;
-                
+
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
                 let data_ref: &TensorData = &*data_ptr;
-                
+
                 let _: () = msg_send![dictionary_ptr, setObject: data_ref, forKey: tensor_ref];
             }
-            
+
             // Create NSArray for target tensors if provided
             let targets_array_ptr = match target_tensors {
                 Some(tensors) => {
                     // Need to convert &[&Retained<Tensor>] to a slice of &Tensor for NSArray::from_slice
-                    let targets_refs: Vec<&Tensor> = tensors.iter()
+                    let targets_refs: Vec<&Tensor> = tensors
+                        .iter()
                         .map(|retained_tensor| retained_tensor.as_ref())
                         .collect();
                     let array = NSArray::from_slice(&targets_refs);
                     &*array as *const _
-                },
+                }
                 None => std::ptr::null(),
             };
-            
+
             // Create NSArray for target operations if provided
             let ops_array_ptr = match target_operations {
                 Some(ops) => {
                     let array = NSArray::from_slice(ops);
                     &*array as *const _
-                },
+                }
                 None => std::ptr::null(),
             };
-            
+
             // Get descriptor pointer if provided
             let desc_ptr = match execution_descriptor {
                 Some(desc) => desc as *const _,
                 None => std::ptr::null(),
             };
-            
+
             // Encode the graph to the command buffer
             let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![
                 self,
@@ -790,29 +754,29 @@ impl Graph {
                 targetOperations: ops_array_ptr,
                 executionDescriptor: desc_ptr
             ];
-            
+
             // Convert NSMutableDictionary to HashMap
             let _results_dict = Retained::from_raw(results_ptr).unwrap();
-            
+
             let mut result = HashMap::new();
             let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
-            
+
             let keys_count: usize = msg_send![keys, count];
-            
+
             for i in 0..keys_count {
                 let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
                 let key = Retained::from_raw(key_ptr as *mut _).unwrap();
-                
+
                 let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
                 let value = Retained::from_raw(value_ptr as *mut _).unwrap();
-                
+
                 result.insert(key, value);
             }
-            
+
             result
         }
     }
-    
+
     /// Encodes the graph to a command buffer with a results dictionary
     ///
     /// - Parameters:
@@ -832,53 +796,55 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let feeds_dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let feeds_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![feeds_dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let feeds_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                msg_send![feeds_dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to feeds dictionary
             for (tensor, data) in feeds {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
                 let data_ptr = data.as_ref() as *const TensorData;
-                
+
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
                 let data_ref: &TensorData = &*data_ptr;
-                
+
                 let _: () = msg_send![feeds_ptr, setObject: data_ref, forKey: tensor_ref];
             }
-            
+
             // Create NSMutableDictionary for results
             let results_dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![results_dictionary_class, dictionaryWithCapacity: results_dict.len()];
-            
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                msg_send![results_dictionary_class, dictionaryWithCapacity: results_dict.len()];
+
             // Add entries to results dictionary
             for (tensor, data) in results_dict {
                 // Get raw pointers to the inner Objective-C objects
                 let tensor_ptr = tensor.as_ref() as *const Tensor;
                 let data_ptr = data.as_ref() as *const TensorData;
-                
+
                 // Create temporary references for message sending
                 let tensor_ref: &Tensor = &*tensor_ptr;
                 let data_ref: &TensorData = &*data_ptr;
-                
+
                 let _: () = msg_send![results_ptr, setObject: data_ref, forKey: tensor_ref];
             }
-            
+
             // Create NSArray for target operations if provided
             let ops_array_ptr = match target_operations {
                 Some(ops) => {
                     let array = NSArray::from_slice(ops);
                     &*array as *const _
-                },
+                }
                 None => std::ptr::null(),
             };
-            
+
             // Get descriptor pointer if provided
             let desc_ptr = match execution_descriptor {
                 Some(desc) => desc as *const _,
                 None => std::ptr::null(),
             };
-            
+
             // Encode the graph to the command buffer with results
             let _: () = msg_send![
                 self,
@@ -890,7 +856,7 @@ impl Graph {
             ];
         }
     }
-    
+
     /// Execute the graph with feeds on a specific device
     ///
     /// - Parameters:
@@ -910,62 +876,64 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to dictionary
             for (tensor, data) in feeds {
                 let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
             }
-            
+
             // Create NSArray for output tensors
             let output_array = NSArray::from_slice(output_tensors);
-            
+
             // Run the graph on device
-            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = match execution_descriptor {
-                Some(desc) => {
-                    msg_send![
-                        self,
-                        runWithFeeds: dictionary_ptr,
-                        targetTensors: &*output_array,
-                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                        onDevice: device,
-                        executionDescriptor: desc
-                    ]
-                }
-                None => {
-                    msg_send![
-                        self,
-                        runWithFeeds: dictionary_ptr,
-                        targetTensors: &*output_array,
-                        targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                        onDevice: device,
-                        executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
-                    ]
-                }
-            };
-            
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                match execution_descriptor {
+                    Some(desc) => {
+                        msg_send![
+                            self,
+                            runWithFeeds: dictionary_ptr,
+                            targetTensors: &*output_array,
+                            targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                            onDevice: device,
+                            executionDescriptor: desc
+                        ]
+                    }
+                    None => {
+                        msg_send![
+                            self,
+                            runWithFeeds: dictionary_ptr,
+                            targetTensors: &*output_array,
+                            targetOperations: std::ptr::null::<NSArray<Operation>>(),
+                            onDevice: device,
+                            executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
+                        ]
+                    }
+                };
+
             let _results_dict = Retained::from_raw(results_ptr).unwrap();
-            
+
             // Convert NSDictionary to HashMap
             let mut result = HashMap::new();
             let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
-            
+
             let keys_count: usize = msg_send![keys, count];
-            
+
             for i in 0..keys_count {
                 let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
                 let key = Retained::from_raw(key_ptr as *mut _).unwrap();
-                
+
                 let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
                 let value = Retained::from_raw(value_ptr as *mut _).unwrap();
-                
+
                 result.insert(key, value);
             }
-            
+
             result
         }
     }
-    
+
     /// Execute the graph with feeds and target operations on a specific device
     ///
     /// - Parameters:
@@ -988,8 +956,10 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 randomUniformTensorWithShape: shape,
@@ -999,7 +969,7 @@ impl Graph {
                 seed: seed,
                 name: name_ptr
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -1007,7 +977,7 @@ impl Graph {
             }
         }
     }
-    
+
     /// Creates a tensor with random normal values
     pub fn random_normal(
         &self,
@@ -1020,8 +990,10 @@ impl Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-            
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 randomNormalTensorWithShape: shape,
@@ -1031,7 +1003,7 @@ impl Graph {
                 seed: seed,
                 name: name_ptr
             ];
-            
+
             if tensor_ptr.is_null() {
                 None
             } else {
@@ -1039,7 +1011,7 @@ impl Graph {
             }
         }
     }
-    
+
     pub fn run_with_feeds_and_ops_on_device(
         &self,
         device: &Device,
@@ -1051,61 +1023,63 @@ impl Graph {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-            
+            let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
+
             // Add entries to dictionary
             for (tensor, data) in feeds {
                 let _: () = msg_send![dictionary_ptr, setObject: *data, forKey: *tensor];
             }
-            
+
             // Create NSArray for output tensors
             let output_array = NSArray::from_slice(output_tensors);
-            
+
             // Create NSArray for target operations
             let ops_array = NSArray::from_slice(target_operations);
-            
+
             // Run the graph on device with operations
-            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = match execution_descriptor {
-                Some(desc) => {
-                    msg_send![
-                        self,
-                        runWithFeeds: dictionary_ptr,
-                        targetTensors: &*output_array,
-                        targetOperations: &*ops_array,
-                        onDevice: device,
-                        executionDescriptor: desc
-                    ]
-                }
-                None => {
-                    msg_send![
-                        self,
-                        runWithFeeds: dictionary_ptr,
-                        targetTensors: &*output_array,
-                        targetOperations: &*ops_array,
-                        onDevice: device,
-                        executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
-                    ]
-                }
-            };
-            
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
+                match execution_descriptor {
+                    Some(desc) => {
+                        msg_send![
+                            self,
+                            runWithFeeds: dictionary_ptr,
+                            targetTensors: &*output_array,
+                            targetOperations: &*ops_array,
+                            onDevice: device,
+                            executionDescriptor: desc
+                        ]
+                    }
+                    None => {
+                        msg_send![
+                            self,
+                            runWithFeeds: dictionary_ptr,
+                            targetTensors: &*output_array,
+                            targetOperations: &*ops_array,
+                            onDevice: device,
+                            executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
+                        ]
+                    }
+                };
+
             let _results_dict = Retained::from_raw(results_ptr).unwrap();
-            
+
             // Convert NSDictionary to HashMap
             let mut result = HashMap::new();
             let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
-            
+
             let keys_count: usize = msg_send![keys, count];
-            
+
             for i in 0..keys_count {
                 let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
                 let key = Retained::from_raw(key_ptr as *mut _).unwrap();
-                
+
                 let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
                 let value = Retained::from_raw(value_ptr as *mut _).unwrap();
-                
+
                 result.insert(key, value);
             }
-            
+
             result
         }
     }

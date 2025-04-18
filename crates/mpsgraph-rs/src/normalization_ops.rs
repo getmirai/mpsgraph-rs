@@ -21,7 +21,7 @@ pub trait GraphNormalizationOps {
     /// A valid Tensor object
     fn mean(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -172,7 +172,7 @@ pub trait GraphNormalizationOps {
 impl GraphNormalizationOps for Graph {
     fn mean(
         &self,
-        tensor: &Tensor,
+        tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
@@ -186,7 +186,7 @@ impl GraphNormalizationOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                meanOfTensor: tensor,
+                meanOfTensor: &**tensor,
                 axes: axes_ptr,
                 name: name_ptr
             ];
