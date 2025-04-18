@@ -82,7 +82,7 @@ pub trait GraphMemoryOps {
         shape: &Shape,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a variable from an input tensor.
     ///
@@ -98,7 +98,7 @@ pub trait GraphMemoryOps {
         &self,
         tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a read op which reads at this point of execution of the graph.
     ///
@@ -114,7 +114,7 @@ pub trait GraphMemoryOps {
         &self,
         variable: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates an assign operation which writes at this point of execution of the graph.
     ///
@@ -126,13 +126,13 @@ pub trait GraphMemoryOps {
     ///
     /// # Returns
     ///
-    /// A valid MPSGraphOperation object.
+    /// A valid Operation object.
     fn assign_variable(
         &self,
         variable: &Retained<Tensor>,
         tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Operation>>;
+    ) -> Retained<Operation>;
 }
 
 /// Extension methods to provide generic variable creation
@@ -155,7 +155,7 @@ pub trait GraphVariableOps {
         shape: &Shape,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 impl GraphMemoryOps for Graph {
@@ -213,7 +213,7 @@ impl GraphMemoryOps for Graph {
         shape: &Shape,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
@@ -230,9 +230,9 @@ impl GraphMemoryOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create variable tensor from bytes");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -241,7 +241,7 @@ impl GraphMemoryOps for Graph {
         &self,
         tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
@@ -253,9 +253,9 @@ impl GraphMemoryOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create variable from tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -264,7 +264,7 @@ impl GraphMemoryOps for Graph {
         &self,
         variable: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
@@ -276,9 +276,9 @@ impl GraphMemoryOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to read variable tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -288,7 +288,7 @@ impl GraphMemoryOps for Graph {
         variable: &Retained<Tensor>,
         tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Operation>> {
+    ) -> Retained<Operation> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
@@ -301,9 +301,9 @@ impl GraphMemoryOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to assign variable tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -316,7 +316,7 @@ impl GraphVariableOps for Graph {
         shape: &Shape,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             // Create NSData
             let bytes_len = std::mem::size_of_val(data);

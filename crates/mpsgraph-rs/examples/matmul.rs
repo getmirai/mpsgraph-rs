@@ -89,12 +89,12 @@ fn main() {
     let a_tensor_shape = ShapeHelper::matrix(m as i64, k as i64);
     let b_tensor_shape = ShapeHelper::matrix(k as i64, n as i64);
 
-    let a = graph.placeholder(DataType::Float32, &a_tensor_shape).unwrap();
-    let b = graph.placeholder(DataType::Float32, &b_tensor_shape).unwrap();
+    let a = graph.placeholder(DataType::Float32, &a_tensor_shape);
+    let b = graph.placeholder(DataType::Float32, &b_tensor_shape);
 
     // Perform matrix multiplication: A * B
     // The matmul method takes transpose flags for both inputs
-    let result = graph.matmul(&a, &b, false, false, None).unwrap();
+    let result = graph.matmul(&a, &b, false, false, None);
 
     // Create TensorBuffers for inputs
     let a_tensor = TensorBuffer::new(&device, &a_data, &a_shape, DataType::Float32);

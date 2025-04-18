@@ -24,7 +24,7 @@ pub trait GraphNormalizationOps {
         tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Returns the variance of the input tensor along the specified axes when the mean has been precomputed.
     ///
@@ -44,7 +44,7 @@ pub trait GraphNormalizationOps {
         mean_tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Returns the variance of the input tensor along the specified axes.
     ///
@@ -62,7 +62,7 @@ pub trait GraphNormalizationOps {
         tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a batch normalization operation and returns the result tensor.
     ///
@@ -88,7 +88,7 @@ pub trait GraphNormalizationOps {
         beta: Option<&Retained<Tensor>>,
         epsilon: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a normalization gamma-gradient operation and returns the result tensor.
     ///
@@ -114,7 +114,7 @@ pub trait GraphNormalizationOps {
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a normalization beta-gradient operation and returns the result tensor.
     ///
@@ -134,7 +134,7 @@ pub trait GraphNormalizationOps {
         source: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a normalization input gradient operation and returns the result tensor.
     ///
@@ -166,7 +166,7 @@ pub trait GraphNormalizationOps {
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 impl GraphNormalizationOps for Graph {
@@ -175,7 +175,7 @@ impl GraphNormalizationOps for Graph {
         tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -192,9 +192,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create mean operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -205,7 +205,7 @@ impl GraphNormalizationOps for Graph {
         mean_tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -223,9 +223,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create variance with mean operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -235,7 +235,7 @@ impl GraphNormalizationOps for Graph {
         tensor: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -252,9 +252,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create variance operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -268,7 +268,7 @@ impl GraphNormalizationOps for Graph {
         beta: Option<&Retained<Tensor>>,
         epsilon: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -288,9 +288,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create normalization operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -304,7 +304,7 @@ impl GraphNormalizationOps for Graph {
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -325,9 +325,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create normalization gamma gradient operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -338,7 +338,7 @@ impl GraphNormalizationOps for Graph {
         source: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -356,9 +356,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create normalization beta gradient operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -375,7 +375,7 @@ impl GraphNormalizationOps for Graph {
         axes: &[i64],
         epsilon: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -403,9 +403,9 @@ impl GraphNormalizationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create normalization gradient operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

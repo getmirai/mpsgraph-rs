@@ -19,7 +19,7 @@ pub trait GraphMatrixInverseOps {
     ///
     /// # Returns
     /// A new tensor containing the inverted matrix/matrices
-    fn inverse(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn inverse(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
 }
 
 /// Implementation of matrix inverse operations for Graph
@@ -36,7 +36,7 @@ impl GraphMatrixInverseOps for Graph {
     ///
     /// # Returns
     /// A new tensor containing the inverted matrix/matrices
-    fn inverse(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn inverse(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -44,9 +44,9 @@ impl GraphMatrixInverseOps for Graph {
             let result: *mut Tensor = msg_send![self, inverseOfTensor: &**x, name: name_ptr];
 
             if result.is_null() {
-                None
+                panic!("Failed to create matrix inverse operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

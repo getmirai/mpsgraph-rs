@@ -26,7 +26,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a flatten2D operation
     ///
@@ -44,7 +44,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a broadcast operation
     ///
@@ -62,7 +62,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a shape-of operation
     ///
@@ -78,7 +78,7 @@ pub trait GraphTensorShapeOps {
         &self,
         x: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a cast operation to change tensor data type
     ///
@@ -96,7 +96,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a stack operation to combine tensors along a new axis
     ///
@@ -114,7 +114,7 @@ pub trait GraphTensorShapeOps {
         tensors: &[&Retained<Tensor>],
         axis: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a split operation to split a tensor into multiple parts
     ///
@@ -152,7 +152,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates an expand_dims operation to insert dimensions of size 1
     ///
@@ -170,7 +170,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a tile operation to repeat a tensor along specified dimensions
     ///
@@ -188,7 +188,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         multiples: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a pad operation to pad a tensor
     ///
@@ -208,7 +208,7 @@ pub trait GraphTensorShapeOps {
         padding: &[i64],
         constant: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a space-to-depth operation
     ///
@@ -226,7 +226,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a depth-to-space operation
     ///
@@ -244,7 +244,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a reverse operation to reverse a tensor along specified dimensions
     ///
@@ -262,7 +262,7 @@ pub trait GraphTensorShapeOps {
         x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 impl GraphTensorShapeOps for Graph {
@@ -271,7 +271,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -287,9 +287,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create reshape operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -299,7 +299,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -312,9 +312,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create flatten2d operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -324,7 +324,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         shape: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -340,9 +340,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create broadcast operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -351,7 +351,7 @@ impl GraphTensorShapeOps for Graph {
         &self,
         x: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -363,9 +363,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create shape_of operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -375,7 +375,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -388,9 +388,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create cast operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -400,7 +400,7 @@ impl GraphTensorShapeOps for Graph {
         tensors: &[&Retained<Tensor>],
         axis: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -422,9 +422,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create stack operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -472,7 +472,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -488,9 +488,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create squeeze operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -500,7 +500,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -516,9 +516,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create expand_dims operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -528,7 +528,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         multiples: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -544,9 +544,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create tile operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -557,7 +557,7 @@ impl GraphTensorShapeOps for Graph {
         padding: &[i64],
         constant: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -574,9 +574,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create pad operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -586,7 +586,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -599,9 +599,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create space_to_depth operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -611,7 +611,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         block_size: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -624,9 +624,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create depth_to_space operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -636,7 +636,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -652,9 +652,9 @@ impl GraphTensorShapeOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create reverse operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

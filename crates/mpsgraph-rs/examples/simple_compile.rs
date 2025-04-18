@@ -34,18 +34,18 @@ fn main() {
     // 1. Define input tensors
     let shape_dimensions = [2, 2];
     let shape = ShapeHelper::matrix(2, 2);
-    let a = graph.placeholder(DataType::Float32, &shape).unwrap();
-    let b = graph.placeholder(DataType::Float32, &shape).unwrap();
+    let a = graph.placeholder(DataType::Float32, &shape);
+    let b = graph.placeholder(DataType::Float32, &shape);
 
     // 2. Define computation operations
     // Operation 1: C = A + B
-    let c = graph.add(&a, &b, Some("C")).unwrap();
+    let c = graph.add(&a, &b, Some("C"));
 
     // Operation 2: D = C * C (element-wise multiply)
-    let d = graph.multiply(&c, &c, Some("D")).unwrap();
+    let d = graph.multiply(&c, &c, Some("D"));
 
     // Operation 3: E = C + D
-    let e = graph.add(&c, &d, Some("E")).unwrap();
+    let e = graph.add(&c, &d, Some("E"));
 
     //-- Create Buffers for Input and Output Data --//
     println!("Creating Metal buffers for inputs and outputs...");

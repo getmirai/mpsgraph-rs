@@ -23,7 +23,7 @@ pub trait GraphMatrixOps {
         x: &Retained<Tensor>,
         dimensions: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a matrix multiplication operation.
     ///
@@ -41,7 +41,7 @@ pub trait GraphMatrixOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a matrix multiplication operation with transposed operands.
     ///
@@ -63,7 +63,7 @@ pub trait GraphMatrixOps {
         secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a vector inner product operation.
     ///
@@ -81,7 +81,7 @@ pub trait GraphMatrixOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a vector outer product operation.
     ///
@@ -99,7 +99,7 @@ pub trait GraphMatrixOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a batch matrix multiplication operation.
     ///
@@ -117,7 +117,7 @@ pub trait GraphMatrixOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a batch matrix multiplication operation with transposed operands.
     ///
@@ -139,7 +139,7 @@ pub trait GraphMatrixOps {
         secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a tensor with a band part extracted from the input tensor.
     ///
@@ -163,7 +163,7 @@ pub trait GraphMatrixOps {
         num_lower: &Retained<Tensor>,
         num_upper: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a tensor with a band part extracted from the input tensor using scalar values.
     ///
@@ -187,7 +187,7 @@ pub trait GraphMatrixOps {
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 impl GraphMatrixOps for Graph {
@@ -196,7 +196,7 @@ impl GraphMatrixOps for Graph {
         x: &Retained<Tensor>,
         dimensions: &[i64],
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -213,9 +213,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create transpose tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -225,7 +225,7 @@ impl GraphMatrixOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -238,9 +238,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create matrix multiplication tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -252,7 +252,7 @@ impl GraphMatrixOps for Graph {
         secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -267,9 +267,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create matrix multiplication with transpose tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -279,7 +279,7 @@ impl GraphMatrixOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -292,9 +292,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create inner product tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -304,7 +304,7 @@ impl GraphMatrixOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -317,9 +317,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create outer product tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -329,7 +329,7 @@ impl GraphMatrixOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -342,9 +342,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create batch matrix multiplication tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -356,7 +356,7 @@ impl GraphMatrixOps for Graph {
         secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -371,9 +371,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create batch matrix multiplication with transpose tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -384,7 +384,7 @@ impl GraphMatrixOps for Graph {
         num_lower: &Retained<Tensor>,
         num_upper: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -398,9 +398,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create band part tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -411,7 +411,7 @@ impl GraphMatrixOps for Graph {
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -425,9 +425,9 @@ impl GraphMatrixOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create band part with scalars tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

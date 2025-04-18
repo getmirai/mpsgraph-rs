@@ -23,7 +23,7 @@ pub trait GraphLinearAlgebraOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a matrix multiplication operation with transposed operands.
     ///
@@ -45,7 +45,7 @@ pub trait GraphLinearAlgebraOps {
         secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a vector inner product operation.
     ///
@@ -63,7 +63,7 @@ pub trait GraphLinearAlgebraOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a vector outer product operation.
     ///
@@ -81,7 +81,7 @@ pub trait GraphLinearAlgebraOps {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a batch matrix multiplication operation.
     ///
@@ -99,7 +99,7 @@ pub trait GraphLinearAlgebraOps {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a batch matrix multiplication operation with transposed operands.
     ///
@@ -121,7 +121,7 @@ pub trait GraphLinearAlgebraOps {
         secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a tensor with a band part extracted from the input tensor.
     ///
@@ -145,7 +145,7 @@ pub trait GraphLinearAlgebraOps {
         num_lower: &Tensor,
         num_upper: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a tensor with a band part extracted from the input tensor using scalar values.
     ///
@@ -169,7 +169,7 @@ pub trait GraphLinearAlgebraOps {
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Calculates the Hamming distance between two tensors.
     ///
@@ -190,7 +190,7 @@ pub trait GraphLinearAlgebraOps {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Performs scaled dot-product attention on the input tensors.
     ///
@@ -218,7 +218,7 @@ pub trait GraphLinearAlgebraOps {
         value: &Tensor,
         scale: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Performs scaled dot-product attention with a scalar scaling factor.
     ///
@@ -243,7 +243,7 @@ pub trait GraphLinearAlgebraOps {
         value: &Tensor,
         scale: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Performs masked scaled dot-product attention.
     ///
@@ -270,7 +270,7 @@ pub trait GraphLinearAlgebraOps {
         mask: &Tensor,
         scale: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Performs masked scaled dot-product attention with a scalar scaling factor.
     ///
@@ -297,7 +297,7 @@ pub trait GraphLinearAlgebraOps {
         mask: &Tensor,
         scale: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 /// Implementation of linear algebra operations for Graph
@@ -307,7 +307,7 @@ impl GraphLinearAlgebraOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -320,9 +320,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create matrix multiplication operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -334,7 +334,7 @@ impl GraphLinearAlgebraOps for Graph {
         secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -349,9 +349,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create matrix multiplication with transpose operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -361,7 +361,7 @@ impl GraphLinearAlgebraOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -374,9 +374,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create inner product operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -386,7 +386,7 @@ impl GraphLinearAlgebraOps for Graph {
         primary: &Retained<Tensor>,
         secondary: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -399,9 +399,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create outer product operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -411,7 +411,7 @@ impl GraphLinearAlgebraOps for Graph {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -424,9 +424,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create batch matrix multiplication operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -438,7 +438,7 @@ impl GraphLinearAlgebraOps for Graph {
         secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -453,9 +453,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create batch matrix multiplication with transpose operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -466,7 +466,7 @@ impl GraphLinearAlgebraOps for Graph {
         num_lower: &Tensor,
         num_upper: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -480,9 +480,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create band part operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -493,7 +493,7 @@ impl GraphLinearAlgebraOps for Graph {
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -507,9 +507,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create band part with scalars operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -519,7 +519,7 @@ impl GraphLinearAlgebraOps for Graph {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -532,9 +532,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create hamming distance operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -546,7 +546,7 @@ impl GraphLinearAlgebraOps for Graph {
         value: &Tensor,
         scale: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -561,9 +561,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create scaled dot product attention operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -575,7 +575,7 @@ impl GraphLinearAlgebraOps for Graph {
         value: &Tensor,
         scale: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -590,9 +590,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create scaled dot product attention with scalar operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -605,7 +605,7 @@ impl GraphLinearAlgebraOps for Graph {
         mask: &Tensor,
         scale: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -621,9 +621,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create masked scaled dot product attention operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -636,7 +636,7 @@ impl GraphLinearAlgebraOps for Graph {
         mask: &Tensor,
         scale: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -652,9 +652,9 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create masked scaled dot product attention with scalar operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

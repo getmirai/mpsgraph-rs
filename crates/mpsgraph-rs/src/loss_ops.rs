@@ -49,7 +49,7 @@ pub trait GraphLossOps {
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates the gradient of a softmax cross-entropy loss operation and returns the result tensor.
     ///
@@ -73,7 +73,7 @@ pub trait GraphLossOps {
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 /// Implementation of loss operations for Graph
@@ -85,7 +85,7 @@ impl GraphLossOps for Graph {
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -100,9 +100,9 @@ impl GraphLossOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create softmax cross-entropy operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -115,7 +115,7 @@ impl GraphLossOps for Graph {
         axis: i64,
         reduction_type: LossReductionType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -131,9 +131,9 @@ impl GraphLossOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create softmax cross-entropy gradient operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

@@ -8,7 +8,7 @@ use crate::tensor::Tensor;
 /// Trait for activation operations on Graph
 pub trait GraphActivationOps {
     /// Creates a ReLU operation
-    fn relu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn relu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Creates a ReLU gradient operation
     fn relu_gradient(
@@ -16,10 +16,10 @@ pub trait GraphActivationOps {
         gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
     
     /// Creates a Sigmoid operation
-    fn sigmoid(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn sigmoid(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Creates a Sigmoid gradient operation
     fn sigmoid_gradient(
@@ -27,13 +27,13 @@ pub trait GraphActivationOps {
         gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
     
     /// Creates a Tanh operation
-    fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
     
     /// Creates a SoftMax operation
-    fn softmax(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn softmax(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Retained<Tensor>;
     
     /// Creates a SoftMax gradient operation
     fn softmax_gradient(
@@ -42,10 +42,10 @@ pub trait GraphActivationOps {
         source: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
     
     /// Creates a Leaky ReLU operation
-    fn leaky_relu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn leaky_relu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Retained<Tensor>;
     
     /// Creates a Leaky ReLU with alpha tensor
     fn leaky_relu_with_alpha_tensor(
@@ -53,7 +53,7 @@ pub trait GraphActivationOps {
         x: &Retained<Tensor>,
         alpha_tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
     
     /// Creates a Leaky ReLU gradient operation
     fn leaky_relu_gradient(
@@ -62,17 +62,17 @@ pub trait GraphActivationOps {
         source: &Retained<Tensor>,
         alpha: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates an ELU (Exponential Linear Unit) operation
-    fn elu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn elu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a GELU (Gaussian Error Linear Unit) operation
-    fn gelu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>>;
+    fn gelu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
 }
 
 impl GraphActivationOps for Graph {
-    fn relu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn relu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -84,9 +84,9 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create ReLU tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -96,7 +96,7 @@ impl GraphActivationOps for Graph {
         gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -109,14 +109,14 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create ReLU gradient tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
     
-    fn sigmoid(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn sigmoid(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -128,9 +128,9 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Sigmoid tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -140,7 +140,7 @@ impl GraphActivationOps for Graph {
         gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -153,14 +153,14 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Sigmoid gradient tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
     
-    fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -172,14 +172,14 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Tanh tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
     
-    fn softmax(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn softmax(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -192,9 +192,9 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create SoftMax tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -205,7 +205,7 @@ impl GraphActivationOps for Graph {
         source: &Retained<Tensor>,
         axis: i64,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -219,14 +219,14 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create SoftMax gradient tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
     
-    fn leaky_relu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn leaky_relu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -239,9 +239,9 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Leaky ReLU tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -251,7 +251,7 @@ impl GraphActivationOps for Graph {
         x: &Retained<Tensor>,
         alpha_tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -264,9 +264,9 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Leaky ReLU with alpha tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -277,7 +277,7 @@ impl GraphActivationOps for Graph {
         source: &Retained<Tensor>,
         alpha: f32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -291,14 +291,14 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Leaky ReLU gradient tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
 
-    fn elu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn elu(&self, x: &Retained<Tensor>, alpha: f32, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -311,14 +311,14 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create ELU tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
 
-    fn gelu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Option<Retained<Tensor>> {
+    fn gelu(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -330,9 +330,9 @@ impl GraphActivationOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create GELU tensor");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }

@@ -78,7 +78,7 @@ impl Graph {
     }
 
     /// Creates a placeholder tensor with the given data type and shape
-    pub fn placeholder(&self, data_type: DataType, shape: &Shape) -> Option<Retained<Tensor>> {
+    pub fn placeholder(&self, data_type: DataType, shape: &Shape) -> Retained<Tensor> {
         unsafe {
             // Use null for the name parameter
             let tensor_ptr: *mut Tensor = msg_send![
@@ -89,9 +89,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create placeholder tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -102,7 +102,7 @@ impl Graph {
         data_type: DataType,
         shape: &Shape,
         name: &str,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = NSString::from_str(name);
 
@@ -114,9 +114,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create placeholder tensor with name: {}", name);
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -129,7 +129,7 @@ impl Graph {
         _transpose_lhs: bool,
         _transpose_rhs: bool,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let result_ptr: *mut Tensor = match name {
                 Some(name_str) => {
@@ -152,9 +152,9 @@ impl Graph {
             };
 
             if result_ptr.is_null() {
-                None
+                panic!("Failed to create matrix multiplication tensor");
             } else {
-                Retained::from_raw(result_ptr)
+                Retained::from_raw(result_ptr).unwrap()
             }
         }
     }
@@ -254,7 +254,7 @@ impl Graph {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -269,9 +269,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create addition tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -282,7 +282,7 @@ impl Graph {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -297,9 +297,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create multiplication tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -310,7 +310,7 @@ impl Graph {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -325,9 +325,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create subtraction tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -338,7 +338,7 @@ impl Graph {
         primary: &Tensor,
         secondary: &Tensor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -353,9 +353,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create division tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -367,7 +367,7 @@ impl Graph {
         data_type: DataType,
         shape: &Shape,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -383,9 +383,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create constant scalar tensor with shape");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -396,7 +396,7 @@ impl Graph {
         value: f64,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -411,9 +411,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create constant scalar tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -425,7 +425,7 @@ impl Graph {
         data_type: DataType,
         shape: &Shape,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         // Create TensorData from values
         let dims = shape.dimensions();
         let data = TensorData::from_bytes(values, &dims, data_type);
@@ -441,7 +441,7 @@ impl Graph {
         shape_dimensions: &[i64],
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         // Create shape
         let shape = ShapeHelper::from_dimensions(shape_dimensions);
 
@@ -455,7 +455,7 @@ impl Graph {
         data: &Retained<TensorData>,
         shape: Option<&Shape>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -470,9 +470,9 @@ impl Graph {
             ];
             
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create constant tensor with data");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -483,7 +483,7 @@ impl Graph {
         data: &[u8],
         shape: &Shape,
         data_type: DataType,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         // Create TensorData from the raw bytes
         let tensor_data = unsafe {
             // Get the default Metal device
@@ -508,7 +508,7 @@ impl Graph {
             ];
 
             if tensor_data.is_null() {
-                return None;
+                panic!("Failed to create TensorData from raw bytes");
             }
 
             Retained::from_raw(tensor_data).unwrap()
@@ -527,22 +527,13 @@ impl Graph {
     ///   - descriptor: Optional compilation descriptor
     ///
     /// - Returns: A compiled executable
-    /// Compiles the graph against a given set of feeds and targets
-    ///
-    /// - Parameters:
-    ///   - device: Metal device to compile for
-    ///   - feeds: A dictionary mapping input tensors to their values
-    ///   - targets: An array of tensors whose values should be computed
-    ///   - descriptor: Optional compilation descriptor
-    ///
-    /// - Returns: A compiled executable
     pub fn compile(
         &self,
         device: &Device,
         feeds: &HashMap<Retained<Tensor>, Retained<ShapedType>>,
         targets: &[&Retained<Tensor>],
         descriptor: Option<&CompilationDescriptor>,
-    ) -> Option<Retained<Executable>> {
+    ) -> Retained<Executable> {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
@@ -587,9 +578,9 @@ impl Graph {
             ];
 
             if executable_ptr.is_null() {
-                None
+                panic!("Failed to compile graph");
             } else {
-                Retained::from_raw(executable_ptr)
+                Retained::from_raw(executable_ptr).unwrap()
             }
         }
     }
@@ -611,7 +602,7 @@ impl Graph {
         targets: &[&Retained<Tensor>],
         target_ops: &[&Operation],
         descriptor: Option<&CompilationDescriptor>,
-    ) -> Option<Retained<Executable>> {
+    ) -> Retained<Executable> {
         unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
@@ -659,9 +650,9 @@ impl Graph {
             ];
 
             if executable_ptr.is_null() {
-                None
+                panic!("Failed to compile graph with targets and operations");
             } else {
-                Retained::from_raw(executable_ptr)
+                Retained::from_raw(executable_ptr).unwrap()
             }
         }
     }
@@ -953,7 +944,7 @@ impl Graph {
         data_type: DataType,
         seed: u32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -971,9 +962,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create random uniform tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }
@@ -987,7 +978,7 @@ impl Graph {
         data_type: DataType,
         seed: u32,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -1005,9 +996,9 @@ impl Graph {
             ];
 
             if tensor_ptr.is_null() {
-                None
+                panic!("Failed to create random normal tensor");
             } else {
-                Retained::from_raw(tensor_ptr)
+                Retained::from_raw(tensor_ptr).unwrap()
             }
         }
     }

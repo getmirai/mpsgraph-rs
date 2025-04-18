@@ -13,11 +13,11 @@ fn main() {
     // Create input placeholders with shape
     let shape_dimensions = [2, 2];
     let shape = ShapeHelper::matrix(2, 2);
-    let a = graph.placeholder(DataType::Float32, &shape).unwrap();
-    let b = graph.placeholder(DataType::Float32, &shape).unwrap();
+    let a = graph.placeholder(DataType::Float32, &shape);
+    let b = graph.placeholder(DataType::Float32, &shape);
 
     // Define operations: C = A + B
-    let result = graph.add(&a, &b, None).unwrap();
+    let result = graph.add(&a, &b, None);
 
     // Get a Metal device
     let metal_device = metal::Device::system_default().unwrap();

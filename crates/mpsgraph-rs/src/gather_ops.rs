@@ -27,7 +27,7 @@ pub trait GraphGatherOps {
         indices_tensor: &Retained<Tensor>,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a Gather operation and returns the result tensor.
     ///
@@ -51,7 +51,7 @@ pub trait GraphGatherOps {
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a GatherAlongAxis operation and returns the result tensor.
     ///
@@ -76,7 +76,7 @@ pub trait GraphGatherOps {
         updates_tensor: &Retained<Tensor>,
         indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a GatherAlongAxis operation using an axis tensor and returns the result tensor.
     ///
@@ -101,7 +101,7 @@ pub trait GraphGatherOps {
         updates_tensor: &Retained<Tensor>,
         indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 /// Implementation of gather operations for Graph
@@ -112,7 +112,7 @@ impl GraphGatherOps for Graph {
         indices_tensor: &Retained<Tensor>,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -126,9 +126,9 @@ impl GraphGatherOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create GatherND operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -140,7 +140,7 @@ impl GraphGatherOps for Graph {
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -155,9 +155,9 @@ impl GraphGatherOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create Gather operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -168,13 +168,14 @@ impl GraphGatherOps for Graph {
         updates_tensor: &Retained<Tensor>,
         indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
+
                 gatherAlongAxis: axis,
                 withUpdatesTensor: &**updates_tensor,
                 indicesTensor: &**indices_tensor,
@@ -182,9 +183,9 @@ impl GraphGatherOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create GatherAlongAxis operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
@@ -195,7 +196,7 @@ impl GraphGatherOps for Graph {
         updates_tensor: &Retained<Tensor>,
         indices_tensor: &Retained<Tensor>,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
@@ -209,9 +210,9 @@ impl GraphGatherOps for Graph {
             ];
 
             if result.is_null() {
-                None
+                panic!("Failed to create GatherAlongAxisTensor operation");
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Retained::from_raw(result).unwrap()
             }
         }
     }
