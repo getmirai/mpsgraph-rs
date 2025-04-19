@@ -67,5 +67,5 @@ default = []
 local-dev = []
 
 [[example]]
-name = "tensor_ops"
-path = "examples/tensor_ops.rs"
+name = "tensor_operators"
+path = "examples/tensor_operators.rs"
