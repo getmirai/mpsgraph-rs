@@ -206,24 +206,6 @@ pub trait GraphTensorShapeOps {
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
-    /// Creates an expand_dims operation to insert dimensions of size 1
-    ///
-    /// # Arguments
-    ///
-    /// * `x` - The input tensor
-    /// * `axes` - Axes at which to insert new dimensions
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn expand_dims(
-        &self,
-        x: &Retained<Tensor>,
-        axes: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-    
     /// Creates an expand_dims operation to insert a dimension of size 1 at the specified axis
     ///
     /// # Arguments
@@ -235,10 +217,28 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn expand_dims_axis(
+    fn expand_dims(
         &self,
         x: &Retained<Tensor>,
         axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+    
+    /// Creates an expand_dims operation to insert dimensions of size 1 at specified axes
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axes` - Axes at which to insert new dimensions
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn expand_dims_axes(
+        &self,
+        x: &Retained<Tensor>,
+        axes: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor>;
     
@@ -586,6 +586,31 @@ impl GraphTensorShapeOps for Graph {
     fn expand_dims(
         &self,
         x: &Retained<Tensor>,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                expandDimsOfTensor: &**x,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create expand_dims operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn expand_dims_axes(
+        &self,
+        x: &Retained<Tensor>,
         axes: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -598,13 +623,13 @@ impl GraphTensorShapeOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                expandDimsTensor: &**x,
+                expandDimsOfTensor: &**x,
                 axes: axes_ptr,
                 name: name_ptr
             ];
 
             if result.is_null() {
-                panic!("Failed to create expand_dims operation");
+                panic!("Failed to create expand_dims_axes operation");
             } else {
                 Retained::from_raw(result).unwrap()
             }
@@ -820,30 +845,6 @@ impl GraphTensorShapeOps for Graph {
         }
     }
     
-    fn expand_dims_axis(
-        &self,
-        x: &Retained<Tensor>,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                expandDimsOfTensor: &**x,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create expand_dims_axis operation");
-            } else {
-                Retained::from_raw(result).unwrap()
-            }
-        }
-    }
     
     fn expand_dims_with_tensor(
         &self,
@@ -881,4 +882,3 @@ impl GraphTensorShapeOpsExtension for Graph {
     fn tensor_shape_ops(&self) -> &dyn GraphTensorShapeOps {
         self
     }
-}
