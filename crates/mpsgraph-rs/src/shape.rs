@@ -129,41 +129,4 @@ unsafe impl RefEncode for Shape {
     const ENCODING_REF: objc2::Encoding = <*mut AnyObject>::ENCODING_REF;
 }
 
-// Remove ShapeHelper struct as its methods are now integrated into Shape
-// Keep for backwards compatibility as deprecated
-#[deprecated(since = "0.2.0", note = "Use Shape methods directly instead")]
-pub struct ShapeHelper;
-
-#[allow(deprecated)]
-impl ShapeHelper {
-    /// Create a Shape representing a scalar
-    pub fn scalar() -> Shape {
-        Shape::scalar()
-    }
-
-    /// Create a Shape representing a vector
-    pub fn vector(length: i64) -> Shape {
-        Shape::vector(length)
-    }
-
-    /// Create a Shape representing a matrix
-    pub fn matrix(rows: i64, columns: i64) -> Shape {
-        Shape::matrix(rows, columns)
-    }
-
-    /// Create a Shape representing a 3D tensor
-    pub fn tensor3d(dim1: i64, dim2: i64, dim3: i64) -> Shape {
-        Shape::tensor3d(dim1, dim2, dim3)
-    }
-
-    /// Create a Shape representing a 4D tensor
-    pub fn tensor4d(dim1: i64, dim2: i64, dim3: i64, dim4: i64) -> Shape {
-        Shape::tensor4d(dim1, dim2, dim3, dim4)
-    }
-
-    /// Create a Shape from a slice of dimensions
-    pub fn from_dimensions(dimensions: &[i64]) -> Shape {
-        Shape::from_dimensions(dimensions)
-    }
-}
 

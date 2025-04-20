@@ -1,14 +1,14 @@
 use crate::optimizer_ops::VariableOp;
 use crate::graph::Graph;
 use crate::tensor::DataType;
-use crate::shape::ShapeHelper;
+use crate::shape::Shape;
 
 #[test]
 fn test_variable_op_creation() {
     let graph = Graph::new();
     
     // Create a tensor to use as a variable
-    let shape = ShapeHelper::matrix(2, 3);
+    let shape = Shape::matrix(2, 3);
     let tensor = graph.placeholder(
         "weights", 
         DataType::Float32, 
@@ -32,10 +32,10 @@ fn test_sgd_api_compiles() {
     let graph = Graph::new();
     
     // Create tensors for the test
-    let shape = ShapeHelper::matrix(2, 3);
+    let shape = Shape::matrix(2, 3);
     let values = graph.placeholder("values", DataType::Float32, &shape, None).unwrap();
     let gradient = graph.placeholder("gradient", DataType::Float32, &shape, None).unwrap();
-    let learning_rate = graph.placeholder("lr", DataType::Float32, &ShapeHelper::scalar(), None).unwrap();
+    let learning_rate = graph.placeholder("lr", DataType::Float32, &Shape::scalar(), None).unwrap();
     
     // Test SGD operation
     let _ = || {
@@ -57,8 +57,8 @@ fn test_adam_api_compiles() {
     let graph = Graph::new();
     
     // Create tensors for the test
-    let shape = ShapeHelper::matrix(2, 3);
-    let scalar_shape = ShapeHelper::scalar();
+    let shape = Shape::matrix(2, 3);
+    let scalar_shape = Shape::scalar();
     
     let values = graph.placeholder("values", DataType::Float32, &shape, None).unwrap();
     let gradient = graph.placeholder("gradient", DataType::Float32, &shape, None).unwrap();

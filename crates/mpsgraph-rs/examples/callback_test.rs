@@ -1,5 +1,5 @@
 use mpsgraph::{
-    DataType, ExecutionDescriptor, Graph, ShapeHelper, TensorData, CommandBuffer,
+    DataType, ExecutionDescriptor, Graph, Shape, TensorData, CommandBuffer,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -12,7 +12,7 @@ fn main() {
 
     // Create input placeholders with shape
     let shape_dimensions = [2, 2];
-    let shape = ShapeHelper::matrix(2, 2);
+    let shape = Shape::matrix(2, 2);
     let a = graph.placeholder(DataType::Float32, &shape);
     let b = graph.placeholder(DataType::Float32, &shape);
 

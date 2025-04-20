@@ -24,9 +24,9 @@ pub trait GraphGradientOps {
     /// # Example
     ///
     /// ```ignore
-    /// # use mpsgraph::{Graph, DataType, ShapeHelper};
+    /// # use mpsgraph::{Graph, DataType, Shape};
     /// # let graph = Graph::new();
-    /// # let shape = ShapeHelper::matrix(2, 3);
+    /// # let shape = Shape::matrix(2, 3);
     /// # let x = graph.placeholder(DataType::Float32, &shape).unwrap();
     /// # let y = graph.square(&x, None).unwrap();
     /// // Calculate gradient dy/dx

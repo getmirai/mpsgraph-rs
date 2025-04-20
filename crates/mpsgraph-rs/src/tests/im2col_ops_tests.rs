@@ -1,7 +1,7 @@
 use crate::im2col_ops::ImToColOpDescriptor;
 use crate::pooling_ops::TensorNamedDataLayout;
 use crate::graph::Graph;
-use crate::shape::ShapeHelper;
+use crate::shape::Shape;
 use crate::tensor::{Tensor, DataType};
 
 #[test]
@@ -69,7 +69,7 @@ fn test_im2col_api_compiles() {
     let graph = Graph::new();
     
     // Placeholder source tensor
-    let source_shape = ShapeHelper::tensor4d(1, 3, 32, 32); // batch, channels, height, width
+    let source_shape = Shape::tensor4d(1, 3, 32, 32); // batch, channels, height, width
     let source = graph.placeholder("source", DataType::Float32, &source_shape, None).unwrap();
     
     // Create descriptor
@@ -81,7 +81,7 @@ fn test_im2col_api_compiles() {
     let _im2col_result = graph.im_to_col(&source, &descriptor, Some("im2col"));
     
     // Test col2im operation
-    let output_shape = ShapeHelper::tensor4d(1, 3, 32, 32);
+    let output_shape = Shape::tensor4d(1, 3, 32, 32);
     let _col2im_result = graph.col_to_im(&source, &output_shape, &descriptor, Some("col2im"));
     
     // Test alias methods for backward compatibility

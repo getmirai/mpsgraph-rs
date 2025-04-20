@@ -1,5 +1,5 @@
 use crate::stencil_ops::{StencilOpDescriptor, ReductionMode, BoundaryMode, PaddingMode};
-use crate::shape::ShapeHelper;
+use crate::shape::Shape;
 
 #[test]
 fn test_stencil_descriptor_creation() {
@@ -22,10 +22,10 @@ fn test_stencil_descriptor_creation() {
 #[test]
 fn test_stencil_descriptor_with_params() {
     // Create shape objects for the parameters
-    let offsets = ShapeHelper::tensor4d(0, 0, 0, 0);
-    let strides = ShapeHelper::tensor4d(1, 1, 1, 1);
-    let dilation_rates = ShapeHelper::tensor4d(1, 1, 1, 1);
-    let explicit_padding = ShapeHelper::tensor4d(0, 0, 0, 0);
+    let offsets = Shape::tensor4d(0, 0, 0, 0);
+    let strides = Shape::tensor4d(1, 1, 1, 1);
+    let dilation_rates = Shape::tensor4d(1, 1, 1, 1);
+    let explicit_padding = Shape::tensor4d(0, 0, 0, 0);
     
     // Create a descriptor with padding style
     let descriptor1 = StencilOpDescriptor::with_padding_style(PaddingMode::Valid);

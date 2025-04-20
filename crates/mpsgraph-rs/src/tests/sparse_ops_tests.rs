@@ -1,7 +1,7 @@
 use crate::sparse_ops::{CreateSparseOpDescriptor, SparseStorageType};
 use crate::tensor::DataType;
 use crate::graph::Graph;
-use crate::shape::{Shape, ShapeHelper};
+use crate::shape::{Shape, Shape};
 use crate::tensor::Tensor;
 
 #[test]
@@ -33,7 +33,7 @@ fn test_create_sparse_op_descriptor_with_settings() {
 #[test]
 fn test_sparse_api_compiles() {
     let graph = Graph::new();
-    let shape = ShapeHelper::from_dimensions(&[2, 3, 4]);
+    let shape = Shape::from_dimensions(&[2, 3, 4]);
     
     // Just test that the methods exist and the types are correct
     // We're not running actual GPU operations

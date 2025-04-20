@@ -1,6 +1,6 @@
 use crate::rnn_ops::{SingleGateRNNDescriptor, LSTMDescriptor, GRUDescriptor, RNNActivation};
 use crate::graph::Graph;
-use crate::shape::ShapeHelper;
+use crate::shape::Shape;
 use crate::tensor::DataType;
 use crate::device::CustomDefault;
 
@@ -89,10 +89,10 @@ fn test_rnn_api_compiles() {
     let graph = Graph::new();
     
     // Create a batch of 2 sequences, each 10 time steps, with 4 features
-    let input_shape = ShapeHelper::tensor3d(10, 2, 4);
+    let input_shape = Shape::tensor3d(10, 2, 4);
     let hidden_dim = 8;
-    let recurrent_weight_shape = ShapeHelper::matrix(hidden_dim, hidden_dim);
-    let input_weight_shape = ShapeHelper::matrix(hidden_dim, 4);
+    let recurrent_weight_shape = Shape::matrix(hidden_dim, hidden_dim);
+    let input_weight_shape = Shape::matrix(hidden_dim, 4);
     
     // Test single-gate RNN API
     let _ = |input, recurrent_weight, input_weight, bias, init_state, mask| {

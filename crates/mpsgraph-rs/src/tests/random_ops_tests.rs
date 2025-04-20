@@ -1,7 +1,7 @@
 use crate::random_ops::{RandomOpDescriptor, RandomDistribution, RandomNormalSamplingMethod};
 use crate::tensor::DataType;
 use crate::graph::Graph;
-use crate::shape::ShapeHelper;
+use crate::shape::Shape;
 use crate::device::CustomDefault;
 
 #[test]
@@ -62,7 +62,7 @@ fn test_random_ops_api_compiles() {
     let graph = Graph::new();
     
     // Create a tensor shape
-    let shape = ShapeHelper::tensor3d(2, 3, 4); // 2x3x4 tensor
+    let shape = Shape::tensor3d(2, 3, 4); // 2x3x4 tensor
     
     // Test creating a random state tensor
     let _ = |seed| {

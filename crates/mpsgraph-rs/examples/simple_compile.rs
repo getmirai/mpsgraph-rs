@@ -1,6 +1,6 @@
 use metal::{Device, MTLResourceOptions};
 use mpsgraph::{
-    CommandBufferStatus, DataType, ExecutionDescriptor, Graph, ShapeHelper, TensorData,
+    CommandBufferStatus, DataType, ExecutionDescriptor, Graph, Shape, TensorData,
 };
 use std::collections::HashMap;
 
@@ -33,7 +33,7 @@ fn main() {
 
     // 1. Define input tensors
     let shape_dimensions = [2, 2];
-    let shape = ShapeHelper::matrix(2, 2);
+    let shape = Shape::matrix(2, 2);
     let a = graph.placeholder(DataType::Float32, &shape);
     let b = graph.placeholder(DataType::Float32, &shape);
 

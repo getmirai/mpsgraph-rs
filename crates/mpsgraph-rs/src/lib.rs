@@ -15,7 +15,7 @@ pub mod prelude {
     pub use crate::core::{ClassType, DataType};
     pub use crate::device::Device;
     pub use crate::graph::{Graph, TensorDataScalar};
-    pub use crate::shape::{Shape, ShapeHelper};
+    pub use crate::shape::Shape;
     pub use crate::tensor::Tensor;
     pub use crate::tensor_data::TensorData;
     pub use crate::operation::Operation;
@@ -90,7 +90,7 @@ pub mod utils;
 pub use core::{ClassType, create_ns_array_from_i64_slice, DataType};
 pub use device::{Device, CustomDefault};
 pub use graph::{Graph, TensorDataScalar};
-pub use shape::{Shape, ShapeHelper};
+pub use shape::Shape;
 pub use tensor::Tensor;
 pub use tensor_data::TensorData;
 pub use operation::Operation;

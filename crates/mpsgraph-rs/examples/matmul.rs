@@ -1,6 +1,6 @@
 use metal::{Buffer, Device, MTLResourceOptions};
 use mpsgraph::{
-    DataType, ExecutionDescriptor, Graph, ShapeHelper, TensorData,
+    DataType, ExecutionDescriptor, Graph, Shape, TensorData,
 };
 use std::collections::HashMap;
 use objc2::rc::Retained;
@@ -85,9 +85,9 @@ fn main() {
     let b_shape = [k, n];
     let result_shape = [m, n];
 
-    // Create shapes for the tensors (convert usize to i64 for ShapeHelper)
-    let a_tensor_shape = ShapeHelper::matrix(m as i64, k as i64);
-    let b_tensor_shape = ShapeHelper::matrix(k as i64, n as i64);
+    // Create shapes for the tensors (convert usize to i64 for Shape)
+    let a_tensor_shape = Shape::matrix(m as i64, k as i64);
+    let b_tensor_shape = Shape::matrix(k as i64, n as i64);
 
     let a = graph.placeholder(DataType::Float32, &a_tensor_shape);
     let b = graph.placeholder(DataType::Float32, &b_tensor_shape);
