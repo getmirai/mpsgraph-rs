@@ -136,7 +136,7 @@ pub trait GraphTensorShapeOps {
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>>;
 
-    /// Creates a squeeze operation to remove dimensions of size 1
+    /// Creates a squeeze operation to remove dimensions of size 1 at specified axes
     ///
     /// # Arguments
     ///
@@ -151,6 +151,58 @@ pub trait GraphTensorShapeOps {
         &self,
         x: &Retained<Tensor>,
         axes: &[i64],
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+    
+    /// Creates a squeeze operation to remove all dimensions of size 1
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn squeeze_all(
+        &self,
+        x: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+    
+    /// Creates a squeeze operation to remove a dimension of size 1 at the specified axis
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axis` - The axis to squeeze
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn squeeze_axis(
+        &self,
+        x: &Retained<Tensor>,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+    
+    /// Creates a squeeze operation to remove dimensions with size 1 specified by a tensor
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axes_tensor` - The tensor containing the axes to squeeze
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn squeeze_with_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        axes_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -169,6 +221,42 @@ pub trait GraphTensorShapeOps {
         &self,
         x: &Retained<Tensor>,
         axes: &[i64],
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+    
+    /// Creates an expand_dims operation to insert a dimension of size 1 at the specified axis
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axis` - The axis to expand
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn expand_dims_axis(
+        &self,
+        x: &Retained<Tensor>,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+    
+    /// Creates an expand_dims operation to insert dimensions with size 1 specified by a tensor
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `axes_tensor` - The tensor containing the axes to expand
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn expand_dims_with_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        axes_tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -653,6 +741,129 @@ impl GraphTensorShapeOps for Graph {
 
             if result.is_null() {
                 panic!("Failed to create reverse operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn squeeze_all(
+        &self,
+        x: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                squeezeTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create squeeze_all operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn squeeze_axis(
+        &self,
+        x: &Retained<Tensor>,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                squeezeTensor: &**x,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create squeeze_axis operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn squeeze_with_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        axes_tensor: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                squeezeTensor: &**x,
+                axesTensor: &**axes_tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create squeeze_with_tensor operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn expand_dims_axis(
+        &self,
+        x: &Retained<Tensor>,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                expandDimsOfTensor: &**x,
+                axis: axis,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create expand_dims_axis operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn expand_dims_with_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        axes_tensor: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                expandDimsOfTensor: &**x,
+                axesTensor: &**axes_tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create expand_dims_with_tensor operation");
             } else {
                 Retained::from_raw(result).unwrap()
             }
