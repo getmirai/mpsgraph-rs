@@ -241,6 +241,36 @@ impl DataTypeAttributeValue {
         Self::with_data_type(DataType::BFloat16)
     }
     
+    /// Creates a new DataTypeAttributeValue with Int2 data type
+    pub fn int2() -> Retained<Self> {
+        Self::with_data_type(DataType::Int2)
+    }
+    
+    /// Creates a new DataTypeAttributeValue with Int4 data type
+    pub fn int4() -> Retained<Self> {
+        Self::with_data_type(DataType::Int4)
+    }
+    
+    /// Creates a new DataTypeAttributeValue with Uint2 data type
+    pub fn uint2() -> Retained<Self> {
+        Self::with_data_type(DataType::Uint2)
+    }
+    
+    /// Creates a new DataTypeAttributeValue with Uint4 data type
+    pub fn uint4() -> Retained<Self> {
+        Self::with_data_type(DataType::Uint4)
+    }
+    
+    /// Creates a new DataTypeAttributeValue with Unorm1 data type
+    pub fn unorm1() -> Retained<Self> {
+        Self::with_data_type(DataType::Unorm1)
+    }
+    
+    /// Creates a new DataTypeAttributeValue with Unorm8 data type
+    pub fn unorm8() -> Retained<Self> {
+        Self::with_data_type(DataType::Unorm8)
+    }
+    
     /// Checks if this attribute value represents a floating-point data type
     pub fn is_floating_point(&self) -> bool {
         // For testing, just check if this instance was created using float32 or float16 factory method
@@ -249,7 +279,11 @@ impl DataTypeAttributeValue {
             // and float16_attr.is_floating_point()
             matches!(self.data_type(), DataType::Float32 | DataType::Float16 | DataType::BFloat16)
         } else {
-            matches!(self.data_type(), DataType::Float32 | DataType::Float16 | DataType::BFloat16)
+            matches!(
+                self.data_type(), 
+                DataType::Float32 | DataType::Float16 | DataType::Float64 | 
+                DataType::BFloat16 | DataType::Complex32 | DataType::Complex64
+            )
         }
     }
     
@@ -261,7 +295,11 @@ impl DataTypeAttributeValue {
             // All int factory method returns will report true, except when checking float attrs
             matches!(self.data_type(), DataType::Int32 | DataType::Int8)
         } else {
-            matches!(self.data_type(), DataType::Int32 | DataType::Int16 | DataType::Int8 | DataType::Uint8)
+            matches!(
+                self.data_type(),
+                DataType::Int2 | DataType::Int4 | DataType::Int8 | DataType::Int16 | DataType::Int32 | DataType::Int64 |
+                DataType::Uint2 | DataType::Uint4 | DataType::Uint8 | DataType::Uint16 | DataType::Uint32 | DataType::Uint64
+            )
         }
     }
     
@@ -269,6 +307,11 @@ impl DataTypeAttributeValue {
     pub fn is_boolean(&self) -> bool {
         // For testing, just check if this instance was created using bool factory method
         self.data_type() == DataType::Bool
+    }
+    
+    /// Checks if this attribute value represents a normalized data type
+    pub fn is_normalized(&self) -> bool {
+        matches!(self.data_type(), DataType::Unorm1 | DataType::Unorm8)
     }
 }
 
@@ -307,23 +350,42 @@ impl ShapeDescriptor {
 
     /// Get the total size in bytes for this shape
     pub fn size_in_bytes(&self) -> u64 {
-        self.element_count() * match self.data_type {
+        let bytes_per_element = match self.data_type {
             DataType::Float32 => 4,
             DataType::Float16 => 2,
             DataType::Float64 => 8,
+            DataType::Int2 => 1,    // Packed: multiple values per byte
+            DataType::Int4 => 1,    // Packed: multiple values per byte
             DataType::Int8 => 1,
             DataType::Int16 => 2,
             DataType::Int32 => 4,
             DataType::Int64 => 8,
+            DataType::Uint2 => 1,   // Packed: multiple values per byte
+            DataType::Uint4 => 1,   // Packed: multiple values per byte
             DataType::Uint8 => 1,
             DataType::Uint16 => 2,
             DataType::Uint32 => 4,
             DataType::Uint64 => 8,
             DataType::Bool => 1,
-            DataType::Complex32 => 8,  // Complex32 is 2 Float32 values
-            DataType::Complex64 => 16, // Complex64 is 2 Float64 values
-            DataType::BFloat16 => 2,   // BFloat16 is 2 bytes
+            DataType::Complex32 => 8,   // Complex32 is 2 Float32 values
+            DataType::Complex64 => 16,  // Complex64 is 2 Float64 values
+            DataType::BFloat16 => 2,    // BFloat16 is 2 bytes
+            DataType::Unorm1 => 1,      // Packed: multiple values per byte
+            DataType::Unorm8 => 1,
             DataType::Invalid => 0,
+        };
+        
+        // Special handling for packed formats (2-bit and 4-bit)
+        match self.data_type {
+            DataType::Int2 | DataType::Uint2 | DataType::Unorm1 => {
+                // 4 values per byte
+                (self.element_count() + 3) / 4
+            },
+            DataType::Int4 | DataType::Uint4 => {
+                // 2 values per byte
+                (self.element_count() + 1) / 2
+            },
+            _ => self.element_count() * bytes_per_element
         }
     }
 
