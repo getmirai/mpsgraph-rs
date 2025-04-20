@@ -2,12 +2,12 @@ use objc2::rc::Retained;
 use objc2::{extern_class, ClassType, msg_send, sel};
 use objc2::runtime::NSObject;
 use objc2::ffi::class_getInstanceMethod;
-use objc2_foundation::{NSData, NSObjectProtocol};
+use objc2_foundation::{NSArray, NSData, NSNumber, NSObjectProtocol};
 use metal::{Buffer, Device as MetalDevice};
 use metal::foreign_types::ForeignType;
 
 use crate::device::Device;
-use crate::shape::{Shape, ShapeHelper};
+use crate::shape::Shape;
 use crate::tensor::DataType;
 
 extern_class!(
@@ -23,7 +23,7 @@ impl TensorData {
     /// Creates a new TensorData from a slice of data and a shape dimensions
     pub fn from_bytes<T: Copy>(data: &[T], shape_dimensions: &[i64], data_type: DataType) -> Retained<Self> {
         // Create a Shape from dimensions
-        let shape = ShapeHelper::from_dimensions(shape_dimensions);
+        let shape = Shape::from_dimensions(shape_dimensions);
         
         unsafe {
             // Calculate the total data size
@@ -49,7 +49,7 @@ impl TensorData {
             let obj: *mut Self = msg_send![alloc, 
                 initWithDevice:&*mps_device, 
                 data:&*ns_data, 
-                shape:&*shape, 
+                shape:shape.as_ptr(), 
                 dataType:data_type_val
             ];
             let tensor_data = Retained::from_raw(obj).unwrap();
@@ -88,7 +88,7 @@ impl TensorData {
             let obj: *mut Self = msg_send![alloc, 
                 initWithDevice:&*mps_device, 
                 data:&*ns_data, 
-                shape:shape, 
+                shape:shape.as_ptr(), 
                 dataType:data_type_val
             ];
             
@@ -103,7 +103,7 @@ impl TensorData {
     /// Creates a new TensorData from a Metal buffer
     pub fn from_buffer(buffer: &Buffer, shape_dimensions: &[i64], data_type: DataType) -> Retained<Self> {
         // Create a Shape from dimensions
-        let shape = ShapeHelper::from_dimensions(shape_dimensions);
+        let shape = Shape::from_dimensions(shape_dimensions);
         
         unsafe {
             let class = Self::class();
@@ -114,7 +114,7 @@ impl TensorData {
             let alloc: *mut Self = msg_send![class, alloc];
             let obj: *mut Self = msg_send![alloc,
                 initWithMTLBuffer:buffer_ptr,
-                shape:&*shape,
+                shape:shape.as_ptr(),
                 dataType:data_type_val
             ];
             let tensor_data = Retained::from_raw(obj).unwrap();
@@ -124,10 +124,10 @@ impl TensorData {
     }
 
     /// Returns the shape of this tensor data
-    pub fn shape(&self) -> Retained<Shape> {
+    pub fn shape(&self) -> Shape {
         unsafe {
-            let shape: Retained<Shape> = msg_send![self, shape];
-            shape
+            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
+            Shape::new(array)
         }
     }
 
@@ -205,7 +205,7 @@ impl TensorData {
 impl crate::CustomDefault for TensorData {
     fn custom_default() -> Retained<Self> {
         // Create a default tensor data with a scalar shape and zero value
-        let scalar_shape = ShapeHelper::scalar();
+        let scalar_shape = Shape::scalar();
         let zero: [f32; 1] = [0.0];
         Self::with_bytes(&zero, &scalar_shape, DataType::Float32).unwrap()
     }

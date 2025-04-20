@@ -1,10 +1,10 @@
 use objc2::rc::Retained;
 use objc2::{extern_class, msg_send};
 use objc2::runtime::NSObject;
-use objc2_foundation::{NSObjectProtocol, NSString};
+use objc2_foundation::{NSArray, NSNumber, NSObjectProtocol, NSString};
 use std::hash::{Hash, Hasher};
 
-use crate::shape::{Shape, ShapeExtensions};
+use crate::shape::Shape;
 
 /// Data type for Metal Performance Shaders Graph tensors
 /// 
@@ -85,10 +85,10 @@ impl Tensor {
     }
 
     /// Returns the shape of this tensor
-    pub fn shape(&self) -> Retained<Shape> {
+    pub fn shape(&self) -> Shape {
         unsafe {
-            let shape: Retained<Shape> = msg_send![self, shape];
-            shape
+            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
+            Shape::new(array)
         }
     }
 

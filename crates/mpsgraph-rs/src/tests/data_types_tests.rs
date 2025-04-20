@@ -1,5 +1,5 @@
 use crate::data_types::{Type, ShapedType, DataTypeAttributeValue};
-use crate::shape::{ShapeHelper, ShapeExtensions};
+use crate::shape::Shape;
 use crate::tensor::DataType;
 use objc2::rc::Retained;
 
@@ -11,7 +11,7 @@ fn test_type() {
 
 #[test]
 fn test_shaped_type() {
-    let shape = ShapeHelper::tensor3d(2, 3, 4);
+    let shape = Shape::tensor3d(2, 3, 4);
     let shaped_type = ShapedType::new(&shape, DataType::Float32);
     
     assert_eq!(shaped_type.data_type(), shaped_type.data_type());
@@ -39,7 +39,7 @@ fn test_data_type_attribute_value() {
     // Just check that we got a value
     let _data_type = data_type_attr.data_type();
     
-    let shape = ShapeHelper::tensor3d(2, 3, 4);
+    let shape = Shape::tensor3d(2, 3, 4);
     let shaped_type = ShapedType::new(&shape, DataType::Float32);
     
     let shaped_attr = DataTypeAttributeValue::with_shaped_type(&shaped_type);

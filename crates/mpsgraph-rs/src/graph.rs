@@ -9,7 +9,6 @@ use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
 use crate::operation::Operation;
 use crate::shape::Shape;
-use crate::shape::{ShapeExtensions, ShapeHelper};
 use crate::tensor::{DataType, Tensor};
 use crate::tensor_data::TensorData;
 use crate::ShapedType;
@@ -83,7 +82,7 @@ impl Graph {
             // Use null for the name parameter
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                placeholderWithShape: shape,
+                placeholderWithShape: shape.as_ptr(),
                 dataType: data_type as u32,
                 name: std::ptr::null::<NSString>()
             ];
@@ -108,7 +107,7 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                placeholderWithShape: shape,
+                placeholderWithShape: shape.as_ptr(),
                 dataType: data_type as u32,
                 name: &*name_ns
             ];
@@ -443,7 +442,7 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         // Create shape
-        let shape = ShapeHelper::from_dimensions(shape_dimensions);
+        let shape = Shape::from_dimensions(shape_dimensions);
 
         // Create constant with shape
         self.constant_with_shape(values, data_type, &shape, name)

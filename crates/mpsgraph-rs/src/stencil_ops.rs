@@ -81,7 +81,7 @@ impl StencilOpDescriptor {
     pub fn with_explicit_padding(explicit_padding: &Shape) -> Retained<Self> {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
-            msg_send![cls, descriptorWithExplicitPadding: explicit_padding]
+            msg_send![cls, descriptorWithExplicitPadding: explicit_padding.as_ptr()]
         }
     }
 
@@ -93,8 +93,8 @@ impl StencilOpDescriptor {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
             msg_send![cls, 
-                descriptorWithOffsets: offsets, 
-                explicitPadding: explicit_padding
+                descriptorWithOffsets: offsets.as_ptr(), 
+                explicitPadding: explicit_padding.as_ptr()
             ]
         }
     }
@@ -114,10 +114,10 @@ impl StencilOpDescriptor {
             let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
             msg_send![cls, 
                 descriptorWithReductionMode: reduction_mode as u64,
-                offsets: offsets,
-                strides: strides,
-                dilationRates: dilation_rates,
-                explicitPadding: explicit_padding,
+                offsets: offsets.as_ptr(),
+                strides: strides.as_ptr(),
+                dilationRates: dilation_rates.as_ptr(),
+                explicitPadding: explicit_padding.as_ptr(),
                 boundaryMode: boundary_mode as i64,
                 paddingStyle: padding_style as u64,
                 paddingConstant: padding_constant
@@ -135,28 +135,28 @@ impl StencilOpDescriptor {
     /// Sets the offsets
     pub fn set_offsets(&self, offsets: &Shape) {
         unsafe {
-            let _: () = msg_send![self, setOffsets: offsets];
+            let _: () = msg_send![self, setOffsets: offsets.as_ptr()];
         }
     }
 
     /// Sets the strides
     pub fn set_strides(&self, strides: &Shape) {
         unsafe {
-            let _: () = msg_send![self, setStrides: strides];
+            let _: () = msg_send![self, setStrides: strides.as_ptr()];
         }
     }
 
     /// Sets the dilation rates
     pub fn set_dilation_rates(&self, dilation_rates: &Shape) {
         unsafe {
-            let _: () = msg_send![self, setDilationRates: dilation_rates];
+            let _: () = msg_send![self, setDilationRates: dilation_rates.as_ptr()];
         }
     }
 
     /// Sets the explicit padding
     pub fn set_explicit_padding(&self, explicit_padding: &Shape) {
         unsafe {
-            let _: () = msg_send![self, setExplicitPadding: explicit_padding];
+            let _: () = msg_send![self, setExplicitPadding: explicit_padding.as_ptr()];
         }
     }
 

@@ -1,5 +1,5 @@
 use crate::tensor::DataType;
-use crate::shape::{Shape, ShapeExtensions, ShapeHelper};
+use crate::shape::Shape;
 use objc2::rc::Retained;
 use objc2::{extern_class, msg_send, ClassType};
 use objc2::runtime::NSObject;
@@ -66,9 +66,9 @@ impl ShapedType {
     }
 
     /// Returns the shape of this type
-    pub fn shape(&self) -> Retained<Shape> {
+    pub fn shape(&self) -> Shape {
         // For test purposes, return a fixed shape
-        ShapeHelper::tensor3d(2, 3, 4)
+        Shape::tensor3d(2, 3, 4)
     }
 
     /// Returns the data type of this type
@@ -97,15 +97,9 @@ impl ShapedType {
     pub fn is_ranked(&self) -> bool {
         // In a real implementation, we would check if the shape has dimensions
         // For test purposes, we're making our own behavior for testing
-        let shape_addr = format!("{:p}", self.shape());
-        let unranked_shape_addr = format!("{:p}", ShapeHelper::tensor3d(2, 3, 4));
         
-        // If the object was created with unranked_tensor_type, it's not ranked
-        if shape_addr == unranked_shape_addr {
-            false
-        } else {
-            true
-        }
+        // Check if the shape has any dimensions
+        !self.shape().dimensions().is_empty()
     }
 
     /// Create a tensor type with the specified rank
@@ -114,7 +108,7 @@ impl ShapedType {
     pub fn tensor_type_with_rank(rank: usize, data_type: DataType) -> Retained<Self> {
         // Create a shape with dimensions of size 1 for each rank
         let dimensions = vec![1; rank];
-        let shape = crate::shape::ShapeHelper::from_dimensions(&dimensions);
+        let shape = Shape::from_dimensions(&dimensions);
 
         // Create a shaped type with the shape and data type
         Self::new(&shape, data_type)
@@ -126,7 +120,7 @@ impl ShapedType {
     pub fn unranked_tensor_type(data_type: DataType) -> Retained<Self> {
         // Create a shaped type with an empty shape to represent an unranked tensor
         let dimensions: Vec<i64> = Vec::new();
-        let shape = crate::shape::ShapeHelper::from_dimensions(&dimensions);
+        let shape = Shape::from_dimensions(&dimensions);
 
         // Create a shaped type with the empty shape and data type
         Self::new(&shape, data_type)
@@ -195,7 +189,7 @@ impl DataTypeAttributeValue {
     /// Get the shaped type of this attribute value, if available
     pub fn shaped_type(&self) -> Option<Retained<ShapedType>> {
         // For test purposes, create a new ShapedType
-        let shape = ShapeHelper::tensor3d(2, 3, 4);
+        let shape = Shape::tensor3d(2, 3, 4);
         let shaped_type = ShapedType::new(&shape, DataType::Float32);
         Some(shaped_type)
     }

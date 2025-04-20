@@ -202,7 +202,7 @@ impl GraphMatrixOps for Graph {
             let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
 
             // Create a shape object from the dimensions
-            let dimensions_shape = crate::ShapeHelper::from_dimensions(dimensions);
+            let dimensions_shape = crate::shape::Shape::from_dimensions(dimensions);
 
             // Create the operation
             let result: *mut Tensor = msg_send![
