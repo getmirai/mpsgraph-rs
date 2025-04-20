@@ -20,12 +20,16 @@ pub enum DataType {
     Float64 = 0x10000000 | 64,
     
     // Signed integer types
+    Int2 = 0x20000000 | 2,
+    Int4 = 0x20000000 | 4,
     Int8 = 0x20000000 | 8,
     Int16 = 0x20000000 | 16,
     Int32 = 0x20000000 | 32,
     Int64 = 0x20000000 | 64,
     
     // Unsigned integer types
+    Uint2 = 2,
+    Uint4 = 4,
     Uint8 = 8,
     Uint16 = 16,
     Uint32 = 32,
@@ -40,6 +44,10 @@ pub enum DataType {
     
     // BFloat16 type
     BFloat16 = 0x80000000 | 0x10000000 | 16,
+    
+    // Normalized types
+    Unorm1 = 0x30000000 | 1,
+    Unorm8 = 0x30000000 | 8,
 }
 
 impl DataType {
@@ -49,10 +57,14 @@ impl DataType {
             val if val == DataType::Float32 as u32 => DataType::Float32,
             val if val == DataType::Float16 as u32 => DataType::Float16,
             val if val == DataType::Float64 as u32 => DataType::Float64,
+            val if val == DataType::Int2 as u32 => DataType::Int2,
+            val if val == DataType::Int4 as u32 => DataType::Int4,
             val if val == DataType::Int8 as u32 => DataType::Int8,
             val if val == DataType::Int16 as u32 => DataType::Int16,
             val if val == DataType::Int32 as u32 => DataType::Int32,
             val if val == DataType::Int64 as u32 => DataType::Int64,
+            val if val == DataType::Uint2 as u32 => DataType::Uint2,
+            val if val == DataType::Uint4 as u32 => DataType::Uint4,
             val if val == DataType::Uint8 as u32 => DataType::Uint8,
             val if val == DataType::Uint16 as u32 => DataType::Uint16,
             val if val == DataType::Uint32 as u32 => DataType::Uint32,
@@ -61,6 +73,8 @@ impl DataType {
             val if val == DataType::Complex32 as u32 => DataType::Complex32,
             val if val == DataType::Complex64 as u32 => DataType::Complex64,
             val if val == DataType::BFloat16 as u32 => DataType::BFloat16,
+            val if val == DataType::Unorm1 as u32 => DataType::Unorm1,
+            val if val == DataType::Unorm8 as u32 => DataType::Unorm8,
             _ => DataType::Invalid,
         }
     }
