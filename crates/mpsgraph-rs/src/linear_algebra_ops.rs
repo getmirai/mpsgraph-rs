@@ -98,8 +98,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn batch_matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -118,9 +118,9 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn batch_matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -143,9 +143,9 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object with the band part extracted.
     fn band_part(
         &self,
-        input: &Tensor,
-        num_lower: &Tensor,
-        num_upper: &Tensor,
+        input: &Retained<Tensor>,
+        num_lower: &Retained<Tensor>,
+        num_upper: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -167,7 +167,7 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object with the band part extracted.
     fn band_part_with_scalars(
         &self,
-        input: &Tensor,
+        input: &Retained<Tensor>,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
@@ -190,8 +190,8 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor with the Hamming distance between the inputs.
     fn hamming_distance(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -217,10 +217,10 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn scaled_dot_product_attention(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
-        scale: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -242,9 +242,9 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -268,11 +268,11 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn masked_scaled_dot_product_attention(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
-        mask: &Tensor,
-        scale: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
+        mask: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -295,10 +295,10 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn masked_scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
-        mask: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
+        mask: &Retained<Tensor>,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -313,7 +313,7 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A tensor containing the determinant of the input matrix
-    fn determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+    fn determinant(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
 
     /// Calculates the determinant for each matrix in a batch of matrices.
     ///
@@ -325,7 +325,11 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A tensor containing determinants for each matrix in the batch
-    fn batched_determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+    fn batched_determinant(
+        &self,
+        tensor: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
 
     /// Solves the triangular linear system with multiple right-hand sides.
     ///
@@ -345,8 +349,8 @@ pub trait GraphLinearAlgebraOps {
     /// A tensor containing the solution X
     fn triangular_solve(
         &self,
-        matrix: &Tensor,
-        rhs: &Tensor,
+        matrix: &Retained<Tensor>,
+        rhs: &Retained<Tensor>,
         lower_triangular: bool,
         right_side: bool,
         unit_diagonal: bool,
@@ -366,7 +370,12 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A tensor containing the result of the einsum operation
-    fn einsum(&self, tensors: &[&Tensor], equation: &str, name: Option<&str>) -> Retained<Tensor>;
+    fn einsum(
+        &self,
+        tensors: &[&Retained<Tensor>],
+        equation: &str,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
 }
 
 /// Implementation of linear algebra operations for Graph
@@ -485,8 +494,8 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn batch_matmul(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -497,8 +506,8 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 name: name_ptr
             ];
 
@@ -512,9 +521,9 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn batch_matmul_with_transpose(
         &self,
-        primary: &Tensor,
+        primary: &Retained<Tensor>,
         primary_transpose: bool,
-        secondary: &Tensor,
+        secondary: &Retained<Tensor>,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -526,9 +535,9 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: primary,
+                matrixMultiplicationWithPrimaryTensor: &**primary,
                 transposePrimary: primary_transpose,
-                secondaryTensor: secondary,
+                secondaryTensor: &**secondary,
                 transposeSecondary: secondary_transpose,
                 name: name_ptr
             ];
@@ -543,9 +552,9 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn band_part(
         &self,
-        input: &Tensor,
-        num_lower: &Tensor,
-        num_upper: &Tensor,
+        input: &Retained<Tensor>,
+        num_lower: &Retained<Tensor>,
+        num_upper: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -556,9 +565,9 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                bandPartWithTensor: input,
-                numLowerTensor: num_lower,
-                numUpperTensor: num_upper,
+                bandPartWithTensor: &**input,
+                numLowerTensor: &**num_lower,
+                numUpperTensor: &**num_upper,
                 name: name_ptr
             ];
 
@@ -572,7 +581,7 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn band_part_with_scalars(
         &self,
-        input: &Tensor,
+        input: &Retained<Tensor>,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
@@ -585,7 +594,7 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                bandPartWithTensor: input,
+                bandPartWithTensor: &**input,
                 numLower: num_lower,
                 numUpper: num_upper,
                 name: name_ptr
@@ -601,8 +610,8 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn hamming_distance(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
         result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -614,8 +623,8 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                HammingDistanceWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
+                HammingDistanceWithPrimaryTensor: &**primary,
+                secondaryTensor: &**secondary,
                 resultDataType: result_data_type as u32,
                 name: name_ptr
             ];
@@ -630,10 +639,10 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn scaled_dot_product_attention(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
-        scale: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -644,10 +653,10 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                scaledDotProductAttentionWithQueryTensor: query,
-                keyTensor: key,
-                valueTensor: value,
-                scaleTensor: scale,
+                scaledDotProductAttentionWithQueryTensor: &**query,
+                keyTensor: &**key,
+                valueTensor: &**value,
+                scaleTensor: &**scale,
                 name: name_ptr
             ];
 
@@ -661,9 +670,9 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -675,9 +684,9 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                scaledDotProductAttentionWithQueryTensor: query,
-                keyTensor: key,
-                valueTensor: value,
+                scaledDotProductAttentionWithQueryTensor: &**query,
+                keyTensor: &**key,
+                valueTensor: &**value,
                 scaleScalar: scale as f64,
                 name: name_ptr
             ];
@@ -692,11 +701,11 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn masked_scaled_dot_product_attention(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
-        mask: &Tensor,
-        scale: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
+        mask: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -707,11 +716,11 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                scaledDotProductAttentionWithQueryTensor: query,
-                keyTensor: key,
-                valueTensor: value,
-                maskTensor: mask,
-                scaleTensor: scale,
+                scaledDotProductAttentionWithQueryTensor: &**query,
+                keyTensor: &**key,
+                valueTensor: &**value,
+                maskTensor: &**mask,
+                scaleTensor: &**scale,
                 name: name_ptr
             ];
 
@@ -725,10 +734,10 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn masked_scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Tensor,
-        key: &Tensor,
-        value: &Tensor,
-        mask: &Tensor,
+        query: &Retained<Tensor>,
+        key: &Retained<Tensor>,
+        value: &Retained<Tensor>,
+        mask: &Retained<Tensor>,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -740,10 +749,10 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                scaledDotProductAttentionWithQueryTensor: query,
-                keyTensor: key,
-                valueTensor: value,
-                maskTensor: mask,
+                scaledDotProductAttentionWithQueryTensor: &**query,
+                keyTensor: &**key,
+                valueTensor: &**value,
+                maskTensor: &**mask,
                 scaleScalar: scale as f64,
                 name: name_ptr
             ];
@@ -758,7 +767,7 @@ impl GraphLinearAlgebraOps for Graph {
         }
     }
 
-    fn determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    fn determinant(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -767,7 +776,7 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                determinant: tensor,
+                determinant: &**tensor,
                 name: name_ptr
             ];
 
@@ -779,7 +788,11 @@ impl GraphLinearAlgebraOps for Graph {
         }
     }
 
-    fn batched_determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    fn batched_determinant(
+        &self,
+        tensor: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -788,7 +801,7 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                batchedDeterminant: tensor,
+                batchedDeterminant: &**tensor,
                 name: name_ptr
             ];
 
@@ -802,8 +815,8 @@ impl GraphLinearAlgebraOps for Graph {
 
     fn triangular_solve(
         &self,
-        matrix: &Tensor,
-        rhs: &Tensor,
+        matrix: &Retained<Tensor>,
+        rhs: &Retained<Tensor>,
         lower_triangular: bool,
         right_side: bool,
         unit_diagonal: bool,
@@ -817,8 +830,8 @@ impl GraphLinearAlgebraOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                triangularSolve: matrix,
-                rhs: rhs,
+                triangularSolve: &**matrix,
+                rhs: &**rhs,
                 lowerTriangular: lower_triangular,
                 rightSide: right_side,
                 unitDiagonal: unit_diagonal,
@@ -833,7 +846,12 @@ impl GraphLinearAlgebraOps for Graph {
         }
     }
 
-    fn einsum(&self, tensors: &[&Tensor], equation: &str, name: Option<&str>) -> Retained<Tensor> {
+    fn einsum(
+        &self,
+        tensors: &[&Retained<Tensor>],
+        equation: &str,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -842,9 +860,9 @@ impl GraphLinearAlgebraOps for Graph {
 
             let equation_ns = NSString::from_str(equation);
 
-            // Create NSArray from tensors
+            // Create NSArray by dereferencing each Retained<Tensor> to get the Tensor object
             let tensor_ptrs: Vec<*const Tensor> =
-                tensors.iter().map(|t| *t as *const Tensor).collect();
+                tensors.iter().map(|t| &***t as *const _).collect();
 
             let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
             let tensor_array_ptr = &*tensor_array as *const _;

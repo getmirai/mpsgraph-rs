@@ -1,8 +1,8 @@
 use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
-use crate::pooling_ops::TensorNamedDataLayout;
 use crate::graph::Graph;
+use crate::pooling_ops::TensorNamedDataLayout;
 use crate::resize_ops::{ResizeMode, ResizeNearestRoundingMode};
 use crate::tensor::Tensor;
 
@@ -52,8 +52,8 @@ pub trait GraphSampleGridOps {
     /// A valid Tensor object or None if error
     fn sample_grid(
         &self,
-        source: &Tensor,
-        coordinates: &Tensor,
+        source: &Retained<Tensor>,
+        coordinates: &Retained<Tensor>,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -84,8 +84,8 @@ pub trait GraphSampleGridOps {
     /// A valid Tensor object or None if error
     fn sample_grid_nearest(
         &self,
-        source: &Tensor,
-        coordinates: &Tensor,
+        source: &Retained<Tensor>,
+        coordinates: &Retained<Tensor>,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -101,8 +101,8 @@ pub trait GraphSampleGridOps {
 impl GraphSampleGridOps for Graph {
     fn sample_grid(
         &self,
-        source: &Tensor,
-        coordinates: &Tensor,
+        source: &Retained<Tensor>,
+        coordinates: &Retained<Tensor>,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -114,12 +114,14 @@ impl GraphSampleGridOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = objc2::msg_send![
-                self, 
-                sampleGridWithSourceTensor: source,
-                coordinateTensor: coordinates,
+                self,
+                sampleGridWithSourceTensor: &**source,
+                coordinateTensor: &**coordinates,
                 layout: layout as u64,
                 normalizeCoordinates: normalize_coordinates,
                 relativeCoordinates: relative_coordinates,
@@ -140,8 +142,8 @@ impl GraphSampleGridOps for Graph {
 
     fn sample_grid_nearest(
         &self,
-        source: &Tensor,
-        coordinates: &Tensor,
+        source: &Retained<Tensor>,
+        coordinates: &Retained<Tensor>,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -153,12 +155,14 @@ impl GraphSampleGridOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = objc2::msg_send![
-                self, 
-                sampleGridWithSourceTensor: source,
-                coordinateTensor: coordinates,
+                self,
+                sampleGridWithSourceTensor: &**source,
+                coordinateTensor: &**coordinates,
                 layout: layout as u64,
                 normalizeCoordinates: normalize_coordinates,
                 relativeCoordinates: relative_coordinates,

@@ -1,11 +1,11 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
-use crate::graph::Graph;
-use crate::tensor::Tensor;
-use crate::shape::Shape;
 use crate::convolution_ops::Convolution2DOpDescriptor;
+use crate::graph::Graph;
+use crate::shape::Shape;
+use crate::tensor::Tensor;
 
 // Import PaddingMode from convolution_ops and PaddingStyle from pooling_ops
 pub use crate::convolution_ops::PaddingMode;
@@ -33,8 +33,8 @@ pub trait GraphConvolutionTransposeOps {
     /// A new Tensor containing the result
     fn convolution_transpose_2d(
         &self,
-        source: &Tensor,
-        weights: &Tensor,
+        source: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
         output_shape: &Shape,
         descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -55,9 +55,9 @@ pub trait GraphConvolutionTransposeOps {
     /// A new Tensor containing the result
     fn convolution_transpose_2d_with_tensor_shape(
         &self,
-        source: &Tensor,
-        weights: &Tensor,
-        output_shape_tensor: &Tensor,
+        source: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
+        output_shape_tensor: &Retained<Tensor>,
         descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -77,8 +77,8 @@ pub trait GraphConvolutionTransposeOps {
     /// A new Tensor containing the gradient with respect to source
     fn convolution_transpose_2d_data_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        weights: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
         output_shape: &Shape,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -99,9 +99,9 @@ pub trait GraphConvolutionTransposeOps {
     /// A new Tensor containing the gradient with respect to source
     fn convolution_transpose_2d_data_gradient_with_tensor_shape(
         &self,
-        incoming_gradient: &Tensor,
-        weights: &Tensor,
-        output_shape_tensor: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
+        output_shape_tensor: &Retained<Tensor>,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -121,8 +121,8 @@ pub trait GraphConvolutionTransposeOps {
     /// A new Tensor containing the gradient with respect to weights
     fn convolution_transpose_2d_weights_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
         output_shape: &Shape,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -143,9 +143,9 @@ pub trait GraphConvolutionTransposeOps {
     /// A new Tensor containing the gradient with respect to weights
     fn convolution_transpose_2d_weights_gradient_with_tensor_shape(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        output_shape_tensor: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
+        output_shape_tensor: &Retained<Tensor>,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
@@ -155,20 +155,22 @@ pub trait GraphConvolutionTransposeOps {
 impl GraphConvolutionTransposeOps for Graph {
     fn convolution_transpose_2d(
         &self,
-        source: &Tensor,
-        weights: &Tensor,
+        source: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
         output_shape: &Shape,
         descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                convolutionTranspose2DWithSourceTensor: source,
-                weightsTensor: weights,
+                convolutionTranspose2DWithSourceTensor: &**source,
+                weightsTensor: &**weights,
                 outputShape: output_shape,
                 descriptor: descriptor,
                 name: name_ptr,
@@ -184,21 +186,23 @@ impl GraphConvolutionTransposeOps for Graph {
 
     fn convolution_transpose_2d_with_tensor_shape(
         &self,
-        source: &Tensor,
-        weights: &Tensor,
-        output_shape_tensor: &Tensor,
+        source: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
+        output_shape_tensor: &Retained<Tensor>,
         descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                convolutionTranspose2DWithSourceTensor: source,
-                weightsTensor: weights,
-                outputShapeTensor: output_shape_tensor,
+                convolutionTranspose2DWithSourceTensor: &**source,
+                weightsTensor: &**weights,
+                outputShapeTensor: &**output_shape_tensor,
                 descriptor: descriptor,
                 name: name_ptr,
             ];
@@ -213,20 +217,22 @@ impl GraphConvolutionTransposeOps for Graph {
 
     fn convolution_transpose_2d_data_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        weights: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
         output_shape: &Shape,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient,
-                weightsTensor: weights,
+                convolutionTranspose2DDataGradientWithIncomingGradientTensor: &**incoming_gradient,
+                weightsTensor: &**weights,
                 outputShape: output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr,
@@ -242,21 +248,23 @@ impl GraphConvolutionTransposeOps for Graph {
 
     fn convolution_transpose_2d_data_gradient_with_tensor_shape(
         &self,
-        incoming_gradient: &Tensor,
-        weights: &Tensor,
-        output_shape_tensor: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
+        output_shape_tensor: &Retained<Tensor>,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient,
-                weightsTensor: weights,
-                outputShapeTensor: output_shape_tensor,
+                convolutionTranspose2DDataGradientWithIncomingGradientTensor: &**incoming_gradient,
+                weightsTensor: &**weights,
+                outputShapeTensor: &**output_shape_tensor,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr,
             ];
@@ -271,20 +279,22 @@ impl GraphConvolutionTransposeOps for Graph {
 
     fn convolution_transpose_2d_weights_gradient(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
         output_shape: &Shape,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
+                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: &**incoming_gradient,
+                sourceTensor: &**source,
                 outputShape: output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr,
@@ -300,21 +310,23 @@ impl GraphConvolutionTransposeOps for Graph {
 
     fn convolution_transpose_2d_weights_gradient_with_tensor_shape(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        output_shape_tensor: &Tensor,
+        incoming_gradient: &Retained<Tensor>,
+        source: &Retained<Tensor>,
+        output_shape_tensor: &Retained<Tensor>,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
-                outputShapeTensor: output_shape_tensor,
+                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: &**incoming_gradient,
+                sourceTensor: &**source,
+                outputShapeTensor: &**output_shape_tensor,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr,
             ];

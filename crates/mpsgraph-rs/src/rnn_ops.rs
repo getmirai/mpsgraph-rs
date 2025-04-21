@@ -1,9 +1,9 @@
 use crate::graph::Graph;
 use crate::tensor::Tensor;
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::extern_class;
 use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 
 /// Activation functions for RNN operations
@@ -532,12 +532,12 @@ impl Graph {
     /// The layout of both outputs is [T,N,H] or [T,N,2H] for bidirectional.
     pub fn single_gate_rnn_with_mask(
         &self,
-        input: &Tensor,
-        recurrent_weight: &Tensor,
-        input_weight: Option<&Tensor>,
-        bias: Option<&Tensor>,
-        init_state: Option<&Tensor>,
-        mask: Option<&Tensor>,
+        input: &Retained<Tensor>,
+        recurrent_weight: &Retained<Tensor>,
+        input_weight: Option<&Retained<Tensor>>,
+        bias: Option<&Retained<Tensor>>,
+        init_state: Option<&Retained<Tensor>>,
+        mask: Option<&Retained<Tensor>>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
@@ -546,31 +546,31 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let input_weight_obj = match input_weight {
-                Some(w) => w as *const _,
+                Some(w) => &**w as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let bias_obj = match bias {
-                Some(b) => b as *const _,
+                Some(b) => &**b as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let init_state_obj = match init_state {
-                Some(s) => s as *const _,
+                Some(s) => &**s as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let mask_obj = match mask {
-                Some(m) => m as *const _,
+                Some(m) => &**m as *const _,
                 None => std::ptr::null(),
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                singleGateRNNWithSourceTensor: input,
-                recurrentWeight: recurrent_weight,
+                singleGateRNNWithSourceTensor: &**input,
+                recurrentWeight: &**recurrent_weight,
                 inputWeight: input_weight_obj,
                 bias: bias_obj,
                 initState: init_state_obj,
@@ -624,11 +624,11 @@ impl Graph {
     /// The layout of both outputs is [T,N,H] or [T,N,2H] for bidirectional.
     pub fn single_gate_rnn(
         &self,
-        input: &Tensor,
-        recurrent_weight: &Tensor,
-        input_weight: Option<&Tensor>,
-        bias: Option<&Tensor>,
-        init_state: Option<&Tensor>,
+        input: &Retained<Tensor>,
+        recurrent_weight: &Retained<Tensor>,
+        input_weight: Option<&Retained<Tensor>>,
+        bias: Option<&Retained<Tensor>>,
+        init_state: Option<&Retained<Tensor>>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
@@ -637,26 +637,26 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let input_weight_obj = match input_weight {
-                Some(w) => w as *const _,
+                Some(w) => &**w as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let bias_obj = match bias {
-                Some(b) => b as *const _,
+                Some(b) => &**b as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let init_state_obj = match init_state {
-                Some(s) => s as *const _,
+                Some(s) => &**s as *const _,
                 None => std::ptr::null(),
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                singleGateRNNWithSourceTensor: input,
-                recurrentWeight: recurrent_weight,
+                singleGateRNNWithSourceTensor: &**input,
+                recurrentWeight: &**recurrent_weight,
                 inputWeight: input_weight_obj,
                 bias: bias_obj,
                 initState: init_state_obj,
@@ -704,9 +704,9 @@ impl Graph {
     /// The layout of both outputs is [T,N,H] or [T,N,2H] for bidirectional.
     pub fn single_gate_rnn_minimal(
         &self,
-        input: &Tensor,
-        recurrent_weight: &Tensor,
-        init_state: Option<&Tensor>,
+        input: &Retained<Tensor>,
+        recurrent_weight: &Retained<Tensor>,
+        init_state: Option<&Retained<Tensor>>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
@@ -715,16 +715,16 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let init_state_obj = match init_state {
-                Some(s) => s as *const _,
+                Some(s) => &**s as *const _,
                 None => std::ptr::null(),
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                singleGateRNNWithSourceTensor: input,
-                recurrentWeight: recurrent_weight,
+                singleGateRNNWithSourceTensor: &**input,
+                recurrentWeight: &**recurrent_weight,
                 initState: init_state_obj,
                 descriptor: descriptor,
                 name: name_obj
@@ -768,15 +768,15 @@ impl Graph {
     /// The order of the gradients will be: for `input`, for `recurrent_weight`, for `input_weight`, for `bias` and finally for `init_state`.
     pub fn single_gate_rnn_gradients(
         &self,
-        input: &Tensor,
-        recurrent_weight: &Tensor,
-        source_gradient: &Tensor,
-        z_state: &Tensor,
-        state_gradient: Option<&Tensor>,
-        input_weight: Option<&Tensor>,
-        bias: Option<&Tensor>,
-        init_state: Option<&Tensor>,
-        mask: Option<&Tensor>,
+        input: &Retained<Tensor>,
+        recurrent_weight: &Retained<Tensor>,
+        source_gradient: &Retained<Tensor>,
+        z_state: &Retained<Tensor>,
+        state_gradient: Option<&Retained<Tensor>>,
+        input_weight: Option<&Retained<Tensor>>,
+        bias: Option<&Retained<Tensor>>,
+        init_state: Option<&Retained<Tensor>>,
+        mask: Option<&Retained<Tensor>>,
         descriptor: &SingleGateRNNDescriptor,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
@@ -785,38 +785,38 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let state_gradient_obj = match state_gradient {
-                Some(sg) => sg as *const _,
+                Some(sg) => &**sg as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let input_weight_obj = match input_weight {
-                Some(w) => w as *const _,
+                Some(w) => &**w as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let bias_obj = match bias {
-                Some(b) => b as *const _,
+                Some(b) => &**b as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let init_state_obj = match init_state {
-                Some(s) => s as *const _,
+                Some(s) => &**s as *const _,
                 None => std::ptr::null(),
             };
-            
+
             let mask_obj = match mask {
-                Some(m) => m as *const _,
+                Some(m) => &**m as *const _,
                 None => std::ptr::null(),
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                singleGateRNNGradientsWithSourceTensor: input,
-                recurrentWeight: recurrent_weight,
-                sourceGradient: source_gradient,
-                zState: z_state,
+                singleGateRNNGradientsWithSourceTensor: &**input,
+                recurrentWeight: &**recurrent_weight,
+                sourceGradient: &**source_gradient,
+                zState: &**z_state,
                 stateGradient: state_gradient_obj,
                 inputWeight: input_weight_obj,
                 bias: bias_obj,
@@ -859,12 +859,12 @@ impl Graph {
     /// Tuple containing (output tensor of shape [T,N,H] or [N,T,H], output hidden state tensor of shape [N,H], output cell state tensor of shape [N,H])
     pub fn lstm(
         &self,
-        input: &Tensor,
-        initial_hidden_state: &Tensor,
-        initial_cell_state: &Tensor,
-        weights: &Tensor,
-        recurrent_weights: &Tensor,
-        biases: Option<&Tensor>,
+        input: &Retained<Tensor>,
+        initial_hidden_state: &Retained<Tensor>,
+        initial_cell_state: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
+        recurrent_weights: &Retained<Tensor>,
+        biases: Option<&Retained<Tensor>>,
         descriptor: &LSTMDescriptor,
         name: Option<&str>,
     ) -> (Retained<Tensor>, Retained<Tensor>, Retained<Tensor>) {
@@ -873,19 +873,19 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let biases_obj = match biases {
-                Some(b) => b as *const _,
+                Some(b) => &**b as *const _,
                 None => std::ptr::null(),
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                LSTMWithSourceTensor: input,
-                recurrentSourceTensor: initial_hidden_state,
-                cellSourceTensor: initial_cell_state,
-                weightsTensor: weights,
-                recurrentWeightsTensor: recurrent_weights,
+                LSTMWithSourceTensor: &**input,
+                recurrentSourceTensor: &**initial_hidden_state,
+                cellSourceTensor: &**initial_cell_state,
+                weightsTensor: &**weights,
+                recurrentWeightsTensor: &**recurrent_weights,
                 biasesTensor: biases_obj,
                 descriptor: descriptor,
                 name: name_obj
@@ -900,7 +900,8 @@ impl Graph {
             let output_cell_state_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 2];
 
             let output_tensor = Retained::retain(output_tensor_ptr).unwrap();
-            let output_hidden_state_tensor = Retained::retain(output_hidden_state_tensor_ptr).unwrap();
+            let output_hidden_state_tensor =
+                Retained::retain(output_hidden_state_tensor_ptr).unwrap();
             let output_cell_state_tensor = Retained::retain(output_cell_state_tensor_ptr).unwrap();
 
             (
@@ -928,11 +929,11 @@ impl Graph {
     /// Tuple containing (output tensor of shape [T,N,H] or [N,T,H], output state tensor of shape [N,H])
     pub fn gru(
         &self,
-        input: &Tensor,
-        initial_state: &Tensor,
-        weights: &Tensor,
-        recurrent_weights: &Tensor,
-        biases: Option<&Tensor>,
+        input: &Retained<Tensor>,
+        initial_state: &Retained<Tensor>,
+        weights: &Retained<Tensor>,
+        recurrent_weights: &Retained<Tensor>,
+        biases: Option<&Retained<Tensor>>,
         descriptor: &GRUDescriptor,
         name: Option<&str>,
     ) -> (Retained<Tensor>, Retained<Tensor>) {
@@ -941,18 +942,18 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let biases_obj = match biases {
-                Some(b) => b as *const _,
+                Some(b) => &**b as *const _,
                 None => std::ptr::null(),
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                GRUWithSourceTensor: input,
-                recurrentSourceTensor: initial_state,
-                weightsTensor: weights,
-                recurrentWeightsTensor: recurrent_weights,
+                GRUWithSourceTensor: &**input,
+                recurrentSourceTensor: &**initial_state,
+                weightsTensor: &**weights,
+                recurrentWeightsTensor: &**recurrent_weights,
                 biasesTensor: biases_obj,
                 descriptor: descriptor,
                 name: name_obj
@@ -968,10 +969,7 @@ impl Graph {
             let output_tensor = Retained::retain(output_tensor_ptr).unwrap();
             let output_state_tensor = Retained::retain(output_state_tensor_ptr).unwrap();
 
-            (
-                output_tensor,
-                output_state_tensor,
-            )
+            (output_tensor, output_state_tensor)
         }
     }
 }

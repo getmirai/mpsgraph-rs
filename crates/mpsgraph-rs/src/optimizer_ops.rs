@@ -1,9 +1,9 @@
 use crate::graph::Graph;
 use crate::operation::Operation;
 use crate::tensor::Tensor;
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
-use objc2::{extern_class};
 use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 use std::ptr;
 
@@ -24,16 +24,12 @@ unsafe impl NSObjectProtocol for VariableOp {}
 impl VariableOp {
     /// Returns the operation associated with this variable.
     pub fn operation(&self) -> Retained<Operation> {
-        unsafe {
-            msg_send![self, operation]
-        }
+        unsafe { msg_send![self, operation] }
     }
 
     /// Returns the tensor associated with this variable.
     pub fn tensor(&self) -> Retained<Tensor> {
-        unsafe {
-            msg_send![self, tensor]
-        }
+        unsafe { msg_send![self, tensor] }
     }
 }
 
@@ -46,6 +42,318 @@ impl crate::device::CustomDefault for VariableOp {
 }
 
 /// Optimizer operations for Graph
+pub trait GraphOptimizerOps {
+    /// Creates a stochastic gradient descent update operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `learning_rate` - Tensor containing the learning rate.
+    /// * `values` - Tensor containing the values to be updated.
+    /// * `gradient` - Tensor containing the gradient of the loss with respect to the values.
+    /// * `name` - Optional name for the operation.
+    ///
+    /// # Returns
+    ///
+    /// A tensor representing the updated values.
+    fn sgd_update(
+        &self,
+        learning_rate: &Retained<Tensor>,
+        values: &Retained<Tensor>,
+        gradient: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates an Adam update operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `learning_rate` - Current learning rate for the Adam update.
+    /// * `beta1` - Exponential decay rate for the first moment estimates.
+    /// * `beta2` - Exponential decay rate for the second moment estimates.
+    /// * `epsilon` - Small constant for numerical stability.
+    /// * `beta1_power` - Beta1 raised to the power of time step t.
+    /// * `beta2_power` - Beta2 raised to the power of time step t.
+    /// * `values` - Values to be updated.
+    /// * `momentum` - Tensor to store the first moment estimates.
+    /// * `velocity` - Tensor to store the second moment estimates.
+    /// * `maximum_velocity` - Optional tensor to store the clamped second moment estimates.
+    /// * `gradient` - Gradient to be used in the update.
+    /// * `name` - Optional name for the operation.
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the updated values.
+    fn adam_update(
+        &self,
+        learning_rate: &Retained<Tensor>,
+        beta1: &Retained<Tensor>,
+        beta2: &Retained<Tensor>,
+        epsilon: &Retained<Tensor>,
+        beta1_power: &Retained<Tensor>,
+        beta2_power: &Retained<Tensor>,
+        values: &Retained<Tensor>,
+        momentum: &Retained<Tensor>,
+        velocity: &Retained<Tensor>,
+        maximum_velocity: Option<&Retained<Tensor>>,
+        gradient: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates a RMSProp update operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `current_learning_rate` - Current learning rate.
+    /// * `beta1` - RMSProp beta1 value (decay rate).
+    /// * `beta2` - RMSProp beta2 value (decay rate for velocity).
+    /// * `epsilon` - Small constant for numerical stability.
+    /// * `values` - Values to be updated.
+    /// * `momentum` - Tensor to store momentum.
+    /// * `velocity` - Tensor to store velocity.
+    /// * `maximum_velocity` - Optional tensor to clamp velocity.
+    /// * `gradient` - Gradient tensor.
+    /// * `centered` - Whether to use centered RMSProp.
+    /// * `name` - Optional name for the operation.
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the updated values.
+    fn rmsprop_update(
+        &self,
+        current_learning_rate: &Retained<Tensor>,
+        beta1: &Retained<Tensor>,
+        beta2: &Retained<Tensor>,
+        epsilon: &Retained<Tensor>,
+        values: &Retained<Tensor>,
+        momentum: &Retained<Tensor>,
+        velocity: &Retained<Tensor>,
+        maximum_velocity: Option<&Retained<Tensor>>,
+        gradient: &Retained<Tensor>,
+        centered: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates an L2 norm gradient clipping operation.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Tensor to be clipped.
+    /// * `norm_limit` - L2 norm limit.
+    /// * `name` - Optional name for the operation.
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the clipped values.
+    fn l2_norm_gradient_clipping(
+        &self,
+        tensor: &Retained<Tensor>,
+        norm_limit: f32,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates an operation to multiply gradients by a scalar.
+    ///
+    /// # Arguments
+    ///
+    /// * `learning_rate` - Learning rate tensor.
+    /// * `gradient` - Gradient tensor.
+    /// * `name` - Optional name for the operation.
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the scaled gradients.
+    fn multiply_gradients_by_scalar(
+        &self,
+        learning_rate: &Retained<Tensor>,
+        gradient: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+}
+
+/// Implementation of optimizer operations for Graph
+impl GraphOptimizerOps for Graph {
+    fn sgd_update(
+        &self,
+        learning_rate: &Retained<Tensor>,
+        values: &Retained<Tensor>,
+        gradient: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                SGDWithLearningRate: &**learning_rate,
+                values: &**values,
+                gradient: &**gradient,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create SGD operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn adam_update(
+        &self,
+        learning_rate: &Retained<Tensor>,
+        beta1: &Retained<Tensor>,
+        beta2: &Retained<Tensor>,
+        epsilon: &Retained<Tensor>,
+        beta1_power: &Retained<Tensor>,
+        beta2_power: &Retained<Tensor>,
+        values: &Retained<Tensor>,
+        momentum: &Retained<Tensor>,
+        velocity: &Retained<Tensor>,
+        maximum_velocity: Option<&Retained<Tensor>>,
+        gradient: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let maximum_velocity_ptr = match maximum_velocity {
+                Some(mv) => &**mv as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                AdamWithLearningRate: &**learning_rate,
+                beta1: &**beta1,
+                beta2: &**beta2,
+                epsilon: &**epsilon,
+                beta1Power: &**beta1_power,
+                beta2Power: &**beta2_power,
+                values: &**values,
+                momentum: &**momentum,
+                velocity: &**velocity,
+                maximumVelocity: maximum_velocity_ptr,
+                gradient: &**gradient,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create Adam update operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn rmsprop_update(
+        &self,
+        current_learning_rate: &Retained<Tensor>,
+        beta1: &Retained<Tensor>,
+        beta2: &Retained<Tensor>,
+        epsilon: &Retained<Tensor>,
+        values: &Retained<Tensor>,
+        momentum: &Retained<Tensor>,
+        velocity: &Retained<Tensor>,
+        maximum_velocity: Option<&Retained<Tensor>>,
+        gradient: &Retained<Tensor>,
+        centered: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let maximum_velocity_ptr = match maximum_velocity {
+                Some(mv) => &**mv as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                RMSPropWithLearningRate: &**current_learning_rate,
+                beta1: &**beta1,
+                beta2: &**beta2,
+                epsilon: &**epsilon,
+                values: &**values,
+                momentum: &**momentum,
+                velocity: &**velocity,
+                maximumVelocity: maximum_velocity_ptr,
+                gradient: &**gradient,
+                centered: centered,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create RMSProp update operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn l2_norm_gradient_clipping(
+        &self,
+        tensor: &Retained<Tensor>,
+        norm_limit: f32,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                l2NormGradientClippingWithTensor: &**tensor,
+                normLimit: norm_limit as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create L2 norm gradient clipping operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn multiply_gradients_by_scalar(
+        &self,
+        learning_rate: &Retained<Tensor>,
+        gradient: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                multiplyGradientsByScalarWithLearningRate: &**learning_rate,
+                gradient: &**gradient,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create multiply gradients by scalar operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+}
+
 impl Graph {
     /// Stochastic gradient descent optimization.
     ///
@@ -75,7 +383,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 stochasticGradientDescentWithLearningRateTensor: learning_rate,
                 valuesTensor: values,
                 gradientTensor: gradient,
@@ -145,7 +453,7 @@ impl Graph {
             };
 
             let result_array: Retained<NSArray<Tensor>> = msg_send![
-                self, 
+                self,
                 adamWithLearningRateTensor: learning_rate,
                 beta1Tensor: beta1,
                 beta2Tensor: beta2,
@@ -232,7 +540,7 @@ impl Graph {
             };
 
             let result_array: Retained<NSArray<Tensor>> = msg_send![
-                self, 
+                self,
                 adamWithCurrentLearningRateTensor: current_learning_rate,
                 beta1Tensor: beta1,
                 beta2Tensor: beta2,
@@ -285,7 +593,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 variableOpWithTensor: tensor,
                 name: name_obj
             ]
@@ -320,7 +628,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 applyStochasticGradientDescentWithLearningRateTensor: learning_rate,
                 variableOp: variable_op,
                 gradientTensor: gradient,
