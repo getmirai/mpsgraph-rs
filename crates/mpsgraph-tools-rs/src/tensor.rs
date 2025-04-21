@@ -527,7 +527,8 @@ impl Tensor {
 
     /// Apply the tanh activation function
     pub fn tanh(&self) -> Tensor {
-        Tensor(self.graph().tanh(&self.0, None))
+        let graph = self.graph();
+        Tensor(GraphActivationOps::tanh(&*graph, &self.0, None))
     }
 
     /// Apply the ReLU activation function

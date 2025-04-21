@@ -145,7 +145,7 @@ impl TensorOps for Retained<MPSTensor> {
     
     fn tanh(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
-        graph.tanh(self, name)
+        GraphActivationOps::tanh(&*graph, self, name)
     }
     
     fn relu(&self, name: Option<&str>) -> Retained<MPSTensor> {

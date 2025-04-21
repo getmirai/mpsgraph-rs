@@ -279,6 +279,140 @@ impl GraphArithmeticOps for Graph {
             }
         }
     }
+    
+    fn asin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                asinWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create inverse sine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn acos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                acosWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create inverse cosine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn atan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                atanWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create inverse tangent tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn asinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                asinhWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create inverse hyperbolic sine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn acosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                acoshWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create inverse hyperbolic cosine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn atanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                atanhWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create inverse hyperbolic tangent tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn atan2(&self, y: &Retained<Tensor>, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                atan2WithPrimaryTensor: &**y,
+                secondaryTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create atan2 tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
 
     fn exp(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
