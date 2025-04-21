@@ -613,21 +613,3 @@ impl Tensor {
         Tensor(self.graph().maximum(&self.0, &other.0, None))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use mpsgraph::Shape;
-
-    use super::*;
-
-    #[test]
-    #[ignore = "This test still needs to be updated for the new Shape type"]
-    fn test_tensor_operators() {
-        // Mark the test as implemented but ignored for now
-        // Since we're making structural changes to the Shape type, we'll need to
-        // update this test later to work with the new approach
-        
-        // For now, we'll just log that this test is being skipped
-        println!("Tensor operators test is skipped until Shape implementation is finalized");
-    }
-}
