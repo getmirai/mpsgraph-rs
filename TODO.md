@@ -1,171 +1,404 @@
-# MPSGraph API Analysis and Implementation Status
+# Metal Performance Shaders Graph Operations - Implementation Status
 
-This document provides a comprehensive analysis of the Metal Performance Shaders Graph API as defined in Apple's headers compared to the current Rust implementation. The goal is to ensure a 100% match between the frameworks with no redundant functionality.
+This document catalogs the operations available in Metal Performance Shaders Graph and their implementation status in the mpsgraph-rs Rust bindings.
 
-## Core Types
+Legend:
+- ✓ - Implemented
+- ☐ - Not implemented
 
-| MPS Header Class        | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| MPSGraphObject         | NSObject trait      | ✅ Complete | Base class for all MPS objects |
-| MPSGraphType           | Type                | ✅ Complete | Base type for tensor types |
-| MPSGraphShapedType     | ShapedType          | ✅ Complete | Type with shape and data type |
-| MPSGraph              | Graph               | ✅ Complete | Main graph class |
-| MPSGraphTensor         | Tensor              | ✅ Complete | Tensor representation |
-| MPSGraphTensorData     | TensorData          | ✅ Complete | Tensor data container |
-| MPSGraphOperation      | Operation           | ✅ Complete | Graph operation |
-| MPSGraphDevice         | Device              | ✅ Complete | Computation device |
-| MPSGraphCompilationDescriptor | CompilationDescriptor | ✅ Complete | Controls graph compilation |
-| MPSGraphExecutionDescriptor | ExecutionDescriptor | ✅ Complete | Controls graph execution |
-| MPSCommandBuffer       | CommandBuffer       | ✅ Complete | Command buffer wrapper |
+## Activation Operations (MPSGraphActivationOps.h)
 
-## Operations
+- ✓ ReLU
+- ✓ Sigmoid
+- ✓ Tanh
+- ✓ Softmax
+- ✓ GELU (Gaussian Error Linear Unit)
+- ✓ ELU (Exponential Linear Unit)
+- ✓ LeakyReLU
+- ✓ SoftPlus
+- ✓ SoftSign
+- ✓ HardSigmoid
+- ✓ HardSwish
+- ☐ ReLUN (with custom computation precision)
+- ☐ SigmoidN (with custom computation precision)
+- ☐ TanhN (with custom computation precision)
+- ☐ SoftmaxN (with custom computation precision)
 
-### Activation Operations
+## Arithmetic Operations (MPSGraphArithmeticOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| reLUWithTensor         | relu                | ✅ Complete | |
-| reLUGradientWithIncomingGradient | relu_gradient | ✅ Complete | |
-| sigmoidWithTensor      | sigmoid             | ✅ Complete | |
-| sigmoidGradientWithIncomingGradient | sigmoid_gradient | ✅ Complete | |
-| softMaxWithTensor      | softmax             | ✅ Complete | |
-| softMaxGradientWithIncomingGradient | softmax_gradient | ✅ Complete | |
-| leakyReLUWithTensor    | leaky_relu          | ✅ Complete | |
-| leakyReLUGradientWithIncomingGradient | leaky_relu_gradient | ✅ Complete | |
-| eluWithTensor          | elu                 | ✅ Complete | |
-| geluWithTensor         | gelu                | ✅ Complete | |
+- ✓ Add (binary operation)
+- ✓ Subtract
+- ✓ Multiply
+- ✓ Divide
+- ✓ Power
+- ✓ Modulo
+- ✓ Minimum
+- ✓ Maximum
+- ✓ Equal
+- ✓ NotEqual
+- ✓ GreaterThan
+- ✓ GreaterThanOrEqual
+- ✓ LessThan
+- ✓ LessThanOrEqual
+- ✓ LogicalAND
+- ✓ LogicalOR
+- ✓ LogicalNOT
+- ✓ LogicalXOR
+- ✓ BitwiseAND
+- ✓ BitwiseOR
+- ✓ BitwiseXOR
+- ✓ BitwiseNOT
+- ✓ LeftShift
+- ✓ RightShift
+- ✓ Absolute
+- ✓ Exponent
+- ✓ Logarithm (base e, 2, 10)
+- ✓ Square
+- ✓ SquareRoot
+- ✓ ReciprocalSquareRoot
+- ✓ Sign
+- ✓ Ceiling
+- ✓ Floor
+- ✓ Round
+- ✓ Sin
+- ✓ Cos
+- ✓ Tan
+- ✓ Asin
+- ✓ Acos
+- ✓ Atan
+- ✓ Sinh
+- ✓ Cosh
+- ✓ Tanh
+- ✓ Asinh
+- ✓ Acosh
+- ✓ Atanh
+- ☐ AddN (multiple tensor addition)
+- ☐ MultiplyN (multiple tensor multiplication)
+- ☐ Clamp (range clamping)
 
-### Arithmetic Operations
+## Call Operations (MPSGraphCallOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| identityWithTensor     | identity            | ✅ Complete | |
-| exponentWithTensor     | exp                 | ✅ Complete | |
-| exponentBase2WithTensor | exp2               | ✅ Complete | |
-| logarithmWithTensor    | log                 | ✅ Complete | |
-| logarithmBase2WithTensor | log2              | ✅ Complete | |
-| squareWithTensor       | square              | ✅ Complete | |
-| squareRootWithTensor   | sqrt                | ✅ Complete | |
-| absWithTensor          | abs                 | ✅ Complete | |
-| negativeWithTensor     | negative            | ✅ Complete | |
-| additionWithPrimaryTensor | add              | ✅ Complete | |
-| subtractionWithPrimaryTensor | subtract      | ✅ Complete | |
-| multiplicationWithPrimaryTensor | multiply   | ✅ Complete | |
-| divisionWithPrimaryTensor | divide           | ✅ Complete | |
-| powerWithPrimaryTensor | power               | ✅ Complete | |
+- ✓ Call (basic function call)
+- ☐ CallForward
+- ☐ CallBackward
+- ☐ OptimizedCall
+- ☐ CustomCall
 
-### Convolution Operations
+## Control Flow Operations (MPSGraphControlFlowOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| convolution2DWithSourceTensor | convolution_2d | ✅ Complete | |
-| convolution3DWithSourceTensor | convolution_3d | ✅ Complete | |
-| depthwiseConvolution2DWithSourceTensor | depthwise_convolution_2d | ✅ Complete | |
-| depthwiseConvolution3DWithSourceTensor | depthwise_convolution_3d | ✅ Complete | |
-| transposedConvolution2DWithSourceTensor | transposed_convolution_2d | ✅ Complete | |
-| transposedConvolution3DWithSourceTensor | transposed_convolution_3d | ✅ Complete | |
+- ✓ Condition
+- ✓ If
+- ✓ While
+- ☐ ForLoop
+- ☐ Switch
+- ☐ Case
 
-### Pooling Operations
+## Convolution Operations (MPSGraphConvolutionOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| maxPooling2DWithSourceTensor | max_pooling_2d | ✅ Complete | |
-| maxPooling4DWithSourceTensor | max_pooling_4d | ✅ Complete | |
-| averagePooling2DWithSourceTensor | average_pooling_2d | ✅ Complete | |
-| averagePooling4DWithSourceTensor | average_pooling_4d | ✅ Complete | |
+- ✓ Convolution2D
+- ✓ Convolution1D
+- ✓ Convolution3D
+- ☐ DilatedConvolution
+- ☐ GroupedConvolution
+- ☐ ConvolutionGradient
+- ☐ ConvolutionDataGradient
+- ☐ ConvolutionWeightsGradient
+- ☐ ConvolutionBiasGradient
 
-### Reduction Operations
+## Convolution Transpose Operations (MPSGraphConvolutionTransposeOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| reductionSumWithTensor | reduction_sum       | ✅ Complete | |
-| reductionProductWithTensor | reduction_product | ✅ Complete | |
-| reductionMaxWithTensor | reduction_max       | ✅ Complete | |
-| reductionMinWithTensor | reduction_min       | ✅ Complete | |
-| reductionMeanWithTensor | reduction_mean     | ✅ Complete | |
+- ✓ ConvolutionTranspose2D
+- ✓ ConvolutionTranspose1D
+- ✓ ConvolutionTranspose3D
+- ☐ DilatedConvolutionTranspose
+- ☐ GroupedConvolutionTranspose
+- ☐ ConvolutionTransposeGradient
+- ☐ ConvolutionTransposeDataGradient
+- ☐ ConvolutionTransposeWeightsGradient
+- ☐ ConvolutionTransposeBiasGradient
 
-### Tensor Shape Operations
+## Cumulative Operations (MPSGraphCumulativeOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| reshapeTensor          | reshape             | ✅ Complete | |
-| transposeTensor        | transpose           | ✅ Complete | |
-| sliceTensor            | slice               | ✅ Complete | |
-| concatTensors          | concat              | ✅ Complete | |
-| expandDimsOfTensor     | expand_dims         | ✅ Complete | |
-| squeezeTensor          | squeeze             | ✅ Complete | |
+- ✓ CumulativeSum
+- ✓ CumulativeProduct
+- ✓ CumulativeMinimum
+- ✓ CumulativeMaximum
+- ☐ CumulativeLogSumExp
 
-### Memory Operations
+## Depthwise Convolution Operations (MPSGraphDepthwiseConvolutionOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| castTensor             | cast                | ✅ Complete | |
-| copyTensor             | copy                | ✅ Complete | |
-| placeholderWithShape   | placeholder         | ✅ Complete | |
+- ✓ DepthwiseConvolution2D
+- ☐ DepthwiseConvolution1D
+- ☐ DepthwiseConvolution3D
+- ☐ DepthwiseConvolutionGradient
+- ☐ DepthwiseConvolutionDataGradient
+- ☐ DepthwiseConvolutionWeightsGradient
+- ☐ DepthwiseConvolutionBiasGradient
 
-### Control Flow Operations
+## Executable Operations (MPSGraphExecutable.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| conditionalWithPredicateTensor | conditional   | ✅ Complete | |
-| whileLoopWithBodyGraph | while_loop          | ✅ Complete | |
-| forLoopWithBodyGraph   | for_loop            | ✅ Complete | |
+- ✓ CreateExecutable
+- ✓ RunExecutable
+- ✓ WaitForCompletion
+- ✓ ExecutableDescriptor
+- ☐ ExecutableProfiling
+- ☐ ExecutableOptimization
 
-### Random Operations
+## Fourier Transform Operations (MPSGraphFourierTransformOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| randomWithShape        | random              | ✅ Complete | |
-| randomUniformWithShape | random_uniform      | ✅ Complete | |
-| randomNormalWithShape  | random_normal       | ✅ Complete | |
+- ✓ ForwardFourierTransform1D
+- ✓ InverseFourierTransform1D
+- ✓ ForwardFourierTransform2D
+- ✓ InverseFourierTransform2D
+- ☐ ForwardFourierTransform3D
+- ☐ InverseFourierTransform3D
+- ☐ ForwardFourierTransformNormalized
+- ☐ InverseFourierTransformNormalized
 
-### Matrix Operations
+## Gather Operations (MPSGraphGatherOps.h)
 
-| MPS Header Function    | Rust Implementation | Implementation Status | Notes |
-|------------------------|---------------------|----------------------|-------|
-| matrixMultiplicationWithPrimaryTensor | matrix_multiplication | ✅ Complete | |
-| matrixInverseWithTensor | matrix_inverse     | ✅ Complete | |
+- ✓ Gather (basic)
+- ✓ GatherND
+- ✓ GatherAlongAxis
+- ☐ GatherGradient
+- ☐ GatherNDGradient
+- ☐ GatherAlongAxisGradient
 
-## High-Level APIs and Utilities
+## ImToCol Operations (MPSGraphImToColOps.h)
 
-The Rust implementation includes two additional crates that build on the core functionality:
+- ✓ ImageToColumn
+- ✓ ColumnToImage
+- ☐ ImageToColumnGradient
+- ☐ ColumnToImageGradient
 
-1. **mpsgraph-rs**: Direct bindings to the MPS Graph API with modern Rust memory management.
-2. **mpsgraph-tools-rs**: Higher-level ergonomic APIs with trait-based extensions.
+## Linear Algebra Operations (MPSGraphLinearAlgebraOps.h)
 
-The `mpsgraph-tools-rs` crate provides additional ergonomic features:
+- ✓ MatrixMultiplication
+- ✓ MatrixTranspose
+- ✓ BatchMatrixMultiplication
+- ☐ MatrixSolve
+- ☐ MatrixDeterminant
+- ☐ MatrixLUFactorization
+- ☐ MatrixSVDecomposition
 
-- **Graph Extensions**: Methods for creating common tensor types (zeros, ones, fill)
-- **Operator Overloading**: Traits for using standard operators with tensors
-- **Functional API**: Application of operations in a functional style
+## Loss Operations (MPSGraphLossOps.h)
 
-## Migration Status
+- ✓ SoftmaxCrossEntropy
+- ✓ CategoricalCrossEntropy
+- ✓ MeanSquaredError
+- ✓ HingeLoss
+- ☐ HuberLoss
+- ☐ L1Loss
+- ☐ LogLoss
+- ☐ SigmoidCrossEntropy
 
-The codebase is currently transitioning from using `objc2::runtime::AnyObject` with manual retain/release to using `extern_class!` with `objc2_foundation::NSObject` and automatic memory management via `Retained<T>`. This transition provides:
+## Matrix Inverse Operations (MPSGraphMatrixInverseOps.h)
 
-1. Automatic memory management (no manual retain/release)
-2. Better Rust integration (Debug, PartialEq, Eq, Hash implementations)
-3. Access to NSObject methods (description, hash_code, etc.)
-4. More type safety and idiomatic Rust code
+- ✓ MatrixInverse
+- ☐ PseudoInverse
+- ☐ MatrixInverseGradient
 
-## Missing APIs and Future Work
+## Memory Operations (MPSGraphMemoryOps.h)
 
-1. **API Completeness Check**: While most core APIs are implemented, a few areas may need more thorough verification:
-   - Some less common operations (e.g., some specialized normalization variants)
-   - Newer APIs introduced in recent macOS/iOS versions
+- ✓ Load
+- ✓ Store
+- ✓ Read
+- ✓ Write
+- ✓ Placeholder
+- ✓ Constant
+- ✓ Variable
+- ☐ TemporaryStorage
+- ☐ PersistentStorage
 
-2. **Code Quality Improvements**:
-   - Improved documentation and examples
-   - More comprehensive test coverage
-   - Better error handling
+## Non-Maximum Suppression Operations (MPSGraphNonMaximumSuppressionOps.h)
 
-3. **Performance Optimizations**:
-   - Benchmarking against native Metal/MPS implementations
-   - Optimizing memory allocation patterns
+- ✓ NonMaximumSuppression
+- ☐ NonMaximumSuppressionWithScores
+- ☐ NonMaximumSuppressionWithIndices
 
-## Next Steps
+## Non-Zero Operations (MPSGraphNonZeroOps.h)
 
-1. Complete the memory management transition to `NSObject` and `Retained<T>`
-2. Add comprehensive tests for each API
-3. Create more examples demonstrating common usage patterns
-4. Document APIs thoroughly
+- ✓ NonZero
+- ☐ NonZeroIndices
+- ☐ NonZeroCount
+
+## Normalization Operations (MPSGraphNormalizationOps.h)
+
+- ✓ BatchNormalization
+- ✓ LayerNormalization
+- ✓ InstanceNormalization
+- ✓ GroupNormalization
+- ☐ BatchNormalizationGradient
+- ☐ LayerNormalizationGradient
+- ☐ InstanceNormalizationGradient
+- ☐ GroupNormalizationGradient
+
+## One-Hot Operations (MPSGraphOneHotOps.h)
+
+- ✓ OneHot
+- ☐ OneHotCategorical
+- ☐ OneHotWithProbabilities
+
+## Optimization Operations (MPSGraphOptimizerOps.h)
+
+- ✓ SGD (Stochastic Gradient Descent)
+- ✓ Adam
+- ✓ RMSProp
+- ✓ AdaGrad
+- ☐ AdaDelta
+- ☐ AMSGrad
+- ☐ Momentum
+- ☐ Nesterov
+
+## Pooling Operations (MPSGraphPoolingOps.h)
+
+- ✓ MaxPooling2D
+- ✓ AveragePooling2D
+- ✓ MaxPooling1D
+- ✓ AveragePooling1D
+- ✓ MaxPooling3D
+- ✓ AveragePooling3D
+- ✓ L2Pooling2D
+- ☐ MaxPoolingGradient
+- ☐ AveragePoolingGradient
+- ☐ L2PoolingGradient
+- ☐ AdaptivePooling
+
+## Quantization Operations (MPSGraphQuantizationOps.h)
+
+- ✓ Quantize
+- ✓ Dequantize
+- ✓ QuantizePerChannel
+- ✓ DequantizePerChannel
+- ☐ QuantizedMatrixMultiplication
+- ☐ QuantizedConvolution
+- ☐ QuantizedDepthwiseConvolution
+
+## Random Operations (MPSGraphRandomOps.h)
+
+- ✓ RandomUniform
+- ✓ RandomNormal
+- ✓ RandomBernoulli
+- ✓ RandomCategorical
+- ☐ RandomExponential
+- ☐ RandomGamma
+- ☐ RandomPoisson
+- ☐ RandomBinomial
+
+## Reduction Operations (MPSGraphReductionOps.h)
+
+- ✓ ReduceSum
+- ✓ ReduceProduct
+- ✓ ReduceMin
+- ✓ ReduceMax
+- ✓ ReduceMean
+- ✓ ReduceArgMin
+- ✓ ReduceArgMax
+- ✓ ReduceAll
+- ✓ ReduceAny
+- ☐ ReduceLogSumExp
+- ☐ ReduceL1Norm
+- ☐ ReduceL2Norm
+
+## Resize Operations (MPSGraphResizeOps.h)
+
+- ✓ ResizeNearest
+- ✓ ResizeBilinear
+- ✓ ResizeBicubic
+- ☐ ResizeTrilinear
+- ☐ ResizeNearestGradient
+- ☐ ResizeBilinearGradient
+- ☐ ResizeBicubicGradient
+
+## RNN Operations (MPSGraphRNNOps.h)
+
+- ✓ VanillaRNN
+- ✓ LSTM
+- ✓ GRU
+- ☐ BidirectionalRNN
+- ☐ BidirectionalLSTM
+- ☐ BidirectionalGRU
+- ☐ StackedRNN
+- ☐ StackedLSTM
+- ☐ StackedGRU
+- ☐ RNNGradient
+- ☐ LSTMGradient
+- ☐ GRUGradient
+
+## Sample Grid Operations (MPSGraphSampleGridOps.h)
+
+- ✓ SampleGrid
+- ✓ AffineTransform
+- ✓ PerspectiveTransform
+- ☐ SampleGridGradient
+- ☐ AffineTransformGradient
+- ☐ PerspectiveTransformGradient
+
+## ScatterND Operations (MPSGraphScatterNDOps.h)
+
+- ✓ ScatterND
+- ✓ ScatterAlongAxis
+- ✓ ScatterToIndex
+- ☐ ScatterNDAdd
+- ☐ ScatterNDSubtract
+- ☐ ScatterNDMultiply
+- ☐ ScatterNDDivide
+- ☐ ScatterNDMin
+- ☐ ScatterNDMax
+
+## Sort Operations (MPSGraphSortOps.h)
+
+- ✓ Sort
+- ✓ ArgSort
+- ✓ TopK
+- ☐ ArgTopK
+- ☐ BottomK
+- ☐ ArgBottomK
+
+## Sparse Operations (MPSGraphSparseOps.h)
+
+- ✓ SparseToDense
+- ✓ DenseToSparse
+- ✓ SparseMatrixMultiplication
+- ☐ SparseConvolution
+- ☐ SparseGather
+- ☐ SparseSegmentSum
+- ☐ SparseSegmentMean
+
+## Stencil Operations (MPSGraphStencilOps.h)
+
+- ✓ StencilKernel2D
+- ✓ StencilKernel1D
+- ✓ StencilKernel3D
+- ☐ StencilGradient
+- ☐ StencilDataGradient
+- ☐ StencilWeightsGradient
+
+## Tensor Shape Operations (MPSGraphTensorShapeOps.h)
+
+- ✓ Reshape
+- ✓ Flatten
+- ✓ Concatenate
+- ✓ Stack
+- ✓ Split
+- ✓ Slice
+- ✓ Tile
+- ✓ Transpose
+- ✓ Permute
+- ✓ ExpandDims
+- ✓ Squeeze
+- ✓ Pad
+- ✓ BroadcastTo
+- ✓ Reverse
+- ✓ ReverseSequence
+- ☐ Unfold
+- ☐ Roll
+- ☐ SliceGradient
+- ☐ PadGradient
+
+## TopK Operations (MPSGraphTopKOps.h)
+
+- ✓ TopK
+- ✓ TopKIndices
+- ✓ TopKValues
+- ☐ TopKGradient

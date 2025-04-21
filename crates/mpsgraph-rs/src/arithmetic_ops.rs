@@ -48,6 +48,45 @@ pub trait GraphArithmeticOps {
 
     /// Returns the ceiling of the input tensor
     fn ceil(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the sine of the input tensor
+    fn sin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the cosine of the input tensor
+    fn cos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the tangent of the input tensor
+    fn tan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the hyperbolic sine of the input tensor
+    fn sinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the hyperbolic cosine of the input tensor
+    fn cosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the hyperbolic tangent of the input tensor
+    fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the inverse sine of the input tensor
+    fn asin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the inverse cosine of the input tensor
+    fn acos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the inverse tangent of the input tensor
+    fn atan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the inverse hyperbolic sine of the input tensor
+    fn asinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the inverse hyperbolic cosine of the input tensor
+    fn acosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the inverse hyperbolic tangent of the input tensor
+    fn atanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    
+    /// Returns the four-quadrant arctangent of y/x; atan2(y,x)
+    fn atan2(&self, y: &Retained<Tensor>, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
 
     /// Returns the floor of the input tensor
     fn floor(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
@@ -463,6 +502,120 @@ impl GraphArithmeticOps for Graph {
 
             if result.is_null() {
                 panic!("Failed to create ceiling tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn sin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                sineWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create sine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn cos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                cosineWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create cosine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn tan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                tangentWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create tangent tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn sinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                hyperbolicSineWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create hyperbolic sine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn cosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                hyperbolicCosineWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create hyperbolic cosine tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+    
+    fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                hyperbolicTangentWithTensor: &**x,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create hyperbolic tangent tensor");
             } else {
                 Retained::from_raw(result).unwrap()
             }
