@@ -20,11 +20,7 @@ pub trait GraphMemoryOps {
     /// # Returns
     ///
     /// A valid Tensor object of type ComplexFloat32.
-    fn complex_constant(
-        &self,
-        real_part: f64,
-        imaginary_part: f64,
-    ) -> Retained<Tensor>;
+    fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Retained<Tensor>;
 
     /// Creates a complex constant with the specified data type and returns the result tensor.
     ///
@@ -110,11 +106,7 @@ pub trait GraphMemoryOps {
     /// # Returns
     ///
     /// A valid Tensor object.
-    fn read_variable(
-        &self,
-        variable: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn read_variable(&self, variable: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates an assign operation which writes at this point of execution of the graph.
     ///
@@ -133,6 +125,37 @@ pub trait GraphMemoryOps {
         tensor: &Retained<Tensor>,
         name: Option<&str>,
     ) -> Retained<Operation>;
+
+    /// Creates a placeholder tensor with the specified shape and data type.
+    ///
+    /// # Arguments
+    ///
+    /// * `shape` - The shape of the placeholder tensor
+    /// * `data_type` - The data type of the placeholder tensor
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn placeholder_tensor(
+        &self,
+        shape: &Shape,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates a storage tensor with the specified handle, shape, and data type.
+    ///
+    /// # Arguments
+    ///
+    /// * `handle` - The storage handle
+    /// * `shape` - The shape of the storage tensor
+    /// * `data_type` - The data type of the storage tensor
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn storage_tensor(&self, handle: u64, shape: &Shape, data_type: DataType) -> Retained<Tensor>;
 }
 
 /// Extension methods to provide generic variable creation
@@ -159,11 +182,7 @@ pub trait GraphVariableOps {
 }
 
 impl GraphMemoryOps for Graph {
-    fn complex_constant(
-        &self,
-        real_part: f64,
-        imaginary_part: f64,
-    ) -> Retained<Tensor> {
+    fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Retained<Tensor> {
         unsafe {
             msg_send![
                 self,
@@ -260,11 +279,7 @@ impl GraphMemoryOps for Graph {
         }
     }
 
-    fn read_variable(
-        &self,
-        variable: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn read_variable(&self, variable: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
@@ -307,6 +322,48 @@ impl GraphMemoryOps for Graph {
             }
         }
     }
+
+    fn placeholder_tensor(
+        &self,
+        shape: &Shape,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                placeholderTensorWithShape: shape,
+                dataType: data_type as u64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create placeholder tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn storage_tensor(&self, handle: u64, shape: &Shape, data_type: DataType) -> Retained<Tensor> {
+        unsafe {
+            let result: *mut Tensor = msg_send![
+                self,
+                storageTensorWithHandle: handle,
+                shape: shape,
+                dataType: data_type as u64
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create storage tensor");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
 }
 
 impl GraphVariableOps for Graph {
@@ -321,7 +378,7 @@ impl GraphVariableOps for Graph {
             // Create NSData
             let bytes_len = std::mem::size_of_val(data);
             let data_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, bytes_len);
-            
+
             self.variable_with_bytes(data_slice, shape, data_type, name)
         }
     }

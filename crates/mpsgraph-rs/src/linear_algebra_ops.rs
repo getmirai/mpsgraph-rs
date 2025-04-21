@@ -1,8 +1,10 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
+use crate::core::create_ns_array_from_slice;
 use crate::graph::Graph;
+use crate::tensor::DataType;
 use crate::tensor::Tensor;
 
 /// Linear algebra operations for Graph
@@ -180,6 +182,7 @@ pub trait GraphLinearAlgebraOps {
     ///
     /// * `primary` - The first input tensor
     /// * `secondary` - The second input tensor
+    /// * `result_data_type` - The result data type
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -189,6 +192,7 @@ pub trait GraphLinearAlgebraOps {
         &self,
         primary: &Tensor,
         secondary: &Tensor,
+        result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -298,6 +302,71 @@ pub trait GraphLinearAlgebraOps {
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
+
+    /// Calculates the determinant of a square matrix.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor representing a square matrix
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the determinant of the input matrix
+    fn determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+
+    /// Calculates the determinant for each matrix in a batch of matrices.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - The input tensor containing a batch of matrices
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing determinants for each matrix in the batch
+    fn batched_determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+
+    /// Solves the triangular linear system with multiple right-hand sides.
+    ///
+    /// Solves a system of linear equations AX = B, where A is a triangular matrix.
+    ///
+    /// # Arguments
+    ///
+    /// * `matrix` - A tensor representing the triangular matrix A
+    /// * `rhs` - A tensor representing the right-hand side B
+    /// * `lower_triangular` - Whether A is lower triangular (true) or upper triangular (false)
+    /// * `right_side` - Whether to solve A*X = B (false) or X*A = B (true)
+    /// * `unit_diagonal` - Whether to assume the diagonal elements of A are all 1
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the solution X
+    fn triangular_solve(
+        &self,
+        matrix: &Tensor,
+        rhs: &Tensor,
+        lower_triangular: bool,
+        right_side: bool,
+        unit_diagonal: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Einstein summation (einsum) operation.
+    ///
+    /// Computes a generalized contraction between tensors according to the Einstein summation convention.
+    ///
+    /// # Arguments
+    ///
+    /// * `tensors` - A list of tensors to contract
+    /// * `equation` - The einsum equation in the form of a string
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tensor containing the result of the einsum operation
+    fn einsum(&self, tensors: &[&Tensor], equation: &str, name: Option<&str>) -> Retained<Tensor>;
 }
 
 /// Implementation of linear algebra operations for Graph
@@ -310,10 +379,12 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 matrixMultiplicationWithPrimaryTensor: &**primary,
                 secondaryTensor: &**secondary,
                 name: name_ptr
@@ -337,10 +408,12 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 matrixMultiplicationWithPrimaryTensor: &**primary,
                 transposePrimary: primary_transpose,
                 secondaryTensor: &**secondary,
@@ -364,10 +437,12 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 innerProductWithPrimaryTensor: &**primary,
                 secondaryTensor: &**secondary,
                 name: name_ptr
@@ -389,10 +464,12 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 outerProductWithPrimaryTensor: &**primary,
                 secondaryTensor: &**secondary,
                 name: name_ptr
@@ -414,10 +491,12 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 matrixMultiplicationWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
                 name: name_ptr
@@ -441,7 +520,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -469,7 +550,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -496,7 +579,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -518,16 +603,20 @@ impl GraphLinearAlgebraOps for Graph {
         &self,
         primary: &Tensor,
         secondary: &Tensor,
+        result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                hammingDistanceWithPrimaryTensor: primary,
+                HammingDistanceWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
+                resultDataType: result_data_type as u32,
                 name: name_ptr
             ];
 
@@ -549,7 +638,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -578,7 +669,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -608,7 +701,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -639,7 +734,9 @@ impl GraphLinearAlgebraOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -652,7 +749,115 @@ impl GraphLinearAlgebraOps for Graph {
             ];
 
             if result.is_null() {
-                panic!("Failed to create masked scaled dot product attention with scalar operation");
+                panic!(
+                    "Failed to create masked scaled dot product attention with scalar operation"
+                );
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                determinant: tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create determinant operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn batched_determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                batchedDeterminant: tensor,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create batched determinant operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn triangular_solve(
+        &self,
+        matrix: &Tensor,
+        rhs: &Tensor,
+        lower_triangular: bool,
+        right_side: bool,
+        unit_diagonal: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                triangularSolve: matrix,
+                rhs: rhs,
+                lowerTriangular: lower_triangular,
+                rightSide: right_side,
+                unitDiagonal: unit_diagonal,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create triangular solve operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn einsum(&self, tensors: &[&Tensor], equation: &str, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let equation_ns = NSString::from_str(equation);
+
+            // Create NSArray from tensors
+            let tensor_ptrs: Vec<*const Tensor> =
+                tensors.iter().map(|t| *t as *const Tensor).collect();
+
+            let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
+            let tensor_array_ptr = &*tensor_array as *const _;
+
+            let result: *mut Tensor = msg_send![
+                self,
+                einsumWithTensors: tensor_array_ptr,
+                equation: &*equation_ns,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create einsum operation");
             } else {
                 Retained::from_raw(result).unwrap()
             }

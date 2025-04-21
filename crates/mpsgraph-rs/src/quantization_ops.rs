@@ -1,9 +1,9 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
-use crate::tensor::{Tensor, DataType};
+use crate::tensor::{DataType, Tensor};
 
 /// Trait for performing quantization operations on a graph
 pub trait GraphQuantizationOps {
@@ -207,6 +207,54 @@ pub trait GraphQuantizationOps {
         axis: i64,
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
+
+    /// Creates a quantize operation to convert a floating-point tensor to a quantized tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor to quantize
+    /// * `scale` - The scale factor for quantization
+    /// * `zero_point` - The zero point for quantization
+    /// * `axis` - The axis along which to quantize
+    /// * `data_type` - The target quantized data type
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object containing the quantized values
+    fn quantize_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
+        zero_point: &Retained<Tensor>,
+        axis: i64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates a dequantize operation to convert a quantized tensor back to floating-point.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input quantized tensor to dequantize
+    /// * `scale` - The scale factor for dequantization
+    /// * `zero_point` - The zero point for dequantization
+    /// * `axis` - The axis along which to dequantize
+    /// * `data_type` - The source quantized data type
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object containing the dequantized values
+    fn dequantize_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
+        zero_point: &Retained<Tensor>,
+        axis: i64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
 }
 
 /// Implementation of quantization operations for Graph
@@ -221,7 +269,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -250,7 +300,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -280,7 +332,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -311,7 +365,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -342,7 +398,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -373,7 +431,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -401,7 +461,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -427,7 +489,9 @@ impl GraphQuantizationOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -441,6 +505,72 @@ impl GraphQuantizationOps for Graph {
                 None
             } else {
                 Some(Retained::from_raw(result).unwrap())
+            }
+        }
+    }
+
+    fn quantize_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
+        zero_point: &Retained<Tensor>,
+        axis: i64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                quantizeTensor: &**x,
+                scale: &**scale,
+                zeroPoint: &**zero_point,
+                axis: axis,
+                type: data_type as u32,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create quantize operation");
+            } else {
+                Retained::from_raw(result).unwrap()
+            }
+        }
+    }
+
+    fn dequantize_tensor(
+        &self,
+        x: &Retained<Tensor>,
+        scale: &Retained<Tensor>,
+        zero_point: &Retained<Tensor>,
+        axis: i64,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                dequantizeTensor: &**x,
+                scale: &**scale,
+                zeroPoint: &**zero_point,
+                axis: axis,
+                type: data_type as u32,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create dequantize operation");
+            } else {
+                Retained::from_raw(result).unwrap()
             }
         }
     }
