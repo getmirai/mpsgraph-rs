@@ -76,44 +76,27 @@ impl Graph {
         }
     }
 
-    /// Creates a placeholder tensor with the given data type and shape
-    pub fn placeholder(&self, data_type: DataType, shape: &Shape) -> Retained<Tensor> {
+    pub fn placeholder(
+        &self,
+        data_type: DataType,
+        shape: &Shape,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
-            // Use null for the name parameter
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 placeholderWithShape: shape.as_ptr(),
                 dataType: data_type as u32,
-                name: std::ptr::null::<NSString>()
+                name: name_ptr
             ];
 
             if tensor_ptr.is_null() {
                 panic!("Failed to create placeholder tensor");
-            } else {
-                Retained::from_raw(tensor_ptr).unwrap()
-            }
-        }
-    }
-
-    /// Creates a placeholder tensor with the given data type, shape, and name
-    pub fn placeholder_with_name(
-        &self,
-        data_type: DataType,
-        shape: &Shape,
-        name: &str,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = NSString::from_str(name);
-
-            let tensor_ptr: *mut Tensor = msg_send![
-                self,
-                placeholderWithShape: shape.as_ptr(),
-                dataType: data_type as u32,
-                name: &*name_ns
-            ];
-
-            if tensor_ptr.is_null() {
-                panic!("Failed to create placeholder tensor with name: {}", name);
             } else {
                 Retained::from_raw(tensor_ptr).unwrap()
             }
@@ -130,25 +113,17 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let result_ptr: *mut Tensor = match name {
-                Some(name_str) => {
-                    let name_ns = NSString::from_str(name_str);
-                    msg_send![
-                        self,
-                        matrixMultiplicationWithPrimaryTensor: lhs,
-                        secondaryTensor: rhs,
-                        name: &*name_ns
-                    ]
-                }
-                None => {
-                    msg_send![
-                        self,
-                        matrixMultiplicationWithPrimaryTensor: lhs,
-                        secondaryTensor: rhs,
-                        name: std::ptr::null::<NSString>()
-                    ]
-                }
-            };
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_ptr: *mut Tensor = msg_send![
+                self,
+                matrixMultiplicationWithPrimaryTensor: lhs,
+                secondaryTensor: rhs,
+                name: name_ptr
+            ];
 
             if result_ptr.is_null() {
                 panic!("Failed to create matrix multiplication tensor");
