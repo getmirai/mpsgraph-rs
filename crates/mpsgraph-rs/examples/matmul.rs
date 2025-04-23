@@ -1,9 +1,7 @@
 use metal::{Buffer, Device, MTLResourceOptions};
-use mpsgraph::{
-    DataType, ExecutionDescriptor, Graph, Shape, TensorData,
-};
-use std::collections::HashMap;
+use mpsgraph::{DataType, ExecutionDescriptor, Graph, Shape, TensorData};
 use objc2::rc::Retained;
+use std::collections::HashMap;
 
 // A struct that pairs an MTLBuffer with its TensorData
 #[derive(Clone)]
@@ -81,7 +79,7 @@ fn main() {
     let graph = Graph::new();
 
     // Create input placeholders
-    let a_shape = [m, k];  // usize array for TensorBuffer
+    let a_shape = [m, k]; // usize array for TensorBuffer
     let b_shape = [k, n];
     let result_shape = [m, n];
 
@@ -89,8 +87,8 @@ fn main() {
     let a_tensor_shape = Shape::matrix(m as i64, k as i64);
     let b_tensor_shape = Shape::matrix(k as i64, n as i64);
 
-    let a = graph.placeholder(DataType::Float32, &a_tensor_shape);
-    let b = graph.placeholder(DataType::Float32, &b_tensor_shape);
+    let a = graph.placeholder(DataType::Float32, &a_tensor_shape, None);
+    let b = graph.placeholder(DataType::Float32, &b_tensor_shape, None);
 
     // Perform matrix multiplication: A * B
     // The matmul method takes transpose flags for both inputs
@@ -102,7 +100,8 @@ fn main() {
 
     // Create TensorBuffer for output
     let result_size = m * n;
-    let result_tensor = TensorBuffer::new_empty(&device, result_size, &result_shape, DataType::Float32);
+    let result_tensor =
+        TensorBuffer::new_empty(&device, result_size, &result_shape, DataType::Float32);
 
     // Create command queue
     let command_queue = device.new_command_queue();
@@ -168,18 +167,20 @@ fn main() {
     println!("\nVerifying result:");
     let expected_result = vec![
         // First row: 1*1 + 2*3 + 3*5, 1*2 + 2*4 + 3*6
-        1.0 * 1.0 + 2.0 * 3.0 + 3.0 * 5.0, 1.0 * 2.0 + 2.0 * 4.0 + 3.0 * 6.0,
+        1.0 * 1.0 + 2.0 * 3.0 + 3.0 * 5.0,
+        1.0 * 2.0 + 2.0 * 4.0 + 3.0 * 6.0,
         // Second row: 4*1 + 5*3 + 6*5, 4*2 + 5*4 + 6*6
-        4.0 * 1.0 + 5.0 * 3.0 + 6.0 * 5.0, 4.0 * 2.0 + 5.0 * 4.0 + 6.0 * 6.0,
+        4.0 * 1.0 + 5.0 * 3.0 + 6.0 * 5.0,
+        4.0 * 2.0 + 5.0 * 4.0 + 6.0 * 6.0,
     ];
     println!("Expected: {:?}", expected_result);
-    
+
     // Check if results match
     let result_correct = result_floats
         .iter()
         .zip(expected_result.iter())
         .all(|(a, b)| (a - b).abs() < 0.00001);
-    
+
     if result_correct {
         println!("✅ Result is correct!");
     } else {

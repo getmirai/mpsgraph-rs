@@ -1,7 +1,5 @@
 use metal::{Device, MTLResourceOptions};
-use mpsgraph::{
-    CommandBufferStatus, DataType, ExecutionDescriptor, Graph, Shape, TensorData,
-};
+use mpsgraph::{CommandBufferStatus, DataType, ExecutionDescriptor, Graph, Shape, TensorData};
 use std::collections::HashMap;
 
 /// A simple example demonstrating how to use MPSGraph with CommandBuffer (modern API version)
@@ -34,8 +32,8 @@ fn main() {
     // 1. Define input tensors
     let shape_dimensions = [2, 2];
     let shape = Shape::matrix(2, 2);
-    let a = graph.placeholder(DataType::Float32, &shape);
-    let b = graph.placeholder(DataType::Float32, &shape);
+    let a = graph.placeholder(DataType::Float32, &shape, None);
+    let b = graph.placeholder(DataType::Float32, &shape, None);
 
     // 2. Define computation operations
     // Operation 1: C = A + B

@@ -11,11 +11,8 @@
 //! - **Utility Methods**: Convenience functions for common operations
 //! - **Tensor Creation**: Helper methods for creating tensors filled with zeros, ones, etc.
 
-use mpsgraph::{
-    DataType, Graph, Shape, Operation,
-    GraphActivationOps, GraphArithmeticOps
-};
 use mpsgraph::tensor::Tensor as MPSTensor;
+use mpsgraph::{DataType, Graph, GraphActivationOps, GraphArithmeticOps, Operation, Shape};
 
 /// Helper function to extract the graph from a tensor
 fn get_graph_from_tensor(tensor: &Retained<MPSTensor>) -> Retained<Graph> {
@@ -24,7 +21,7 @@ fn get_graph_from_tensor(tensor: &Retained<MPSTensor>) -> Retained<Graph> {
         let tensor_ptr = &**tensor;
         let operation_ptr: *mut Operation = msg_send![tensor_ptr, operation];
         let operation = Retained::from_raw(operation_ptr).unwrap();
-        
+
         // Get the graph from the operation
         let graph_ptr: *mut Graph = msg_send![&*operation, graph];
         Retained::from_raw(graph_ptr).unwrap()
@@ -39,49 +36,49 @@ fn get_data_type_from_tensor(tensor: &Retained<MPSTensor>) -> DataType {
         std::mem::transmute(data_type)
     }
 }
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 
 /// Extension trait for tensor arithmetic operations
-/// 
+///
 /// This trait adds arithmetic operations to the Tensor type.
 pub trait TensorOps {
     /// Add this tensor to another tensor
     fn add(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Subtract another tensor from this tensor
     fn sub(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Multiply this tensor by another tensor
     fn mul(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Divide this tensor by another tensor
     fn div(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Negate this tensor
     fn neg(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Square each element of this tensor
     fn square(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Take the square root of each element of this tensor
     fn sqrt(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Take the absolute value of each element of this tensor
     fn abs(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Take the exponential of each element of this tensor
     fn exp(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Take the natural logarithm of each element of this tensor
     fn log(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Apply the sigmoid function to each element of this tensor
     fn sigmoid(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Apply the tanh function to each element of this tensor
     fn tanh(&self, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Apply the ReLU function to each element of this tensor
     fn relu(&self, name: Option<&str>) -> Retained<MPSTensor>;
 }
@@ -92,62 +89,62 @@ impl TensorOps for Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.add(self, rhs, name)
     }
-    
+
     fn sub(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.subtract(self, rhs, name)
     }
-    
+
     fn mul(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.multiply(self, rhs, name)
     }
-    
+
     fn div(&self, rhs: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.divide(self, rhs, name)
     }
-    
+
     fn neg(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.negative(self, name)
     }
-    
+
     fn square(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.square(self, name)
     }
-    
+
     fn sqrt(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.sqrt(self, name)
     }
-    
+
     fn abs(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.abs(self, name)
     }
-    
+
     fn exp(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.exp(self, name)
     }
-    
+
     fn log(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.log(self, name)
     }
-    
+
     fn sigmoid(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.sigmoid(self, name)
     }
-    
+
     fn tanh(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         GraphActivationOps::tanh(&*graph, self, name)
     }
-    
+
     fn relu(&self, name: Option<&str>) -> Retained<MPSTensor> {
         let graph = get_graph_from_tensor(self);
         graph.relu(self, name)
@@ -166,10 +163,10 @@ pub trait GraphExtensions {
 
     /// Create a constant scalar tensor (without shape)
     fn constant_scalar_tensor<T: Into<f64> + Copy>(
-        &self, 
+        &self,
         value: T,
         data_type: DataType,
-        name: Option<&str>
+        name: Option<&str>,
     ) -> Retained<MPSTensor>;
 
     /// Create a constant scalar tensor with a specific shape
@@ -178,24 +175,14 @@ pub trait GraphExtensions {
         value: T,
         shape: &Shape,
         data_type: DataType,
-        name: Option<&str>
+        name: Option<&str>,
     ) -> Retained<MPSTensor>;
 
     /// Create a tensor filled with zeros
-    fn zeros(
-        &self,
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>
-    ) -> Retained<MPSTensor>;
+    fn zeros(&self, shape: &Shape, data_type: DataType, name: Option<&str>) -> Retained<MPSTensor>;
 
     /// Create a tensor filled with ones
-    fn ones(
-        &self,
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>
-    ) -> Retained<MPSTensor>;
+    fn ones(&self, shape: &Shape, data_type: DataType, name: Option<&str>) -> Retained<MPSTensor>;
 
     /// Create a tensor filled with a specific value
     fn fill<T: Into<f64> + Copy>(
@@ -203,7 +190,7 @@ pub trait GraphExtensions {
         value: T,
         shape: &Shape,
         data_type: DataType,
-        name: Option<&str>
+        name: Option<&str>,
     ) -> Retained<MPSTensor>;
 }
 
@@ -214,24 +201,20 @@ impl GraphExtensions for Graph {
         data_type: DataType,
         name: Option<&str>,
     ) -> Retained<MPSTensor> {
-        if let Some(name_str) = name {
-            self.placeholder_with_name(data_type, shape, name_str)
-        } else {
-            self.placeholder(data_type, shape)
-        }
+        self.placeholder(data_type, shape, name)
     }
-    
+
     /// Create a constant scalar tensor (without shape)
     fn constant_scalar_tensor<T: Into<f64> + Copy>(
-        &self, 
+        &self,
         value: T,
         data_type: DataType,
-        _name: Option<&str>
+        _name: Option<&str>,
     ) -> Retained<MPSTensor> {
         // Use unsafe direct message sending to create the scalar constant
         unsafe {
             let value_f64 = value.into();
-            
+
             // Use the correct method without the name parameter
             // The constantWithScalar:dataType: method expects a 32-bit value for the data type
             let tensor_ptr: *mut MPSTensor = msg_send![
@@ -239,23 +222,23 @@ impl GraphExtensions for Graph {
                 constantWithScalar: value_f64,
                 dataType: data_type as u32
             ];
-            
+
             Retained::from_raw(tensor_ptr).expect("Failed to create constant scalar tensor")
         }
     }
-    
+
     /// Create a constant scalar tensor with a specific shape
     fn constant_scalar_shaped_tensor<T: Into<f64> + Copy>(
         &self,
         value: T,
         shape: &Shape,
         data_type: DataType,
-        _name: Option<&str>
+        _name: Option<&str>,
     ) -> Retained<MPSTensor> {
         // Use unsafe direct message sending to create the scalar constant with shape
         unsafe {
             let value_f64 = value.into();
-            
+
             // Use the constantWithScalar:shape:dataType: method
             let tensor_ptr: *mut MPSTensor = msg_send![
                 self,
@@ -263,28 +246,19 @@ impl GraphExtensions for Graph {
                 shape: shape,
                 dataType: data_type as u32
             ];
-            
-            Retained::from_raw(tensor_ptr).expect("Failed to create constant scalar tensor with shape")
+
+            Retained::from_raw(tensor_ptr)
+                .expect("Failed to create constant scalar tensor with shape")
         }
     }
-    
+
     /// Create a tensor filled with zeros
-    fn zeros(
-        &self,
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>
-    ) -> Retained<MPSTensor> {
+    fn zeros(&self, shape: &Shape, data_type: DataType, name: Option<&str>) -> Retained<MPSTensor> {
         self.constant_scalar_shaped_tensor(0.0, shape, data_type, name)
     }
 
     /// Create a tensor filled with ones
-    fn ones(
-        &self,
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>
-    ) -> Retained<MPSTensor> {
+    fn ones(&self, shape: &Shape, data_type: DataType, name: Option<&str>) -> Retained<MPSTensor> {
         self.constant_scalar_shaped_tensor(1.0, shape, data_type, name)
     }
 
@@ -294,7 +268,7 @@ impl GraphExtensions for Graph {
         value: T,
         shape: &Shape,
         data_type: DataType,
-        name: Option<&str>
+        name: Option<&str>,
     ) -> Retained<MPSTensor> {
         self.constant_scalar_shaped_tensor(value, shape, data_type, name)
     }
@@ -313,7 +287,7 @@ impl GraphExtensions for Graph {
 ///
 /// // Create a graph and a tensor
 /// let graph = Graph::new();
-/// 
+///
 /// // Create a shape using NSNumber
 /// let numbers = [
 ///     NSNumber::new_usize(2),
@@ -321,7 +295,7 @@ impl GraphExtensions for Graph {
 /// ];
 /// let number_refs: Vec<&NSNumber> = numbers.iter().map(|n| n.as_ref()).collect();
 /// let shape = Shape::from_slice(&number_refs);
-/// 
+///
 /// let tensor = graph.placeholder_tensor(&shape, DataType::Float32, None);
 ///
 /// // Method-based API (object-oriented style)
@@ -476,7 +450,7 @@ pub fn silu(tensor: &Retained<MPSTensor>, name_prefix: Option<&str>) -> Retained
     // Implementation using the TensorOps trait methods
     let sigmoid_name = name_prefix.map(|p| format!("{}_sigmoid", p));
     let sigmoid_tensor = tensor.sigmoid(sigmoid_name.as_deref());
-    
+
     tensor.mul(&sigmoid_tensor, name_prefix)
 }
 
@@ -510,7 +484,7 @@ pub fn gelu(tensor: &Retained<MPSTensor>, name_prefix: Option<&str>) -> Retained
     // Compute x^3
     let square_name = name_prefix.map(|p| format!("{}_square", p));
     let x_squared = tensor.square(square_name.as_deref());
-    
+
     let cube_name = name_prefix.map(|p| format!("{}_cube", p));
     let x_cubed = tensor.mul(&x_squared, cube_name.as_deref());
 
@@ -555,7 +529,11 @@ pub fn gelu(tensor: &Retained<MPSTensor>, name_prefix: Option<&str>) -> Retained
 /// # Returns
 ///
 /// A new tensor with each element raised to the specified power
-pub fn pow(tensor: &Retained<MPSTensor>, exponent: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor> {
+pub fn pow(
+    tensor: &Retained<MPSTensor>,
+    exponent: &Retained<MPSTensor>,
+    name: Option<&str>,
+) -> Retained<MPSTensor> {
     let graph = get_graph_from_tensor(tensor);
     graph.power(tensor, exponent, name)
 }
@@ -572,7 +550,12 @@ pub fn pow(tensor: &Retained<MPSTensor>, exponent: &Retained<MPSTensor>, name: O
 /// # Returns
 ///
 /// A new tensor with values clipped to the specified range
-pub fn clip(tensor: &Retained<MPSTensor>, min_val: &Retained<MPSTensor>, max_val: &Retained<MPSTensor>, name: Option<&str>) -> Retained<MPSTensor> {
+pub fn clip(
+    tensor: &Retained<MPSTensor>,
+    min_val: &Retained<MPSTensor>,
+    max_val: &Retained<MPSTensor>,
+    name: Option<&str>,
+) -> Retained<MPSTensor> {
     // First clip to minimum (max of tensor and min_val)
     let graph = get_graph_from_tensor(tensor);
     let name_min = name.map(|n| format!("{}_min", n));
@@ -587,30 +570,43 @@ pub fn clip(tensor: &Retained<MPSTensor>, min_val: &Retained<MPSTensor>, max_val
 pub trait TensorScalarOps {
     /// Add a scalar value to this tensor
     fn add_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Subtract a scalar value from this tensor
     fn sub_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Multiply this tensor by a scalar value
     fn mul_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Divide this tensor by a scalar value
     fn div_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+
     /// Create a constant tensor with the same data type as this tensor
     fn constant<T: Into<f64> + Copy>(&self, value: T) -> Retained<MPSTensor>;
-    
+
     /// Raise each element of the tensor to a power
-    fn power_scalar<T: Into<f64> + Copy>(&self, exponent: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+    fn power_scalar<T: Into<f64> + Copy>(
+        &self,
+        exponent: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor>;
+
     /// Clip tensor values to a specified range
-    fn clamp<T: Into<f64> + Copy>(&self, min: T, max: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+    fn clamp<T: Into<f64> + Copy>(&self, min: T, max: T, name: Option<&str>)
+        -> Retained<MPSTensor>;
+
     /// Get the minimum of this tensor and a scalar value
-    fn minimum_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor>;
-    
+    fn minimum_scalar<T: Into<f64> + Copy>(
+        &self,
+        value: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor>;
+
     /// Get the maximum of this tensor and a scalar value
-    fn maximum_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor>;
+    fn maximum_scalar<T: Into<f64> + Copy>(
+        &self,
+        value: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor>;
 }
 
 impl TensorScalarOps for Retained<MPSTensor> {
@@ -619,7 +615,7 @@ impl TensorScalarOps for Retained<MPSTensor> {
         let data_type = get_data_type_from_tensor(self);
         graph.constant_scalar_tensor(value, data_type, None)
     }
-    
+
     fn add_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor> {
         // Skip the operation if value is 0
         if value.into() == 0.0 {
@@ -628,7 +624,7 @@ impl TensorScalarOps for Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         self.add(&const_tensor, name)
     }
-    
+
     fn sub_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor> {
         // Skip the operation if value is 0
         if value.into() == 0.0 {
@@ -637,7 +633,7 @@ impl TensorScalarOps for Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         self.sub(&const_tensor, name)
     }
-    
+
     fn mul_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor> {
         // Skip the operation if value is 1
         if value.into() == 1.0 {
@@ -646,7 +642,7 @@ impl TensorScalarOps for Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         self.mul(&const_tensor, name)
     }
-    
+
     fn div_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor> {
         // Skip the operation if value is 1
         if value.into() == 1.0 {
@@ -655,26 +651,43 @@ impl TensorScalarOps for Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         self.div(&const_tensor, name)
     }
-    
-    fn power_scalar<T: Into<f64> + Copy>(&self, exponent: T, name: Option<&str>) -> Retained<MPSTensor> {
+
+    fn power_scalar<T: Into<f64> + Copy>(
+        &self,
+        exponent: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor> {
         let const_tensor = self.constant(exponent);
         let graph = get_graph_from_tensor(self);
         graph.power(self, &const_tensor, name)
     }
-    
-    fn clamp<T: Into<f64> + Copy>(&self, min: T, max: T, name: Option<&str>) -> Retained<MPSTensor> {
+
+    fn clamp<T: Into<f64> + Copy>(
+        &self,
+        min: T,
+        max: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor> {
         let min_tensor = self.constant(min);
         let max_tensor = self.constant(max);
         clip(self, &min_tensor, &max_tensor, name)
     }
-    
-    fn minimum_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor> {
+
+    fn minimum_scalar<T: Into<f64> + Copy>(
+        &self,
+        value: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         let graph = get_graph_from_tensor(self);
         graph.minimum(self, &const_tensor, name)
     }
-    
-    fn maximum_scalar<T: Into<f64> + Copy>(&self, value: T, name: Option<&str>) -> Retained<MPSTensor> {
+
+    fn maximum_scalar<T: Into<f64> + Copy>(
+        &self,
+        value: T,
+        name: Option<&str>,
+    ) -> Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         let graph = get_graph_from_tensor(self);
         graph.maximum(self, &const_tensor, name)
@@ -684,7 +697,7 @@ impl TensorScalarOps for Retained<MPSTensor> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     // This is still a test that requires a Metal device, so keep it marked
     // as ignored for CI environments. You can run it locally with:
     // cargo test -- --ignored
@@ -693,44 +706,44 @@ mod tests {
     fn test_tensor_operations() {
         // This is a compile-time check of the API, not a runtime test
         // The actual execution would require a valid Metal device
-        
+
         // Check that the API exists by referring to the traits and functions
         let _ = <Graph as GraphExtensions>::zeros;
         let _ = <Graph as GraphExtensions>::ones;
         let _ = <Graph as GraphExtensions>::fill::<f32>;
-        
+
         let _ = <Retained<MPSTensor> as TensorOps>::add;
         let _ = <Retained<MPSTensor> as TensorOps>::sqrt;
         let _ = <Retained<MPSTensor> as TensorOps>::abs;
-        
+
         // Functional API operations
         let _ = square;
-        let _ = sqrt; 
+        let _ = sqrt;
         let _ = relu;
-        
+
         // This is a compile-time check of the API, not a runtime test
         // The actual execution would require a valid Metal device
         println!("API trait implementation verified");
     }
-    
+
     // Add a basic unit test that doesn't require a Metal device
     #[test]
     fn test_api_structure() {
         // This test just verifies that the API structure is correct
         // and doesn't require an actual Metal device
-        
+
         // Verify that the API structure is correct by checking the presence
         // of the expected trait methods and functions
-        
+
         // Check that the core tensor creation utilities exist
         let _ = <Graph as GraphExtensions>::zeros;
         let _ = <Graph as GraphExtensions>::ones;
         let _ = <Graph as GraphExtensions>::fill::<f32>;
-        
+
         // Verify trait implementations are available
         let _ = <Retained<MPSTensor> as TensorOps>::add;
         let _ = <Retained<MPSTensor> as TensorOps>::square;
-        
+
         // Test successful if we get here
         println!("API structure verified");
     }
