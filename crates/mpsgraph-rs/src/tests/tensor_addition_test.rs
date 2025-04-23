@@ -1,5 +1,4 @@
 use crate::{DataType, Graph, Shape, TensorData};
-use metal::Device as MetalDevice;
 use objc2_foundation::NSNumber;
 use std::collections::HashMap;
 
