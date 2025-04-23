@@ -51,7 +51,7 @@ impl From<Retained<MPSTensor>> for Tensor {
 impl Tensor {
     /// Create a new placeholder tensor on the given graph
     pub fn placeholder(graph: &Graph, data_type: DataType, shape: &Shape) -> Self {
-        Tensor(graph.placeholder(data_type, shape))
+        Tensor(graph.placeholder(data_type, shape, None))
     }
 
     /// Create a new scalar constant tensor on the given graph

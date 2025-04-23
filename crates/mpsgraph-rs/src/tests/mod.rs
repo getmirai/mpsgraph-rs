@@ -1,7 +1,8 @@
 //! Test module for mpsgraph
 
-// Only data_types_tests enabled for now
+// Enabled tests
 mod data_types_tests;
+mod tensor_addition_test;
 
 // Temporarily disabled while the API migration is in progress
 // mod device_tests;

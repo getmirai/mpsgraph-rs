@@ -320,7 +320,6 @@ name = "mpsgraph"
 version = "0.1.0"
 dependencies = [
  "bindgen",
- "block",
  "block2",
  "metal",
  "objc2",
@@ -332,6 +331,7 @@ dependencies = [
 name = "mpsgraph-tools"
 version = "0.1.0"
 dependencies = [
+ "metal",
  "mpsgraph",
  "objc2",
  "objc2-foundation",

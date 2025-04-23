@@ -45,8 +45,8 @@ crate-type = ["rlib", "staticlib"]
 [dependencies]
 # Use the modern version of mpsgraph with NSObject-based types
 mpsgraph = { path = "../mpsgraph-rs", version = "0.1.0" }
-objc2 = "0.6.0"
-objc2-foundation = "0.3.0"
+objc2 = { workspace = true }
+objc2-foundation = { workspace = true }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios", target_os = "tvos", target_os = "watchos", target_os = "visionos"))'.dependencies]
 # MacOS/iOS specific dependencies would go here if needed
@@ -60,7 +60,9 @@ rustdoc-args = ["--cfg", "docsrs"]
 targets = ["x86_64-apple-darwin", "aarch64-apple-darwin"]
 
 [dev-dependencies]
-rand = "0.8.0"
+rand = { workspace = true }
+# Use same metal version as mpsgraph-rs uses (check its Cargo.toml)
+metal = { workspace = true }
 
 [features]
 default = []

@@ -12,17 +12,16 @@ documentation = "https://docs.rs/mpsgraph"
 readme = "README.md"
 
 [dependencies]
-objc2 = "0.6.0"
-objc2-foundation = "0.3.0"
-metal = "0.32.0"
-block = "0.1.6"
-block2 = "0.6.0"
+objc2 = { workspace = true }
+objc2-foundation = { workspace = true }
+metal = { workspace = true }
+block2 = { workspace = true }
 
 [dev-dependencies]
-prettydiff = "0.8.0"
+prettydiff = { workspace = true }
 
 [build-dependencies]
-bindgen = "0.71.1"
+bindgen = { workspace = true }
 
 [[example]]
 name = "matmul"
