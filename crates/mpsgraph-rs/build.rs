@@ -2,8 +2,8 @@
 // It will generate bindings for Metal Performance Shaders Graph framework
 
 fn main() {
-    // Only run bindgen on macOS
-    #[cfg(target_os = "macos")]
+    // Run on both macOS and iOS
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     {
         println!("cargo:rustc-link-lib=framework=MetalPerformanceShadersGraph");
     }

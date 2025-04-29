@@ -3,8 +3,8 @@
 //! This crate provides Rust bindings for Apple's MPS Graph framework
 //! using modern `extern_class!` macros and automatic memory management.
 
-#[cfg(not(target_os = "macos"))]
-compile_error!("MetalPerformanceShadersGraph is only available on macOS");
+#[cfg(not(any(target_os = "macos", target_os = "ios")))]
+compile_error!("MetalPerformanceShadersGraph is only available on macOS and iOS");
 
 // Re-export objc2 crates for use by end users
 pub use objc2;
