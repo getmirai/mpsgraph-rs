@@ -1,7 +1,6 @@
-use crate::data_types::{DataTypeAttributeValue, ShapedType, Type};
+use crate::data_types::{ShapedType, Type};
 use crate::shape::Shape;
 use crate::tensor::DataType;
-use objc2::rc::Retained;
 
 #[test]
 fn test_type() {

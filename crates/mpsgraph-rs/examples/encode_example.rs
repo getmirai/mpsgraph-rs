@@ -1,7 +1,7 @@
 use metal::{Device as MetalDevice, MTLResourceOptions};
 use mpsgraph::{
-    CommandBuffer, CompilationDescriptor, DataType, Device, ExecutableExecutionDescriptor,
-    ExecutionDescriptor, Graph, GraphActivationOps, Shape, ShapedType, TensorData,
+    CommandBuffer, CompilationDescriptor, DataType, Device, Executable,
+    ExecutableExecutionDescriptor, Graph, GraphActivationOps, Shape, ShapedType, TensorData,
 };
 use objc2_foundation::NSNumber;
 use std::collections::HashMap;
@@ -14,21 +14,17 @@ use std::collections::HashMap;
 /// 3. Demonstrates both direct graph execution (reliable) and executable encoding (experimental)
 /// 4. Verifies the results match expectations
 fn main() {
-    println!("MPSGraph Executable Encode Example");
-    println!("--------------------------------");
+    println!("MPSGraph Encode Example Using Executable");
+    println!("=======================================");
 
-    // Get the default Metal device
     let metal_device = MetalDevice::system_default().expect("No Metal device found");
     println!("Using device: {}", metal_device.name());
 
-    // Create a graph
     let graph = Graph::new();
 
-    // Define shape for tensors (2x3 matrix)
     let shape_dimensions = [2, 3];
     println!("Creating tensors with shape: {:?}", shape_dimensions);
 
-    // Create shape using NSNumber objects (required by the API)
     let numbers = [
         NSNumber::new_usize(shape_dimensions[0]),
         NSNumber::new_usize(shape_dimensions[1]),
@@ -41,126 +37,93 @@ fn main() {
     let b = graph.placeholder(DataType::Float32, &shape, Some("b"));
 
     println!("Defining operations...");
-    // Add tensors A and B
     let c = graph.add(&a, &b, Some("c"));
-    // Apply ReLU operation to the result
-    let d = graph.relu(&c, Some("d"));
+    let d = graph.relu(&c, Some("d")); // Result Tensor
 
-    // Compile the graph into an executable
-    println!("\nPART 1: COMPILING GRAPH TO EXECUTABLE");
-    println!("-----------------------------------");
-    // Create a compilation descriptor
-    println!("Creating compilation descriptor...");
+    println!("\nCompiling graph to executable...");
     let comp_desc = CompilationDescriptor::new();
     let mps_device = Device::new();
-
-    // Create shaped types for compilation
-    println!("Creating shaped types for compilation...");
     let shaped_type = ShapedType::new(&shape, DataType::Float32);
     let mut feed_types = HashMap::new();
     feed_types.insert(&a, &shaped_type);
     feed_types.insert(&b, &shaped_type);
 
-    // Compile the graph into an executable
-    println!("Compiling graph to executable...");
-    let executable = graph.compile(&mps_device, &feed_types, &[&d], Some(&comp_desc));
-    println!("Graph compiled successfully to executable.");
+    let executable: objc2::rc::Retained<Executable> =
+        graph.compile(&mps_device, &feed_types, &[&d], Some(&comp_desc));
+    println!("Graph compiled successfully.");
 
-    println!("\nPART 2: PREPARING INPUT AND OUTPUT DATA");
-    println!("-------------------------------------");
-    println!("Creating Metal buffers with input data...");
-    // Define input data
+    println!("\nPreparing data for execution...");
     let a_data = [1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0];
-    let b_data = [0.5f32, 0.5, 0.5, 0.5, 0.5, 0.5];
+    let b_data = [-0.5f32, -2.5, 0.5, -4.5, 2.0, -1.0]; // Include negatives for ReLU test
 
     println!("\nMatrix A:");
     print_matrix(&a_data, shape_dimensions[0], shape_dimensions[1]);
-
     println!("\nMatrix B:");
     print_matrix(&b_data, shape_dimensions[0], shape_dimensions[1]);
 
-    // Calculate buffer size
     let buffer_size =
         (shape_dimensions[0] * shape_dimensions[1] * std::mem::size_of::<f32>()) as u64;
 
-    // Create Metal buffers
     let a_buffer = metal_device.new_buffer_with_data(
         a_data.as_ptr() as *const std::ffi::c_void,
         buffer_size,
         MTLResourceOptions::StorageModeShared,
     );
-
     let b_buffer = metal_device.new_buffer_with_data(
         b_data.as_ptr() as *const std::ffi::c_void,
         buffer_size,
         MTLResourceOptions::StorageModeShared,
     );
-
     let d_buffer = metal_device.new_buffer(buffer_size, MTLResourceOptions::StorageModeShared);
 
-    println!("Creating MPSGraphTensorData from Metal buffers...");
-    // Convert dimensions to i64 as required by the API
+    println!("Creating TensorData...");
     let shape_i64: Vec<i64> = shape_dimensions.iter().map(|&dim| dim as i64).collect();
-
     let a_tensor_data = TensorData::from_buffer(&a_buffer, &shape_i64, DataType::Float32);
     let b_tensor_data = TensorData::from_buffer(&b_buffer, &shape_i64, DataType::Float32);
     let d_tensor_data = TensorData::from_buffer(&d_buffer, &shape_i64, DataType::Float32);
 
-    println!("\nPART 3: DIRECT GRAPH EXECUTION (RELIABLE METHOD)");
-    println!("-------------------------------------------------");
-    // Create a Metal command queue for the first approach
-    println!("Creating Metal command queue...");
+    println!("\nExecuting using compiled Executable...");
     let command_queue = metal_device.new_command_queue();
-
-    println!("Creating execution descriptor...");
-    let execution_descriptor = ExecutionDescriptor::new();
-    execution_descriptor.set_wait_until_completed(true);
-
-    // Create a command buffer
-    println!("Creating command buffer from command queue...");
     let command_buffer = CommandBuffer::from_command_queue(&command_queue);
 
-    // Set up dictionaries for the direct approach
-    println!("Setting up input and output mappings...");
-    let mut feeds = HashMap::new();
-    feeds.insert(&a, &a_tensor_data);
-    feeds.insert(&b, &b_tensor_data);
+    // Prepare inputs and outputs for the executable encode call
+    let inputs_for_exec = [&a_tensor_data, &b_tensor_data];
+    let outputs_for_exec = [&d_tensor_data];
 
-    let mut results = HashMap::new();
-    results.insert(&d, &d_tensor_data);
+    // Create descriptor for executable execution
+    let exec_desc = ExecutableExecutionDescriptor::new();
+    exec_desc.set_wait_until_completed(true);
 
-    println!("Encoding graph directly to command buffer (reliable method)...");
-    // Encode the graph to the command buffer - the tried and tested approach
-    graph.encode_to_command_buffer_with_results(
+    println!("Encoding using executable.encode_to_command_buffer...");
+    let _result = executable.encode_to_command_buffer(
         &command_buffer,
-        &feeds,
-        None,
-        &results,
-        Some(&execution_descriptor),
+        &inputs_for_exec,
+        Some(&outputs_for_exec),
+        Some(&exec_desc),
     );
+    println!("Encode call completed.");
 
-    println!("Committing command buffer and waiting for completion...");
-    // Commit the command buffer
+    println!("Committing and waiting...");
     command_buffer.commit();
     command_buffer.wait_until_completed();
 
-    println!("Reading results from output buffer...");
-    // Read results from the buffer
+    if command_buffer.status() == mpsgraph::CommandBufferStatus::Error {
+        panic!("*** Error during command buffer execution! ***");
+    }
+    println!("Execution successful!");
+
+    println!("\n--- Verifying Results ---");
     let result_ptr = d_buffer.contents() as *const f32;
     let result_slice = unsafe {
         std::slice::from_raw_parts(result_ptr, shape_dimensions[0] * shape_dimensions[1])
     };
-
-    println!("\nResult Matrix (ReLU(A + B)):");
+    println!("Result Matrix (ReLU(A + B)):");
     print_matrix(result_slice, shape_dimensions[0], shape_dimensions[1]);
 
-    println!("\nVerifying results:");
     let mut all_correct = true;
-
     for i in 0..shape_dimensions[0] * shape_dimensions[1] {
-        let expected = (a_data[i] + b_data[i]).max(0.0); // Add then ReLU
+        let expected = (a_data[i] + b_data[i]).max(0.0); // ReLU
         let actual = result_slice[i];
-
         if (expected - actual).abs() > 0.0001 {
             println!(
                 "Error at position {}: Expected {}, got {}",
@@ -171,31 +134,10 @@ fn main() {
     }
 
     if all_correct {
-        println!("✅ Direct graph execution produced correct results!");
+        println!("✅ All results match expected values!");
     } else {
-        println!("❌ Direct graph execution produced incorrect results!");
+        println!("❌ Results don't match expected values.");
     }
-
-    // Optional: Mention executable encoding possibility
-    println!("\nPART 4: ABOUT EXECUTABLE ENCODING");
-    println!("--------------------------------");
-    println!("The executable has been created successfully by compiling the graph.");
-    println!("The executable.encode_to_command_buffer() method exists in the API");
-    println!("and matches the MetalPerformanceShadersGraph.framework headers.");
-    println!();
-    println!("However, in the current binding implementation, using this method");
-    println!("may cause memory management issues resulting in program crashes.");
-    println!("This is why we used the direct graph encoding approach above instead.");
-    println!();
-    println!("The API signature for executable encoding is:");
-    println!("  executable.encode_to_command_buffer(");
-    println!("      &command_buffer,        // CommandBuffer");
-    println!("      &[&tensor_data, ...],   // Array of input TensorData");
-    println!("      Some(&[&result_data]),  // Optional array of output TensorData");
-    println!("      Some(&execution_desc),  // Optional ExecutableExecutionDescriptor");
-    println!("  );");
-
-    println!("\nExample complete!");
 }
 
 fn print_matrix(data: &[f32], rows: usize, cols: usize) {
