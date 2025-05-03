@@ -33,14 +33,6 @@ impl VariableOp {
     }
 }
 
-impl crate::device::CustomDefault for VariableOp {
-    fn custom_default() -> Retained<Self> {
-        // This is a placeholder. In practice, variables should be
-        // created with Graph::variable_op_for_tensor
-        panic!("VariableOp cannot be created with custom_default. Use Graph::variable_op_for_tensor instead");
-    }
-}
-
 /// Optimizer operations for Graph
 pub trait GraphOptimizerOps {
     /// Creates a stochastic gradient descent update operation.

@@ -130,13 +130,6 @@ impl SingleGateRNNDescriptor {
     }
 }
 
-// Instead of implementing Default directly, we can use a CustomDefault trait
-impl crate::device::CustomDefault for SingleGateRNNDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 impl LSTMDescriptor {
     /// Creates a new LSTM descriptor with default settings
     pub fn new() -> Retained<Self> {
@@ -321,12 +314,6 @@ impl LSTMDescriptor {
     }
 }
 
-impl crate::device::CustomDefault for LSTMDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 impl GRUDescriptor {
     /// Creates a new GRU descriptor with default settings
     pub fn new() -> Retained<Self> {
@@ -490,12 +477,6 @@ impl GRUDescriptor {
             let activation_val: u64 = msg_send![self, outputGateActivation];
             std::mem::transmute(activation_val)
         }
-    }
-}
-
-impl crate::device::CustomDefault for GRUDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }
 

@@ -1,10 +1,10 @@
 use crate::convolution_ops::PaddingMode;
 use crate::pooling_ops::TensorNamedDataLayout;
-use crate::CustomDefault;
+use crate::{Graph, Tensor};
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::extern_class;
 use objc2_foundation::{NSArray, NSNumber, NSObject, NSObjectProtocol, NSString};
 
 extern_class!(
@@ -140,12 +140,6 @@ impl DepthwiseConvolution2DOpDescriptor {
     }
 }
 
-impl CustomDefault for DepthwiseConvolution2DOpDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 impl DepthwiseConvolution3DOpDescriptor {
     /// Creates a new depthwise convolution 3D operation descriptor with default values
     pub fn new(padding_style: PaddingMode) -> Retained<Self> {
@@ -226,16 +220,16 @@ fn create_number_array(values: &[usize]) -> Retained<NSArray<NSNumber>> {
         .iter()
         .map(|&val| NSNumber::new_u64(val as u64))
         .collect();
-    
+
     // Get references to NSNumber objects
     let number_refs: Vec<&NSNumber> = numbers.iter().map(|n| n.as_ref()).collect();
-    
+
     // Create NSArray from the NSNumber objects
     NSArray::from_slice(&number_refs)
 }
 
 /// Depthwise convolution operations for Graph
-impl crate::Graph {
+impl Graph {
     /// Creates a 2D depthwise convolution operation and returns the result tensor.
     ///
     /// # Arguments
@@ -250,17 +244,17 @@ impl crate::Graph {
     /// A new Tensor containing the result
     pub fn depthwise_convolution_2d(
         &self,
-        source: &crate::Tensor,
-        weights: &crate::Tensor,
+        source: &Tensor,
+        weights: &Tensor,
         descriptor: &DepthwiseConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> Retained<crate::Tensor> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 depthwiseConvolution2DWithSourceTensor: source,
@@ -286,18 +280,18 @@ impl crate::Graph {
     /// A new Tensor containing the gradient with respect to data
     pub fn depthwise_convolution_2d_data_gradient(
         &self,
-        incoming_gradient: &crate::Tensor,
-        weights: &crate::Tensor,
+        incoming_gradient: &Tensor,
+        weights: &Tensor,
         output_shape: &crate::Shape,
         descriptor: &DepthwiseConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> Retained<crate::Tensor> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 depthwiseConvolution2DDataGradientWithIncomingGradientTensor: incoming_gradient,
@@ -324,18 +318,18 @@ impl crate::Graph {
     /// A new Tensor containing the gradient with respect to weights
     pub fn depthwise_convolution_2d_weights_gradient(
         &self,
-        incoming_gradient: &crate::Tensor,
-        source: &crate::Tensor,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
         output_shape: &crate::Shape,
         descriptor: &DepthwiseConvolution2DOpDescriptor,
         name: Option<&str>,
-    ) -> Retained<crate::Tensor> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 depthwiseConvolution2DWeightsGradientWithIncomingGradientTensor: incoming_gradient,
@@ -361,17 +355,17 @@ impl crate::Graph {
     /// A new Tensor containing the result
     pub fn depthwise_convolution_3d(
         &self,
-        source: &crate::Tensor,
-        weights: &crate::Tensor,
+        source: &Tensor,
+        weights: &Tensor,
         descriptor: &DepthwiseConvolution3DOpDescriptor,
         name: Option<&str>,
-    ) -> Retained<crate::Tensor> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 depthwiseConvolution3DWithSourceTensor: source,
@@ -397,18 +391,18 @@ impl crate::Graph {
     /// A new Tensor containing the gradient with respect to data
     pub fn depthwise_convolution_3d_data_gradient(
         &self,
-        incoming_gradient: &crate::Tensor,
-        weights: &crate::Tensor,
+        incoming_gradient: &Tensor,
+        weights: &Tensor,
         output_shape: &crate::Shape,
         descriptor: &DepthwiseConvolution3DOpDescriptor,
         name: Option<&str>,
-    ) -> Retained<crate::Tensor> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 depthwiseConvolution3DDataGradientWithIncomingGradientTensor: incoming_gradient,
@@ -435,18 +429,18 @@ impl crate::Graph {
     /// A new Tensor containing the gradient with respect to weights
     pub fn depthwise_convolution_3d_weights_gradient(
         &self,
-        incoming_gradient: &crate::Tensor,
-        source: &crate::Tensor,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
         output_shape: &crate::Shape,
         descriptor: &DepthwiseConvolution3DOpDescriptor,
         name: Option<&str>,
-    ) -> Retained<crate::Tensor> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 depthwiseConvolution3DWeightsGradientWithIncomingGradientTensor: incoming_gradient,

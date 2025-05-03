@@ -1,9 +1,9 @@
-use metal::{SharedEvent};
 use metal::foreign_types::ForeignType;
+use metal::SharedEvent;
 use objc2::rc::Retained;
-use objc2::{extern_class, msg_send, ClassType};
 use objc2::runtime::{AnyClass, NSObject};
-use objc2_foundation::{NSObjectProtocol, NSString, NSURL};
+use objc2::{extern_class, msg_send, ClassType};
+use objc2_foundation::{NSArray, NSObjectProtocol, NSString, NSURL};
 use std::collections::HashMap;
 
 use crate::tensor::Tensor;
@@ -81,7 +81,7 @@ impl CompilationDescriptor {
             let _: () = msg_send![self, setOptimizationLevel: level as u32];
         }
     }
-    
+
     /// Set the optimization profile
     pub fn set_optimization_profile(&self, profile: OptimizationProfile) {
         unsafe {
@@ -94,12 +94,6 @@ impl CompilationDescriptor {
         unsafe {
             let _: () = msg_send![self, setDebugCompile: debug_compile];
         }
-    }
-}
-
-impl crate::CustomDefault for CompilationDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }
 
@@ -139,7 +133,7 @@ impl ExecutionDescriptor {
     pub fn prefer_asynchronous_execution(&self) {
         self.set_wait_until_completed(false);
     }
-    
+
     /// Wait for a Metal shared event with a specific value before scheduling execution
     pub fn wait_for_event(&self, event: &SharedEvent, value: u64) {
         unsafe {
@@ -149,22 +143,11 @@ impl ExecutionDescriptor {
     }
 
     /// Signal a Metal shared event with a value at a specific execution stage
-    pub fn signal_event(
-        &self,
-        event: &SharedEvent,
-        execution_stage: ExecutionStage,
-        value: u64,
-    ) {
+    pub fn signal_event(&self, event: &SharedEvent, execution_stage: ExecutionStage, value: u64) {
         unsafe {
             let event_ptr = event.as_ptr() as *mut std::ffi::c_void;
             let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u32, value: value];
         }
-    }
-}
-
-impl crate::CustomDefault for ExecutionDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }
 
@@ -211,12 +194,6 @@ impl SerializationDescriptor {
     }
 }
 
-impl crate::CustomDefault for SerializationDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 extern_class!(
     #[derive(Debug, PartialEq, Eq)]
     #[unsafe(super = NSObject)]
@@ -253,7 +230,7 @@ impl ExecutableExecutionDescriptor {
     pub fn prefer_asynchronous_execution(&self) {
         self.set_wait_until_completed(false);
     }
-    
+
     /// Wait for a Metal shared event with a specific value before scheduling execution
     pub fn wait_for_event(&self, event: &SharedEvent, value: u64) {
         unsafe {
@@ -263,22 +240,11 @@ impl ExecutableExecutionDescriptor {
     }
 
     /// Signal a Metal shared event with a value at a specific execution stage
-    pub fn signal_event(
-        &self,
-        event: &SharedEvent,
-        execution_stage: ExecutionStage,
-        value: u64,
-    ) {
+    pub fn signal_event(&self, event: &SharedEvent, execution_stage: ExecutionStage, value: u64) {
         unsafe {
             let event_ptr = event.as_ptr() as *mut std::ffi::c_void;
             let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u32, value: value];
         }
-    }
-}
-
-impl crate::CustomDefault for ExecutableExecutionDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }
 
@@ -298,33 +264,33 @@ impl Executable {
     /// Create a new executable from a serialized package at the specified URL
     pub fn from_serialized_package(
         url_string: &str,
-        compilation_descriptor: Option<&CompilationDescriptor>,
+        compilation_descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Option<Retained<Self>> {
         unsafe {
             // Convert URL to NSURL
             let url_str = NSString::from_str(url_string);
             let nsurl_class = AnyClass::get(c"NSURL").unwrap();
             let nsurl_ptr: *mut NSURL = msg_send![nsurl_class, URLWithString: &*url_str];
-            
+
             if nsurl_ptr.is_null() {
                 return None;
             }
-            
+
             let nsurl = Retained::from_raw(nsurl_ptr).unwrap();
-            
+
             // Initialize from URL
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
-            
+
             // Get compilation descriptor or pass nil
             match compilation_descriptor {
                 Some(desc) => {
                     let executable: *mut Self = msg_send![
                         alloc,
                         initWithMPSGraphPackageAtURL: &*nsurl,
-                        compilationDescriptor: desc
+                        compilationDescriptor: desc.as_ref() as &CompilationDescriptor
                     ];
-                    
+
                     if executable.is_null() {
                         None
                     } else {
@@ -337,7 +303,7 @@ impl Executable {
                         initWithMPSGraphPackageAtURL: &*nsurl,
                         compilationDescriptor: std::ptr::null::<CompilationDescriptor>()
                     ];
-                    
+
                     if executable.is_null() {
                         None
                     } else {
@@ -347,46 +313,134 @@ impl Executable {
             }
         }
     }
-    
+
     /// Serializes the executable to a file URL
     pub fn serialize_to_url(
         &self,
         url_string: &str,
-        descriptor: &SerializationDescriptor,
+        descriptor: &Retained<SerializationDescriptor>,
     ) -> bool {
         unsafe {
             // Convert URL to NSURL
             let url_str = NSString::from_str(url_string);
             let nsurl_class = AnyClass::get(c"NSURL").unwrap();
             let nsurl_ptr: *mut NSURL = msg_send![nsurl_class, URLWithString: &*url_str];
-            
+
             if nsurl_ptr.is_null() {
                 return false;
             }
-            
+
             let nsurl = Retained::from_raw(nsurl_ptr).unwrap();
-            
+
             // Serialize
             let result: bool = msg_send![
                 self,
                 serializeToMPSGraphPackageAtURL: &*nsurl,
-                descriptor: descriptor
+                descriptor: descriptor.as_ref() as &SerializationDescriptor
             ];
-            
+
             result
         }
     }
-}
 
-impl crate::CustomDefault for Executable {
-    fn custom_default() -> Retained<Self> {
-        // Not a typical default case, a dummy implementation is returned
-        // Users should use from_serialized_package or similar methods
+    /// Returns the feed tensors for the executable.
+    pub fn feed_tensors(&self) -> Option<Vec<Retained<Tensor>>> {
         unsafe {
-            let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj_ptr: *mut Self = msg_send![alloc, init];
-            Retained::from_raw(obj_ptr).unwrap()
+            let array_ptr: *mut NSArray<Tensor> = msg_send![self, feedTensors];
+            if array_ptr.is_null() {
+                None
+            } else {
+                // Work directly with the raw pointer
+                let count: usize = msg_send![array_ptr, count];
+                let mut vec = Vec::with_capacity(count);
+                for i in 0..count {
+                    // Get pointer, check null, create Retained from raw
+                    let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
+                    if !tensor_ptr.is_null() {
+                        vec.push(Retained::from_raw(tensor_ptr).unwrap());
+                    }
+                }
+                Some(vec)
+            }
+        }
+    }
+
+    /// Returns the target tensors for the executable.
+    pub fn target_tensors(&self) -> Option<Vec<Retained<Tensor>>> {
+        unsafe {
+            let array_ptr: *mut NSArray<Tensor> = msg_send![self, targetTensors];
+            if array_ptr.is_null() {
+                None
+            } else {
+                // Work directly with the raw pointer
+                let count: usize = msg_send![array_ptr, count];
+                let mut vec = Vec::with_capacity(count);
+                for i in 0..count {
+                    // Get pointer, check null, create Retained from raw
+                    let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
+                    if !tensor_ptr.is_null() {
+                        vec.push(Retained::from_raw(tensor_ptr).unwrap());
+                    }
+                }
+                Some(vec)
+            }
+        }
+    }
+
+    /// Encodes the executable's commands to a command buffer.
+    pub fn encode_to_command_buffer(
+        &self,
+        command_buffer: &Retained<crate::command_buffer::CommandBuffer>, // Use crate::CommandBuffer
+        inputs: &[&Retained<TensorData>],
+        results: Option<&[&Retained<TensorData>]>,
+        execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
+    ) -> Option<Vec<Retained<TensorData>>> {
+        unsafe {
+            // Create NSArray for inputs
+            let input_refs: Vec<&TensorData> = inputs.iter().map(|t| t.as_ref()).collect();
+            let inputs_array = NSArray::from_slice(&input_refs);
+
+            // Create NSArray for results (or null)
+            let results_array_ptr: *const NSArray<TensorData> = match results {
+                Some(res_slice) => {
+                    let result_refs: Vec<&TensorData> =
+                        res_slice.iter().map(|t| t.as_ref()).collect();
+                    let array = NSArray::from_slice(&result_refs);
+                    &*array
+                }
+                None => std::ptr::null(),
+            };
+
+            // Get descriptor pointer or null
+            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
+                d.as_ref() as *const ExecutableExecutionDescriptor
+            });
+
+            // Call encodeToCommandBuffer
+            let returned_array_ptr: *mut NSArray<TensorData> = msg_send![
+                self,
+                encodeToCommandBuffer: command_buffer.as_ref() as &crate::command_buffer::CommandBuffer, // Explicit cast
+                inputsArray: &*inputs_array,
+                resultsArray: results_array_ptr,
+                executionDescriptor: desc_ptr
+            ];
+
+            // Convert returned NSArray to Vec<Retained<TensorData>>
+            if returned_array_ptr.is_null() {
+                None
+            } else {
+                // Work directly with the raw pointer
+                let count: usize = msg_send![returned_array_ptr, count];
+                let mut vec = Vec::with_capacity(count);
+                for i in 0..count {
+                    // Get pointer, check null, create Retained from raw
+                    let data_ptr: *mut TensorData = msg_send![returned_array_ptr, objectAtIndex: i];
+                    if !data_ptr.is_null() {
+                        vec.push(Retained::from_raw(data_ptr).unwrap());
+                    }
+                }
+                Some(vec)
+            }
         }
     }
 }

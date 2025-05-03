@@ -1,9 +1,8 @@
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::extern_class;
 use objc2_foundation::{NSObject, NSObjectProtocol};
-use crate::CustomDefault;
 
 /// Convolution padding mode
 #[repr(u64)]
@@ -137,12 +136,6 @@ impl Convolution2DOpDescriptor {
     }
 }
 
-impl CustomDefault for Convolution2DOpDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 impl Convolution3DOpDescriptor {
     /// Creates a new descriptor with default parameters
     pub fn new() -> Retained<Self> {
@@ -222,11 +215,5 @@ impl Convolution3DOpDescriptor {
         unsafe {
             let _: () = msg_send![self, setGroups: groups as u64];
         }
-    }
-}
-
-impl CustomDefault for Convolution3DOpDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }

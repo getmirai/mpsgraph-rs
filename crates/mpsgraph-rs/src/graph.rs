@@ -1,7 +1,9 @@
 use objc2::rc::Retained;
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
-use objc2_foundation::{NSArray, NSData, NSMutableDictionary, NSObjectProtocol, NSString};
+use objc2_foundation::{
+    NSArray, NSData, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString,
+};
 use std::collections::HashMap;
 
 use crate::command_buffer::CommandBuffer;
@@ -498,15 +500,12 @@ impl Graph {
         descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Retained<Executable> {
         unsafe {
-            // Create NSMutableDictionary for feeds
-            let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> =
-                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-
-            // Add entries to dictionary
-            for (tensor, shaped_type) in feeds {
-                let _: () = msg_send![dictionary_ptr, setObject: shaped_type.as_ref() as &ShapedType, forKey: tensor.as_ref() as &Tensor];
-            }
+            // Create immutable NSDictionary for feeds directly
+            let keys: Vec<&Tensor> = feeds.keys().map(|k| k.as_ref()).collect();
+            let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
+            let keys_array = NSArray::from_slice(&keys);
+            let values_array = NSArray::from_slice(&values);
+            let immutable_feeds_dict: Retained<NSDictionary<Tensor, ShapedType>> = msg_send![NSDictionary::<Tensor, ShapedType>::class(), dictionaryWithObjects: &*values_array, forKeys: &*keys_array];
 
             // Create NSArray for target tensors
             let targets_refs: Vec<&Tensor> = targets
@@ -524,7 +523,7 @@ impl Graph {
             let executable_ptr: *mut Executable = msg_send![
                 self,
                 compileWithDevice: device.as_ref() as &Device,
-                feeds: dictionary_ptr,
+                feeds: &*immutable_feeds_dict, // Pass the immutable dictionary
                 targetTensors: &*targets_array,
                 targetOperations: std::ptr::null::<NSArray<Operation>>(),
                 compilationDescriptor: desc_ptr
@@ -557,15 +556,12 @@ impl Graph {
         descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Retained<Executable> {
         unsafe {
-            // Create NSMutableDictionary for feeds
-            let dictionary_class = NSMutableDictionary::<Tensor, ShapedType>::class();
-            let dictionary_ptr: *mut NSMutableDictionary<Tensor, ShapedType> =
-                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-
-            // Add entries to dictionary
-            for (tensor, shaped_type) in feeds {
-                let _: () = msg_send![dictionary_ptr, setObject: shaped_type.as_ref() as &ShapedType, forKey: tensor.as_ref() as &Tensor];
-            }
+            // Create immutable NSDictionary for feeds directly
+            let keys: Vec<&Tensor> = feeds.keys().map(|k| k.as_ref()).collect();
+            let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
+            let keys_array = NSArray::from_slice(&keys);
+            let values_array = NSArray::from_slice(&values);
+            let immutable_feeds_dict: Retained<NSDictionary<Tensor, ShapedType>> = msg_send![NSDictionary::<Tensor, ShapedType>::class(), dictionaryWithObjects: &*values_array, forKeys: &*keys_array];
 
             // Create NSArray for target tensors
             let targets_refs: Vec<&Tensor> = targets
@@ -587,7 +583,7 @@ impl Graph {
             let executable_ptr: *mut Executable = msg_send![
                 self,
                 compileWithDevice: device.as_ref() as &Device,
-                feeds: dictionary_ptr,
+                feeds: &*immutable_feeds_dict, // Pass the immutable dictionary
                 targetTensors: &*targets_array,
                 targetOperations: &*ops_array,
                 compilationDescriptor: desc_ptr
@@ -833,12 +829,5 @@ impl Graph {
                 Retained::from_raw(tensor_ptr).unwrap()
             }
         }
-    }
-}
-
-// Implement CustomDefault for Graph
-impl crate::CustomDefault for Graph {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }

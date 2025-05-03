@@ -1,8 +1,8 @@
 use metal::foreign_types::ForeignType;
 use metal::Device as MetalDevice;
 use objc2::rc::Retained;
-use objc2::{extern_class, ClassType, msg_send};
 use objc2::runtime::NSObject;
+use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::NSObjectProtocol;
 
 // The extern_class macro will generate the struct definition
@@ -27,22 +27,11 @@ impl Device {
         unsafe {
             let class = Self::class();
             let device_ptr = device.as_ptr();
-            
+
             // Cast the raw device pointer to id type (NSObject) as expected by MPS
             let device_id = device_ptr as *mut objc2::runtime::AnyObject;
-            
+
             msg_send![class, deviceWithMTLDevice: device_id]
         }
-    }
-}
-
-// Implement CustomDefault instead of Default, since Default requires returning Self
-pub trait CustomDefault {
-    fn custom_default() -> Retained<Self> where Self: Sized;
-}
-
-impl CustomDefault for Device {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
     }
 }

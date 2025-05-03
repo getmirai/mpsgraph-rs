@@ -1,13 +1,12 @@
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::extern_class;
 use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
 
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
-use crate::CustomDefault;
 
 /// Re-export padding styles from convolution_ops
 pub use crate::convolution_ops::PaddingMode;
@@ -92,8 +91,8 @@ impl StencilOpDescriptor {
     ) -> Retained<Self> {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
-            msg_send![cls, 
-                descriptorWithOffsets: offsets.as_ptr(), 
+            msg_send![cls,
+                descriptorWithOffsets: offsets.as_ptr(),
                 explicitPadding: explicit_padding.as_ptr()
             ]
         }
@@ -112,7 +111,7 @@ impl StencilOpDescriptor {
     ) -> Retained<Self> {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphStencilOpDescriptor").unwrap();
-            msg_send![cls, 
+            msg_send![cls,
                 descriptorWithReductionMode: reduction_mode as u64,
                 offsets: offsets.as_ptr(),
                 strides: strides.as_ptr(),
@@ -182,12 +181,6 @@ impl StencilOpDescriptor {
     }
 }
 
-impl CustomDefault for StencilOpDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new()
-    }
-}
-
 /// Stencil operations for Graph
 impl Graph {
     /// Creates a stencil operation and returns the result tensor.
@@ -220,7 +213,7 @@ impl Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             msg_send![
                 self,
                 stencilWithSourceTensor: source,

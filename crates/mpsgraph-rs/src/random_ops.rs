@@ -2,10 +2,10 @@ use crate::core::DataType;
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::{extern_class};
 use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 
 /// Random distribution types supported by MPSGraph
@@ -47,7 +47,7 @@ impl RandomOpDescriptor {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphRandomOpDescriptor").unwrap();
             msg_send![
-                cls, 
+                cls,
                 descriptorWithDistribution: distribution as u64,
                 dataType: data_type as u32
             ]
@@ -111,12 +111,6 @@ impl RandomOpDescriptor {
     }
 }
 
-impl crate::device::CustomDefault for RandomOpDescriptor {
-    fn custom_default() -> Retained<Self> {
-        Self::new(RandomDistribution::Uniform, DataType::Float32)
-    }
-}
-
 /// Random operations for Graph
 impl Graph {
     /// Creates a tensor representing state using the Philox algorithm with given seed
@@ -132,7 +126,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 randomPhiloxStateTensorWithSeed: seed as u64,
                 name: name_obj
             ]
@@ -154,7 +148,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 randomPhiloxStateTensorWithCounterLow: counter_low as u64,
                 counterHigh: counter_high as u64,
                 key: key as u64,
@@ -177,7 +171,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 randomTensorWithShape: shape,
                 descriptor: descriptor,
                 name: name_obj
@@ -200,7 +194,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 randomTensorWithShape: shape,
                 descriptor: descriptor,
                 seed: seed as u64,
@@ -224,7 +218,7 @@ impl Graph {
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
-                self, 
+                self,
                 randomTensorWithShape: shape,
                 descriptor: descriptor,
                 stateTensor: state,
@@ -250,11 +244,7 @@ impl Graph {
     }
 
     /// Creates a random uniform tensor with values in range [0.0, 1.0)
-    pub fn random_uniform_tensor(
-        &self,
-        shape: &Shape,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn random_uniform_tensor(&self, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
@@ -262,7 +252,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 randomUniformTensorWithShape: shape,
                 name: name_obj
             ]
@@ -283,7 +273,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 randomUniformTensorWithShape: shape,
                 seed: seed as u64,
                 name: name_obj
@@ -305,7 +295,7 @@ impl Graph {
             };
 
             let result: Retained<NSArray<Tensor>> = msg_send![
-                self, 
+                self,
                 randomUniformTensorWithShape: shape,
                 stateTensor: state,
                 name: name_obj
@@ -330,12 +320,7 @@ impl Graph {
     }
 
     /// Creates a dropout operation which zeros out elements of the input tensor randomly with probability equal to rate
-    pub fn dropout(
-        &self,
-        tensor: &Tensor,
-        rate: f64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn dropout(&self, tensor: &Tensor, rate: f64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_obj = match name {
                 Some(s) => &*NSString::from_str(s),
@@ -343,7 +328,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 dropoutTensor: tensor,
                 rate: rate,
                 name: name_obj
@@ -365,7 +350,7 @@ impl Graph {
             };
 
             msg_send![
-                self, 
+                self,
                 dropoutTensor: tensor,
                 rateTensor: rate_tensor,
                 name: name_obj
