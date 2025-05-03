@@ -445,24 +445,6 @@ impl Executable {
         }
     }
 
-    ///
-    /// # Warning: Unstable Method
-    /// This method is currently **unstable** and known to cause **segmentation faults**
-    /// due to unresolved memory management issues when interacting with the underlying
-    /// Objective-C framework. It is strongly recommended **not to use** this method in
-    /// production code.
-    ///
-    /// **Recommended Alternative:** Use the direct graph encoding method
-    /// [`Graph::encode_to_command_buffer_with_results`](crate::Graph::encode_to_command_buffer_with_results),
-    /// which provides equivalent functionality and is stable.
-    ///
-    /// ```rust,ignore
-    /// // Instead of:
-    /// // executable.encode_to_command_buffer(command_buffer, ...);
-    ///
-    /// // Use:
-    /// // graph.encode_to_command_buffer_with_results(command_buffer, ...);
-    /// ```
     pub fn encode_to_command_buffer(
         &self,
         command_buffer: &Retained<crate::command_buffer::CommandBuffer>,
