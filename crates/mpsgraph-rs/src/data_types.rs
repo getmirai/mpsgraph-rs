@@ -42,7 +42,7 @@ impl Type {
 extern_class!(
     #[derive(Debug, PartialEq, Eq, Hash)]
     #[unsafe(super = Type)]
-    #[name = "MPSGraphType"] // Using MPSGraphType as a placeholder
+    #[name = "MPSGraphShapedType"]
     /// A wrapper for MPSGraphShapedType objects
     ///
     /// `MPSGraphShapedType` is a subclass of `MPSGraphType` that includes shape and data type information.
@@ -53,15 +53,16 @@ unsafe impl NSObjectProtocol for ShapedType {}
 
 impl ShapedType {
     /// Create a new shaped type with shape and data type
-    pub fn new(_shape: &Shape, _data_type: DataType) -> Retained<Self> {
+    pub fn new(shape: &Shape, data_type: DataType) -> Retained<Self> {
         unsafe {
             let class = Self::class();
-
-            // Since the real method doesn't exist, just call new and store the attributes manually
-            let obj: Retained<Self> = msg_send![class, new];
-
-            // In a real implementation, we would set the shape and data type here
-            obj
+            let alloc: *mut Self = msg_send![class, alloc];
+            // Call the correct initializer
+            let obj: *mut Self = msg_send![alloc,
+                initWithShape: shape.as_ptr(), // Pass MPSShape* from our Shape struct
+                dataType: data_type as u32 // Pass MPSDataType
+            ];
+            Retained::from_raw(obj).unwrap()
         }
     }
 

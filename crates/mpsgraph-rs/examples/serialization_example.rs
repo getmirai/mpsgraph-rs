@@ -13,8 +13,9 @@ use mpsgraph::{
     ShapedType,
     TensorData,
 };
+use objc2_foundation::NSArray; // Added import
 
-use std::{collections::HashMap, env, fs}; // Added PathBuf back
+use std::{collections::HashMap, env, fs, path::PathBuf}; // Added PathBuf back
 
 fn main() {
     println!("MPSGraph Serialization/Deserialization Example");
@@ -47,23 +48,26 @@ fn main() {
 
     println!("Calling graph.compile()..."); // Added print
     let executable = graph.compile(&mps_device, &feeds, &targets, Some(&comp_desc));
-    println!("Graph compiled successfully."); // Should not be reached if crashing
+    println!("Graph compiled successfully.");
 
     // --- 3. Serialization ---
     println!("\n--- Serialization ---");
+
+    // ** Explicitly specialize before serializing **
+    println!("Specializing executable...");
+    let input_types_vec: Vec<&mpsgraph::Type> = vec![shaped_type.as_ref(), shaped_type.as_ref()];
+    let input_types_array = NSArray::from_slice(&input_types_vec);
+    executable.specialize_with_device(Some(&mps_device), &input_types_array, Some(&comp_desc));
+    println!("Specialization complete.");
+
     let mut temp_file_path = env::temp_dir();
     temp_file_path.push("example_graph.mpsgraphpkg"); // Use different name from test
     let temp_file_path_str = temp_file_path.to_str().unwrap();
-
-    // Ensure file doesn't exist from previous run (optional)
-    let _ = fs::remove_file(&temp_file_path);
-
+    let _ = fs::remove_file(&temp_file_path); // Clean up previous run
     println!("Serializing executable to: {}", temp_file_path_str);
     let ser_desc = SerializationDescriptor::new();
-    // Set serialization options if needed: ser_desc.set_append(false); ...
-
-    let serialize_success = executable.serialize_to_url(temp_file_path_str, &ser_desc);
-    assert!(serialize_success, "Failed to serialize executable");
+    ser_desc.set_deployment_platform(mpsgraph::DeploymentPlatform::MacOS); // Set platform
+    executable.serialize_to_url(temp_file_path_str, &ser_desc);
     println!("Serialization successful.");
 
     // --- 4. Deserialization ---

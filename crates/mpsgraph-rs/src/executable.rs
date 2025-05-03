@@ -42,7 +42,7 @@ pub enum ExecutionStage {
 }
 
 /// Represents the deployment platform for a graph
-#[repr(u32)]
+#[repr(u64)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum DeploymentPlatform {
     /// macOS platform
@@ -181,7 +181,7 @@ impl SerializationDescriptor {
     /// Set deployment platform
     pub fn set_deployment_platform(&self, platform: DeploymentPlatform) {
         unsafe {
-            let _: () = msg_send![self, setDeploymentPlatform: platform as u32];
+            let _: () = msg_send![self, setDeploymentPlatform: platform as u64];
         }
     }
 
@@ -267,8 +267,9 @@ impl Executable {
         compilation_descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Option<Retained<Self>> {
         unsafe {
-            // Convert URL to NSURL
-            let url_str = NSString::from_str(url_string);
+            // Convert URL string to file URL string
+            let file_url_string = format!("file://{}", url_string);
+            let url_str = NSString::from_str(&file_url_string); // Use file URL string
             let nsurl_class = AnyClass::get(c"NSURL").unwrap();
             let nsurl_ptr: *mut NSURL = msg_send![nsurl_class, URLWithString: &*url_str];
 
@@ -319,27 +320,51 @@ impl Executable {
         &self,
         url_string: &str,
         descriptor: &Retained<SerializationDescriptor>,
-    ) -> bool {
+    ) {
         unsafe {
-            // Convert URL to NSURL
-            let url_str = NSString::from_str(url_string);
+            // Convert URL string to file URL string
+            let file_url_string = format!("file://{}", url_string);
+            let url_str = NSString::from_str(&file_url_string);
             let nsurl_class = AnyClass::get(c"NSURL").unwrap();
             let nsurl_ptr: *mut NSURL = msg_send![nsurl_class, URLWithString: &*url_str];
 
             if nsurl_ptr.is_null() {
-                return false;
+                eprintln!("Error: Could not create NSURL from string: {}", url_string);
+                return;
             }
 
             let nsurl = Retained::from_raw(nsurl_ptr).unwrap();
 
-            // Serialize
-            let result: bool = msg_send![
+            // Serialize (returns void)
+            let _: () = msg_send![
                 self,
                 serializeToMPSGraphPackageAtURL: &*nsurl,
                 descriptor: descriptor.as_ref() as &SerializationDescriptor
             ];
+        }
+    }
 
-            result
+    /// Specialize the executable for a device and input types.
+    pub fn specialize_with_device(
+        &self,
+        device: Option<&Retained<crate::device::Device>>,
+        input_types: &NSArray<crate::data_types::Type>,
+        compilation_descriptor: Option<&Retained<CompilationDescriptor>>,
+    ) {
+        unsafe {
+            let device_ptr = device.map_or(std::ptr::null(), |d| {
+                d.as_ref() as *const crate::device::Device
+            });
+            let desc_ptr = compilation_descriptor.map_or(std::ptr::null(), |d| {
+                d.as_ref() as *const CompilationDescriptor
+            });
+
+            let _: () = msg_send![
+                self,
+                specializeWithDevice: device_ptr,
+                inputTypes: input_types,
+                compilationDescriptor: desc_ptr
+            ];
         }
     }
 
