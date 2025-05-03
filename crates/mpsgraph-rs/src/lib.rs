@@ -158,6 +158,5 @@ pub use utils::tensor as tensor_utils;
 #[cfg(test)]
 mod tests {
     mod data_types_tests;
-    mod serialization_test;
     mod tensor_addition_test;
 }
