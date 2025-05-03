@@ -33,11 +33,11 @@ fn test_tensor_addition_metal_execution() {
 
     // Set up input feeds with the correct type
     let mut feeds = HashMap::new();
-    feeds.insert(&*a, &*a_tensor_data);
-    feeds.insert(&*b, &*b_tensor_data);
+    feeds.insert(&a, &a_tensor_data);
+    feeds.insert(&b, &b_tensor_data);
 
     // Execute the graph and get results
-    let results = graph.run_with_feeds(&feeds, &[&*c]);
+    let results = graph.run_async_with_feeds(&feeds, &[&a, &c], None);
 
     // Verify we got a result for tensor C
     assert_eq!(results.len(), 1);
