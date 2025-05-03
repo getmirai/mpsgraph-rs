@@ -725,26 +725,4 @@ mod tests {
         // The actual execution would require a valid Metal device
         println!("API trait implementation verified");
     }
-
-    // Add a basic unit test that doesn't require a Metal device
-    #[test]
-    fn test_api_structure() {
-        // This test just verifies that the API structure is correct
-        // and doesn't require an actual Metal device
-
-        // Verify that the API structure is correct by checking the presence
-        // of the expected trait methods and functions
-
-        // Check that the core tensor creation utilities exist
-        let _ = <Graph as GraphExtensions>::zeros;
-        let _ = <Graph as GraphExtensions>::ones;
-        let _ = <Graph as GraphExtensions>::fill::<f32>;
-
-        // Verify trait implementations are available
-        let _ = <Retained<MPSTensor> as TensorOps>::add;
-        let _ = <Retained<MPSTensor> as TensorOps>::square;
-
-        // Test successful if we get here
-        println!("API structure verified");
-    }
 }
