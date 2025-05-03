@@ -445,60 +445,104 @@ impl Executable {
         }
     }
 
-    /// Encodes the executable's commands to a command buffer.
+    ///
+    /// # Warning: Unstable Method
+    /// This method is currently **unstable** and known to cause **segmentation faults**
+    /// due to unresolved memory management issues when interacting with the underlying
+    /// Objective-C framework. It is strongly recommended **not to use** this method in
+    /// production code.
+    ///
+    /// **Recommended Alternative:** Use the direct graph encoding method
+    /// [`Graph::encode_to_command_buffer_with_results`](crate::Graph::encode_to_command_buffer_with_results),
+    /// which provides equivalent functionality and is stable.
+    ///
+    /// ```rust,ignore
+    /// // Instead of:
+    /// // executable.encode_to_command_buffer(command_buffer, ...);
+    ///
+    /// // Use:
+    /// // graph.encode_to_command_buffer_with_results(command_buffer, ...);
+    /// ```
     pub fn encode_to_command_buffer(
         &self,
-        command_buffer: &Retained<crate::command_buffer::CommandBuffer>, // Use crate::CommandBuffer
+        command_buffer: &Retained<crate::command_buffer::CommandBuffer>,
         inputs: &[&Retained<TensorData>],
         results: Option<&[&Retained<TensorData>]>,
         execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
     ) -> Option<Vec<Retained<TensorData>>> {
-        unsafe {
-            // Create NSArray for inputs
-            let input_refs: Vec<&TensorData> = inputs.iter().map(|t| t.as_ref()).collect();
-            let inputs_array = NSArray::from_slice(&input_refs);
+        use objc2::rc::autoreleasepool;
+        use objc2_foundation::NSArray;
 
-            // Create NSArray for results (or null)
-            let results_array_ptr: *const NSArray<TensorData> = match results {
-                Some(res_slice) => {
-                    let result_refs: Vec<&TensorData> =
-                        res_slice.iter().map(|t| t.as_ref()).collect();
-                    let array = NSArray::from_slice(&result_refs);
-                    &*array
-                }
-                None => std::ptr::null(),
-            };
+        autoreleasepool(|_pool| {
+            unsafe {
+                // Use from_slice for inputs
+                let input_refs: Vec<&TensorData> = inputs
+                    .iter()
+                    .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
+                    .collect();
 
-            // Get descriptor pointer or null
-            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const ExecutableExecutionDescriptor
-            });
+                // Create NSArray using from_slice with the Vec of references
+                let inputs_array = NSArray::from_slice(&input_refs);
 
-            // Call encodeToCommandBuffer
-            let returned_array_ptr: *mut NSArray<TensorData> = msg_send![
-                self,
-                encodeToCommandBuffer: command_buffer.as_ref() as &crate::command_buffer::CommandBuffer, // Explicit cast
-                inputsArray: &*inputs_array,
-                resultsArray: results_array_ptr,
-                executionDescriptor: desc_ptr
-            ];
+                // --- Results Array (Optional) ---
+                let results_array_option: Option<Retained<NSArray<TensorData>>> =
+                    results.map(|r_slice| {
+                        let result_refs: Vec<&TensorData> = r_slice
+                            .iter()
+                            .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
+                            .collect();
+                        NSArray::from_slice(&result_refs)
+                    });
+                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
+                let results_array_ptr: *const NSArray<TensorData> = results_array_option
+                    .as_ref()
+                    .map_or(std::ptr::null(), |arr| Retained::as_ptr(arr));
 
-            // Convert returned NSArray to Vec<Retained<TensorData>>
-            if returned_array_ptr.is_null() {
-                None
-            } else {
-                // Work directly with the raw pointer
-                let count: usize = msg_send![returned_array_ptr, count];
-                let mut vec = Vec::with_capacity(count);
-                for i in 0..count {
-                    // Get pointer, check null, create Retained from raw
-                    let data_ptr: *mut TensorData = msg_send![returned_array_ptr, objectAtIndex: i];
-                    if !data_ptr.is_null() {
-                        vec.push(Retained::from_raw(data_ptr).unwrap());
+                // --- Execution Descriptor (Optional) ---
+                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
+                let desc_ptr: *const ExecutableExecutionDescriptor =
+                    execution_descriptor.map_or(std::ptr::null(), |d| Retained::as_ptr(d));
+
+                // --- Command Buffer Pointer ---
+                // Use Retained::as_ptr to get the raw pointer
+                let cmd_buffer_ptr: *const crate::command_buffer::CommandBuffer =
+                    Retained::as_ptr(command_buffer);
+
+                // --- Inputs Array Pointer ---
+                // Use Retained::as_ptr to get the raw pointer
+                let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
+
+                // --- Call Objective-C Method ---
+                // Pass raw pointers for all arguments
+                let result_ptr: *mut NSArray<TensorData> = msg_send![
+                    self,
+                    encodeToCommandBuffer: cmd_buffer_ptr,
+                    inputsArray: inputs_array_ptr,
+                    resultsArray: results_array_ptr,
+                    executionDescriptor: desc_ptr
+                ];
+
+                // --- Handle Return Value ---
+                if result_ptr.is_null() {
+                    None
+                } else {
+                    // Attempt to take ownership of the potentially autoreleased NSArray*
+                    if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
+                        // Successfully retained the array, now process items
+                        let mut output_vec = Vec::with_capacity(result_array.len());
+                        for item in result_array.iter() {
+                            // iter() yields &Retained<TensorData>
+                            // Clone the item to transfer ownership to the output Vec
+                            output_vec.push(item.clone());
+                        }
+                        Some(output_vec)
+                    } else {
+                        // retain_autoreleased failed, pointer was likely invalid
+                        eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in encode_to_command_buffer");
+                        None
                     }
                 }
-                Some(vec)
             }
-        }
+        })
     }
 }
