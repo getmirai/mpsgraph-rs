@@ -262,39 +262,6 @@ extern_class!(
 unsafe impl NSObjectProtocol for Executable {}
 
 impl Executable {
-    /// Runs the graph for the given feeds and returns the target tensor values,
-    /// ensuring all target operations also executed.
-    /// This call is asynchronous and will return immediately after finishing encoding.
-    pub fn encode(
-        self: &Self,
-        command_buffer: &CommandBuffer,
-        inputs: &[Retained<TensorData>],
-        results: Option<&[Retained<TensorData>]>,
-        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
-    ) -> Box<[Retained<TensorData>]> {
-        unsafe {
-            let command_buffer_ptr = command_buffer as *const CommandBuffer;
-            let inputs_nsarray = NSArray::from_retained_slice(inputs);
-            let inputs_nsarray_ptr = inputs_nsarray.as_ref() as *const NSArray<TensorData>;
-            let results_optional_nsarray = results.map(|r| NSArray::from_retained_slice(r));
-            let results_nsarray_ptr = results_optional_nsarray.map_or(std::ptr::null(), |r| {
-                r.as_ref() as *const NSArray<TensorData>
-            });
-            let execution_descriptor_ptr =
-                execution_descriptor.map_or(std::ptr::null(), |r| r as *const _);
-
-            let results: Retained<NSArray<TensorData>> = msg_send![
-                self,
-                encodeToCommandBuffer: command_buffer_ptr,
-                inputsArray: inputs_nsarray_ptr,
-                resultsArray: results_nsarray_ptr,
-                executionDescriptor: execution_descriptor_ptr,
-            ];
-
-            results.iter().collect()
-        }
-    }
-
     /// Create a new executable from a serialized package at the specified URL
     pub fn from_serialized_package(
         url_string: &str,
