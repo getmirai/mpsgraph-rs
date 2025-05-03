@@ -145,10 +145,11 @@ impl Graph {
         feeds: &HashMap<&Tensor, &TensorData>,
         output_tensors: &[&Tensor],
     ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
-        self.run_with_feeds_and_descriptor(feeds, output_tensors, None)
+        self.run_async_with_feeds(feeds, output_tensors, None)
     }
 
-    /// Execute the graph with feeds and execution descriptor
+    /// Execute the graph asynchronously with feeds and optional execution descriptor
+    /// (Maps to ObjC runAsyncWithFeeds:targetTensors:targetOperations:executionDescriptor:)
     ///
     /// - Parameters:
     ///   - feeds: A dictionary mapping input tensors to their values
@@ -156,7 +157,7 @@ impl Graph {
     ///   - execution_descriptor: Optional descriptor controlling execution options
     ///
     /// - Returns: A dictionary mapping output tensors to their computed values
-    pub fn run_with_feeds_and_descriptor(
+    pub fn run_async_with_feeds(
         &self,
         feeds: &HashMap<&Tensor, &TensorData>,
         output_tensors: &[&Tensor],
@@ -176,28 +177,26 @@ impl Graph {
             // Create NSArray for output tensors
             let output_array = NSArray::from_slice(output_tensors);
 
-            // Run the graph
-            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
-                match execution_descriptor {
-                    Some(desc) => {
-                        msg_send![
-                            self,
-                            runWithFeeds: dictionary_ptr,
-                            targetTensors: &*output_array,
-                            targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                            executionDescriptor: desc
-                        ]
-                    }
-                    None => {
-                        msg_send![
-                            self,
-                            runWithFeeds: dictionary_ptr,
-                            targetTensors: &*output_array,
-                            targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                            executionDescriptor: std::ptr::null::<ExecutionDescriptor>()
-                        ]
-                    }
-                };
+            // Get descriptor pointer or null
+            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| d as *const _);
+
+            // Always call the async version
+            let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![
+                self,
+                runAsyncWithFeeds: dictionary_ptr,
+                targetTensors: &*output_array,
+                targetOperations: std::ptr::null::<NSArray<Operation>>(), // Pass nil for operations
+                executionDescriptor: desc_ptr // Pass pointer or null
+            ];
+
+            // Check if results_ptr is null before proceeding
+            if results_ptr.is_null() {
+                // Handle error appropriately, maybe return empty map or panic
+                // For now, let's return an empty map, though panic might be better
+                // depending on expected behavior.
+                return HashMap::new();
+                // panic!("runAsyncWithFeeds returned null dictionary");
+            }
 
             let _results_dict = Retained::from_raw(results_ptr).unwrap();
 
@@ -626,19 +625,6 @@ impl Graph {
         }
     }
 
-    /// Compiles the graph against a given set of feeds, targets, and target operations
-    ///
-    /// This version accepts Retained references, which is the preferred approach.
-    ///
-    /// - Parameters:
-    ///   - device: Metal device to compile for
-    ///   - feeds: A dictionary mapping input tensors to their values
-    ///   - targets: An array of tensors whose values should be computed
-    ///   - target_ops: An array of operations to be completed
-    ///   - descriptor: Optional compilation descriptor
-    ///
-    /// - Returns: A compiled executable
-
     /// Encodes the graph to a command buffer for execution
     ///
     /// - Parameters:
@@ -654,8 +640,8 @@ impl Graph {
         command_buffer: &CommandBuffer,
         feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
         target_tensors: Option<&[&Retained<Tensor>]>,
-        target_operations: Option<&[&Operation]>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
+        target_operations: Option<&[Retained<Operation>]>,
+        execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
     ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
         unsafe {
             // Create NSMutableDictionary for feeds
@@ -665,43 +651,38 @@ impl Graph {
 
             // Add entries to dictionary
             for (tensor, data) in feeds {
-                // Get raw pointers to the inner Objective-C objects
-                let tensor_ptr = tensor.as_ref() as *const Tensor;
-                let data_ptr = data.as_ref() as *const TensorData;
-
-                // Create temporary references for message sending
-                let tensor_ref: &Tensor = &*tensor_ptr;
-                let data_ref: &TensorData = &*data_ptr;
-
-                let _: () = msg_send![dictionary_ptr, setObject: data_ref, forKey: tensor_ref];
+                // Pass raw pointers with explicit types
+                let _: () = msg_send![dictionary_ptr, setObject: data.as_ref() as *const TensorData, forKey: tensor.as_ref() as *const Tensor];
             }
 
             // Create NSArray for target tensors if provided
             let targets_array_ptr = match target_tensors {
                 Some(tensors) => {
-                    // Need to convert &[&Retained<Tensor>] to a slice of &Tensor for NSArray::from_slice
                     let targets_refs: Vec<&Tensor> = tensors
                         .iter()
                         .map(|retained_tensor| retained_tensor.as_ref())
                         .collect();
                     let array = NSArray::from_slice(&targets_refs);
-                    &*array as *const _
+                    &*array as *const NSArray<Tensor>
                 }
                 None => std::ptr::null(),
             };
 
             // Create NSArray for target operations if provided
-            let ops_array_ptr = match target_operations {
-                Some(ops) => {
-                    let array = NSArray::from_slice(ops);
-                    &*array as *const _
+            let ops_array: Option<Retained<NSArray<Operation>>> = match target_operations {
+                Some(ops_retained) => {
+                    let ops_refs: Vec<&Operation> = ops_retained
+                        .iter()
+                        .map(|retained_op| retained_op.as_ref())
+                        .collect();
+                    Some(NSArray::from_slice(&ops_refs))
                 }
-                None => std::ptr::null(),
+                None => None,
             };
 
             // Get descriptor pointer if provided
             let desc_ptr = match execution_descriptor {
-                Some(desc) => desc as *const _,
+                Some(desc) => desc.as_ref() as *const ExecutionDescriptor,
                 None => std::ptr::null(),
             };
 
@@ -711,9 +692,16 @@ impl Graph {
                 encodeToCommandBuffer: command_buffer,
                 feeds: dictionary_ptr,
                 targetTensors: targets_array_ptr,
-                targetOperations: ops_array_ptr,
+                targetOperations: ops_array.as_deref(),
                 executionDescriptor: desc_ptr
             ];
+
+            // Check if results_ptr is null
+            if results_ptr.is_null() {
+                // Consider how to handle this - return empty or panic?
+                return HashMap::new();
+                // panic!("encodeToCommandBuffer returned null dictionary");
+            }
 
             // Convert NSMutableDictionary to HashMap
             let _results_dict = Retained::from_raw(results_ptr).unwrap();
@@ -749,9 +737,9 @@ impl Graph {
         &self,
         command_buffer: &CommandBuffer,
         feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
-        target_operations: Option<&[&Operation]>,
+        target_operations: Option<&[Retained<Operation>]>,
         results_dict: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
+        execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
     ) {
         unsafe {
             // Create NSMutableDictionary for feeds
@@ -761,15 +749,8 @@ impl Graph {
 
             // Add entries to feeds dictionary
             for (tensor, data) in feeds {
-                // Get raw pointers to the inner Objective-C objects
-                let tensor_ptr = tensor.as_ref() as *const Tensor;
-                let data_ptr = data.as_ref() as *const TensorData;
-
-                // Create temporary references for message sending
-                let tensor_ref: &Tensor = &*tensor_ptr;
-                let data_ref: &TensorData = &*data_ptr;
-
-                let _: () = msg_send![feeds_ptr, setObject: data_ref, forKey: tensor_ref];
+                // Pass raw pointers with explicit types
+                let _: () = msg_send![feeds_ptr, setObject: data.as_ref() as *const TensorData, forKey: tensor.as_ref() as *const Tensor];
             }
 
             // Create NSMutableDictionary for results
@@ -779,29 +760,25 @@ impl Graph {
 
             // Add entries to results dictionary
             for (tensor, data) in results_dict {
-                // Get raw pointers to the inner Objective-C objects
-                let tensor_ptr = tensor.as_ref() as *const Tensor;
-                let data_ptr = data.as_ref() as *const TensorData;
-
-                // Create temporary references for message sending
-                let tensor_ref: &Tensor = &*tensor_ptr;
-                let data_ref: &TensorData = &*data_ptr;
-
-                let _: () = msg_send![results_ptr, setObject: data_ref, forKey: tensor_ref];
+                // Pass raw pointers with explicit types
+                let _: () = msg_send![results_ptr, setObject: data.as_ref() as *const TensorData, forKey: tensor.as_ref() as *const Tensor];
             }
 
             // Create NSArray for target operations if provided
-            let ops_array_ptr = match target_operations {
-                Some(ops) => {
-                    let array = NSArray::from_slice(ops);
-                    &*array as *const _
+            let ops_array: Option<Retained<NSArray<Operation>>> = match target_operations {
+                Some(ops_retained) => {
+                    let ops_refs: Vec<&Operation> = ops_retained
+                        .iter()
+                        .map(|retained_op| retained_op.as_ref())
+                        .collect();
+                    Some(NSArray::from_slice(&ops_refs))
                 }
-                None => std::ptr::null(),
+                None => None,
             };
 
             // Get descriptor pointer if provided
             let desc_ptr = match execution_descriptor {
-                Some(desc) => desc as *const _,
+                Some(desc) => desc.as_ref() as *const ExecutionDescriptor,
                 None => std::ptr::null(),
             };
 
@@ -810,7 +787,7 @@ impl Graph {
                 self,
                 encodeToCommandBuffer: command_buffer,
                 feeds: feeds_ptr,
-                targetOperations: ops_array_ptr,
+                targetOperations: ops_array.as_deref(),
                 resultsDictionary: results_ptr,
                 executionDescriptor: desc_ptr
             ];
