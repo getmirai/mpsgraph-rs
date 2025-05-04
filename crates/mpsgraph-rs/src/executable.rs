@@ -414,7 +414,7 @@ impl Executable {
 
     pub fn encode_to_command_buffer(
         &self,
-        command_buffer: &Retained<crate::command_buffer::CommandBuffer>,
+        command_buffer: &Retained<CommandBuffer>,
         inputs: &[&Retained<TensorData>],
         results: Option<&[&Retained<TensorData>]>,
         execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
