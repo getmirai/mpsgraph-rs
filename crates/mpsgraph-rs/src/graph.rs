@@ -217,113 +217,44 @@ impl Graph {
         }
     }
 
-    /// Creates a constant tensor with the given data
-    /// Adds two tensors element-wise
-    pub fn add(
+    /// Creates a constant tensor with the given raw bytes
+    pub fn constant_with_data(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
-        name: Option<&str>,
+        data: &[u8],
+        shape: &Shape,
+        data_type: DataType,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
+            // Create NSData with our data
+            let ns_data = NSData::with_bytes(data);
 
+            // Use the graph's constant method directly
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                additionWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
-                name: name_ptr
+                constantWithData: &*ns_data,
+                shape: shape.as_ptr(),
+                dataType: data_type as u32
             ];
 
             if tensor_ptr.is_null() {
-                panic!("Failed to create addition tensor");
+                panic!("Failed to create constant tensor from raw bytes");
             } else {
                 Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
 
-    /// Multiplies two tensors element-wise
-    pub fn multiply(
-        &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    /// Creates a constant scalar tensor
+    pub fn constant_with_scalar(&self, value: f64, data_type: DataType) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                multiplicationWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
-                name: name_ptr
+                constantWithScalar: value,
+                dataType: data_type as u32
             ];
 
             if tensor_ptr.is_null() {
-                panic!("Failed to create multiplication tensor");
-            } else {
-                Retained::retain_autoreleased(tensor_ptr).unwrap()
-            }
-        }
-    }
-
-    /// Subtracts one tensor from another element-wise
-    pub fn subtract(
-        &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor_ptr: *mut Tensor = msg_send![
-                self,
-                subtractionWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
-                name: name_ptr
-            ];
-
-            if tensor_ptr.is_null() {
-                panic!("Failed to create subtraction tensor");
-            } else {
-                Retained::retain_autoreleased(tensor_ptr).unwrap()
-            }
-        }
-    }
-
-    /// Divides one tensor by another element-wise
-    pub fn divide(
-        &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor_ptr: *mut Tensor = msg_send![
-                self,
-                divisionWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
-                name: name_ptr
-            ];
-
-            if tensor_ptr.is_null() {
-                panic!("Failed to create division tensor");
+                panic!("Failed to create constant scalar tensor");
             } else {
                 Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
@@ -331,7 +262,7 @@ impl Graph {
     }
 
     /// Creates a constant tensor with scalar value and shape
-    pub fn constant_scalar_with_shape(
+    pub fn constant_with_filled_scalar(
         &self,
         value: f64,
         data_type: DataType,
@@ -351,126 +282,6 @@ impl Graph {
                 Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
-    }
-
-    /// Creates a constant scalar tensor
-    pub fn constant_scalar(&self, value: f64, data_type: DataType) -> Retained<Tensor> {
-        unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
-                self,
-                constantWithScalar: value,
-                dataType: data_type as u32
-            ];
-
-            if tensor_ptr.is_null() {
-                panic!("Failed to create constant scalar tensor");
-            } else {
-                Retained::retain_autoreleased(tensor_ptr).unwrap()
-            }
-        }
-    }
-
-    /// Creates a constant tensor with array values and shape
-    pub fn constant_with_shape(
-        &self,
-        values: &[f64],
-        data_type: DataType,
-        shape: &Shape,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        // Create TensorData from values
-        let dims = shape.dimensions();
-        let data = TensorData::from_bytes(values, &dims, data_type);
-
-        // Create constant with data
-        self.constant_with_data(&data, Some(shape), name)
-    }
-
-    /// Creates a constant tensor with array values, inferring shape from array dimensions
-    pub fn constant(
-        &self,
-        values: &[f64],
-        shape_dimensions: &[i64],
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        // Create shape
-        let shape = Shape::from_dimensions(shape_dimensions);
-
-        // Create constant with shape
-        self.constant_with_shape(values, data_type, &shape, name)
-    }
-
-    /// Creates a constant tensor with the given data
-    pub fn constant_with_data(
-        &self,
-        data: &Retained<TensorData>,
-        shape: Option<&Shape>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let shape_ptr = shape.map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor_ptr: *mut Tensor = msg_send![
-                self,
-                constantWithData: &**data,
-                shape: shape_ptr,
-                name: name_ptr
-            ];
-
-            if tensor_ptr.is_null() {
-                panic!("Failed to create constant tensor with data");
-            } else {
-                Retained::retain_autoreleased(tensor_ptr).unwrap()
-            }
-        }
-    }
-
-    /// Creates a constant tensor with the given raw bytes
-    pub fn constant_with_raw_data(
-        &self,
-        data: &[u8],
-        shape: &Shape,
-        data_type: DataType,
-    ) -> Retained<Tensor> {
-        // Create TensorData from the raw bytes
-        let tensor_data = unsafe {
-            // Get the default Metal device
-            let device = metal::Device::system_default().expect("No Metal device found");
-
-            // Create NSData with our data
-            let ns_data = NSData::with_bytes(data);
-
-            // Create MPSGraphDevice from MTLDevice
-            let mps_device = Device::with_device(&device);
-
-            // Create the TensorData with NSData
-            let tensor_data_class = TensorData::class();
-            let data_type_val = data_type as u32;
-
-            let alloc: *mut TensorData = msg_send![tensor_data_class, alloc];
-            let tensor_data: *mut TensorData = msg_send![alloc,
-                initWithDevice:&*mps_device,
-                data:&*ns_data,
-                shape:shape,
-                dataType:data_type_val
-            ];
-
-            if tensor_data.is_null() {
-                panic!("Failed to create TensorData from raw bytes");
-            }
-
-            // This is an init method, which returns an object with +1 retain count
-            Retained::from_raw(tensor_data).unwrap()
-        };
-
-        // Use the existing constant_with_data method with the created TensorData
-        self.constant_with_data(&tensor_data, Some(shape), None)
     }
 
     /// Compiles the graph against a given set of feeds and targets
@@ -851,6 +662,118 @@ impl Graph {
 
             if tensor_ptr.is_null() {
                 panic!("Failed to create random normal tensor");
+            } else {
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
+            }
+        }
+    }
+
+    /// Adds two tensors element-wise
+    pub fn add(
+        &self,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                additionWithPrimaryTensor: primary.as_ref() as &Tensor,
+                secondaryTensor: secondary.as_ref() as &Tensor,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                panic!("Failed to create addition tensor");
+            } else {
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
+            }
+        }
+    }
+
+    /// Multiplies two tensors element-wise
+    pub fn multiply(
+        &self,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                multiplicationWithPrimaryTensor: primary.as_ref() as &Tensor,
+                secondaryTensor: secondary.as_ref() as &Tensor,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                panic!("Failed to create multiplication tensor");
+            } else {
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
+            }
+        }
+    }
+
+    /// Subtracts one tensor from another element-wise
+    pub fn subtract(
+        &self,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                subtractionWithPrimaryTensor: primary.as_ref() as &Tensor,
+                secondaryTensor: secondary.as_ref() as &Tensor,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                panic!("Failed to create subtraction tensor");
+            } else {
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
+            }
+        }
+    }
+
+    /// Divides one tensor by another element-wise
+    pub fn divide(
+        &self,
+        primary: &Retained<Tensor>,
+        secondary: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let tensor_ptr: *mut Tensor = msg_send![
+                self,
+                divisionWithPrimaryTensor: primary.as_ref() as &Tensor,
+                secondaryTensor: secondary.as_ref() as &Tensor,
+                name: name_ptr
+            ];
+
+            if tensor_ptr.is_null() {
+                panic!("Failed to create division tensor");
             } else {
                 Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
