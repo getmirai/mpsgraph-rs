@@ -1,14 +1,14 @@
 use block2::{Block, RcBlock};
 use objc2::encode::{Encoding, RefEncode};
-use objc2::{ClassType, Encode, Message};
-use objc2::rc::Retained;
-use objc2_foundation::NSArray;
 use objc2::msg_send;
+use objc2::rc::Retained;
+use objc2::{ClassType, Encode, Message};
+use objc2_foundation::NSArray;
 use std::ffi::c_void;
 use std::fmt;
 
 /// Helper to create NSArray from vector of Retained<Tensor>
-pub fn create_ns_array_from_tensors<T>(tensors: Vec<Retained<T>>) -> Retained<NSArray<T>> 
+pub fn create_ns_array_from_tensors<T>(tensors: Vec<Retained<T>>) -> Retained<NSArray<T>>
 where
     T: Message + ClassType,
 {
@@ -29,7 +29,7 @@ impl TensorBlock {
     pub fn new(block: RcBlock<dyn Fn() -> *mut c_void>) -> Self {
         Self { block }
     }
-    
+
     pub fn as_block_ptr(&self) -> *const Block<dyn Fn() -> *mut c_void> {
         &*self.block
     }
@@ -38,7 +38,9 @@ impl TensorBlock {
 // Debug implementation
 impl fmt::Debug for TensorBlock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TensorBlock").field("block", &"<block>").finish()
+        f.debug_struct("TensorBlock")
+            .field("block", &"<block>")
+            .finish()
     }
 }
 
@@ -61,7 +63,7 @@ impl TensorArrayBlock {
     pub fn new(block: RcBlock<dyn Fn(*mut c_void) -> *mut c_void>) -> Self {
         Self { block }
     }
-    
+
     pub fn as_block_ptr(&self) -> *const Block<dyn Fn(*mut c_void) -> *mut c_void> {
         &*self.block
     }
@@ -70,7 +72,9 @@ impl TensorArrayBlock {
 // Debug implementation
 impl fmt::Debug for TensorArrayBlock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TensorArrayBlock").field("block", &"<block>").finish()
+        f.debug_struct("TensorArrayBlock")
+            .field("block", &"<block>")
+            .finish()
     }
 }
 
@@ -93,7 +97,7 @@ impl IndexTensorArrayBlock {
     pub fn new(block: RcBlock<dyn Fn(*mut c_void, *mut c_void) -> *mut c_void>) -> Self {
         Self { block }
     }
-    
+
     pub fn as_block_ptr(&self) -> *const Block<dyn Fn(*mut c_void, *mut c_void) -> *mut c_void> {
         &*self.block
     }
@@ -102,7 +106,9 @@ impl IndexTensorArrayBlock {
 // Debug implementation
 impl fmt::Debug for IndexTensorArrayBlock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IndexTensorArrayBlock").field("block", &"<block>").finish()
+        f.debug_struct("IndexTensorArrayBlock")
+            .field("block", &"<block>")
+            .finish()
     }
 }
 
@@ -125,7 +131,7 @@ impl ConditionBlock {
     pub fn new(block: RcBlock<dyn Fn(*mut c_void, *mut c_void) -> *mut c_void>) -> Self {
         Self { block }
     }
-    
+
     pub fn as_block_ptr(&self) -> *const Block<dyn Fn(*mut c_void, *mut c_void) -> *mut c_void> {
         &*self.block
     }
@@ -134,7 +140,9 @@ impl ConditionBlock {
 // Debug implementation
 impl fmt::Debug for ConditionBlock {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("ConditionBlock").field("block", &"<block>").finish()
+        f.debug_struct("ConditionBlock")
+            .field("block", &"<block>")
+            .finish()
     }
 }
 
@@ -188,19 +196,22 @@ pub fn convert_nsarray_to_vec<T: Message + ClassType>(array: *mut NSArray<T>) ->
     if array.is_null() {
         return Vec::new();
     }
-    
+
     unsafe {
-        let array = Retained::from_raw(array).unwrap();
+        // Since array is passed in as a raw pointer, we need to retain it
+        // Typically, it would be an autoreleased object
+        let array = Retained::retain_autoreleased(array).unwrap();
         let count = array.len();
         let mut results = Vec::with_capacity(count);
-        
+
         for i in 0..count {
             let obj: *mut T = msg_send![&*array, objectAtIndex: i];
             if !obj.is_null() {
-                results.push(Retained::from_raw(obj).unwrap());
+                // Objects from an NSArray are autoreleased, so we need to retain them
+                results.push(Retained::retain_autoreleased(obj).unwrap());
             }
         }
-        
+
         results
     }
 }

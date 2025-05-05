@@ -126,9 +126,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create TensorData
     let shape_i64: Vec<i64> = shape_dimensions.iter().map(|&dim| dim as i64).collect();
-    let a_tensor_data = TensorData::from_buffer(&a_buffer, &shape_i64, DataType::Float32);
-    let b_tensor_data = TensorData::from_buffer(&b_buffer, &shape_i64, DataType::Float32);
-    let c_tensor_data = TensorData::from_buffer(&c_buffer, &shape_i64, DataType::Float32);
+    let tensor_shape = Shape::from_dimensions(&shape_i64);
+    let a_tensor_data = TensorData::from_buffer(&a_buffer, &tensor_shape, DataType::Float32);
+    let b_tensor_data = TensorData::from_buffer(&b_buffer, &tensor_shape, DataType::Float32);
+    let c_tensor_data = TensorData::from_buffer(&c_buffer, &tensor_shape, DataType::Float32);
     println!("Input/Output TensorData created.");
 
     // **Important:** Get tensors from the *deserialized* executable

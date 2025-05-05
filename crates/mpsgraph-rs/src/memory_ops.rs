@@ -184,11 +184,18 @@ pub trait GraphVariableOps {
 impl GraphMemoryOps for Graph {
     fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Retained<Tensor> {
         unsafe {
-            msg_send![
+            let result: *mut Tensor = msg_send![
                 self,
                 constantWithRealPart: real_part,
                 imaginaryPart: imaginary_part
-            ]
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create complex constant tensor");
+            } else {
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
         }
     }
 
@@ -199,12 +206,19 @@ impl GraphMemoryOps for Graph {
         data_type: DataType,
     ) -> Retained<Tensor> {
         unsafe {
-            msg_send![
+            let result: *mut Tensor = msg_send![
                 self,
                 constantWithRealPart: real_part,
                 imaginaryPart: imaginary_part,
                 dataType: data_type as u64
-            ]
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create complex constant tensor with type");
+            } else {
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
         }
     }
 
@@ -216,13 +230,20 @@ impl GraphMemoryOps for Graph {
         data_type: DataType,
     ) -> Retained<Tensor> {
         unsafe {
-            msg_send![
+            let result: *mut Tensor = msg_send![
                 self,
                 constantWithRealPart: real_part,
                 imaginaryPart: imaginary_part,
-                shape: shape,
+                shape: shape.as_ptr(),
                 dataType: data_type as u64
-            ]
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create complex constant tensor with shape");
+            } else {
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
         }
     }
 
@@ -243,7 +264,7 @@ impl GraphMemoryOps for Graph {
             let result: *mut Tensor = msg_send![
                 self,
                 variableWithData: &*ns_data,
-                shape: shape,
+                shape: shape.as_ptr(),
                 dataType: data_type as u64,
                 name: name_ptr
             ];
@@ -251,7 +272,8 @@ impl GraphMemoryOps for Graph {
             if result.is_null() {
                 panic!("Failed to create variable tensor from bytes");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -274,7 +296,8 @@ impl GraphMemoryOps for Graph {
             if result.is_null() {
                 panic!("Failed to create variable from tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -293,7 +316,8 @@ impl GraphMemoryOps for Graph {
             if result.is_null() {
                 panic!("Failed to read variable tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -318,7 +342,8 @@ impl GraphMemoryOps for Graph {
             if result.is_null() {
                 panic!("Failed to assign variable tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -335,7 +360,7 @@ impl GraphMemoryOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                placeholderTensorWithShape: shape,
+                placeholderTensorWithShape: shape.as_ptr(),
                 dataType: data_type as u64,
                 name: name_ptr
             ];
@@ -343,7 +368,8 @@ impl GraphMemoryOps for Graph {
             if result.is_null() {
                 panic!("Failed to create placeholder tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -353,14 +379,15 @@ impl GraphMemoryOps for Graph {
             let result: *mut Tensor = msg_send![
                 self,
                 storageTensorWithHandle: handle,
-                shape: shape,
+                shape: shape.as_ptr(),
                 dataType: data_type as u64
             ];
 
             if result.is_null() {
                 panic!("Failed to create storage tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This method returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

@@ -172,7 +172,7 @@ impl Graph {
 
             msg_send![
                 self,
-                randomTensorWithShape: shape,
+                randomTensorWithShape: shape.as_ptr(),
                 descriptor: descriptor,
                 name: name_obj
             ]
@@ -195,7 +195,7 @@ impl Graph {
 
             msg_send![
                 self,
-                randomTensorWithShape: shape,
+                randomTensorWithShape: shape.as_ptr(),
                 descriptor: descriptor,
                 seed: seed as u64,
                 name: name_obj
@@ -219,7 +219,7 @@ impl Graph {
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                randomTensorWithShape: shape,
+                randomTensorWithShape: shape.as_ptr(),
                 descriptor: descriptor,
                 stateTensor: state,
                 name: name_obj
@@ -253,7 +253,7 @@ impl Graph {
 
             msg_send![
                 self,
-                randomUniformTensorWithShape: shape,
+                randomUniformTensorWithShape: shape.as_ptr(),
                 name: name_obj
             ]
         }
@@ -274,7 +274,7 @@ impl Graph {
 
             msg_send![
                 self,
-                randomUniformTensorWithShape: shape,
+                randomUniformTensorWithShape: shape.as_ptr(),
                 seed: seed as u64,
                 name: name_obj
             ]
@@ -296,7 +296,7 @@ impl Graph {
 
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
-                randomUniformTensorWithShape: shape,
+                randomUniformTensorWithShape: shape.as_ptr(),
                 stateTensor: state,
                 name: name_obj
             ];

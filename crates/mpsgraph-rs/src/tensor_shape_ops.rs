@@ -7,6 +7,7 @@ use crate::core::create_ns_array_from_slice;
 use crate::graph::Graph;
 use crate::tensor::DataType;
 use crate::tensor::Tensor;
+use crate::Shape;
 
 /// Trait for tensor shape operations on Graph
 pub trait GraphTensorShapeOps {
@@ -39,7 +40,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn reshape(&self, x: &Retained<Tensor>, shape: &[i64], name: Option<&str>) -> Retained<Tensor>;
+    fn reshape(&self, x: &Retained<Tensor>, shape: &Shape, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a reshape operation using a shape tensor
     ///
@@ -86,7 +87,7 @@ pub trait GraphTensorShapeOps {
     fn broadcast(
         &self,
         x: &Retained<Tensor>,
-        shape: &[i64],
+        shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -737,7 +738,7 @@ pub trait GraphTensorShapeOps {
     fn coordinate_along_axis(
         &self,
         axis: i64,
-        shape: &[i64],
+        shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -755,7 +756,7 @@ pub trait GraphTensorShapeOps {
     fn coordinate_along_axis_tensor(
         &self,
         axis_tensor: &Retained<Tensor>,
-        shape: &[i64],
+        shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -1014,20 +1015,17 @@ impl GraphTensorShapeOps for Graph {
         }
     }
 
-    fn reshape(&self, x: &Retained<Tensor>, shape: &[i64], name: Option<&str>) -> Retained<Tensor> {
+    fn reshape(&self, x: &Retained<Tensor>, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let shape_array = create_ns_array_from_i64_slice(shape);
-            let shape_ptr = &*shape_array as *const _;
-
             let result: *mut Tensor = msg_send![
                 self,
                 reshapeTensor: &**x,
-                withShape: shape_ptr,
+                withShape: shape.as_ptr(),
                 name: name_ptr
             ];
 
@@ -1091,7 +1089,7 @@ impl GraphTensorShapeOps for Graph {
     fn broadcast(
         &self,
         x: &Retained<Tensor>,
-        shape: &[i64],
+        shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1100,13 +1098,10 @@ impl GraphTensorShapeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let shape_array = create_ns_array_from_i64_slice(shape);
-            let shape_ptr = &*shape_array as *const _;
-
             let result: *mut Tensor = msg_send![
                 self,
                 broadcastTensor: &**x,
-                toShape: shape_ptr,
+                toShape: shape.as_ptr(),
                 name: name_ptr
             ];
 
@@ -1954,7 +1949,7 @@ impl GraphTensorShapeOps for Graph {
     fn coordinate_along_axis(
         &self,
         axis: i64,
-        shape: &[i64],
+        shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1963,13 +1958,10 @@ impl GraphTensorShapeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let shape_array = create_ns_array_from_i64_slice(shape);
-            let shape_ptr = &*shape_array as *const _;
-
             let result: *mut Tensor = msg_send![
                 self,
                 coordinateAlongAxis: axis,
-                shape: shape_ptr,
+                shape: shape.as_ptr(),
                 name: name_ptr
             ];
 
@@ -1984,7 +1976,7 @@ impl GraphTensorShapeOps for Graph {
     fn coordinate_along_axis_tensor(
         &self,
         axis_tensor: &Retained<Tensor>,
-        shape: &[i64],
+        shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1993,13 +1985,10 @@ impl GraphTensorShapeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let shape_array = create_ns_array_from_i64_slice(shape);
-            let shape_ptr = &*shape_array as *const _;
-
             let result: *mut Tensor = msg_send![
                 self,
                 coordinateAlongAxisTensor: &**axis_tensor,
-                withShape: shape_ptr,
+                withShape: shape.as_ptr(),
                 name: name_ptr
             ];
 

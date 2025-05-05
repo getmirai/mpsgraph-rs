@@ -84,10 +84,11 @@ fn test_encode_to_command_buffer() {
     );
 
     // Create TensorData from Metal buffers
-    let a_tensor_data = TensorData::from_buffer(&a_buffer, &shape_dims, DataType::Float32);
-    let b_tensor_data = TensorData::from_buffer(&b_buffer, &shape_dims, DataType::Float32);
+    let shape_for_tensors = Shape::from_dimensions(&shape_dims);
+    let a_tensor_data = TensorData::from_buffer(&a_buffer, &shape_for_tensors, DataType::Float32);
+    let b_tensor_data = TensorData::from_buffer(&b_buffer, &shape_for_tensors, DataType::Float32);
     let result_tensor_data =
-        TensorData::from_buffer(&result_buffer, &shape_dims, DataType::Float32);
+        TensorData::from_buffer(&result_buffer, &shape_for_tensors, DataType::Float32);
 
     // Step 4: Create a command buffer
     let cmd_buffer = CommandBuffer::from_command_buffer(&cmd_queue.new_command_buffer().to_owned());
@@ -178,10 +179,11 @@ fn test_encode_to_command_buffer_memory_management() {
     );
 
     // Create TensorData with proper memory management
-    let a_tensor_data = TensorData::from_buffer(&a_buffer, &shape_dims, DataType::Float32);
-    let b_tensor_data = TensorData::from_buffer(&b_buffer, &shape_dims, DataType::Float32);
+    let shape_for_tensors = Shape::from_dimensions(&shape_dims);
+    let a_tensor_data = TensorData::from_buffer(&a_buffer, &shape_for_tensors, DataType::Float32);
+    let b_tensor_data = TensorData::from_buffer(&b_buffer, &shape_for_tensors, DataType::Float32);
     let result_tensor_data =
-        TensorData::from_buffer(&result_buffer, &shape_dims, DataType::Float32);
+        TensorData::from_buffer(&result_buffer, &shape_for_tensors, DataType::Float32);
 
     // Create command queue and execution descriptor
     let cmd_queue = metal_device.new_command_queue();

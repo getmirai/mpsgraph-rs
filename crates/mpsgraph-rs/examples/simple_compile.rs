@@ -78,11 +78,11 @@ fn main() {
     println!("Creating TensorData from Metal buffers...");
 
     // Wrap Metal buffers in TensorData
-    let a_data = TensorData::from_buffer(&a_buffer, &shape_dimensions, DataType::Float32);
-    let b_data = TensorData::from_buffer(&b_buffer, &shape_dimensions, DataType::Float32);
-    let c_data = TensorData::from_buffer(&c_buffer, &shape_dimensions, DataType::Float32);
-    let d_data = TensorData::from_buffer(&d_buffer, &shape_dimensions, DataType::Float32);
-    let e_data = TensorData::from_buffer(&e_buffer, &shape_dimensions, DataType::Float32);
+    let a_data = TensorData::from_buffer(&a_buffer, &shape, DataType::Float32);
+    let b_data = TensorData::from_buffer(&b_buffer, &shape, DataType::Float32);
+    let c_data = TensorData::from_buffer(&c_buffer, &shape, DataType::Float32);
+    let d_data = TensorData::from_buffer(&d_buffer, &shape, DataType::Float32);
+    let e_data = TensorData::from_buffer(&e_buffer, &shape, DataType::Float32);
 
     //-- Set Up Feeds and Results --//
     println!("Setting up feeds and results dictionaries...");

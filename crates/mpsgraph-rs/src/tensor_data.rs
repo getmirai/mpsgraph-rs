@@ -105,25 +105,16 @@ impl TensorData {
     }
 
     /// Creates a new TensorData from a Metal buffer
-    pub fn from_buffer(
-        buffer: &Buffer,
-        shape_dimensions: &[i64],
-        data_type: DataType,
-    ) -> Retained<Self> {
-        // Create a Shape from dimensions
-        let shape = Shape::from_dimensions(shape_dimensions);
-
+    pub fn from_buffer(buffer: &Buffer, shape: &Shape, data_type: DataType) -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            // Get the underlying MTLBuffer pointer as an Objective-C object
             let buffer_ptr = buffer.as_ptr() as *mut objc2::runtime::AnyObject;
-            let data_type_val = data_type as u32;
 
             let alloc: *mut Self = msg_send![class, alloc];
             let obj: *mut Self = msg_send![alloc,
-                initWithMTLBuffer:buffer_ptr,
-                shape:shape.as_ptr(),
-                dataType:data_type_val
+                initWithMTLBuffer: buffer_ptr,
+                shape: shape.as_ptr(),
+                dataType: data_type as u32
             ];
             let tensor_data = Retained::from_raw(obj).unwrap();
 

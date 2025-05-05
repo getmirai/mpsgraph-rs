@@ -2,7 +2,6 @@ use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
-use crate::core::create_ns_array_from_slice;
 use crate::graph::Graph;
 use crate::tensor::DataType;
 use crate::tensor::Tensor;
@@ -402,7 +401,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create matrix multiplication operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -433,7 +432,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create matrix multiplication with transpose operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -460,7 +459,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inner product operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -487,7 +486,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create outer product operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -514,7 +513,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create batch matrix multiplication operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -545,7 +544,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create batch matrix multiplication with transpose operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -574,7 +573,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create band part operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -603,7 +602,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create band part with scalars operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -632,7 +631,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create hamming distance operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -663,7 +662,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create scaled dot product attention operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -694,7 +693,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create scaled dot product attention with scalar operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -727,7 +726,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create masked scaled dot product attention operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -762,7 +761,7 @@ impl GraphLinearAlgebraOps for Graph {
                     "Failed to create masked scaled dot product attention with scalar operation"
                 );
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -783,7 +782,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create determinant operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -808,7 +807,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create batched determinant operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -841,7 +840,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create triangular solve operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -864,12 +863,9 @@ impl GraphLinearAlgebraOps for Graph {
             let tensor_ptrs: Vec<*const Tensor> =
                 tensors.iter().map(|t| &***t as *const _).collect();
 
-            let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
-            let tensor_array_ptr = &*tensor_array as *const _;
-
             let result: *mut Tensor = msg_send![
                 self,
-                einsumWithTensors: tensor_array_ptr,
+                einsumWithTensors: tensor_ptrs.as_ptr(),
                 equation: &*equation_ns,
                 name: name_ptr
             ];
@@ -877,7 +873,7 @@ impl GraphLinearAlgebraOps for Graph {
             if result.is_null() {
                 panic!("Failed to create einsum operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

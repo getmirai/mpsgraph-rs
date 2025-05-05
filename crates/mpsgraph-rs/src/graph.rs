@@ -272,7 +272,7 @@ impl Graph {
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 constantWithScalar: value,
-                shape: shape,
+                shape: shape.as_ptr(),
                 dataType: data_type as u32
             ];
 
@@ -618,7 +618,7 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                randomUniformTensorWithShape: shape,
+                randomUniformTensorWithShape: shape.as_ptr(),
                 min: min,
                 max: max,
                 dataType: data_type as u64,
@@ -652,7 +652,7 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                randomNormalTensorWithShape: shape,
+                randomNormalTensorWithShape: shape.as_ptr(),
                 mean: mean,
                 standardDeviation: std_dev,
                 dataType: data_type as u64,

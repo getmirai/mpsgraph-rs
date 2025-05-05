@@ -20,11 +20,11 @@ fn get_graph_from_tensor(tensor: &Retained<MPSTensor>) -> Retained<Graph> {
         // Get the operation that created this tensor
         let tensor_ptr = &**tensor;
         let operation_ptr: *mut Operation = msg_send![tensor_ptr, operation];
-        let operation = Retained::from_raw(operation_ptr).unwrap();
+        let operation = Retained::retain_autoreleased(operation_ptr).unwrap();
 
         // Get the graph from the operation
         let graph_ptr: *mut Graph = msg_send![&*operation, graph];
-        Retained::from_raw(graph_ptr).unwrap()
+        Retained::retain_autoreleased(graph_ptr).unwrap()
     }
 }
 
@@ -223,7 +223,8 @@ impl GraphExtensions for Graph {
                 dataType: data_type as u32
             ];
 
-            Retained::from_raw(tensor_ptr).expect("Failed to create constant scalar tensor")
+            Retained::retain_autoreleased(tensor_ptr)
+                .expect("Failed to create constant scalar tensor")
         }
     }
 
@@ -243,11 +244,11 @@ impl GraphExtensions for Graph {
             let tensor_ptr: *mut MPSTensor = msg_send![
                 self,
                 constantWithScalar: value_f64,
-                shape: shape,
+                shape: shape.as_ptr(),
                 dataType: data_type as u32
             ];
 
-            Retained::from_raw(tensor_ptr)
+            Retained::retain_autoreleased(tensor_ptr)
                 .expect("Failed to create constant scalar tensor with shape")
         }
     }

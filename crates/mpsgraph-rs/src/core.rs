@@ -41,13 +41,12 @@ pub fn create_ns_array_from_u64_slice(values: &[u64]) -> Retained<NSArray<NSNumb
 }
 
 /// Create an NSArray from a slice of pointers
-pub fn create_ns_array_from_slice<T: 'static + objc2::Message>(objects: &[*const T]) -> Retained<NSArray<T>> {
+pub fn create_ns_array_from_slice<T: 'static + objc2::Message>(
+    objects: &[*const T],
+) -> Retained<NSArray<T>> {
     unsafe {
         // Convert raw pointers to references
-        let refs: Vec<&T> = objects
-            .iter()
-            .map(|&p| &*p)
-            .collect();
+        let refs: Vec<&T> = objects.iter().map(|&p| &*p).collect();
 
         // Create array from references
         NSArray::from_slice(&refs)

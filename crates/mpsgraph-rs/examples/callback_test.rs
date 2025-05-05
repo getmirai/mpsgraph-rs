@@ -44,9 +44,9 @@ fn main() {
     );
 
     // Create TensorData from buffers
-    let a_data = TensorData::from_buffer(&a_buffer, &shape_dimensions, DataType::Float32);
-    let b_data = TensorData::from_buffer(&b_buffer, &shape_dimensions, DataType::Float32);
-    let result_data = TensorData::from_buffer(&result_buffer, &shape_dimensions, DataType::Float32);
+    let a_data = TensorData::from_buffer(&a_buffer, &shape, DataType::Float32);
+    let b_data = TensorData::from_buffer(&b_buffer, &shape, DataType::Float32);
+    let result_data = TensorData::from_buffer(&result_buffer, &shape, DataType::Float32);
 
     // Create input feeds
     let mut feeds = HashMap::new();
@@ -118,8 +118,7 @@ fn main() {
         metal::MTLResourceOptions::StorageModeShared,
     );
 
-    let sync_result_data =
-        TensorData::from_buffer(&sync_result_buffer, &shape_dimensions, DataType::Float32);
+    let sync_result_data = TensorData::from_buffer(&sync_result_buffer, &shape, DataType::Float32);
     let mut sync_results = HashMap::new();
     sync_results.insert(&result, &sync_result_data);
 

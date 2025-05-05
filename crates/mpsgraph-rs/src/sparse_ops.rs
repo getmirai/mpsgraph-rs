@@ -2,10 +2,10 @@ use crate::core::DataType;
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::{extern_class};
 use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSString};
 
 /// The sparse storage options for MPSGraph sparse operations.
@@ -45,7 +45,7 @@ impl CreateSparseOpDescriptor {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphCreateSparseOpDescriptor").unwrap();
             msg_send![
-                cls, 
+                cls,
                 descriptorWithStorageType: storage_type as u64,
                 dataType: data_type as u32
             ]
@@ -99,12 +99,12 @@ impl Graph {
             // Create NSArray of input tensors
             let tensor_refs: Vec<&Tensor> = tensors.iter().copied().collect();
             let tensors_array = NSArray::from_slice(&tensor_refs);
-            
+
             msg_send![
-                self, 
+                self,
                 sparseTensorWithType: data_type as u32,
                 tensors: &*tensors_array,
-                shape: shape,
+                shape: shape.as_ptr(),
                 name: name_obj
             ]
         }
@@ -138,12 +138,12 @@ impl Graph {
             // Create NSArray of input tensors
             let tensor_refs: Vec<&Tensor> = tensors.iter().copied().collect();
             let tensors_array = NSArray::from_slice(&tensor_refs);
-            
+
             msg_send![
-                self, 
+                self,
                 sparseTensorWithDescriptor: descriptor,
                 tensors: &*tensors_array,
-                shape: shape,
+                shape: shape.as_ptr(),
                 name: name_obj
             ]
         }
@@ -179,9 +179,9 @@ impl Graph {
             // Create NSArray of indices tensors
             let indices_refs: Vec<&Tensor> = indices.iter().copied().collect();
             let indices_array = NSArray::from_slice(&indices_refs);
-            
+
             msg_send![
-                self, 
+                self,
                 sparseTensorWithIndicesTensors: &*indices_array,
                 valuesTensor: values,
                 denseShape: dense_shape,
@@ -219,9 +219,9 @@ impl Graph {
             // Create NSArray of indices tensors
             let indices_refs: Vec<&Tensor> = indices.iter().copied().collect();
             let indices_array = NSArray::from_slice(&indices_refs);
-            
+
             msg_send![
-                self, 
+                self,
                 sparseToDenseWithIndicesTensors: &*indices_array,
                 valuesTensor: values,
                 denseShapeTensor: dense_shape,

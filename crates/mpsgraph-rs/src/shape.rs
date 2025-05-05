@@ -85,7 +85,7 @@ impl Shape {
     pub fn into_inner(self) -> Retained<NSArray<NSNumber>> {
         self.0
     }
-    
+
     /// Get the inner NSArray pointer for Objective-C interop
     pub fn as_ptr(&self) -> *mut AnyObject {
         self.0.as_ref() as *const NSArray<NSNumber> as *mut AnyObject
@@ -120,6 +120,18 @@ impl AsRef<NSArray<NSNumber>> for Shape {
     }
 }
 
+impl From<&[i64]> for Shape {
+    fn from(dimensions: &[i64]) -> Self {
+        Self::from_dimensions(dimensions)
+    }
+}
+
+impl<const N: usize> From<&[i64; N]> for Shape {
+    fn from(dimensions: &[i64; N]) -> Self {
+        Self::from_dimensions(dimensions)
+    }
+}
+
 // Objective-C encoding for NSArray compatibility
 unsafe impl Encode for Shape {
     const ENCODING: objc2::Encoding = <*mut AnyObject>::ENCODING;
@@ -128,5 +140,3 @@ unsafe impl Encode for Shape {
 unsafe impl RefEncode for Shape {
     const ENCODING_REF: objc2::Encoding = <*mut AnyObject>::ENCODING_REF;
 }
-
-

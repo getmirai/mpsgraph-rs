@@ -12,7 +12,7 @@ struct TensorBuffer {
 
 impl TensorBuffer {
     // Create a new TensorBuffer from a vector of f32 data
-    fn new(device: &Device, data: &[f32], shape: &[usize], data_type: DataType) -> Self {
+    fn new(device: &Device, data: &[f32], shape_dims: &[usize], data_type: DataType) -> Self {
         // Calculate size in bytes
         let byte_length = data.len() * std::mem::size_of::<f32>();
 
@@ -23,11 +23,12 @@ impl TensorBuffer {
             MTLResourceOptions::StorageModeShared,
         );
 
-        // Convert shape from usize to i64 for TensorData::from_buffer
-        let shape_i64: Vec<i64> = shape.iter().map(|&x| x as i64).collect();
+        // Convert dimensions to i64 and create a proper Shape
+        let shape_i64: Vec<i64> = shape_dims.iter().map(|&dim| dim as i64).collect();
+        let shape = Shape::from_dimensions(&shape_i64);
 
         // Create tensor data that references this buffer
-        let tensor_data = TensorData::from_buffer(&buffer, &shape_i64, data_type);
+        let tensor_data = TensorData::from_buffer(&buffer, &shape, data_type);
 
         Self {
             buffer,
@@ -36,18 +37,19 @@ impl TensorBuffer {
     }
 
     // Create an empty TensorBuffer for results
-    fn new_empty(device: &Device, size: usize, shape: &[usize], data_type: DataType) -> Self {
+    fn new_empty(device: &Device, size: usize, shape_dims: &[usize], data_type: DataType) -> Self {
         // Calculate size in bytes
         let byte_length = size * std::mem::size_of::<f32>();
 
         // Create empty MTLBuffer with storage mode shared
         let buffer = device.new_buffer(byte_length as u64, MTLResourceOptions::StorageModeShared);
 
-        // Convert shape from usize to i64 for TensorData::from_buffer
-        let shape_i64: Vec<i64> = shape.iter().map(|&x| x as i64).collect();
+        // Convert dimensions to i64 and create a proper Shape
+        let shape_i64: Vec<i64> = shape_dims.iter().map(|&dim| dim as i64).collect();
+        let shape = Shape::from_dimensions(&shape_i64);
 
         // Create tensor data that references this buffer
-        let tensor_data = TensorData::from_buffer(&buffer, &shape_i64, data_type);
+        let tensor_data = TensorData::from_buffer(&buffer, &shape, data_type);
 
         Self {
             buffer,

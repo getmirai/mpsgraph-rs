@@ -87,7 +87,7 @@ pub mod utils;
 // Additional modules will be added as they are implemented
 
 // Re-export core types
-pub use core::{create_ns_array_from_i64_slice, ClassType, DataType};
+pub use core::{ClassType, DataType};
 pub use device::Device;
 pub use executable::{
     CompilationDescriptor, DeploymentPlatform, Executable, ExecutableExecutionDescriptor,

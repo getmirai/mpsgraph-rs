@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -220,13 +220,15 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
                 scatterNDWithUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
-                shape: shape,
+                shape: shape.as_ptr(),
                 batchDimensions: batch_dimensions,
                 mode: mode as i64,
                 name: name_ptr
@@ -250,13 +252,15 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
                 scatterNDWithUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
-                shape: shape,
+                shape: shape.as_ptr(),
                 batchDimensions: batch_dimensions,
                 name: name_ptr
             ];
@@ -280,7 +284,9 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -311,13 +317,15 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
                 scatterWithUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
-                shape: shape,
+                shape: shape.as_ptr(),
                 axis: axis,
                 mode: mode as i64,
                 name: name_ptr
@@ -342,7 +350,9 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -373,14 +383,16 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
                 scatterAlongAxis: axis,
                 withUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
-                shape: shape,
+                shape: shape.as_ptr(),
                 mode: mode as i64,
                 name: name_ptr
             ];
@@ -404,7 +416,9 @@ impl GraphScatterNdOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,

@@ -1,10 +1,11 @@
-use crate::core::{create_ns_array_from_i64_slice, DataType};
+use crate::core::DataType;
 use crate::graph::Graph;
+use crate::shape::Shape;
 use crate::tensor::Tensor;
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::extern_class;
 use objc2_foundation::{NSArray, NSNumber, NSObject, NSObjectProtocol, NSString};
 
 /// Return indices mode for max pooling operations
@@ -298,7 +299,7 @@ pub trait GraphPoolingOps {
         &self,
         gradient: &Tensor,
         indices: &Tensor,
-        output_shape: &[i64],
+        output_shape: &Shape,
         descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -377,7 +378,7 @@ pub trait GraphPoolingOps {
         &self,
         gradient: &Tensor,
         indices: &Tensor,
-        output_shape: &[i64],
+        output_shape: &Shape,
         descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -461,7 +462,7 @@ impl GraphPoolingOps for Graph {
                 Some(s) => &*NSString::from_str(s),
                 None => std::ptr::null(),
             };
-            
+
             let result: Retained<NSArray<Tensor>> = msg_send![
                 self,
                 maxPooling2DReturnIndicesWithSourceTensor: source,
@@ -509,19 +510,16 @@ impl GraphPoolingOps for Graph {
         &self,
         gradient: &Tensor,
         indices: &Tensor,
-        output_shape: &[i64],
+        output_shape: &Shape,
         descriptor: &Pooling2DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            // Create MPSShape from the output_shape array
-            let shape_array = create_ns_array_from_i64_slice(output_shape);
-
             let tensor: Retained<Tensor> = msg_send![
                 self,
                 maxPooling2DGradientWithGradientTensor: gradient,
                 indicesTensor: indices,
-                outputShape: &*shape_array,
+                outputShape: output_shape.as_ptr(),
                 descriptor: descriptor,
                 name: match name { Some(s) => &*NSString::from_str(s), None => std::ptr::null() }
             ];
@@ -688,19 +686,16 @@ impl GraphPoolingOps for Graph {
         &self,
         gradient: &Tensor,
         indices: &Tensor,
-        output_shape: &[i64],
+        output_shape: &Shape,
         descriptor: &Pooling4DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            // Create MPSShape from the output_shape array
-            let shape_array = create_ns_array_from_i64_slice(output_shape);
-
             let tensor: Retained<Tensor> = msg_send![
                 self,
                 maxPooling4DGradientWithGradientTensor: gradient,
                 indicesTensor: indices,
-                outputShape: &*shape_array,
+                outputShape: output_shape.as_ptr(),
                 descriptor: descriptor,
                 name: match name { Some(s) => &*NSString::from_str(s), None => std::ptr::null() }
             ];
