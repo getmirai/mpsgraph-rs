@@ -225,8 +225,13 @@ impl Graph {
         data_type: DataType,
     ) -> Retained<Tensor> {
         unsafe {
-            // Create NSData with our data
-            let ns_data = NSData::with_bytes(data);
+            // Create a copy of the data to ensure proper memory management
+            // For large tensors, we'll create a temporary Vec to ensure proper ownership
+            // This explicit copy avoids memory management issues with large tensors
+            let data_copy = data.to_vec();
+
+            // Create NSData by passing ownership of the copy
+            let ns_data = NSData::with_bytes(&data_copy);
 
             // Use the graph's constant method directly
             let tensor_ptr: *mut Tensor = msg_send![

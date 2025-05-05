@@ -154,7 +154,7 @@ pub trait GraphTensorShapeOps {
     fn split(
         &self,
         x: &Retained<Tensor>,
-        num_splits: i64,
+        num_splits: u64,
         axis: i64,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>>;
@@ -1198,7 +1198,7 @@ impl GraphTensorShapeOps for Graph {
     fn split(
         &self,
         x: &Retained<Tensor>,
-        num_splits: i64,
+        num_splits: u64,
         axis: i64,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
