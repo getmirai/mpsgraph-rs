@@ -336,20 +336,13 @@ impl Graph {
         value: f64,
         data_type: DataType,
         shape: &Shape,
-        name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 constantWithScalar: value,
-                dataType: data_type as u64,
                 shape: shape,
-                name: name_ptr
+                dataType: data_type as u32
             ];
 
             if tensor_ptr.is_null() {
@@ -361,23 +354,12 @@ impl Graph {
     }
 
     /// Creates a constant scalar tensor
-    pub fn constant_scalar(
-        &self,
-        value: f64,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn constant_scalar(&self, value: f64, data_type: DataType) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
                 constantWithScalar: value,
-                dataType: data_type as u64,
-                name: name_ptr
+                dataType: data_type as u32
             ];
 
             if tensor_ptr.is_null() {
