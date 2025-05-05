@@ -285,7 +285,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -316,7 +316,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -349,7 +349,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -382,7 +382,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -415,7 +415,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -448,7 +448,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -475,7 +475,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -504,7 +504,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -537,7 +537,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create quantize operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -570,7 +570,7 @@ impl GraphQuantizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create dequantize operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

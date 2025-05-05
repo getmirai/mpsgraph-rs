@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -39,14 +39,17 @@ impl GraphMatrixInverseOps for Graph {
     fn inverse(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![self, inverseOfTensor: &**x, name: name_ptr];
 
             if result.is_null() {
                 panic!("Failed to create matrix inverse operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

@@ -179,7 +179,8 @@ impl GraphConvolutionTransposeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                // This is a computational method that returns an autoreleased object
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -210,7 +211,8 @@ impl GraphConvolutionTransposeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                // This is a computational method that returns an autoreleased object
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -241,7 +243,8 @@ impl GraphConvolutionTransposeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                // This is a computational method that returns an autoreleased object
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -272,7 +275,8 @@ impl GraphConvolutionTransposeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                // This is a computational method that returns an autoreleased object
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -303,7 +307,8 @@ impl GraphConvolutionTransposeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                // This is a computational method that returns an autoreleased object
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -334,7 +339,8 @@ impl GraphConvolutionTransposeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                // This is a computational method that returns an autoreleased object
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }

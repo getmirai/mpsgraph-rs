@@ -1,11 +1,11 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
-use crate::TensorNamedDataLayout;
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
+use crate::TensorNamedDataLayout;
 
 /// The resize mode to use for resizing.
 #[repr(u64)]
@@ -267,7 +267,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -283,7 +285,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -300,7 +302,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -316,7 +320,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -332,7 +336,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -347,7 +353,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -364,7 +370,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -380,7 +388,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -396,7 +404,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -411,7 +421,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -427,7 +437,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -442,7 +454,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -457,7 +469,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -471,7 +485,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -487,7 +501,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -502,7 +518,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -518,7 +534,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -533,7 +551,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -550,7 +568,9 @@ impl GraphResizeOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -566,7 +586,7 @@ impl GraphResizeOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }

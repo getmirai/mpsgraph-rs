@@ -7,9 +7,9 @@ use mpsgraph::{
 };
 use objc2::rc::Retained;
 use objc2_foundation::NSNumber;
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, env, fs, path::PathBuf};
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("MPSGraph Full Flow Example: Compile -> Serialize -> Deserialize -> Execute");
     println!("=======================================================================");
 
@@ -50,10 +50,10 @@ fn main() {
     let serialization_desc = SerializationDescriptor::new();
     serialization_desc.set_deployment_platform(DeploymentPlatform::MacOS);
 
-    // Create a temporary path for the package
-    let temp_dir = std::env::temp_dir();
-    let package_name = "full_flow_graph.mpsgraphpkg";
-    let package_path = temp_dir.join(package_name);
+    // Create a path for the package in the examples directory
+    let examples_dir = env::current_dir()?;
+    // Create a directory for the package
+    let package_path = examples_dir.join("output.mpsgraphpackage");
     let package_path_str = package_path.to_str().expect("Failed to create path string");
 
     // Ensure the directory doesn't already exist from a previous run
@@ -61,8 +61,11 @@ fn main() {
         fs::remove_dir_all(&package_path).expect("Failed to remove existing package dir");
     }
 
-    println!("Serializing to: {}", package_path_str);
-    executable.serialize_to_url(package_path_str, &serialization_desc);
+    // We need to create the directory first for objc2 NSURL to work
+    fs::create_dir_all(&package_path).expect("Failed to create package directory");
+
+    println!("Serializing to: {:?}", package_path);
+    executable.serialize_to_url(&package_path, &serialization_desc);
     println!("Serialization complete.");
 
     // Verify package contents (optional)
@@ -80,7 +83,7 @@ fn main() {
     println!("\n--- Deserializing Executable ---");
     // Note: Using the same compilation descriptor used for the original compilation
     let deserialized_executable_opt =
-        Executable::from_serialized_package(package_path_str, Some(&comp_desc));
+        Executable::from_serialized_package(&package_path, Some(&comp_desc));
 
     let deserialized_executable: Retained<Executable>;
     match deserialized_executable_opt {
@@ -96,7 +99,7 @@ fn main() {
                 fs::remove_dir_all(&package_path)
                     .expect("Failed to remove package dir after failed deserialization");
             }
-            return;
+            return Ok(());
         }
     }
 
@@ -145,7 +148,7 @@ fn main() {
         if package_path.exists() {
             fs::remove_dir_all(&package_path).expect("Failed to remove package dir");
         }
-        return;
+        return Ok(());
     }
     let inputs_for_exec = [&a_tensor_data, &b_tensor_data];
     let outputs_for_exec = [&c_tensor_data];
@@ -173,7 +176,7 @@ fn main() {
         if package_path.exists() {
             fs::remove_dir_all(&package_path).expect("Failed to remove package dir");
         }
-        return;
+        return Ok(());
     }
 
     println!("Execution successful!");
@@ -213,6 +216,8 @@ fn main() {
         fs::remove_dir_all(&package_path).expect("Failed to remove package dir");
         println!("Removed temporary package: {}", package_path_str);
     }
+
+    Ok(())
 }
 
 // Helper function to print matrix

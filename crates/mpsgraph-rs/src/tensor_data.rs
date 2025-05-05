@@ -134,7 +134,8 @@ impl TensorData {
     /// Returns the shape of this tensor data
     pub fn shape(&self) -> Shape {
         unsafe {
-            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
+            let shape_ptr: *mut NSArray<NSNumber> = msg_send![self, shape];
+            let array = Retained::retain_autoreleased(shape_ptr).unwrap();
             Shape::new(array)
         }
     }

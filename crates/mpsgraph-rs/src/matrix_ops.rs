@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -199,7 +199,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             // Create a shape object from the dimensions
             let dimensions_shape = crate::shape::Shape::from_dimensions(dimensions);
@@ -215,7 +217,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create transpose tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -228,7 +231,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -240,7 +245,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create matrix multiplication tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -255,7 +261,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -269,7 +277,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create matrix multiplication with transpose tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -282,7 +291,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -294,7 +305,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inner product tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -307,7 +319,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -319,7 +333,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create outer product tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -332,7 +347,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -344,7 +361,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create batch matrix multiplication tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -359,7 +377,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -373,7 +393,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create batch matrix multiplication with transpose tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -387,7 +408,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -400,7 +423,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create band part tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -414,7 +438,9 @@ impl GraphMatrixOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -427,7 +453,8 @@ impl GraphMatrixOps for Graph {
             if result.is_null() {
                 panic!("Failed to create band part with scalars tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

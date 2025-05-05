@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -48,45 +48,50 @@ pub trait GraphArithmeticOps {
 
     /// Returns the ceiling of the input tensor
     fn ceil(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the sine of the input tensor
     fn sin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the cosine of the input tensor
     fn cos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the tangent of the input tensor
     fn tan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the hyperbolic sine of the input tensor
     fn sinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the hyperbolic cosine of the input tensor
     fn cosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the hyperbolic tangent of the input tensor
     fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the inverse sine of the input tensor
     fn asin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the inverse cosine of the input tensor
     fn acos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the inverse tangent of the input tensor
     fn atan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the inverse hyperbolic sine of the input tensor
     fn asinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the inverse hyperbolic cosine of the input tensor
     fn acosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the inverse hyperbolic tangent of the input tensor
     fn atanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
-    
+
     /// Returns the four-quadrant arctangent of y/x; atan2(y,x)
-    fn atan2(&self, y: &Retained<Tensor>, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    fn atan2(
+        &self,
+        y: &Retained<Tensor>,
+        x: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
 
     /// Returns the floor of the input tensor
     fn floor(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
@@ -264,7 +269,9 @@ impl GraphArithmeticOps for Graph {
     fn identity(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -275,15 +282,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create identity tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn asin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -294,15 +303,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inverse sine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn acos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -313,15 +324,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inverse cosine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn atan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -332,15 +345,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inverse tangent tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn asinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -351,15 +366,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inverse hyperbolic sine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn acosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -370,15 +387,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inverse hyperbolic cosine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn atanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -389,15 +408,22 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create inverse hyperbolic tangent tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
-    fn atan2(&self, y: &Retained<Tensor>, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+
+    fn atan2(
+        &self,
+        y: &Retained<Tensor>,
+        x: &Retained<Tensor>,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -409,7 +435,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create atan2 tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -417,7 +443,9 @@ impl GraphArithmeticOps for Graph {
     fn exp(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -428,7 +456,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create exponential tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -436,7 +464,9 @@ impl GraphArithmeticOps for Graph {
     fn exp2(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -447,7 +477,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create base-2 exponential tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -455,7 +485,9 @@ impl GraphArithmeticOps for Graph {
     fn log(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -466,7 +498,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create logarithm tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -474,7 +506,9 @@ impl GraphArithmeticOps for Graph {
     fn log2(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -485,7 +519,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create base-2 logarithm tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -493,7 +527,9 @@ impl GraphArithmeticOps for Graph {
     fn square(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -504,7 +540,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create square tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -512,7 +548,9 @@ impl GraphArithmeticOps for Graph {
     fn sqrt(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -523,7 +561,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create square root tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -531,7 +569,9 @@ impl GraphArithmeticOps for Graph {
     fn rsqrt(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -542,7 +582,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reciprocal square root tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -550,7 +590,9 @@ impl GraphArithmeticOps for Graph {
     fn reciprocal(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -561,7 +603,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reciprocal tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -569,7 +611,9 @@ impl GraphArithmeticOps for Graph {
     fn abs(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -580,7 +624,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create absolute value tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -588,7 +632,9 @@ impl GraphArithmeticOps for Graph {
     fn negative(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -599,7 +645,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create negative tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -607,7 +653,9 @@ impl GraphArithmeticOps for Graph {
     fn sign(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -618,7 +666,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create sign tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -626,7 +674,9 @@ impl GraphArithmeticOps for Graph {
     fn ceil(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -637,15 +687,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create ceiling tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn sin(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -656,15 +708,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create sine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn cos(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -675,15 +729,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create cosine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn tan(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -694,15 +750,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create tangent tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn sinh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -713,15 +771,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create hyperbolic sine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn cosh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -732,15 +792,17 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create hyperbolic cosine tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
-    
+
     fn tanh(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -751,7 +813,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create hyperbolic tangent tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -759,7 +821,9 @@ impl GraphArithmeticOps for Graph {
     fn floor(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -770,7 +834,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create floor tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -778,7 +842,9 @@ impl GraphArithmeticOps for Graph {
     fn round(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -789,7 +855,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create round tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -802,7 +868,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -814,7 +882,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create addition tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -827,7 +895,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -839,7 +909,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create subtraction tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -852,7 +922,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -864,7 +936,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create multiplication tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -877,7 +949,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -889,7 +963,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create division tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -902,7 +976,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -914,7 +990,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create division_no_nan tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -927,7 +1003,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -939,7 +1017,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create modulo tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -952,7 +1030,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -964,7 +1044,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create power tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -977,7 +1057,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -989,7 +1071,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create minimum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1002,7 +1084,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1014,7 +1098,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create maximum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1027,7 +1111,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1039,7 +1125,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create equal comparison tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1052,7 +1138,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1064,7 +1152,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create not equal comparison tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1077,7 +1165,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1089,7 +1179,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create less than comparison tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1102,7 +1192,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1114,7 +1206,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create less than or equal comparison tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1127,7 +1219,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1139,7 +1233,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create greater than comparison tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1152,7 +1246,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1164,7 +1260,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create greater than or equal comparison tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1177,7 +1273,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1189,7 +1287,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create logical AND tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1202,7 +1300,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1214,7 +1314,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create logical OR tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1222,7 +1322,9 @@ impl GraphArithmeticOps for Graph {
     fn logical_not(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1233,7 +1335,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create logical NOT tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1247,7 +1349,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1260,7 +1364,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create select tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1274,7 +1378,9 @@ impl GraphArithmeticOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -1287,7 +1393,7 @@ impl GraphArithmeticOps for Graph {
             if result.is_null() {
                 panic!("Failed to create clamp tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

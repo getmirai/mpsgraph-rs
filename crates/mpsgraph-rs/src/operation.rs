@@ -1,6 +1,6 @@
 use objc2::rc::Retained;
-use objc2::{extern_class, msg_send};
 use objc2::runtime::NSObject;
+use objc2::{extern_class, msg_send};
 use objc2_foundation::{NSArray, NSObjectProtocol, NSString};
 
 use crate::graph::Graph;
@@ -27,12 +27,11 @@ impl Operation {
 
             for i in 0..count {
                 let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
-                let tensor = Retained::from_raw(tensor_ptr).unwrap();
+                let tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
                 result.push(tensor);
             }
-            
-            // Safe to release the array here
-            let _ = Retained::from_raw(array_ptr).unwrap();
+
+            let _ = Retained::retain_autoreleased(array_ptr).unwrap();
 
             result
         }
@@ -48,12 +47,11 @@ impl Operation {
 
             for i in 0..count {
                 let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
-                let tensor = Retained::from_raw(tensor_ptr).unwrap();
+                let tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
                 result.push(tensor);
             }
-            
-            // Safe to release the array here
-            let _ = Retained::from_raw(array_ptr).unwrap();
+
+            let _ = Retained::retain_autoreleased(array_ptr).unwrap();
 
             result
         }
@@ -63,7 +61,7 @@ impl Operation {
     pub fn graph(&self) -> Retained<Graph> {
         unsafe {
             let graph_ptr: *mut Graph = msg_send![self, graph];
-            let graph = Retained::from_raw(graph_ptr).unwrap();
+            let graph = Retained::retain_autoreleased(graph_ptr).unwrap();
             graph
         }
     }
@@ -75,7 +73,7 @@ impl Operation {
             if name_ptr.is_null() {
                 None
             } else {
-                let name = Retained::from_raw(name_ptr).unwrap();
+                let name = Retained::retain_autoreleased(name_ptr).unwrap();
                 Some(name.to_string())
             }
         }
@@ -85,13 +83,13 @@ impl Operation {
     pub fn control_dependencies(&self) -> Vec<Retained<Operation>> {
         unsafe {
             let dependencies_ptr: *mut NSArray<Operation> = msg_send![self, controlDependencies];
-            let array = Retained::from_raw(dependencies_ptr).unwrap();
+            let array = Retained::retain_autoreleased(dependencies_ptr).unwrap();
             let count = array.len();
             let mut result = Vec::with_capacity(count);
 
             for i in 0..count {
                 let op_ptr: *mut Operation = msg_send![&*array, objectAtIndex: i];
-                let op = Retained::from_raw(op_ptr).unwrap();
+                let op = Retained::retain_autoreleased(op_ptr).unwrap();
                 result.push(op);
             }
 

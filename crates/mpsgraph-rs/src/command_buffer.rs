@@ -277,7 +277,8 @@ impl CommandBuffer {
                 if !metal_buffer.is_null() {
                     let label_ptr: *mut NSString = msg_send![metal_buffer, label];
                     if !label_ptr.is_null() {
-                        let ns_string = Retained::from_raw(label_ptr).unwrap();
+                        // Property accessor returns autoreleased object
+                        let ns_string = Retained::retain_autoreleased(label_ptr).unwrap();
                         return ns_string.to_string();
                     }
                 }

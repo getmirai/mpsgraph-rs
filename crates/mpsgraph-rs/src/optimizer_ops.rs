@@ -188,7 +188,8 @@ impl GraphOptimizerOps for Graph {
             if result.is_null() {
                 panic!("Failed to create SGD operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -238,7 +239,8 @@ impl GraphOptimizerOps for Graph {
             if result.is_null() {
                 panic!("Failed to create Adam update operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -286,7 +288,8 @@ impl GraphOptimizerOps for Graph {
             if result.is_null() {
                 panic!("Failed to create RMSProp update operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -313,7 +316,8 @@ impl GraphOptimizerOps for Graph {
             if result.is_null() {
                 panic!("Failed to create L2 norm gradient clipping operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -340,7 +344,8 @@ impl GraphOptimizerOps for Graph {
             if result.is_null() {
                 panic!("Failed to create multiply gradients by scalar operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -374,13 +379,16 @@ impl Graph {
                 None => std::ptr::null(),
             };
 
-            msg_send![
+            let result: *mut Tensor = msg_send![
                 self,
                 stochasticGradientDescentWithLearningRateTensor: learning_rate,
                 valuesTensor: values,
                 gradientTensor: gradient,
                 name: name_obj
-            ]
+            ];
+
+            // This is a computational method that returns an autoreleased object
+            Retained::retain_autoreleased(result).unwrap()
         }
     }
 
@@ -467,7 +475,8 @@ impl Graph {
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: i];
-                let tensor = Retained::retain(tensor_ptr).unwrap();
+                // This is accessing an object from a collection, so it's autoreleased
+                let tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
                 result.push(tensor);
             }
 
@@ -552,7 +561,7 @@ impl Graph {
             let mut result = Vec::with_capacity(count);
             for i in 0..count {
                 let tensor_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: i];
-                let tensor = Retained::retain(tensor_ptr).unwrap();
+                let tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
                 result.push(tensor);
             }
 
@@ -584,11 +593,14 @@ impl Graph {
                 None => ptr::null(),
             };
 
-            msg_send![
+            let result: *mut VariableOp = msg_send![
                 self,
                 variableOpWithTensor: tensor,
                 name: name_obj
-            ]
+            ];
+
+            // This is a factory method that returns an autoreleased object
+            Retained::retain_autoreleased(result).unwrap()
         }
     }
 
@@ -619,13 +631,16 @@ impl Graph {
                 None => ptr::null(),
             };
 
-            msg_send![
+            let result: *mut Tensor = msg_send![
                 self,
                 applyStochasticGradientDescentWithLearningRateTensor: learning_rate,
                 variableOp: variable_op,
                 gradientTensor: gradient,
                 name: name_obj
-            ]
+            ];
+
+            // This is a computational method that returns an autoreleased object
+            Retained::retain_autoreleased(result).unwrap()
         }
     }
 }

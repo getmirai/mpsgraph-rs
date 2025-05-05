@@ -2,6 +2,7 @@
 
 // Enabled tests
 mod data_types_tests;
+mod executable_tests;
 
 // Temporarily disabled while the API migration is in progress
 // mod device_tests;

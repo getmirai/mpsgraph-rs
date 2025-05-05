@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -115,10 +115,12 @@ impl GraphGatherOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 gatherNDWithUpdatesTensor: &**updates_tensor,
                 indicesTensor: &**indices_tensor,
                 batchDimensions: batch_dimensions,
@@ -128,7 +130,7 @@ impl GraphGatherOps for Graph {
             if result.is_null() {
                 panic!("Failed to create GatherND operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -143,10 +145,12 @@ impl GraphGatherOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 gatherWithUpdatesTensor: &**updates_tensor,
                 indicesTensor: &**indices_tensor,
                 axis: axis,
@@ -157,7 +161,7 @@ impl GraphGatherOps for Graph {
             if result.is_null() {
                 panic!("Failed to create Gather operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -171,11 +175,12 @@ impl GraphGatherOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-
                 gatherAlongAxis: axis,
                 withUpdatesTensor: &**updates_tensor,
                 indicesTensor: &**indices_tensor,
@@ -185,7 +190,7 @@ impl GraphGatherOps for Graph {
             if result.is_null() {
                 panic!("Failed to create GatherAlongAxis operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -199,10 +204,12 @@ impl GraphGatherOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 gatherAlongAxisTensor: &**axis_tensor,
                 withUpdatesTensor: &**updates_tensor,
                 indicesTensor: &**indices_tensor,
@@ -212,7 +219,7 @@ impl GraphGatherOps for Graph {
             if result.is_null() {
                 panic!("Failed to create GatherAlongAxisTensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

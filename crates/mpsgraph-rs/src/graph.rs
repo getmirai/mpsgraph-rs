@@ -73,8 +73,9 @@ impl Graph {
     pub fn new() -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let obj: Retained<Self> = msg_send![class, new];
-            obj
+            // 'new' is a class method that returns an object with +1 retain count
+            let obj_ptr: *mut Self = msg_send![class, new];
+            Retained::from_raw(obj_ptr).unwrap()
         }
     }
 
@@ -100,7 +101,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create placeholder tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -130,7 +131,7 @@ impl Graph {
             if result_ptr.is_null() {
                 panic!("Failed to create matrix multiplication tensor");
             } else {
-                Retained::from_raw(result_ptr).unwrap()
+                Retained::retain_autoreleased(result_ptr).unwrap()
             }
         }
     }
@@ -156,9 +157,12 @@ impl Graph {
             let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
                 msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
 
+            // Retain the dictionary since dictionaryWithCapacity returns an autoreleased object
+            let dictionary = Retained::retain_autoreleased(dictionary_ptr).unwrap();
+
             // Add entries to dictionary
             for (tensor, data) in feeds {
-                let _: () = msg_send![dictionary_ptr, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
+                let _: () = msg_send![&*dictionary, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
             }
 
             // Create NSArray for output tensors
@@ -173,7 +177,7 @@ impl Graph {
             // Always call the async version
             let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![
                 self,
-                runAsyncWithFeeds: dictionary_ptr,
+                runAsyncWithFeeds: &*dictionary,
                 targetTensors: &*output_array,
                 targetOperations: std::ptr::null::<NSArray<Operation>>(), // Pass nil for operations
                 executionDescriptor: desc_ptr // Pass pointer or null
@@ -188,20 +192,23 @@ impl Graph {
                 // panic!("runAsyncWithFeeds returned null dictionary");
             }
 
-            let _results_dict = Retained::from_raw(results_ptr).unwrap();
+            // Retain the results dictionary
+            let results_dict = Retained::retain_autoreleased(results_ptr).unwrap();
 
             // Convert NSDictionary to HashMap
             let mut result = HashMap::new();
-            let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
+            let keys_ptr: *mut NSArray<Tensor> = msg_send![&*results_dict, allKeys];
 
-            let keys_count: usize = msg_send![keys, count];
+            // Retain the keys array
+            let keys = Retained::retain_autoreleased(keys_ptr).unwrap();
+            let keys_count: usize = keys.len();
 
             for i in 0..keys_count {
-                let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
-                let key = Retained::from_raw(key_ptr as *mut _).unwrap();
+                let key_ptr: *mut Tensor = msg_send![&*keys, objectAtIndex: i];
+                let key = Retained::retain_autoreleased(key_ptr).unwrap();
 
-                let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
-                let value = Retained::from_raw(value_ptr as *mut _).unwrap();
+                let value_ptr: *mut TensorData = msg_send![&*results_dict, objectForKey: &*key];
+                let value = Retained::retain_autoreleased(value_ptr).unwrap();
 
                 result.insert(key, value);
             }
@@ -234,7 +241,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create addition tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -262,7 +269,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create multiplication tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -290,7 +297,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create subtraction tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -318,7 +325,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create division tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -348,7 +355,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create constant scalar tensor with shape");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -376,7 +383,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create constant scalar tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -437,7 +444,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create constant tensor with data");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -476,6 +483,7 @@ impl Graph {
                 panic!("Failed to create TensorData from raw bytes");
             }
 
+            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(tensor_data).unwrap()
         };
 
@@ -505,7 +513,15 @@ impl Graph {
             let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
             let keys_array = NSArray::from_slice(&keys);
             let values_array = NSArray::from_slice(&values);
-            let immutable_feeds_dict: Retained<NSDictionary<Tensor, ShapedType>> = msg_send![NSDictionary::<Tensor, ShapedType>::class(), dictionaryWithObjects: &*values_array, forKeys: &*keys_array];
+
+            // dictionaryWithObjects returns an autoreleased object, so we need to retain it
+            let dictionary_class = NSDictionary::<Tensor, ShapedType>::class();
+            let feeds_dict_ptr: *mut NSDictionary<Tensor, ShapedType> = msg_send![
+                dictionary_class,
+                dictionaryWithObjects: &*values_array,
+                forKeys: &*keys_array
+            ];
+            let feeds_dict = Retained::retain_autoreleased(feeds_dict_ptr).unwrap();
 
             // Create NSArray for target tensors
             let targets_refs: Vec<&Tensor> = targets
@@ -523,7 +539,7 @@ impl Graph {
             let executable_ptr: *mut Executable = msg_send![
                 self,
                 compileWithDevice: device.as_ref() as &Device,
-                feeds: &*immutable_feeds_dict, // Pass the immutable dictionary
+                feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
                 targetOperations: std::ptr::null::<NSArray<Operation>>(),
                 compilationDescriptor: desc_ptr
@@ -532,7 +548,7 @@ impl Graph {
             if executable_ptr.is_null() {
                 panic!("Failed to compile graph");
             } else {
-                Retained::from_raw(executable_ptr).unwrap()
+                Retained::retain_autoreleased(executable_ptr).unwrap()
             }
         }
     }
@@ -561,7 +577,15 @@ impl Graph {
             let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
             let keys_array = NSArray::from_slice(&keys);
             let values_array = NSArray::from_slice(&values);
-            let immutable_feeds_dict: Retained<NSDictionary<Tensor, ShapedType>> = msg_send![NSDictionary::<Tensor, ShapedType>::class(), dictionaryWithObjects: &*values_array, forKeys: &*keys_array];
+
+            // dictionaryWithObjects returns an autoreleased object, so we need to retain it
+            let dictionary_class = NSDictionary::<Tensor, ShapedType>::class();
+            let feeds_dict_ptr: *mut NSDictionary<Tensor, ShapedType> = msg_send![
+                dictionary_class,
+                dictionaryWithObjects: &*values_array,
+                forKeys: &*keys_array
+            ];
+            let feeds_dict = Retained::retain_autoreleased(feeds_dict_ptr).unwrap();
 
             // Create NSArray for target tensors
             let targets_refs: Vec<&Tensor> = targets
@@ -583,7 +607,7 @@ impl Graph {
             let executable_ptr: *mut Executable = msg_send![
                 self,
                 compileWithDevice: device.as_ref() as &Device,
-                feeds: &*immutable_feeds_dict, // Pass the immutable dictionary
+                feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
                 targetOperations: &*ops_array,
                 compilationDescriptor: desc_ptr
@@ -592,7 +616,7 @@ impl Graph {
             if executable_ptr.is_null() {
                 panic!("Failed to compile graph with targets and operations");
             } else {
-                Retained::from_raw(executable_ptr).unwrap()
+                Retained::retain_autoreleased(executable_ptr).unwrap()
             }
         }
     }
@@ -621,26 +645,32 @@ impl Graph {
             let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
                 msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
 
+            // Retain the dictionary since dictionaryWithCapacity returns an autoreleased object
+            let dictionary = Retained::retain_autoreleased(dictionary_ptr).unwrap();
+
             // Add entries to dictionary
             for (tensor, data) in feeds {
-                let _: () = msg_send![dictionary_ptr, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
+                let _: () = msg_send![&*dictionary, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
             }
 
             // Create NSArray for target tensors if provided
-            let targets_array_ptr = match target_tensors {
+            let targets_array_option = match target_tensors {
                 Some(tensors) => {
                     let targets_refs: Vec<&Tensor> = tensors
                         .iter()
                         .map(|retained_tensor| retained_tensor.as_ref())
                         .collect();
-                    let array = NSArray::from_slice(&targets_refs);
-                    &*array as *const NSArray<Tensor>
+                    Some(NSArray::from_slice(&targets_refs))
                 }
-                None => std::ptr::null(),
+                None => None,
             };
 
+            let targets_array_ptr = targets_array_option
+                .as_ref()
+                .map_or(std::ptr::null(), |arr| &**arr as *const NSArray<Tensor>);
+
             // Create NSArray for target operations if provided
-            let ops_array: Option<Retained<NSArray<Operation>>> = match target_operations {
+            let ops_array_option: Option<Retained<NSArray<Operation>>> = match target_operations {
                 Some(ops_retained) => {
                     let ops_refs: Vec<&Operation> = ops_retained
                         .iter()
@@ -651,19 +681,22 @@ impl Graph {
                 None => None,
             };
 
+            let ops_array_ptr = ops_array_option
+                .as_ref()
+                .map_or(std::ptr::null(), |arr| &**arr as *const NSArray<Operation>);
+
             // Get descriptor pointer if provided
-            let desc_ptr = match execution_descriptor {
-                Some(desc) => desc.as_ref() as *const ExecutionDescriptor,
-                None => std::ptr::null(),
-            };
+            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
+                d.as_ref() as *const ExecutionDescriptor
+            });
 
             // Encode the graph to the command buffer
             let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![
                 self,
                 encodeToCommandBuffer: command_buffer.as_ref() as &CommandBuffer,
-                feeds: dictionary_ptr,
+                feeds: &*dictionary,
                 targetTensors: targets_array_ptr,
-                targetOperations: ops_array.as_deref(),
+                targetOperations: ops_array_ptr,
                 executionDescriptor: desc_ptr
             ];
 
@@ -674,20 +707,22 @@ impl Graph {
                 // panic!("encodeToCommandBuffer returned null dictionary");
             }
 
-            // Convert NSMutableDictionary to HashMap
-            let _results_dict = Retained::from_raw(results_ptr).unwrap();
+            // Convert NSMutableDictionary to HashMap - retain the results dictionary
+            let results_dict = Retained::retain_autoreleased(results_ptr).unwrap();
 
             let mut result = HashMap::new();
-            let keys: *mut NSArray<Tensor> = msg_send![results_ptr, allKeys];
+            let keys_ptr: *mut NSArray<Tensor> = msg_send![&*results_dict, allKeys];
 
-            let keys_count: usize = msg_send![keys, count];
+            // Retain the keys array
+            let keys = Retained::retain_autoreleased(keys_ptr).unwrap();
+            let keys_count = keys.len();
 
             for i in 0..keys_count {
-                let key_ptr: *const Tensor = msg_send![keys, objectAtIndex: i];
-                let key = Retained::from_raw(key_ptr as *mut _).unwrap();
+                let key_ptr: *mut Tensor = msg_send![&*keys, objectAtIndex: i];
+                let key = Retained::retain_autoreleased(key_ptr).unwrap();
 
-                let value_ptr: *const TensorData = msg_send![results_ptr, objectForKey: key_ptr];
-                let value = Retained::from_raw(value_ptr as *mut _).unwrap();
+                let value_ptr: *mut TensorData = msg_send![&*results_dict, objectForKey: &*key];
+                let value = Retained::retain_autoreleased(value_ptr).unwrap();
 
                 result.insert(key, value);
             }
@@ -718,9 +753,12 @@ impl Graph {
             let feeds_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
                 msg_send![feeds_dictionary_class, dictionaryWithCapacity: feeds.len()];
 
+            // Retain the feeds dictionary
+            let feeds_dictionary = Retained::retain_autoreleased(feeds_ptr).unwrap();
+
             // Add entries to feeds dictionary
             for (tensor, data) in feeds {
-                let _: () = msg_send![feeds_ptr, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
+                let _: () = msg_send![&*feeds_dictionary, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
             }
 
             // Create NSMutableDictionary for results
@@ -728,13 +766,16 @@ impl Graph {
             let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
                 msg_send![results_dictionary_class, dictionaryWithCapacity: results_dict.len()];
 
+            // Retain the results dictionary
+            let results_dictionary = Retained::retain_autoreleased(results_ptr).unwrap();
+
             // Add entries to results dictionary
             for (tensor, data) in results_dict {
-                let _: () = msg_send![results_ptr, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
+                let _: () = msg_send![&*results_dictionary, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
             }
 
             // Create NSArray for target operations if provided
-            let ops_array: Option<Retained<NSArray<Operation>>> = match target_operations {
+            let ops_array_option: Option<Retained<NSArray<Operation>>> = match target_operations {
                 Some(ops_retained) => {
                     let ops_refs: Vec<&Operation> = ops_retained
                         .iter()
@@ -745,19 +786,22 @@ impl Graph {
                 None => None,
             };
 
+            let ops_array_ptr = ops_array_option
+                .as_ref()
+                .map_or(std::ptr::null(), |arr| &**arr as *const NSArray<Operation>);
+
             // Get descriptor pointer if provided
-            let desc_ptr = match execution_descriptor {
-                Some(desc) => desc.as_ref() as *const ExecutionDescriptor,
-                None => std::ptr::null(),
-            };
+            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
+                d.as_ref() as *const ExecutionDescriptor
+            });
 
             // Encode the graph to the command buffer with results
             let _: () = msg_send![
                 self,
                 encodeToCommandBuffer: command_buffer.as_ref() as &CommandBuffer,
-                feeds: feeds_ptr,
-                targetOperations: ops_array.as_deref(),
-                resultsDictionary: results_ptr,
+                feeds: &*feeds_dictionary,
+                targetOperations: ops_array_ptr,
+                resultsDictionary: &*results_dictionary,
                 executionDescriptor: desc_ptr
             ];
         }
@@ -792,7 +836,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create random uniform tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }
@@ -826,7 +870,7 @@ impl Graph {
             if tensor_ptr.is_null() {
                 panic!("Failed to create random normal tensor");
             } else {
-                Retained::from_raw(tensor_ptr).unwrap()
+                Retained::retain_autoreleased(tensor_ptr).unwrap()
             }
         }
     }

@@ -2,10 +2,11 @@ use crate::command_buffer::CommandBuffer;
 use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
 use objc2::rc::Retained;
-use objc2::runtime::{AnyClass, NSObject};
+use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::{NSArray, NSObjectProtocol, NSString, NSURL};
 use std::collections::HashMap;
+use std::path::Path;
 
 use crate::tensor::Tensor;
 use crate::tensor_data::TensorData;
@@ -72,6 +73,7 @@ impl CompilationDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
+            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -114,6 +116,7 @@ impl ExecutionDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
+            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -168,6 +171,7 @@ impl SerializationDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
+            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -211,6 +215,7 @@ impl ExecutableExecutionDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
+            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -264,51 +269,47 @@ unsafe impl NSObjectProtocol for Executable {}
 impl Executable {
     /// Create a new executable from a serialized package at the specified URL
     pub fn from_serialized_package(
-        url_string: &str,
+        path: &Path,
         compilation_descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Option<Retained<Self>> {
         unsafe {
-            // Convert URL string to file URL string
-            let file_url_string = format!("file://{}", url_string);
-            let url_str = NSString::from_str(&file_url_string); // Use file URL string
-            let nsurl_class = AnyClass::get(c"NSURL").unwrap();
-            let nsurl_ptr: *mut NSURL = msg_send![nsurl_class, URLWithString: &*url_str];
+            // Convert path to file URL string
+            let path_str = path.to_str()?;
 
-            if nsurl_ptr.is_null() {
-                return None;
-            }
+            // Create NSURL from path directly (returns Retained<NSURL>)
+            let path_ns = NSString::from_str(path_str);
+            let url = NSURL::fileURLWithPath(&path_ns);
 
-            let nsurl = Retained::from_raw(nsurl_ptr).unwrap();
-
-            // Initialize from URL
+            // Get compilation descriptor or pass nil
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
 
-            // Get compilation descriptor or pass nil
             match compilation_descriptor {
                 Some(desc) => {
                     let executable: *mut Self = msg_send![
                         alloc,
-                        initWithMPSGraphPackageAtURL: &*nsurl,
+                        initWithMPSGraphPackageAtURL: &*url,
                         compilationDescriptor: desc.as_ref() as &CompilationDescriptor
                     ];
 
                     if executable.is_null() {
                         None
                     } else {
+                        // This is an init method, which returns an object with +1 retain count
                         Retained::from_raw(executable)
                     }
                 }
                 None => {
                     let executable: *mut Self = msg_send![
                         alloc,
-                        initWithMPSGraphPackageAtURL: &*nsurl,
+                        initWithMPSGraphPackageAtURL: &*url,
                         compilationDescriptor: std::ptr::null::<CompilationDescriptor>()
                     ];
 
                     if executable.is_null() {
                         None
                     } else {
+                        // This is an init method, which returns an object with +1 retain count
                         Retained::from_raw(executable)
                     }
                 }
@@ -316,31 +317,24 @@ impl Executable {
         }
     }
 
-    pub fn serialize_to_url(
-        &self,
-        url_string: &str,
-        descriptor: &Retained<SerializationDescriptor>,
-    ) {
+    pub fn serialize_to_url(&self, path: &Path, descriptor: &Retained<SerializationDescriptor>) {
         unsafe {
-            // Convert URL string to file URL string
-            let file_url_string = format!("file://{}", url_string);
-            let url_str = NSString::from_str(&file_url_string);
-            let nsurl_class = AnyClass::get(c"NSURL").unwrap();
-            let nsurl_ptr: *mut NSURL = msg_send![nsurl_class, URLWithString: &*url_str];
+            // Convert path to NSURL using fileURLWithPath
+            if let Some(path_str) = path.to_str() {
+                let path_ns = NSString::from_str(path_str);
 
-            if nsurl_ptr.is_null() {
-                eprintln!("Error: Could not create NSURL from string: {}", url_string);
-                return;
+                // fileURLWithPath returns Retained<NSURL>, not Option<Retained<NSURL>>
+                let url = NSURL::fileURLWithPath(&path_ns);
+
+                // Serialize (returns void)
+                let _: () = msg_send![
+                    self,
+                    serializeToMPSGraphPackageAtURL: &*url,
+                    descriptor: descriptor.as_ref() as &SerializationDescriptor
+                ];
+            } else {
+                eprintln!("Error: Could not convert path to string: {:?}", path);
             }
-
-            let nsurl = Retained::from_raw(nsurl_ptr).unwrap();
-
-            // Serialize (returns void)
-            let _: () = msg_send![
-                self,
-                serializeToMPSGraphPackageAtURL: &*nsurl,
-                descriptor: descriptor.as_ref() as &SerializationDescriptor
-            ];
         }
     }
 
@@ -373,20 +367,25 @@ impl Executable {
         unsafe {
             let array_ptr: *mut NSArray<Tensor> = msg_send![self, feedTensors];
             if array_ptr.is_null() {
-                None
-            } else {
-                // Work directly with the raw pointer
-                let count: usize = msg_send![array_ptr, count];
-                let mut vec = Vec::with_capacity(count);
-                for i in 0..count {
-                    // Get pointer, check null, create Retained from raw
-                    let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
-                    if !tensor_ptr.is_null() {
-                        vec.push(Retained::from_raw(tensor_ptr).unwrap());
-                    }
-                }
-                Some(vec)
+                return None;
             }
+
+            let array_opt = Retained::retain_autoreleased(array_ptr);
+            if array_opt.is_none() {
+                return None;
+            }
+            let array = array_opt.unwrap();
+
+            let count = array.len();
+            let mut vec = Vec::with_capacity(count);
+
+            for i in 0..count {
+                let tensor_ptr: *mut Tensor = msg_send![&*array, objectAtIndex: i];
+                if let Some(tensor) = Retained::retain_autoreleased(tensor_ptr) {
+                    vec.push(tensor);
+                }
+            }
+            Some(vec)
         }
     }
 
@@ -395,20 +394,25 @@ impl Executable {
         unsafe {
             let array_ptr: *mut NSArray<Tensor> = msg_send![self, targetTensors];
             if array_ptr.is_null() {
-                None
-            } else {
-                // Work directly with the raw pointer
-                let count: usize = msg_send![array_ptr, count];
-                let mut vec = Vec::with_capacity(count);
-                for i in 0..count {
-                    // Get pointer, check null, create Retained from raw
-                    let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
-                    if !tensor_ptr.is_null() {
-                        vec.push(Retained::from_raw(tensor_ptr).unwrap());
-                    }
-                }
-                Some(vec)
+                return None;
             }
+
+            let array_opt = Retained::retain_autoreleased(array_ptr);
+            if array_opt.is_none() {
+                return None;
+            }
+            let array = array_opt.unwrap();
+
+            let count = array.len();
+            let mut vec = Vec::with_capacity(count);
+
+            for i in 0..count {
+                let tensor_ptr: *mut Tensor = msg_send![&*array, objectAtIndex: i];
+                if let Some(tensor) = Retained::retain_autoreleased(tensor_ptr) {
+                    vec.push(tensor);
+                }
+            }
+            Some(vec)
         }
     }
 

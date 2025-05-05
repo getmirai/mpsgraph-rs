@@ -1,10 +1,10 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
+use crate::core::create_ns_array_from_i64_slice;
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use crate::core::create_ns_array_from_i64_slice;
 
 /// Trait for reduction operations on Graph
 pub trait GraphReductionOps {
@@ -378,7 +378,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -390,7 +392,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction sum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -403,7 +405,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -423,7 +427,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction sum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -436,7 +440,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -448,7 +454,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction maximum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -461,7 +467,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -481,7 +489,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction maximum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -494,7 +502,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -506,7 +516,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction minimum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -519,7 +529,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -539,7 +551,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction minimum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -552,7 +564,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -564,7 +578,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction product tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -577,7 +591,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -597,7 +613,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction product tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -610,7 +626,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -622,7 +640,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction maximum propagate NaN tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -635,7 +653,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -655,7 +675,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction maximum propagate NaN tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -668,7 +688,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -680,7 +702,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction minimum propagate NaN tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -693,7 +715,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -713,7 +737,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction minimum propagate NaN tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -726,7 +750,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -738,7 +764,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction AND tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -751,7 +777,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -771,7 +799,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction AND tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -784,7 +812,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -796,7 +826,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction OR tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -809,7 +839,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -829,7 +861,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction OR tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -842,7 +874,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -854,7 +888,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction XOR tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -867,7 +901,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let axes_ptr = match axes {
                 Some(a) => {
@@ -887,7 +923,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction XOR tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -900,7 +936,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -912,7 +950,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction arg maximum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -925,7 +963,9 @@ impl GraphReductionOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -937,7 +977,7 @@ impl GraphReductionOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reduction arg minimum tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

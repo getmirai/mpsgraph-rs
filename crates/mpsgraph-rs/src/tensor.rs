@@ -1,24 +1,24 @@
 use objc2::rc::Retained;
-use objc2::{extern_class, msg_send};
 use objc2::runtime::NSObject;
+use objc2::{extern_class, msg_send};
 use objc2_foundation::{NSArray, NSNumber, NSObjectProtocol, NSString};
 use std::hash::{Hash, Hasher};
 
 use crate::shape::Shape;
 
 /// Data type for Metal Performance Shaders Graph tensors
-/// 
+///
 /// These values match the MPSDataType definitions in the Metal Performance Shaders framework.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[repr(u32)]
 pub enum DataType {
     Invalid = 0,
-    
+
     // Floating point types
     Float32 = 0x10000000 | 32,
     Float16 = 0x10000000 | 16,
     Float64 = 0x10000000 | 64,
-    
+
     // Signed integer types
     Int2 = 0x20000000 | 2,
     Int4 = 0x20000000 | 4,
@@ -26,7 +26,7 @@ pub enum DataType {
     Int16 = 0x20000000 | 16,
     Int32 = 0x20000000 | 32,
     Int64 = 0x20000000 | 64,
-    
+
     // Unsigned integer types
     Uint2 = 2,
     Uint4 = 4,
@@ -34,17 +34,17 @@ pub enum DataType {
     Uint16 = 16,
     Uint32 = 32,
     Uint64 = 64,
-    
+
     // Boolean type
     Bool = 0x40000000 | 8,
-    
+
     // Complex types
     Complex32 = 0x10000000 | 0x80000000 | 32,
     Complex64 = 0x10000000 | 0x80000000 | 64,
-    
+
     // BFloat16 type
     BFloat16 = 0x80000000 | 0x10000000 | 16,
-    
+
     // Normalized types
     Unorm1 = 0x30000000 | 1,
     Unorm8 = 0x30000000 | 8,
@@ -101,7 +101,8 @@ impl Tensor {
     /// Returns the shape of this tensor
     pub fn shape(&self) -> Shape {
         unsafe {
-            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
+            let array_ptr: *mut NSArray<NSNumber> = msg_send![self, shape];
+            let array = Retained::retain_autoreleased(array_ptr).unwrap();
             Shape::new(array)
         }
     }
@@ -119,8 +120,13 @@ impl Tensor {
     /// Returns the name of this tensor
     pub fn name(&self) -> Option<String> {
         unsafe {
-            let name: Option<Retained<NSString>> = msg_send![self, name];
-            name.map(|s| s.to_string())
+            let name_ptr: *mut NSString = msg_send![self, name];
+            if name_ptr.is_null() {
+                None
+            } else {
+                let name = Retained::retain_autoreleased(name_ptr).unwrap();
+                Some(name.to_string())
+            }
         }
     }
 }

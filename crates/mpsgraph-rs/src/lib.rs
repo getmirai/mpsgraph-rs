@@ -158,4 +158,5 @@ pub use utils::tensor as tensor_utils;
 #[cfg(test)]
 mod tests {
     mod data_types_tests;
+    mod executable_tests;
 }

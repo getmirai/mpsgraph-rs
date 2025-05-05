@@ -1,10 +1,10 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
+use crate::core::create_ns_array_from_i64_slice;
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use crate::core::create_ns_array_from_i64_slice;
 
 /// Trait for normalization operations on Graph
 pub trait GraphNormalizationOps {
@@ -19,12 +19,8 @@ pub trait GraphNormalizationOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn mean(
-        &self,
-        tensor: &Retained<Tensor>,
-        axes: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn mean(&self, tensor: &Retained<Tensor>, axes: &[i64], name: Option<&str>)
+        -> Retained<Tensor>;
 
     /// Returns the variance of the input tensor along the specified axes when the mean has been precomputed.
     ///
@@ -178,7 +174,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             // Convert the axes to NSArray of NSNumbers
             let axes_array = create_ns_array_from_i64_slice(axes);
@@ -194,7 +192,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create mean operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -208,7 +207,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             // Convert the axes to NSArray of NSNumbers
             let axes_array = create_ns_array_from_i64_slice(axes);
@@ -225,7 +226,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create variance with mean operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -238,7 +240,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             // Convert the axes to NSArray of NSNumbers
             let axes_array = create_ns_array_from_i64_slice(axes);
@@ -254,7 +258,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create variance operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -271,7 +276,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let gamma_ptr = gamma.map_or(std::ptr::null(), |g| &**g as *const _);
             let beta_ptr = beta.map_or(std::ptr::null(), |b| &**b as *const _);
@@ -290,7 +297,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create normalization operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -307,7 +315,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             // Convert the axes to NSArray of NSNumbers
             let axes_array = create_ns_array_from_i64_slice(axes);
@@ -327,7 +337,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create normalization gamma gradient operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -341,7 +352,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             // Convert the axes to NSArray of NSNumbers
             let axes_array = create_ns_array_from_i64_slice(axes);
@@ -358,7 +371,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create normalization beta gradient operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -378,7 +392,9 @@ impl GraphNormalizationOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let gamma_ptr = gamma.map_or(std::ptr::null(), |g| &**g as *const _);
             let gamma_gradient_ptr = gamma_gradient.map_or(std::ptr::null(), |g| &**g as *const _);
@@ -405,7 +421,8 @@ impl GraphNormalizationOps for Graph {
             if result.is_null() {
                 panic!("Failed to create normalization gradient operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
