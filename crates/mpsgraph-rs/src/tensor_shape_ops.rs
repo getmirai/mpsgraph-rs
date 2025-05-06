@@ -154,7 +154,7 @@ pub trait GraphTensorShapeOps {
     fn split(
         &self,
         x: &Retained<Tensor>,
-        num_splits: u64,
+        num_splits: usize,
         axis: i64,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>>;
@@ -189,6 +189,84 @@ pub trait GraphTensorShapeOps {
     /// * `starts` - Starting indices for each dimension
     /// * `ends` - Ending indices for each dimension
     /// * `strides` - Strides for each dimension
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn strided_slice(
+        &self,
+        x: &Retained<Tensor>,
+        starts: &[i64],
+        ends: &[i64],
+        strides: &[i64],
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates a strided slice operation using tensor parameters
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `start_tensor` - Tensor containing starting indices for each dimension
+    /// * `end_tensor` - Tensor containing ending indices for each dimension
+    /// * `stride_tensor` - Tensor containing strides for each dimension
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn strided_slice_with_tensors(
+        &self,
+        x: &Retained<Tensor>,
+        start_tensor: &Retained<Tensor>,
+        end_tensor: &Retained<Tensor>,
+        stride_tensor: &Retained<Tensor>,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates a slice operation using tensor parameters for start and size
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `start_tensor` - Tensor containing starting indices for each dimension
+    /// * `size_tensor` - Tensor containing sizes for each dimension
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
+    /// * `name` - Optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn slice_with_tensors(
+        &self,
+        x: &Retained<Tensor>,
+        start_tensor: &Retained<Tensor>,
+        size_tensor: &Retained<Tensor>,
+        squeeze_mask: u32,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+
+    /// Creates a slice operation using tensor parameters for start and size
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - The input tensor
+    /// * `starts` - Starting indices for each dimension
+    /// * `ends` - Ending indices for each dimension
+    /// * `strides` - Strides for each dimension
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -203,84 +281,6 @@ pub trait GraphTensorShapeOps {
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
-    /// Creates a strided slice operation to get a more flexible slice of a tensor
-    ///
-    /// # Arguments
-    ///
-    /// * `x` - The input tensor
-    /// * `starts` - Starting indices for each dimension
-    /// * `ends` - Ending indices for each dimension
-    /// * `strides` - Strides for each dimension
-    /// * `begin_mask` - Mask for start indices (0/1 per dimension)
-    /// * `end_mask` - Mask for end indices (0/1 per dimension)
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn strided_slice(
-        &self,
-        x: &Retained<Tensor>,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a strided slice operation using tensor parameters
-    ///
-    /// # Arguments
-    ///
-    /// * `x` - The input tensor
-    /// * `start_tensor` - Tensor containing starting indices for each dimension
-    /// * `end_tensor` - Tensor containing ending indices for each dimension
-    /// * `stride_tensor` - Tensor containing strides for each dimension
-    /// * `begin_mask` - Mask for start indices (0/1 per dimension)
-    /// * `end_mask` - Mask for end indices (0/1 per dimension)
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn strided_slice_with_tensors(
-        &self,
-        x: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        end_tensor: &Retained<Tensor>,
-        stride_tensor: &Retained<Tensor>,
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a slice operation using tensor parameters for start and size
-    ///
-    /// # Arguments
-    ///
-    /// * `x` - The input tensor
-    /// * `start_tensor` - Tensor containing starting indices for each dimension
-    /// * `size_tensor` - Tensor containing sizes for each dimension
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn slice_with_tensors(
-        &self,
-        x: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        size_tensor: &Retained<Tensor>,
-        shrink_axis_mask: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
     /// Creates a strided slice gradient operation
     ///
     /// # Arguments
@@ -290,6 +290,9 @@ pub trait GraphTensorShapeOps {
     /// * `starts` - Starting indices for each dimension
     /// * `ends` - Ending indices for each dimension
     /// * `strides` - Strides for each dimension
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -314,9 +317,9 @@ pub trait GraphTensorShapeOps {
     /// * `starts` - Starting indices for each dimension
     /// * `ends` - Ending indices for each dimension
     /// * `strides` - Strides for each dimension
-    /// * `begin_mask` - Mask for start indices (0/1 per dimension)
-    /// * `end_mask` - Mask for end indices (0/1 per dimension)
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -329,9 +332,9 @@ pub trait GraphTensorShapeOps {
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -344,9 +347,9 @@ pub trait GraphTensorShapeOps {
     /// * `start_tensor` - Tensor containing starting indices for each dimension
     /// * `end_tensor` - Tensor containing ending indices for each dimension
     /// * `stride_tensor` - Tensor containing strides for each dimension
-    /// * `begin_mask` - Mask for start indices (0/1 per dimension)
-    /// * `end_mask` - Mask for end indices (0/1 per dimension)
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -359,9 +362,9 @@ pub trait GraphTensorShapeOps {
         start_tensor: &Retained<Tensor>,
         end_tensor: &Retained<Tensor>,
         stride_tensor: &Retained<Tensor>,
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -373,7 +376,7 @@ pub trait GraphTensorShapeOps {
     /// * `fwd_in_shape` - The shape of the forward pass input
     /// * `start_tensor` - Tensor containing starting indices for each dimension
     /// * `size_tensor` - Tensor containing sizes for each dimension
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -385,7 +388,7 @@ pub trait GraphTensorShapeOps {
         fwd_in_shape: &Retained<Tensor>,
         start_tensor: &Retained<Tensor>,
         size_tensor: &Retained<Tensor>,
-        shrink_axis_mask: i64,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -398,9 +401,9 @@ pub trait GraphTensorShapeOps {
     /// * `starts` - Starting indices for each dimension
     /// * `ends` - Ending indices for each dimension
     /// * `strides` - Strides for each dimension
-    /// * `begin_mask` - Mask for start indices (0/1 per dimension)
-    /// * `end_mask` - Mask for end indices (0/1 per dimension)
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -413,9 +416,9 @@ pub trait GraphTensorShapeOps {
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -428,9 +431,9 @@ pub trait GraphTensorShapeOps {
     /// * `starts_tensor` - Tensor containing starting indices for each dimension
     /// * `ends_tensor` - Tensor containing ending indices for each dimension
     /// * `strides_tensor` - Tensor containing strides for each dimension
-    /// * `begin_mask` - Mask for start indices (0/1 per dimension)
-    /// * `end_mask` - Mask for end indices (0/1 per dimension)
-    /// * `shrink_axis_mask` - Mask for dimensions to shrink (0/1 per dimension)
+    /// * `start_mask` - Mask for start indices (uint32_t bitmask)
+    /// * `end_mask` - Mask for end indices (uint32_t bitmask)
+    /// * `squeeze_mask` - Mask for dimensions to shrink (uint32_t bitmask)
     /// * `name` - Optional name for the operation
     ///
     /// # Returns
@@ -443,9 +446,9 @@ pub trait GraphTensorShapeOps {
         starts_tensor: &Retained<Tensor>,
         ends_tensor: &Retained<Tensor>,
         strides_tensor: &Retained<Tensor>,
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -633,7 +636,7 @@ pub trait GraphTensorShapeOps {
         &self,
         x: &Retained<Tensor>,
         padding: &[i64],
-        constant: f32,
+        constant: f64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -906,9 +909,9 @@ impl GraphTensorShapeOps for Graph {
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -933,9 +936,9 @@ impl GraphTensorShapeOps for Graph {
                 starts: starts_ptr,
                 ends: ends_ptr,
                 strides: strides_ptr,
-                startMask: begin_mask as u32,
-                endMask: end_mask as u32,
-                squeezeMask: shrink_axis_mask as u32,
+                startMask: start_mask,
+                endMask: end_mask,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -953,9 +956,9 @@ impl GraphTensorShapeOps for Graph {
         start_tensor: &Retained<Tensor>,
         end_tensor: &Retained<Tensor>,
         stride_tensor: &Retained<Tensor>,
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -970,9 +973,9 @@ impl GraphTensorShapeOps for Graph {
                 startTensor: &**start_tensor,
                 endTensor: &**end_tensor,
                 strideTensor: &**stride_tensor,
-                startMask: begin_mask as u32,
-                endMask: end_mask as u32,
-                squeezeMask: shrink_axis_mask as u32,
+                startMask: start_mask,
+                endMask: end_mask,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -989,7 +992,7 @@ impl GraphTensorShapeOps for Graph {
         x: &Retained<Tensor>,
         start_tensor: &Retained<Tensor>,
         size_tensor: &Retained<Tensor>,
-        shrink_axis_mask: i64,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1003,7 +1006,7 @@ impl GraphTensorShapeOps for Graph {
                 sliceTensor: &**x,
                 startTensor: &**start_tensor,
                 sizeTensor: &**size_tensor,
-                squeezeMask: shrink_axis_mask as u32,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -1198,7 +1201,7 @@ impl GraphTensorShapeOps for Graph {
     fn split(
         &self,
         x: &Retained<Tensor>,
-        num_splits: u64,
+        num_splits: usize,
         axis: i64,
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
@@ -1346,7 +1349,7 @@ impl GraphTensorShapeOps for Graph {
         &self,
         x: &Retained<Tensor>,
         padding: &[i64],
-        constant: f32,
+        constant: f64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1362,7 +1365,7 @@ impl GraphTensorShapeOps for Graph {
                 self,
                 padTensor: &**x,
                 paddings: padding_ptr,
-                constantValue: constant as f64,
+                constantValue: constant,
                 name: name_ptr
             ];
 
@@ -1503,9 +1506,9 @@ impl GraphTensorShapeOps for Graph {
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1531,9 +1534,9 @@ impl GraphTensorShapeOps for Graph {
                 starts: starts_ptr,
                 ends: ends_ptr,
                 strides: strides_ptr,
-                startMask: begin_mask as u32,
-                endMask: end_mask as u32,
-                squeezeMask: shrink_axis_mask as u32,
+                startMask: start_mask,
+                endMask: end_mask,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -1552,9 +1555,9 @@ impl GraphTensorShapeOps for Graph {
         start_tensor: &Retained<Tensor>,
         end_tensor: &Retained<Tensor>,
         stride_tensor: &Retained<Tensor>,
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1570,9 +1573,9 @@ impl GraphTensorShapeOps for Graph {
                 startTensor: &**start_tensor,
                 endTensor: &**end_tensor,
                 strideTensor: &**stride_tensor,
-                startMask: begin_mask as u32,
-                endMask: end_mask as u32,
-                squeezeMask: shrink_axis_mask as u32,
+                startMask: start_mask,
+                endMask: end_mask,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -1590,7 +1593,7 @@ impl GraphTensorShapeOps for Graph {
         fwd_in_shape: &Retained<Tensor>,
         start_tensor: &Retained<Tensor>,
         size_tensor: &Retained<Tensor>,
-        shrink_axis_mask: i64,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1605,7 +1608,7 @@ impl GraphTensorShapeOps for Graph {
                 fwdInShapeTensor: &**fwd_in_shape,
                 startTensor: &**start_tensor,
                 sizeTensor: &**size_tensor,
-                squeezeMask: shrink_axis_mask as u32,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -1624,9 +1627,9 @@ impl GraphTensorShapeOps for Graph {
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1652,9 +1655,9 @@ impl GraphTensorShapeOps for Graph {
                 starts: starts_ptr,
                 ends: ends_ptr,
                 strides: strides_ptr,
-                startMask: begin_mask as u32,
-                endMask: end_mask as u32,
-                squeezeMask: shrink_axis_mask as u32,
+                startMask: start_mask,
+                endMask: end_mask,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
@@ -1673,9 +1676,9 @@ impl GraphTensorShapeOps for Graph {
         starts_tensor: &Retained<Tensor>,
         ends_tensor: &Retained<Tensor>,
         strides_tensor: &Retained<Tensor>,
-        begin_mask: i64,
-        end_mask: i64,
-        shrink_axis_mask: i64,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1691,9 +1694,9 @@ impl GraphTensorShapeOps for Graph {
                 startsTensor: &**starts_tensor,
                 endsTensor: &**ends_tensor,
                 stridesTensor: &**strides_tensor,
-                startMask: begin_mask as u32,
-                endMask: end_mask as u32,
-                squeezeMask: shrink_axis_mask as u32,
+                startMask: start_mask,
+                endMask: end_mask,
+                squeezeMask: squeeze_mask,
                 name: name_ptr
             ];
 
