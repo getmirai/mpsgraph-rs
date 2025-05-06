@@ -73,6 +73,33 @@ impl CommandBuffer {
         }
     }
 
+    /// Gets the underlying command buffer.
+    ///
+    /// This method returns the Metal CommandBuffer that was used to initialize this object.
+    pub fn command_buffer(&self) -> MetalCommandBuffer {
+        unsafe {
+            let cmd_buffer: *mut objc2::runtime::AnyObject = msg_send![self, commandBuffer];
+            // Create a metal::CommandBuffer from the raw pointer
+            MetalCommandBuffer::from_ptr(cmd_buffer as _)
+        }
+    }
+
+    /// Gets the root command buffer.
+    ///
+    /// MPSCommandBuffers may wrap other MPSCommandBuffers, in the process
+    /// creating what is in effect a stack of predicate objects that may be
+    /// pushed or popped by making new MPSCommandBuffers or by calling command_buffer().
+    /// In some circumstances, it is preferable to use the root command buffer,
+    /// particularly when trying to identify the command buffer that will be commited
+    /// by commit_and_continue().
+    pub fn root_command_buffer(&self) -> MetalCommandBuffer {
+        unsafe {
+            let cmd_buffer: *mut objc2::runtime::AnyObject = msg_send![self, rootCommandBuffer];
+            // Create a metal::CommandBuffer from the raw pointer
+            MetalCommandBuffer::from_ptr(cmd_buffer as _)
+        }
+    }
+
     /// Commits a command buffer so it can be executed as soon as possible.
     ///
     /// This method calls `commit` on the underlying MTLCommandBuffer.
