@@ -290,7 +290,7 @@ impl GraphNormalizationOps for Graph {
                 varianceTensor: &**variance,
                 gammaTensor: gamma_ptr,
                 betaTensor: beta_ptr,
-                epsilon: epsilon as f64,
+                epsilon: epsilon,
                 name: name_ptr
             ];
 
@@ -330,7 +330,7 @@ impl GraphNormalizationOps for Graph {
                 meanTensor: &**mean,
                 varianceTensor: &**variance,
                 reductionAxes: axes_ptr,
-                epsilon: epsilon as f64,
+                epsilon: epsilon,
                 name: name_ptr
             ];
 
@@ -414,7 +414,7 @@ impl GraphNormalizationOps for Graph {
                 gammaGradientTensor: gamma_gradient_ptr,
                 betaGradientTensor: beta_gradient_ptr,
                 reductionAxes: axes_ptr,
-                epsilon: epsilon as f64,
+                epsilon: epsilon,
                 name: name_ptr
             ];
 

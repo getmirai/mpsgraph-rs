@@ -250,7 +250,7 @@ impl GraphActivationOps for Graph {
             let result: *mut Tensor = msg_send![
                 self,
                 leakyReLUWithTensor: &**x,
-                alpha: alpha as f64,
+                alpha: alpha,
                 name: name_ptr
             ];
 
@@ -306,7 +306,7 @@ impl GraphActivationOps for Graph {
                 self,
                 leakyReLUGradientWithIncomingGradient: &**gradient,
                 sourceTensor: &**source,
-                alpha: alpha as f64,
+                alpha: alpha,
                 name: name_ptr
             ];
 
@@ -328,7 +328,7 @@ impl GraphActivationOps for Graph {
             let result: *mut Tensor = msg_send![
                 self,
                 eluWithTensor: &**x,
-                alpha: alpha as f64,
+                alpha: alpha,
                 name: name_ptr
             ];
 

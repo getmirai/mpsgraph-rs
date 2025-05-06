@@ -686,7 +686,7 @@ impl GraphLinearAlgebraOps for Graph {
                 scaledDotProductAttentionWithQueryTensor: &**query,
                 keyTensor: &**key,
                 valueTensor: &**value,
-                scaleScalar: scale as f64,
+                scale: scale,
                 name: name_ptr
             ];
 
@@ -752,7 +752,7 @@ impl GraphLinearAlgebraOps for Graph {
                 keyTensor: &**key,
                 valueTensor: &**value,
                 maskTensor: &**mask,
-                scaleScalar: scale as f64,
+                scale: scale,
                 name: name_ptr
             ];
 
