@@ -19,6 +19,7 @@ block2 = { workspace = true }
 
 [dev-dependencies]
 prettydiff = { workspace = true }
+ndarray = "0.16.1"
 
 [build-dependencies]
 bindgen = { workspace = true }
@@ -35,13 +36,9 @@ path = "examples/type_test.rs"
 name = "callback_test"
 path = "examples/callback_test.rs"
 
-[[example]]
-name = "simple_compile"
-path = "examples/simple_compile.rs"
-
 [package.metadata.docs.rs]
-default-target = "x86_64-apple-darwin"
-targets = ["x86_64-apple-darwin", "aarch64-apple-darwin", "aarch64-apple-ios", "x86_64-apple-ios"]
+default-target = "aarch64-apple-darwin"
+targets = ["aarch64-apple-darwin", "aarch64-apple-ios"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.macos]

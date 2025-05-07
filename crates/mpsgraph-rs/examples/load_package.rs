@@ -1,10 +1,10 @@
 use mpsgraph::executable::{CompilationDescriptor, Executable};
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Look for the package in the current directory or workspace
-    let mut package_path = env::current_dir()?;
+    let package_path = env::current_dir()?;
 
     // First, try a package in the current directory
     let mut possible_package = package_path.join("output.mpsgraphpackage");

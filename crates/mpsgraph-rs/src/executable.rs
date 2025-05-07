@@ -4,7 +4,7 @@ use metal::SharedEvent;
 use objc2::rc::Retained;
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
-use objc2_foundation::{NSArray, NSObjectProtocol, NSString, NSURL};
+use objc2_foundation::{NSArray, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString, NSURL};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -13,30 +13,26 @@ use crate::tensor_data::TensorData;
 
 /// Represents the optimization level for graph compilation
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[repr(u32)]
+#[repr(u64)]
 pub enum Optimization {
-    /// Default optimization level
-    Default = 0,
-    /// Optimized for size
-    Size = 1,
-    /// Optimized for performance
-    Performance = 2,
+    /// Graph performs core optimizations only
+    Level0 = 0,
+    /// Graph performs additional optimizations
+    Level1 = 1,
 }
 
 /// Represents the optimization profile for graph compilation
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[repr(u32)]
+#[repr(u64)]
 pub enum OptimizationProfile {
-    /// Default optimization profile
-    Default = 0,
-    /// Profile optimized for size
-    Size = 1,
     /// Profile optimized for performance
-    Performance = 2,
+    Performance = 0,
+    /// Profile optimized for power efficiency
+    PowerEfficiency = 1,
 }
 
 /// Represents the stages of execution for a graph
-#[repr(u32)]
+#[repr(u64)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ExecutionStage {
     /// Execution is completed
@@ -81,14 +77,14 @@ impl CompilationDescriptor {
     /// Set the optimization level
     pub fn set_optimization_level(&self, level: Optimization) {
         unsafe {
-            let _: () = msg_send![self, setOptimizationLevel: level as u32];
+            let _: () = msg_send![self, setOptimizationLevel: level as u64];
         }
     }
 
     /// Set the optimization profile
     pub fn set_optimization_profile(&self, profile: OptimizationProfile) {
         unsafe {
-            let _: () = msg_send![self, setOptimizationProfile: profile as u32];
+            let _: () = msg_send![self, setOptimizationProfile: profile as u64];
         }
     }
 
@@ -97,6 +93,121 @@ impl CompilationDescriptor {
         unsafe {
             let _: () = msg_send![self, setDebugCompile: debug_compile];
         }
+    }
+    
+    /// Get the callables map as a Rust HashMap
+    pub fn get_callables(&self) -> HashMap<String, Retained<Executable>> {
+        unsafe {
+            let callables: *mut NSDictionary<NSString, Executable> = msg_send![self, callables];
+            if callables.is_null() {
+                return HashMap::new();
+            }
+            
+            // Safely retain the dictionary
+            let ns_dict = match Retained::retain_autoreleased(callables) {
+                Some(dict) => dict,
+                None => return HashMap::new()
+            };
+            
+            // Get the keys
+            let keys_array: *mut NSArray<NSString> = msg_send![&*ns_dict, allKeys];
+            if keys_array.is_null() {
+                return HashMap::new();
+            }
+            
+            let keys = match Retained::retain_autoreleased(keys_array) {
+                Some(arr) => arr,
+                None => return HashMap::new()
+            };
+            
+            // Create a HashMap and populate it
+            let mut result = HashMap::with_capacity(keys.len());
+            
+            for i in 0..keys.len() {
+                let key_ptr: *mut NSString = msg_send![&*keys, objectAtIndex: i];
+                if key_ptr.is_null() {
+                    continue;
+                }
+                
+                // Get the key as a Rust string
+                let ns_key = match Retained::retain_autoreleased(key_ptr) {
+                    Some(key) => key,
+                    None => continue
+                };
+                
+                let key_str = ns_key.to_string();
+                
+                // Get the corresponding executable
+                let exec_ptr: *mut Executable = msg_send![&*ns_dict, objectForKey: &*ns_key];
+                if exec_ptr.is_null() {
+                    continue;
+                }
+                
+                let executable = match Retained::retain_autoreleased(exec_ptr) {
+                    Some(exec) => exec,
+                    None => continue
+                };
+                
+                result.insert(key_str, executable);
+            }
+            
+            result
+        }
+    }
+    
+    /// Set the callables map using a Rust HashMap
+    pub fn set_callables(&self, callables: &HashMap<String, Retained<Executable>>) {
+        if callables.is_empty() {
+            // If the HashMap is empty, set the property to nil
+            unsafe {
+                let _: () = msg_send![self, setCallables: std::ptr::null::<NSDictionary<NSString, Executable>>()];
+            }
+            return;
+        }
+        
+        // Create a mutable dictionary
+        let mutable_dict = NSMutableDictionary::<NSString, Executable>::new();
+        
+        // Add each entry to the dictionary
+        for (key, executable) in callables {
+            let ns_key = NSString::from_str(key);
+            unsafe {
+                let exec_ptr = Retained::as_ptr(executable);
+                let key_ptr = &*ns_key;
+                let _: () = msg_send![&*mutable_dict, setObject: exec_ptr, forKey: key_ptr];
+            }
+        }
+        
+        // Convert to immutable dictionary
+        let immutable_dict = unsafe {
+            let dict_ptr: *mut NSDictionary<NSString, Executable> = msg_send![&*mutable_dict, copy];
+            Retained::retain_autoreleased(dict_ptr).unwrap()
+        };
+        
+        // Set the property
+        unsafe {
+            let dict_ptr = Retained::as_ptr(&immutable_dict);
+            let _: () = msg_send![self, setCallables: dict_ptr];
+        }
+    }
+    
+    /// Add a callable executable for a specific symbol name
+    pub fn add_callable(&self, symbol_name: &str, executable: &Retained<Executable>) {
+        // Get the current callables
+        let mut callables = self.get_callables();
+        
+        // Add the new callable
+        callables.insert(symbol_name.to_string(), executable.clone());
+        
+        // Update the callables property
+        self.set_callables(&callables);
+    }
+    
+    /// Remove a callable executable for a specific symbol name
+    pub fn remove_callable(&self, symbol_name: &str) {
+        let mut callables = self.get_callables();
+        callables.remove(symbol_name);
+        self.set_callables(&callables);
     }
 }
 
@@ -150,7 +261,7 @@ impl ExecutionDescriptor {
     pub fn signal_event(&self, event: &SharedEvent, execution_stage: ExecutionStage, value: u64) {
         unsafe {
             let event_ptr = event.as_ptr() as *mut std::ffi::c_void;
-            let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u32, value: value];
+            let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u64, value: value];
         }
     }
 }
@@ -249,7 +360,7 @@ impl ExecutableExecutionDescriptor {
     pub fn signal_event(&self, event: &SharedEvent, execution_stage: ExecutionStage, value: u64) {
         unsafe {
             let event_ptr = event.as_ptr() as *mut std::ffi::c_void;
-            let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u32, value: value];
+            let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u64, value: value];
         }
     }
 }
@@ -492,6 +603,88 @@ impl Executable {
                     } else {
                         // retain_autoreleased failed, pointer was likely invalid
                         eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in encode_to_command_buffer");
+                        None
+                    }
+                }
+            }
+        })
+    }
+    
+    /// Run the executable with a Metal command queue
+    pub fn run_with_command_queue(
+        &self,
+        command_queue: &metal::CommandQueue,
+        inputs: &[&Retained<TensorData>],
+        results: Option<&[&Retained<TensorData>]>,
+        execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
+    ) -> Option<Vec<Retained<TensorData>>> {
+        use objc2::rc::autoreleasepool;
+        use objc2_foundation::NSArray;
+
+        autoreleasepool(|_pool| {
+            unsafe {
+                // Use from_slice for inputs
+                let input_refs: Vec<&TensorData> = inputs
+                    .iter()
+                    .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
+                    .collect();
+
+                // Create NSArray using from_slice with the Vec of references
+                let inputs_array = NSArray::from_slice(&input_refs);
+
+                // --- Results Array (Optional) ---
+                let results_array_option: Option<Retained<NSArray<TensorData>>> =
+                    results.map(|r_slice| {
+                        let result_refs: Vec<&TensorData> = r_slice
+                            .iter()
+                            .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
+                            .collect();
+                        NSArray::from_slice(&result_refs)
+                    });
+                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
+                let results_array_ptr: *const NSArray<TensorData> = results_array_option
+                    .as_ref()
+                    .map_or(std::ptr::null(), |arr| Retained::as_ptr(arr));
+
+                // --- Execution Descriptor (Optional) ---
+                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
+                let desc_ptr: *const ExecutableExecutionDescriptor =
+                    execution_descriptor.map_or(std::ptr::null(), |d| Retained::as_ptr(d));
+
+                // --- Command Queue Pointer ---
+                let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
+
+                // --- Inputs Array Pointer ---
+                // Use Retained::as_ptr to get the raw pointer
+                let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
+
+                // --- Call Objective-C Method ---
+                // Pass raw pointers for all arguments
+                let result_ptr: *mut NSArray<TensorData> = msg_send![
+                    self,
+                    runWithMTLCommandQueue: cmd_queue_ptr,
+                    inputsArray: inputs_array_ptr,
+                    resultsArray: results_array_ptr,
+                    executionDescriptor: desc_ptr
+                ];
+
+                // --- Handle Return Value ---
+                if result_ptr.is_null() {
+                    None
+                } else {
+                    // Attempt to take ownership of the potentially autoreleased NSArray*
+                    if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
+                        // Successfully retained the array, now process items
+                        let mut output_vec = Vec::with_capacity(result_array.len());
+                        for item in result_array.iter() {
+                            // iter() yields &Retained<TensorData>
+                            // Clone the item to transfer ownership to the output Vec
+                            output_vec.push(item.clone());
+                        }
+                        Some(output_vec)
+                    } else {
+                        // retain_autoreleased failed, pointer was likely invalid
+                        eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in run_with_command_queue");
                         None
                     }
                 }

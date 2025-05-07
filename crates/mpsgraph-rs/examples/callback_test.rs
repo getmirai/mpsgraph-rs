@@ -9,7 +9,7 @@ fn main() {
     let graph = Graph::new();
 
     // Create input placeholders with shape
-    let shape_dimensions = [2, 2];
+    let _shape_dimensions = [2, 2];
     let shape = Shape::matrix(2, 2);
     let a = graph.placeholder(DataType::Float32, &shape, None);
     let b = graph.placeholder(DataType::Float32, &shape, None);
@@ -66,7 +66,8 @@ fn main() {
 
     // Create a command buffer
     let command_buffer = CommandBuffer::from_command_queue(&command_queue);
-    command_buffer.set_label("Async Execution");
+    let mtl_command_buffer = command_buffer.root_command_buffer();
+    mtl_command_buffer.set_label("Async Execution");
 
     // Create a flag to signal when the callback has completed
     let callback_completed = Arc::new(Mutex::new(false));
@@ -110,7 +111,8 @@ fn main() {
 
     // Create a new command buffer for synchronous execution
     let sync_command_buffer = CommandBuffer::from_command_queue(&command_queue);
-    sync_command_buffer.set_label("Sync Execution");
+    let sync_mtl_command_buffer = sync_command_buffer.root_command_buffer();
+    sync_mtl_command_buffer.set_label("Sync Execution");
 
     // Create another result buffer and tensor data
     let sync_result_buffer = metal_device.new_buffer(
@@ -132,8 +134,8 @@ fn main() {
     );
 
     // Commit and wait for completion
-    sync_command_buffer.commit();
-    sync_command_buffer.wait_until_completed();
+    sync_mtl_command_buffer.commit();
+    sync_mtl_command_buffer.wait_until_completed();
 
     println!("Synchronous execution completed");
 

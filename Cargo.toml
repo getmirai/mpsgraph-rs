@@ -10,10 +10,10 @@ authors = ["Eugene Bokhan <eugenebokhan@icloud.com>"]
 repository = "https://github.com/computer-graphics-tools/mpsgraph-rs"
 
 [workspace.dependencies]
-objc2 = "0.6.0"
-objc2-foundation = "0.3.0"
+objc2 = "0.6.1"
+objc2-foundation = "0.3.1"
 metal = "0.32.0"
-block2 = "0.6.0"
-rand = "0.8.0"
+block2 = "0.6.1"
+rand = "0.9.1"
 bindgen = "0.71.1"
 prettydiff = "0.8.0"

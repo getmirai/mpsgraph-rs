@@ -2,12 +2,12 @@
 use metal::{Device as MetalDevice, MTLResourceOptions};
 use mpsgraph::{
     CommandBuffer, CompilationDescriptor, DataType, DeploymentPlatform, Device, Executable,
-    ExecutableExecutionDescriptor, Graph, GraphActivationOps, SerializationDescriptor, Shape,
+    ExecutableExecutionDescriptor, Graph, SerializationDescriptor, Shape,
     ShapedType, Tensor, TensorData,
 };
 use objc2::rc::Retained;
 use objc2_foundation::NSNumber;
-use std::{collections::HashMap, env, fs, path::PathBuf};
+use std::{collections::HashMap, env, fs};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("MPSGraph Full Flow Example: Compile -> Serialize -> Deserialize -> Execute");
@@ -169,10 +169,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Encode call completed.");
 
     println!("Committing and waiting...");
-    command_buffer.commit();
-    command_buffer.wait_until_completed();
+    let mtl_command_buffer = command_buffer.root_command_buffer();
+    mtl_command_buffer.commit();
+    mtl_command_buffer.wait_until_completed();
 
-    if command_buffer.status() == mpsgraph::CommandBufferStatus::Error {
+    if mtl_command_buffer.status() == metal::MTLCommandBufferStatus::Error {
         println!("*** Error during command buffer execution! ***");
         if package_path.exists() {
             fs::remove_dir_all(&package_path).expect("Failed to remove package dir");

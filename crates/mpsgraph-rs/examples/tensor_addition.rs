@@ -99,8 +99,9 @@ fn main() {
         );
 
         println!("Committing command buffer and waiting for completion...");
-        command_buffer.commit();
-        command_buffer.wait_until_completed();
+        let mtl_command_buffer = command_buffer.root_command_buffer();
+        mtl_command_buffer.commit();
+        mtl_command_buffer.wait_until_completed();
 
         println!("Reading results from output buffer...");
 

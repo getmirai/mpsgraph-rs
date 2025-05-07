@@ -110,7 +110,7 @@ fn test_encode_to_command_buffer() {
 
     // Commit the command buffer
     cmd_buffer.commit();
-    cmd_buffer.wait_until_completed();
+    cmd_buffer.command_buffer().wait_until_completed();
 
     // Step 7: Verify the results
     // Read back the result data
@@ -223,7 +223,7 @@ fn test_encode_to_command_buffer_memory_management() {
     }
 
     // Wait for all operations to complete at the end
-    cmd_buffer.wait_until_completed();
+    cmd_buffer.command_buffer().wait_until_completed();
 
     // If we got here without crashes, memory management likely works correctly
     println!("Encode to command buffer memory management test passed!");
