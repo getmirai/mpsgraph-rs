@@ -1,5 +1,5 @@
 use metal::foreign_types::ForeignType;
-use metal::{CommandBuffer as MetalCommandBuffer, CommandQueue};
+use metal::{CommandBuffer as MTLCommandBuffer, CommandQueue};
 use objc2::rc::Retained;
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
@@ -36,7 +36,7 @@ impl CommandBuffer {
     /// Creates a new MPSCommandBuffer from a Metal CommandBuffer
     ///
     /// This initializes a MPSCommandBuffer with an existing MTLCommandBuffer.
-    pub fn from_command_buffer(command_buffer: &MetalCommandBuffer) -> Retained<Self> {
+    pub fn from_command_buffer(command_buffer: &MTLCommandBuffer) -> Retained<Self> {
         unsafe {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
@@ -76,11 +76,10 @@ impl CommandBuffer {
     /// Gets the underlying command buffer.
     ///
     /// This method returns the Metal CommandBuffer that was used to initialize this object.
-    pub fn command_buffer(&self) -> MetalCommandBuffer {
+    pub fn command_buffer(&self) -> MTLCommandBuffer {
         unsafe {
             let cmd_buffer: *mut objc2::runtime::AnyObject = msg_send![self, commandBuffer];
-            // Create a metal::CommandBuffer from the raw pointer
-            MetalCommandBuffer::from_ptr(cmd_buffer as _)
+            MTLCommandBuffer::from_ptr(cmd_buffer as _)
         }
     }
 
@@ -92,11 +91,10 @@ impl CommandBuffer {
     /// In some circumstances, it is preferable to use the root command buffer,
     /// particularly when trying to identify the command buffer that will be commited
     /// by commit_and_continue().
-    pub fn root_command_buffer(&self) -> MetalCommandBuffer {
+    pub fn root_command_buffer(&self) -> MTLCommandBuffer {
         unsafe {
             let cmd_buffer: *mut objc2::runtime::AnyObject = msg_send![self, rootCommandBuffer];
-            // Create a metal::CommandBuffer from the raw pointer
-            MetalCommandBuffer::from_ptr(cmd_buffer as _)
+            MTLCommandBuffer::from_ptr(cmd_buffer as _)
         }
     }
 
