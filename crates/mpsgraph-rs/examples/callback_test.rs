@@ -66,7 +66,7 @@ fn main() {
 
     // Create a command buffer
     let command_buffer = CommandBuffer::from_command_queue(&command_queue);
-    let mtl_command_buffer = command_buffer.root_command_buffer();
+    let mtl_command_buffer = command_buffer.command_buffer();
     mtl_command_buffer.set_label("Async Execution");
 
     // Create a flag to signal when the callback has completed
@@ -111,7 +111,7 @@ fn main() {
 
     // Create a new command buffer for synchronous execution
     let sync_command_buffer = CommandBuffer::from_command_queue(&command_queue);
-    let sync_mtl_command_buffer = sync_command_buffer.root_command_buffer();
+    let sync_mtl_command_buffer = sync_command_buffer.command_buffer();
     sync_mtl_command_buffer.set_label("Sync Execution");
 
     // Create another result buffer and tensor data

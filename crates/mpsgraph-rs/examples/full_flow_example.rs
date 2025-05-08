@@ -169,7 +169,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Encode call completed.");
 
     println!("Committing and waiting...");
-    let mtl_command_buffer = command_buffer.root_command_buffer();
+    let mtl_command_buffer = command_buffer.command_buffer();
     mtl_command_buffer.commit();
     mtl_command_buffer.wait_until_completed();
 

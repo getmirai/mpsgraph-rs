@@ -76,10 +76,12 @@ impl CommandBuffer {
     /// Gets the underlying command buffer.
     ///
     /// This method returns the Metal CommandBuffer that was used to initialize this object.
-    pub fn command_buffer(&self) -> MTLCommandBuffer {
+    pub fn command_buffer(&self) -> &<MTLCommandBuffer as ForeignType>::Ref {
         unsafe {
-            let cmd_buffer: *mut objc2::runtime::AnyObject = msg_send![self, commandBuffer];
-            MTLCommandBuffer::from_ptr(cmd_buffer as _)
+            let cmd_buffer_ptr: *mut objc2::runtime::AnyObject = msg_send![self, commandBuffer];
+            // Assuming the lifetime of the returned pointer is tied to `self`,
+            // and that CommandBuffer::Ref is a transparent wrapper or suitable for this cast.
+            &*(cmd_buffer_ptr as *const <MTLCommandBuffer as ForeignType>::Ref)
         }
     }
 
