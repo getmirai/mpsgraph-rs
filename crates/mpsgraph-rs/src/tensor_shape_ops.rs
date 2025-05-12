@@ -819,7 +819,7 @@ impl GraphTensorShapeOps for Graph {
             let result: *mut Tensor = msg_send![
                 self,
                 transposeTensor: &**x,
-                dimension: permutation_ptr,
+                permutation: permutation_ptr,
                 name: name_ptr
             ];
 
@@ -1327,13 +1327,13 @@ impl GraphTensorShapeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let multiples_array = create_ns_array_from_i64_slice(multiples);
-            let multiples_ptr = &*multiples_array as *const _;
+            let multiplier_array = create_ns_array_from_i64_slice(multiples);
+            let multiplier_ptr = &*multiplier_array as *const _;
 
             let result: *mut Tensor = msg_send![
                 self,
                 tileTensor: &**x,
-                withMultiples: multiples_ptr,
+                withMultiplier: multiplier_ptr,
                 name: name_ptr
             ];
 
