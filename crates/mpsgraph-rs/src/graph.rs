@@ -776,4 +776,23 @@ impl Graph {
             }
         }
     }
+
+    /// Gets the placeholder tensors associated with the graph, returned as a Vec of retained Tensors.
+    pub fn placeholder_tensors(&self) -> Vec<Retained<Tensor>> {
+        unsafe {
+            let array_ptr: *mut NSArray<Tensor> = msg_send![self, placeholderTensors];
+            let array = Retained::retain_autoreleased(array_ptr).unwrap();
+
+            let count = array.len();
+            let mut vec = Vec::with_capacity(count);
+            for i in 0..count {
+                // objectAtIndex: returns a borrowed reference, so we need to retain it.
+                let tensor_ptr: *mut Tensor = msg_send![&*array, objectAtIndex: i];
+                // It's crucial to retain each object obtained from the array.
+                let retained_tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
+                vec.push(retained_tensor);
+            }
+            vec
+        }
+    }
 }
