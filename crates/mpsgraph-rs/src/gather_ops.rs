@@ -153,7 +153,7 @@ impl GraphGatherOps for Graph {
                 self,
                 gatherWithUpdatesTensor: &**updates_tensor,
                 indicesTensor: &**indices_tensor,
-                axis: axis,
+                axis: axis as isize,
                 batchDimensions: batch_dimensions,
                 name: name_ptr
             ];
