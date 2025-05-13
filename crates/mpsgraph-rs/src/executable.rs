@@ -211,6 +211,12 @@ impl CompilationDescriptor {
         callables.remove(symbol_name);
         self.set_callables(&callables);
     }
+
+    pub fn set_allowed_device(&self, devices: u64) {
+        unsafe {
+            let _: () = msg_send![self, setAllowedComputeDevices: devices as u64];
+        }
+    }
 }
 
 extern_class!(
