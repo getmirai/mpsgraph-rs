@@ -4,7 +4,9 @@ use metal::SharedEvent;
 use objc2::rc::Retained;
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
-use objc2_foundation::{NSArray, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString, NSURL};
+use objc2_foundation::{
+    NSArray, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString, NSURL,
+};
 use std::collections::HashMap;
 use std::path::Path;
 
@@ -94,7 +96,7 @@ impl CompilationDescriptor {
             let _: () = msg_send![self, setDebugCompile: debug_compile];
         }
     }
-    
+
     /// Get the callables map as a Rust HashMap
     pub fn get_callables(&self) -> HashMap<String, Retained<Executable>> {
         unsafe {
@@ -102,59 +104,59 @@ impl CompilationDescriptor {
             if callables.is_null() {
                 return HashMap::new();
             }
-            
+
             // Safely retain the dictionary
             let ns_dict = match Retained::retain_autoreleased(callables) {
                 Some(dict) => dict,
-                None => return HashMap::new()
+                None => return HashMap::new(),
             };
-            
+
             // Get the keys
             let keys_array: *mut NSArray<NSString> = msg_send![&*ns_dict, allKeys];
             if keys_array.is_null() {
                 return HashMap::new();
             }
-            
+
             let keys = match Retained::retain_autoreleased(keys_array) {
                 Some(arr) => arr,
-                None => return HashMap::new()
+                None => return HashMap::new(),
             };
-            
+
             // Create a HashMap and populate it
             let mut result = HashMap::with_capacity(keys.len());
-            
+
             for i in 0..keys.len() {
                 let key_ptr: *mut NSString = msg_send![&*keys, objectAtIndex: i];
                 if key_ptr.is_null() {
                     continue;
                 }
-                
+
                 // Get the key as a Rust string
                 let ns_key = match Retained::retain_autoreleased(key_ptr) {
                     Some(key) => key,
-                    None => continue
+                    None => continue,
                 };
-                
+
                 let key_str = ns_key.to_string();
-                
+
                 // Get the corresponding executable
                 let exec_ptr: *mut Executable = msg_send![&*ns_dict, objectForKey: &*ns_key];
                 if exec_ptr.is_null() {
                     continue;
                 }
-                
+
                 let executable = match Retained::retain_autoreleased(exec_ptr) {
                     Some(exec) => exec,
-                    None => continue
+                    None => continue,
                 };
-                
+
                 result.insert(key_str, executable);
             }
-            
+
             result
         }
     }
-    
+
     /// Set the callables map using a Rust HashMap
     pub fn set_callables(&self, callables: &HashMap<String, Retained<Executable>>) {
         if callables.is_empty() {
@@ -164,10 +166,10 @@ impl CompilationDescriptor {
             }
             return;
         }
-        
+
         // Create a mutable dictionary
         let mutable_dict = NSMutableDictionary::<NSString, Executable>::new();
-        
+
         // Add each entry to the dictionary
         for (key, executable) in callables {
             let ns_key = NSString::from_str(key);
@@ -177,32 +179,32 @@ impl CompilationDescriptor {
                 let _: () = msg_send![&*mutable_dict, setObject: exec_ptr, forKey: key_ptr];
             }
         }
-        
+
         // Convert to immutable dictionary
         let immutable_dict = unsafe {
             let dict_ptr: *mut NSDictionary<NSString, Executable> = msg_send![&*mutable_dict, copy];
             Retained::retain_autoreleased(dict_ptr).unwrap()
         };
-        
+
         // Set the property
         unsafe {
             let dict_ptr = Retained::as_ptr(&immutable_dict);
             let _: () = msg_send![self, setCallables: dict_ptr];
         }
     }
-    
+
     /// Add a callable executable for a specific symbol name
     pub fn add_callable(&self, symbol_name: &str, executable: &Retained<Executable>) {
         // Get the current callables
         let mut callables = self.get_callables();
-        
+
         // Add the new callable
         callables.insert(symbol_name.to_string(), executable.clone());
-        
+
         // Update the callables property
         self.set_callables(&callables);
     }
-    
+
     /// Remove a callable executable for a specific symbol name
     pub fn remove_callable(&self, symbol_name: &str) {
         let mut callables = self.get_callables();
@@ -609,7 +611,7 @@ impl Executable {
             }
         })
     }
-    
+
     /// Run the executable with a Metal command queue
     pub fn run_with_command_queue(
         &self,
@@ -690,5 +692,11 @@ impl Executable {
                 }
             }
         })
+    }
+
+    pub fn dump(&self) {
+        unsafe {
+            let _: () = msg_send![self, dump];
+        }
     }
 }

@@ -795,4 +795,10 @@ impl Graph {
             vec
         }
     }
+
+    pub fn dump(&self) {
+        unsafe {
+            let _: () = msg_send![self, dump];
+        }
+    }
 }
