@@ -10,6 +10,7 @@ use objc2_foundation::{
 use std::collections::HashMap;
 use std::path::Path;
 
+use crate::device::MPSGraphComputeDevice;
 use crate::tensor::Tensor;
 use crate::tensor_data::TensorData;
 
@@ -217,6 +218,78 @@ impl CompilationDescriptor {
             let _: () = msg_send![self, setAllowedComputeDevices: devices as u64];
         }
     }
+
+    pub fn set_compiler_options(&self, options: u64) {
+        unsafe {
+            let _: () = msg_send![self, setCompilerOptions: options];
+        }
+    }
+
+    pub fn set_ane_compiler_spatial_splitting(&self, value: u64) {
+        unsafe {
+            let _: () = msg_send![self, setAneCompilerSpatialSplitting: value];
+        }
+    }
+
+    pub fn set_enable_ane_fw_to_fw_signal(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableANEFWToFWSignal: enable];
+        }
+    }
+
+    pub fn set_enable_ane_late_latch(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableANELateLatch: enable];
+        }
+    }
+
+    pub fn set_print_ane_placement_analysis(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setPrintANEPlacementAnalysis: enable];
+        }
+    }
+
+    pub fn set_preferred_device(&self, device: MPSGraphComputeDevice) {
+        unsafe {
+            let _: () = msg_send![self, setPreferredDevice: device.bits()];
+        }
+    }
+
+    pub fn set_allowed_compute_devices(&self, devices: MPSGraphComputeDevice) {
+        unsafe {
+            let _: () = msg_send![self, setAllowedComputeDevices: devices.bits()];
+        }
+    }
+
+    pub fn set_enable_parallel_encode(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableParallelEncode: enable];
+        }
+    }
+
+    pub fn set_maximum_number_of_parallel_encoding_regions(&self, value: u64) {
+        unsafe {
+            let _: () = msg_send![self, setMaximumNumberOfParallelEncodingRegions: value];
+        }
+    }
+
+    pub fn set_minimum_number_of_ops_in_parallel_region(&self, value: u64) {
+        unsafe {
+            let _: () = msg_send![self, setMinimumNumberOfOpsInParallelRegion: value];
+        }
+    }
+
+    pub fn set_enable_mlir_diagnostics(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableMLIRDiagnostics: enable];
+        }
+    }
+
+    pub fn set_enable_shape_equivalence(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableShapeEquivalence: enable];
+        }
+    }
 }
 
 extern_class!(
@@ -370,6 +443,76 @@ impl ExecutableExecutionDescriptor {
             let event_ptr = event.as_ptr() as *mut std::ffi::c_void;
             let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u64, value: value];
         }
+    }
+
+    pub fn set_enable_commit_and_continue(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableCommitAndContinue: enable];
+        }
+    }
+
+    pub fn set_simulate_ane_compile_failure(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setSimulateANECompileFailure: enable];
+        }
+    }
+
+    pub fn set_simulate_ane_load_model_failure(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setSimulateANELoadModelFailure: enable];
+        }
+    }
+
+    pub fn set_disable_synchronize_results(&self, disable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setDisableSynchronizeResults: disable];
+        }
+    }
+
+    pub fn set_disable_ane_caching(&self, disable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setDisableANECaching: disable];
+        }
+    }
+
+    pub fn set_disable_ane_fallback(&self, disable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setDisableANEFallback: disable];
+        }
+    }
+
+    pub fn set_enable_profiling_op_names(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setEnableProfilingOpNames: enable];
+        }
+    }
+
+    pub fn set_brief_profiling_op_names(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setBriefProfilingOpNames: enable];
+        }
+    }
+
+    pub fn set_break_up_metal_encoders(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setBreakUpMetalEncoders: enable];
+        }
+    }
+
+    pub fn set_generate_runtime_execution_report(&self, enable: bool) {
+        unsafe {
+            let _: () = msg_send![self, setGenerateRuntimeExecutionReport: enable];
+        }
+    }
+
+    pub fn set_maximum_number_of_encoding_threads(&self, value: u64) {
+        unsafe {
+            let _: () = msg_send![self, setMaximumNumberOfEncodingThreads: value];
+        }
+    }
+
+    pub fn number_of_commits_by_mps_graph(&self) -> u64 {
+        unsafe { msg_send![self, numberOfCommitsByMPSGraph] }
     }
 }
 

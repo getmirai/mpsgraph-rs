@@ -16,6 +16,7 @@ objc2 = { workspace = true }
 objc2-foundation = { workspace = true }
 metal = { workspace = true }
 block2 = { workspace = true }
+bitflags = "2.4"
 
 [dev-dependencies]
 prettydiff = { workspace = true }
