@@ -1,8 +1,8 @@
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use objc2::ClassType;
 use objc2::msg_send;
 use objc2::rc::Retained;
+use objc2::ClassType;
 use objc2_foundation::{NSArray, NSNumber, NSObject, NSObjectProtocol, NSString};
 
 /// Scaling mode for FFT operations
@@ -34,9 +34,7 @@ unsafe impl NSObjectProtocol for FFTDescriptor {}
 impl FFTDescriptor {
     /// Creates a new FFT descriptor with default settings
     pub fn new() -> Retained<Self> {
-        unsafe {
-            msg_send![Self::class(), descriptor]
-        }
+        unsafe { msg_send![Self::class(), descriptor] }
     }
 
     /// Sets whether to use inverse FFT (positive phase factor)
@@ -70,7 +68,7 @@ impl FFTDescriptor {
             }
         }
     }
-    
+
     /// Sets the normalization factor for the FFT
     pub fn set_normalization_factor(&self, factor: f64) {
         unsafe {
@@ -450,7 +448,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -476,7 +474,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -509,7 +507,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -535,7 +533,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -568,7 +566,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -594,7 +592,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -627,7 +625,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -653,7 +651,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -686,7 +684,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -712,7 +710,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }
@@ -741,9 +739,9 @@ impl GraphFourierTransformOps for Graph {
                 return None;
             }
 
-            let result_array = Retained::from_raw(result_ptr).unwrap();
+            let result_array = Retained::retain_autoreleased(result_ptr).unwrap();
             let count = result_array.count();
-            
+
             if count != 2 {
                 return None;
             }
@@ -755,8 +753,8 @@ impl GraphFourierTransformOps for Graph {
                 return None;
             }
 
-            let real_output = Retained::from_raw(real_output_ptr).unwrap();
-            let imag_output = Retained::from_raw(imag_output_ptr).unwrap();
+            let real_output = Retained::retain_autoreleased(real_output_ptr).unwrap();
+            let imag_output = Retained::retain_autoreleased(imag_output_ptr).unwrap();
 
             Some((real_output, imag_output))
         }
@@ -784,9 +782,9 @@ impl GraphFourierTransformOps for Graph {
                 return None;
             }
 
-            let result_array = Retained::from_raw(result_ptr).unwrap();
+            let result_array = Retained::retain_autoreleased(result_ptr).unwrap();
             let count = result_array.count();
-            
+
             if count != 2 {
                 return None;
             }
@@ -798,8 +796,8 @@ impl GraphFourierTransformOps for Graph {
                 return None;
             }
 
-            let real_output = Retained::from_raw(real_output_ptr).unwrap();
-            let imag_output = Retained::from_raw(imag_output_ptr).unwrap();
+            let real_output = Retained::retain_autoreleased(real_output_ptr).unwrap();
+            let imag_output = Retained::retain_autoreleased(imag_output_ptr).unwrap();
 
             Some((real_output, imag_output))
         }
@@ -825,9 +823,9 @@ impl GraphFourierTransformOps for Graph {
                 return None;
             }
 
-            let result_array = Retained::from_raw(result_ptr).unwrap();
+            let result_array = Retained::retain_autoreleased(result_ptr).unwrap();
             let count = result_array.count();
-            
+
             if count != 2 {
                 return None;
             }
@@ -839,8 +837,8 @@ impl GraphFourierTransformOps for Graph {
                 return None;
             }
 
-            let real_output = Retained::from_raw(real_output_ptr).unwrap();
-            let imag_output = Retained::from_raw(imag_output_ptr).unwrap();
+            let real_output = Retained::retain_autoreleased(real_output_ptr).unwrap();
+            let imag_output = Retained::retain_autoreleased(imag_output_ptr).unwrap();
 
             Some((real_output, imag_output))
         }
@@ -867,7 +865,7 @@ impl GraphFourierTransformOps for Graph {
             if tensor_ptr.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(tensor_ptr).unwrap())
+                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
             }
         }
     }

@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -57,10 +57,12 @@ impl GraphNonZeroOps for Graph {
     fn non_zero_indices(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 nonZeroIndicesOfTensor: &**tensor,
                 name: name_ptr
             ];
@@ -68,7 +70,7 @@ impl GraphNonZeroOps for Graph {
             if result.is_null() {
                 panic!("Failed to compute non-zero indices tensor");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

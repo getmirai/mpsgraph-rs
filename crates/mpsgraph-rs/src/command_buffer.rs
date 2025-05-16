@@ -48,8 +48,9 @@ impl CommandBuffer {
                 initWithCommandBuffer:buffer_ptr
             ];
 
-            // init methods return retained objects, so from_raw is correct here
-            Retained::from_raw(mps_command_buffer).unwrap()
+            // -[MPSCommandBuffer initWithCommandBuffer:] returns an *autoreleased* object.
+            // We must use retain_autoreleased to correctly manage its lifecycle.
+            Retained::retain_autoreleased(mps_command_buffer).unwrap()
         }
     }
 
@@ -68,7 +69,11 @@ impl CommandBuffer {
                 commandBufferFromCommandQueue:queue_ptr
             ];
 
-            // Class methods return autoreleased objects, so we need to retain
+            // `commandBufferFromCommandQueue:` returns an *autoreleased*
+            // object. We must explicitly retain it to own one reference.
+            // Otherwise, when the surrounding autorelease pool drains, the
+            // object is freed while still in use by MPSGraph, leading to
+            // "message sent to deallocated instance" crashes.
             Retained::retain_autoreleased(mps_command_buffer).unwrap()
         }
     }
@@ -93,10 +98,10 @@ impl CommandBuffer {
     /// In some circumstances, it is preferable to use the root command buffer,
     /// particularly when trying to identify the command buffer that will be commited
     /// by commit_and_continue().
-    pub fn root_command_buffer(&self) -> MTLCommandBuffer {
+    pub fn root_command_buffer(&self) -> &<MTLCommandBuffer as ForeignType>::Ref {
         unsafe {
-            let cmd_buffer: *mut objc2::runtime::AnyObject = msg_send![self, rootCommandBuffer];
-            MTLCommandBuffer::from_ptr(cmd_buffer as _)
+            let cmd_buffer_ptr: *mut objc2::runtime::AnyObject = msg_send![self, rootCommandBuffer];
+            &*(cmd_buffer_ptr as *const <MTLCommandBuffer as ForeignType>::Ref)
         }
     }
 

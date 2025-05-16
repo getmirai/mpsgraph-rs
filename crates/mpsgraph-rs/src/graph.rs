@@ -1,4 +1,4 @@
-use objc2::rc::Retained;
+use objc2::rc::{autoreleasepool, Retained};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::{
@@ -73,7 +73,7 @@ impl Graph {
     pub fn new() -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            // 'new' is a class method that returns an object with +1 retain count
+            // 'new' is a class method that returns an object with +1 retain count.
             let obj_ptr: *mut Self = msg_send![class, new];
             Retained::from_raw(obj_ptr).unwrap()
         }
@@ -297,7 +297,7 @@ impl Graph {
         targets: &[&Retained<Tensor>],
         descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Retained<Executable> {
-        unsafe {
+        autoreleasepool(|_| unsafe {
             // Create immutable NSDictionary for feeds directly
             let keys: Vec<&Tensor> = feeds.keys().map(|k| k.as_ref()).collect();
             let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
@@ -340,7 +340,7 @@ impl Graph {
             } else {
                 Retained::retain_autoreleased(executable_ptr).unwrap()
             }
-        }
+        })
     }
 
     /// Compiles the graph against a given set of feeds, targets, and target operations
@@ -361,7 +361,7 @@ impl Graph {
         target_ops: &[&Retained<Operation>],
         descriptor: Option<&Retained<CompilationDescriptor>>,
     ) -> Retained<Executable> {
-        unsafe {
+        autoreleasepool(|_| unsafe {
             // Create immutable NSDictionary for feeds directly
             let keys: Vec<&Tensor> = feeds.keys().map(|k| k.as_ref()).collect();
             let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
@@ -408,7 +408,7 @@ impl Graph {
             } else {
                 Retained::retain_autoreleased(executable_ptr).unwrap()
             }
-        }
+        })
     }
 
     /// Encodes the graph to a command buffer for execution
@@ -429,7 +429,7 @@ impl Graph {
         target_operations: Option<&[Retained<Operation>]>,
         execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
     ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
-        unsafe {
+        autoreleasepool(|_| unsafe {
             // Create NSMutableDictionary for feeds
             let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
             let dictionary_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
@@ -518,7 +518,7 @@ impl Graph {
             }
 
             result
-        }
+        })
     }
 
     /// Encodes the graph to a command buffer with a results dictionary
@@ -537,7 +537,7 @@ impl Graph {
         results_dict: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
         execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
     ) {
-        unsafe {
+        autoreleasepool(|_| unsafe {
             // Create NSMutableDictionary for feeds
             let feeds_dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
             let feeds_ptr: *mut NSMutableDictionary<Tensor, TensorData> =
@@ -594,7 +594,7 @@ impl Graph {
                 resultsDictionary: &*results_dictionary,
                 executionDescriptor: desc_ptr
             ];
-        }
+        })
     }
 
     /// Creates a tensor with random uniform values

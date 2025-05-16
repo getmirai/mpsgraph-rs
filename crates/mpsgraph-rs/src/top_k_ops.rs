@@ -220,7 +220,7 @@ impl GraphTopKOps for Graph {
                 return None;
             }
 
-            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
             if result_array_retained.count() < 2 {
                 return None;
             }
@@ -229,8 +229,8 @@ impl GraphTopKOps for Graph {
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
             
-            let values = Retained::from_raw(values_ptr).unwrap();
-            let indices = Retained::from_raw(indices_ptr).unwrap();
+            let values = Retained::retain_autoreleased(values_ptr).unwrap();
+            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
             Some((values, indices))
         }
@@ -259,7 +259,7 @@ impl GraphTopKOps for Graph {
                 return None;
             }
 
-            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
             if result_array_retained.count() < 2 {
                 return None;
             }
@@ -268,8 +268,8 @@ impl GraphTopKOps for Graph {
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
             
-            let values = Retained::from_raw(values_ptr).unwrap();
-            let indices = Retained::from_raw(indices_ptr).unwrap();
+            let values = Retained::retain_autoreleased(values_ptr).unwrap();
+            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
             Some((values, indices))
         }
@@ -298,7 +298,7 @@ impl GraphTopKOps for Graph {
                 return None;
             }
 
-            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
             if result_array_retained.count() < 2 {
                 return None;
             }
@@ -307,8 +307,8 @@ impl GraphTopKOps for Graph {
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
             
-            let values = Retained::from_raw(values_ptr).unwrap();
-            let indices = Retained::from_raw(indices_ptr).unwrap();
+            let values = Retained::retain_autoreleased(values_ptr).unwrap();
+            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
             Some((values, indices))
         }
@@ -335,7 +335,7 @@ impl GraphTopKOps for Graph {
                 return None;
             }
 
-            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
             if result_array_retained.count() < 2 {
                 return None;
             }
@@ -344,8 +344,8 @@ impl GraphTopKOps for Graph {
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
             
-            let values = Retained::from_raw(values_ptr).unwrap();
-            let indices = Retained::from_raw(indices_ptr).unwrap();
+            let values = Retained::retain_autoreleased(values_ptr).unwrap();
+            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
             Some((values, indices))
         }
@@ -374,7 +374,7 @@ impl GraphTopKOps for Graph {
                 return None;
             }
 
-            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
             if result_array_retained.count() < 2 {
                 return None;
             }
@@ -383,8 +383,8 @@ impl GraphTopKOps for Graph {
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
             
-            let values = Retained::from_raw(values_ptr).unwrap();
-            let indices = Retained::from_raw(indices_ptr).unwrap();
+            let values = Retained::retain_autoreleased(values_ptr).unwrap();
+            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
             Some((values, indices))
         }
@@ -413,7 +413,7 @@ impl GraphTopKOps for Graph {
                 return None;
             }
 
-            let result_array_retained = Retained::from_raw(result_array).unwrap();
+            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
             if result_array_retained.count() < 2 {
                 return None;
             }
@@ -422,8 +422,8 @@ impl GraphTopKOps for Graph {
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
             
-            let values = Retained::from_raw(values_ptr).unwrap();
-            let indices = Retained::from_raw(indices_ptr).unwrap();
+            let values = Retained::retain_autoreleased(values_ptr).unwrap();
+            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
             Some((values, indices))
         }
@@ -451,7 +451,7 @@ impl GraphTopKOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -480,7 +480,7 @@ impl GraphTopKOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -509,7 +509,7 @@ impl GraphTopKOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }

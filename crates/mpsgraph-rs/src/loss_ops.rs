@@ -102,7 +102,7 @@ impl GraphLossOps for Graph {
             if result.is_null() {
                 panic!("Failed to create softmax cross-entropy operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -133,7 +133,7 @@ impl GraphLossOps for Graph {
             if result.is_null() {
                 panic!("Failed to create softmax cross-entropy gradient operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

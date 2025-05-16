@@ -826,7 +826,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create transpose operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -857,7 +857,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -898,7 +898,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_with_arrays operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -945,7 +945,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create strided_slice operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -982,7 +982,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create strided_slice_with_tensors operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1013,7 +1013,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_with_tensors operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1035,7 +1035,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reshape operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1062,7 +1062,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reshape_with_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1084,7 +1084,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create flatten2d operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1111,7 +1111,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create broadcast operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1132,7 +1132,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create shape_of operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1159,7 +1159,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create cast operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1193,7 +1193,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create stack operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1230,7 +1230,7 @@ impl GraphTensorShapeOps for Graph {
             for i in 0..count {
                 let tensor: *mut Tensor = msg_send![result_array, objectAtIndex: i];
                 if !tensor.is_null() {
-                    tensors.push(Retained::from_raw(tensor).unwrap());
+                    tensors.push(Retained::retain_autoreleased(tensor).unwrap());
                 }
             }
 
@@ -1258,7 +1258,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create squeeze operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1280,7 +1280,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create expand_dims operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1310,7 +1310,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create expand_dims_axes operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1340,7 +1340,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create tile operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1372,7 +1372,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create pad operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1399,7 +1399,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create space_to_depth operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1426,7 +1426,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create depth_to_space operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1451,7 +1451,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create reverse operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1494,7 +1494,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_gradient operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1543,7 +1543,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_gradient_with_masks operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1582,7 +1582,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_gradient_with_tensors operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1615,7 +1615,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_gradient_with_size_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1664,7 +1664,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_update operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1703,7 +1703,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_update_with_tensors operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1746,7 +1746,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_update_zero_masks operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1779,7 +1779,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create slice_update_zero_masks_with_tensors operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1800,7 +1800,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create squeeze_all operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1827,7 +1827,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create squeeze_axis operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1854,7 +1854,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create squeeze_with_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1881,7 +1881,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create expand_dims_with_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1910,7 +1910,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create concat operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1944,7 +1944,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create concat_tensors operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1971,7 +1971,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create coordinate_along_axis operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -1998,7 +1998,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create coordinate_along_axis_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -2025,7 +2025,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create coordinate_along_axis_with_shape_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }
@@ -2052,7 +2052,7 @@ impl GraphTensorShapeOps for Graph {
             if result.is_null() {
                 panic!("Failed to create coordinate_along_axis_tensor_with_shape_tensor operation");
             } else {
-                Retained::from_raw(result).unwrap()
+                Retained::retain_autoreleased(result).unwrap()
             }
         }
     }

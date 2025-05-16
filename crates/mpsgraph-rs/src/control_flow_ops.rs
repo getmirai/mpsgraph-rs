@@ -291,7 +291,7 @@ impl GraphControlFlowOps for Graph {
                     let condition = before_block(&inputs, &mut result_tensors);
 
                     // Set results array
-                    let results_ns = Retained::from_raw(results_array).unwrap();
+                    let results_ns = Retained::retain_autoreleased(results_array).unwrap();
                     for tensor in result_tensors {
                         let _: () = msg_send![&*results_ns, addObject: &*tensor];
                     }
@@ -367,7 +367,7 @@ impl GraphControlFlowOps for Graph {
                     let args_array = args_array_ptr as *mut NSArray<Tensor>;
 
                     // Convert to Tensor
-                    let index_tensor = Retained::from_raw(index).unwrap();
+                    let index_tensor = Retained::retain_autoreleased(index).unwrap();
 
                     // Convert NSArray to Vec<Retained<Tensor>>
                     let body_arguments = convert_nsarray_to_vec(args_array);
@@ -430,7 +430,7 @@ impl GraphControlFlowOps for Graph {
                     let args_array = args_array_ptr as *mut NSArray<Tensor>;
 
                     // Convert to Tensor
-                    let index_tensor = Retained::from_raw(index).unwrap();
+                    let index_tensor = Retained::retain_autoreleased(index).unwrap();
 
                     // Convert NSArray to Vec<Retained<Tensor>>
                     let body_arguments = convert_nsarray_to_vec(args_array);

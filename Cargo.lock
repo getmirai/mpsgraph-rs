@@ -358,6 +358,7 @@ name = "mpsgraph"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "bitflags",
  "block2",
  "metal",
  "ndarray",

@@ -7,36 +7,6 @@ use std::collections::HashMap;
 
 /// Gradient (Automatic Differentiation) operations for Graph
 pub trait GraphGradientOps {
-    /// Calculates a partial derivative of primary_tensor with respect to the tensors.
-    ///
-    /// Returns a dictionary containing partial derivative d(primary_tensor)/d(secondary_tensor) for each tensor.
-    ///
-    /// # Parameters
-    ///
-    /// * `primary_tensor` - Tensor to be differentiated (numerator).
-    /// * `tensors` - Tensors to do the differentiation with (denominator).
-    /// * `name` - Optional name for the gradient operation.
-    ///
-    /// # Returns
-    ///
-    /// A HashMap mapping each input tensor to its gradient tensor.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// # use mpsgraph::{Graph, DataType, Shape};
-    /// # let graph = Graph::new();
-    /// # let shape = Shape::matrix(2, 3);
-    /// # let x = graph.placeholder(DataType::Float32, &shape).unwrap();
-    /// # let y = graph.square(&x, None).unwrap();
-    /// // Calculate gradient dy/dx
-    /// let grads = graph.gradient_for_primary_tensor(&y, &[&x], None);
-    /// if let Some(gradients) = grads {
-    ///     for (input, gradient) in gradients {
-    ///         // Use gradients...
-    ///     }
-    /// }
-    /// ```
     fn gradient_for_primary_tensor(
         &self,
         primary_tensor: &Tensor,

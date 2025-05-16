@@ -116,7 +116,7 @@ impl GraphNonMaximumSuppressionOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -151,7 +151,7 @@ impl GraphNonMaximumSuppressionOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }

@@ -275,37 +275,6 @@ impl GraphExtensions for Graph {
     }
 }
 
-/// Functional API for tensor operations
-///
-/// These functions provide a functional programming style interface to tensor operations.
-/// They enable a consistent style for creating tensor computation graphs.
-///
-/// # Examples
-///
-/// ```ignore
-/// use mpsgraph_tools::prelude::*;
-/// use objc2_foundation::NSNumber;
-///
-/// // Create a graph and a tensor
-/// let graph = Graph::new();
-///
-/// // Create a shape using NSNumber
-/// let numbers = [
-///     NSNumber::new_usize(2),
-///     NSNumber::new_usize(3),
-/// ];
-/// let number_refs: Vec<&NSNumber> = numbers.iter().map(|n| n.as_ref()).collect();
-/// let shape = Shape::from_slice(&number_refs);
-///
-/// let tensor = graph.placeholder_tensor(&shape, DataType::Float32, None);
-///
-/// // Method-based API (object-oriented style)
-/// let squared_method = tensor.square(None);
-///
-/// // Functional API (functional programming style)
-/// let squared_func = square(&tensor, None);
-/// ```
-
 /// Applies square operation to the tensor elements
 ///
 /// Computes the square of each element in the tensor: f(x) = x²
@@ -692,38 +661,5 @@ impl TensorScalarOps for Retained<MPSTensor> {
         let const_tensor = self.constant(value);
         let graph = get_graph_from_tensor(self);
         graph.maximum(self, &const_tensor, name)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // This is still a test that requires a Metal device, so keep it marked
-    // as ignored for CI environments. You can run it locally with:
-    // cargo test -- --ignored
-    #[test]
-    #[ignore]
-    fn test_tensor_operations() {
-        // This is a compile-time check of the API, not a runtime test
-        // The actual execution would require a valid Metal device
-
-        // Check that the API exists by referring to the traits and functions
-        let _ = <Graph as GraphExtensions>::zeros;
-        let _ = <Graph as GraphExtensions>::ones;
-        let _ = <Graph as GraphExtensions>::fill::<f32>;
-
-        let _ = <Retained<MPSTensor> as TensorOps>::add;
-        let _ = <Retained<MPSTensor> as TensorOps>::sqrt;
-        let _ = <Retained<MPSTensor> as TensorOps>::abs;
-
-        // Functional API operations
-        let _ = square;
-        let _ = sqrt;
-        let _ = relu;
-
-        // This is a compile-time check of the API, not a runtime test
-        // The actual execution would require a valid Metal device
-        println!("API trait implementation verified");
     }
 }

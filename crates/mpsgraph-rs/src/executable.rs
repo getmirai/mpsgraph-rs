@@ -72,7 +72,6 @@ impl CompilationDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
-            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -184,7 +183,7 @@ impl CompilationDescriptor {
         // Convert to immutable dictionary
         let immutable_dict = unsafe {
             let dict_ptr: *mut NSDictionary<NSString, Executable> = msg_send![&*mutable_dict, copy];
-            Retained::retain_autoreleased(dict_ptr).unwrap()
+            Retained::from_raw(dict_ptr).unwrap()
         };
 
         // Set the property
@@ -308,7 +307,6 @@ impl ExecutionDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
-            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -363,7 +361,6 @@ impl SerializationDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
-            // This is an init method, which returns an object with +1 retain count
             Retained::from_raw(obj_ptr).unwrap()
         }
     }
@@ -407,7 +404,7 @@ impl ExecutableExecutionDescriptor {
             let class = Self::class();
             let alloc: *mut Self = msg_send![class, alloc];
             let obj_ptr: *mut Self = msg_send![alloc, init];
-            // This is an init method, which returns an object with +1 retain count
+            // alloc/init returns a +1 retained object.
             Retained::from_raw(obj_ptr).unwrap()
         }
     }

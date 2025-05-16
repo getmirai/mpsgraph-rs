@@ -88,7 +88,7 @@ impl Tensor {
         unsafe {
             let tensor_ptr = &*self.0;
             let operation_ptr: *mut Operation = msg_send![tensor_ptr, operation];
-            Retained::from_raw(operation_ptr).unwrap()
+            Retained::retain_autoreleased(operation_ptr).unwrap()
         }
     }
 
@@ -98,7 +98,7 @@ impl Tensor {
         let operation = self.operation();
         unsafe {
             let graph_ptr: *mut Graph = msg_send![&*operation, graph];
-            Retained::from_raw(graph_ptr).unwrap()
+            Retained::retain_autoreleased(graph_ptr).unwrap()
         }
     }
 }

@@ -216,11 +216,10 @@ fn test_encode_to_command_buffer_memory_management() {
                 output_tensors.len()
             );
         }
-
-        // Commit the current command buffer operations and continue
-        // This allows us to reuse the same command buffer
-        cmd_buffer.commit_and_continue();
     }
+
+    // Commit the command buffer
+    cmd_buffer.commit();
 
     // Wait for all operations to complete at the end
     cmd_buffer.command_buffer().wait_until_completed();

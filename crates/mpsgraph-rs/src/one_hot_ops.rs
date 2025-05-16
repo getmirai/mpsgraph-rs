@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::core::DataType;
@@ -158,10 +158,12 @@ impl GraphOneHotOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
@@ -174,7 +176,7 @@ impl GraphOneHotOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -190,10 +192,12 @@ impl GraphOneHotOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 dataType: data_type as u64,
@@ -205,7 +209,7 @@ impl GraphOneHotOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -220,10 +224,12 @@ impl GraphOneHotOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
@@ -234,7 +240,7 @@ impl GraphOneHotOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -247,10 +253,12 @@ impl GraphOneHotOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 name: name_ptr
@@ -259,7 +267,7 @@ impl GraphOneHotOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -273,10 +281,12 @@ impl GraphOneHotOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 dataType: data_type as u64,
@@ -286,7 +296,7 @@ impl GraphOneHotOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }
@@ -300,10 +310,12 @@ impl GraphOneHotOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
@@ -313,7 +325,7 @@ impl GraphOneHotOps for Graph {
             if result.is_null() {
                 None
             } else {
-                Some(Retained::from_raw(result).unwrap())
+                Some(Retained::retain_autoreleased(result).unwrap())
             }
         }
     }

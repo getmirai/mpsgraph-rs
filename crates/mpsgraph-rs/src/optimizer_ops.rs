@@ -24,12 +24,19 @@ unsafe impl NSObjectProtocol for VariableOp {}
 impl VariableOp {
     /// Returns the operation associated with this variable.
     pub fn operation(&self) -> Retained<Operation> {
-        unsafe { msg_send![self, operation] }
+        unsafe {
+            let op_ptr: *mut Operation = msg_send![self, operation];
+            // Property getters yield autoreleased (+0) objects – retain before wrapping
+            Retained::retain_autoreleased(op_ptr).unwrap()
+        }
     }
 
     /// Returns the tensor associated with this variable.
     pub fn tensor(&self) -> Retained<Tensor> {
-        unsafe { msg_send![self, tensor] }
+        unsafe {
+            let tensor_ptr: *mut Tensor = msg_send![self, tensor];
+            Retained::retain_autoreleased(tensor_ptr).unwrap()
+        }
     }
 }
 
