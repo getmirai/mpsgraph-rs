@@ -65,16 +65,16 @@ fn main() {
     // Call the addition executable
     let addition_result = graph.call(
         "addition",
-        &[a.clone(), b.clone()],
-        &[float32_matrix.clone()],
+        &[a.as_ref(), b.as_ref()],
+        &[float32_matrix.as_ref()],
         Some("AdditionCall"),
     );
 
     // Call the multiplication executable
     let multiplication_result = graph.call(
         "multiplication",
-        &[a.clone(), b.clone()],
-        &[float32_matrix.clone()],
+        &[a.as_ref(), b.as_ref()],
+        &[float32_matrix.as_ref()],
         Some("MultiplicationCall"),
     );
 

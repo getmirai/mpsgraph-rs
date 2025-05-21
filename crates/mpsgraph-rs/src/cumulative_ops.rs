@@ -272,7 +272,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeSumWithTensor: tensor,
                 axis: axis,
@@ -280,12 +280,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -303,7 +298,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeSumWithTensor: tensor,
                 axisTensor: axis_tensor,
@@ -311,12 +306,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -332,18 +322,13 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeSumWithTensor: tensor,
                 axis: axis,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -361,7 +346,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeProductWithTensor: tensor,
                 axis: axis,
@@ -369,12 +354,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -392,7 +372,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeMinimumWithTensor: tensor,
                 axis: axis,
@@ -400,12 +380,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -423,7 +398,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeMaximumWithTensor: tensor,
                 axis: axis,
@@ -431,12 +406,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -454,7 +424,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeProductWithTensor: tensor,
                 axisTensor: axis_tensor,
@@ -462,12 +432,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -483,18 +448,13 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeProductWithTensor: tensor,
                 axis: axis,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -512,7 +472,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeMinimumWithTensor: tensor,
                 axisTensor: axis_tensor,
@@ -520,12 +480,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -541,18 +496,13 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeMinimumWithTensor: tensor,
                 axis: axis,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -570,7 +520,7 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeMaximumWithTensor: tensor,
                 axisTensor: axis_tensor,
@@ -578,12 +528,7 @@ impl GraphCumulativeOps for Graph {
                 reverse: reverse,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -599,18 +544,13 @@ impl GraphCumulativeOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 cumulativeMaximumWithTensor: tensor,
                 axis: axis,
                 name: name_ptr,
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 }

@@ -463,27 +463,23 @@ impl GraphPoolingOps for Graph {
                 None => std::ptr::null(),
             };
 
-            let result: Retained<NSArray<Tensor>> = msg_send![
+            let result_array: Retained<NSArray<Tensor>> = msg_send![
                 self,
                 maxPooling2DReturnIndicesWithSourceTensor: source,
                 descriptor: descriptor,
                 name: name_obj
             ];
 
-            // Get the two result tensors
-            let result_count: usize = msg_send![&*result, count];
-
+            let result_count: usize = result_array.count();
             if result_count != 2 {
-                panic!("maxPooling2DReturnIndices should return exactly 2 tensors");
+                panic!(
+                    "maxPooling2DReturnIndices should return exactly 2 tensors, got {}",
+                    result_count
+                );
             }
 
-            let pooling_tensor: *mut Tensor = msg_send![&*result, objectAtIndex: 0u64];
-            let indices_tensor: *mut Tensor = msg_send![&*result, objectAtIndex: 1u64];
-
-            // Convert to retained references
-            let pooling_tensor = Retained::retain(pooling_tensor).unwrap();
-            let indices_tensor = Retained::retain(indices_tensor).unwrap();
-
+            let pooling_tensor: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 0u64];
+            let indices_tensor: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 1u64];
             (pooling_tensor, indices_tensor)
         }
     }
@@ -639,27 +635,28 @@ impl GraphPoolingOps for Graph {
         name: Option<&str>,
     ) -> (Retained<Tensor>, Retained<Tensor>) {
         unsafe {
-            let result: Retained<NSArray<Tensor>> = msg_send![
+            let name_obj = match name {
+                Some(s) => &*NSString::from_str(s),
+                None => std::ptr::null(),
+            };
+
+            let result_array: Retained<NSArray<Tensor>> = msg_send![
                 self,
                 maxPooling4DReturnIndicesWithSourceTensor: source,
                 descriptor: descriptor,
-                name: match name { Some(s) => &*NSString::from_str(s), None => std::ptr::null() }
+                name: name_obj
             ];
 
-            // Get the two result tensors
-            let result_count: usize = msg_send![&*result, count];
-
+            let result_count: usize = result_array.count();
             if result_count != 2 {
-                panic!("maxPooling4DReturnIndices should return exactly 2 tensors");
+                panic!(
+                    "maxPooling4DReturnIndices should return exactly 2 tensors, got {}",
+                    result_count
+                );
             }
 
-            let pooling_tensor: *mut Tensor = msg_send![&*result, objectAtIndex: 0u64];
-            let indices_tensor: *mut Tensor = msg_send![&*result, objectAtIndex: 1u64];
-
-            // Convert to retained references
-            let pooling_tensor = Retained::retain(pooling_tensor).unwrap();
-            let indices_tensor = Retained::retain(indices_tensor).unwrap();
-
+            let pooling_tensor: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 0u64];
+            let indices_tensor: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 1u64];
             (pooling_tensor, indices_tensor)
         }
     }

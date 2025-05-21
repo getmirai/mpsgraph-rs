@@ -270,8 +270,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeTensor: images_tensor,
                 size: size,
@@ -280,13 +279,7 @@ impl GraphResizeOps for Graph {
                 alignCorners: align_corners,
                 layout: layout as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -305,8 +298,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -315,13 +307,7 @@ impl GraphResizeOps for Graph {
                 alignCorners: align_corners,
                 layout: layout as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -339,8 +325,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -348,13 +333,7 @@ impl GraphResizeOps for Graph {
                 centerResult: center_result,
                 alignCorners: align_corners,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -373,8 +352,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeNearestWithTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -383,13 +361,7 @@ impl GraphResizeOps for Graph {
                 alignCorners: align_corners,
                 layout: layout as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -407,8 +379,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeNearestWithTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -416,13 +387,7 @@ impl GraphResizeOps for Graph {
                 centerResult: center_result,
                 alignCorners: align_corners,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -440,8 +405,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeBilinearWithTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -449,13 +413,7 @@ impl GraphResizeOps for Graph {
                 alignCorners: align_corners,
                 layout: layout as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -472,21 +430,14 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeBilinearWithTensor: images_tensor,
                 sizeTensor: size_tensor,
                 centerResult: center_result,
                 alignCorners: align_corners,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -504,8 +455,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -513,13 +463,7 @@ impl GraphResizeOps for Graph {
                 mode: mode as u64,
                 layout: layout as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -537,8 +481,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeTensor: images_tensor,
                 sizeTensor: size_tensor,
@@ -546,13 +489,7 @@ impl GraphResizeOps for Graph {
                 offsetTensor: offset_tensor,
                 mode: mode as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -571,8 +508,7 @@ impl GraphResizeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 resizeWithGradientTensor: gradient,
                 input: input,
@@ -581,13 +517,7 @@ impl GraphResizeOps for Graph {
                 alignCorners: align_corners,
                 layout: layout as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 }

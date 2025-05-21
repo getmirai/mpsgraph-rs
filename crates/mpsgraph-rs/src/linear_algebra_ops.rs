@@ -1,6 +1,6 @@
 use objc2::msg_send;
 use objc2::rc::Retained;
-use objc2_foundation::NSString;
+use objc2_foundation::{NSArray, NSString};
 
 use crate::graph::Graph;
 use crate::tensor::DataType;
@@ -19,12 +19,7 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A valid Tensor object.
-    fn matmul(
-        &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn matmul(&self, primary: &Tensor, secondary: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a matrix multiplication operation with transposed operands.
     ///
@@ -41,9 +36,9 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn matmul_with_transpose(
         &self,
-        primary: &Retained<Tensor>,
+        primary: &Tensor,
         primary_transpose: bool,
-        secondary: &Retained<Tensor>,
+        secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -61,8 +56,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn inner_product(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -79,8 +74,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn outer_product(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -97,8 +92,8 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn batch_matmul(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -117,9 +112,9 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object.
     fn batch_matmul_with_transpose(
         &self,
-        primary: &Retained<Tensor>,
+        primary: &Tensor,
         primary_transpose: bool,
-        secondary: &Retained<Tensor>,
+        secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -142,9 +137,9 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object with the band part extracted.
     fn band_part(
         &self,
-        input: &Retained<Tensor>,
-        num_lower: &Retained<Tensor>,
-        num_upper: &Retained<Tensor>,
+        input: &Tensor,
+        num_lower: &Tensor,
+        num_upper: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -166,7 +161,7 @@ pub trait GraphLinearAlgebraOps {
     /// A valid Tensor object with the band part extracted.
     fn band_part_with_scalars(
         &self,
-        input: &Retained<Tensor>,
+        input: &Tensor,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
@@ -189,8 +184,8 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor with the Hamming distance between the inputs.
     fn hamming_distance(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -216,10 +211,10 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn scaled_dot_product_attention(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
-        scale: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        scale: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -241,9 +236,9 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -267,11 +262,11 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn masked_scaled_dot_product_attention(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
-        mask: &Retained<Tensor>,
-        scale: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        mask: &Tensor,
+        scale: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -294,10 +289,10 @@ pub trait GraphLinearAlgebraOps {
     /// A new tensor containing the result of the attention operation
     fn masked_scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
-        mask: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        mask: &Tensor,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -312,7 +307,7 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A tensor containing the determinant of the input matrix
-    fn determinant(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    fn determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Calculates the determinant for each matrix in a batch of matrices.
     ///
@@ -324,11 +319,7 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A tensor containing determinants for each matrix in the batch
-    fn batched_determinant(
-        &self,
-        tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn batched_determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Solves the triangular linear system with multiple right-hand sides.
     ///
@@ -348,8 +339,8 @@ pub trait GraphLinearAlgebraOps {
     /// A tensor containing the solution X
     fn triangular_solve(
         &self,
-        matrix: &Retained<Tensor>,
-        rhs: &Retained<Tensor>,
+        matrix: &Tensor,
+        rhs: &Tensor,
         lower_triangular: bool,
         right_side: bool,
         unit_diagonal: bool,
@@ -369,48 +360,26 @@ pub trait GraphLinearAlgebraOps {
     /// # Returns
     ///
     /// A tensor containing the result of the einsum operation
-    fn einsum(
-        &self,
-        tensors: &[&Retained<Tensor>],
-        equation: &str,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn einsum(&self, tensors: &[&Tensor], equation: &str, name: Option<&str>) -> Retained<Tensor>;
 }
 
 /// Implementation of linear algebra operations for Graph
 impl GraphLinearAlgebraOps for Graph {
-    fn matmul(
-        &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn matmul(&self, primary: &Tensor, secondary: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                matrixMultiplicationWithPrimaryTensor: &**primary,
-                secondaryTensor: &**secondary,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create matrix multiplication operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, matrixMultiplicationWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
         }
     }
 
     fn matmul_with_transpose(
         &self,
-        primary: &Retained<Tensor>,
+        primary: &Tensor,
         primary_transpose: bool,
-        secondary: &Retained<Tensor>,
+        secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -419,28 +388,14 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                matrixMultiplicationWithPrimaryTensor: &**primary,
-                transposePrimary: primary_transpose,
-                secondaryTensor: &**secondary,
-                transposeSecondary: secondary_transpose,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create matrix multiplication with transpose operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, matrixMultiplicationWithPrimaryTensor: primary, transposePrimary: primary_transpose, secondaryTensor: secondary, transposeSecondary: secondary_transpose, name: name_ptr]
         }
     }
 
     fn inner_product(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -448,26 +403,14 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                innerProductWithPrimaryTensor: &**primary,
-                secondaryTensor: &**secondary,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create inner product operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, innerProductWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
         }
     }
 
     fn outer_product(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -475,26 +418,14 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                outerProductWithPrimaryTensor: &**primary,
-                secondaryTensor: &**secondary,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create outer product operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, outerProductWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
         }
     }
 
     fn batch_matmul(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -502,27 +433,15 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                matrixMultiplicationWithPrimaryTensor: &**primary,
-                secondaryTensor: &**secondary,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create batch matrix multiplication operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, matrixMultiplicationWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
         }
     }
 
     fn batch_matmul_with_transpose(
         &self,
-        primary: &Retained<Tensor>,
+        primary: &Tensor,
         primary_transpose: bool,
-        secondary: &Retained<Tensor>,
+        secondary: &Tensor,
         secondary_transpose: bool,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -531,29 +450,15 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                matrixMultiplicationWithPrimaryTensor: &**primary,
-                transposePrimary: primary_transpose,
-                secondaryTensor: &**secondary,
-                transposeSecondary: secondary_transpose,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create batch matrix multiplication with transpose operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, matrixMultiplicationWithPrimaryTensor: primary, transposePrimary: primary_transpose, secondaryTensor: secondary, transposeSecondary: secondary_transpose, name: name_ptr]
         }
     }
 
     fn band_part(
         &self,
-        input: &Retained<Tensor>,
-        num_lower: &Retained<Tensor>,
-        num_upper: &Retained<Tensor>,
+        input: &Tensor,
+        num_lower: &Tensor,
+        num_upper: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -561,26 +466,13 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                bandPartWithTensor: &**input,
-                numLowerTensor: &**num_lower,
-                numUpperTensor: &**num_upper,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create band part operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, bandPartWithTensor: input, numLowerTensor: num_lower, numUpperTensor: num_upper, name: name_ptr]
         }
     }
 
     fn band_part_with_scalars(
         &self,
-        input: &Retained<Tensor>,
+        input: &Tensor,
         num_lower: i64,
         num_upper: i64,
         name: Option<&str>,
@@ -590,27 +482,14 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                bandPartWithTensor: &**input,
-                numLower: num_lower,
-                numUpper: num_upper,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create band part with scalars operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, bandPartWithTensor: input, numLower: num_lower, numUpper: num_upper, name: name_ptr]
         }
     }
 
     fn hamming_distance(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -619,29 +498,16 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                HammingDistanceWithPrimaryTensor: &**primary,
-                secondaryTensor: &**secondary,
-                resultDataType: result_data_type as u32,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create hamming distance operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, HammingDistanceWithPrimaryTensor: primary, secondaryTensor: secondary, resultDataType: result_data_type as u32, name: name_ptr]
         }
     }
 
     fn scaled_dot_product_attention(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
-        scale: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        scale: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -649,29 +515,15 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                scaledDotProductAttentionWithQueryTensor: &**query,
-                keyTensor: &**key,
-                valueTensor: &**value,
-                scaleTensor: &**scale,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create scaled dot product attention operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, scaledDotProductAttentionWithQueryTensor: query, keyTensor: key, valueTensor: value, scaleTensor: scale, name: name_ptr]
         }
     }
 
     fn scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -680,31 +532,17 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                scaledDotProductAttentionWithQueryTensor: &**query,
-                keyTensor: &**key,
-                valueTensor: &**value,
-                scale: scale,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create scaled dot product attention with scalar operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, scaledDotProductAttentionWithQueryTensor: query, keyTensor: key, valueTensor: value, scale: scale, name: name_ptr]
         }
     }
 
     fn masked_scaled_dot_product_attention(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
-        mask: &Retained<Tensor>,
-        scale: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        mask: &Tensor,
+        scale: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -712,31 +550,16 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                scaledDotProductAttentionWithQueryTensor: &**query,
-                keyTensor: &**key,
-                valueTensor: &**value,
-                maskTensor: &**mask,
-                scaleTensor: &**scale,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create masked scaled dot product attention operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, scaledDotProductAttentionWithQueryTensor: query, keyTensor: key, valueTensor: value, maskTensor: mask, scaleTensor: scale, name: name_ptr]
         }
     }
 
     fn masked_scaled_dot_product_attention_with_scalar(
         &self,
-        query: &Retained<Tensor>,
-        key: &Retained<Tensor>,
-        value: &Retained<Tensor>,
-        mask: &Retained<Tensor>,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
+        mask: &Tensor,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -745,77 +568,34 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                scaledDotProductAttentionWithQueryTensor: &**query,
-                keyTensor: &**key,
-                valueTensor: &**value,
-                maskTensor: &**mask,
-                scale: scale,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!(
-                    "Failed to create masked scaled dot product attention with scalar operation"
-                );
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, scaledDotProductAttentionWithQueryTensor: query, keyTensor: key, valueTensor: value, maskTensor: mask, scale: scale, name: name_ptr]
         }
     }
 
-    fn determinant(&self, tensor: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+    fn determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                determinant: &**tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create determinant operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, determinant: tensor, name: name_ptr]
         }
     }
 
-    fn batched_determinant(
-        &self,
-        tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn batched_determinant(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                batchedDeterminant: &**tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create batched determinant operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, batchedDeterminant: tensor, name: name_ptr]
         }
     }
 
     fn triangular_solve(
         &self,
-        matrix: &Retained<Tensor>,
-        rhs: &Retained<Tensor>,
+        matrix: &Tensor,
+        rhs: &Tensor,
         lower_triangular: bool,
         right_side: bool,
         unit_diagonal: bool,
@@ -826,55 +606,19 @@ impl GraphLinearAlgebraOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                triangularSolve: &**matrix,
-                rhs: &**rhs,
-                lowerTriangular: lower_triangular,
-                rightSide: right_side,
-                unitDiagonal: unit_diagonal,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create triangular solve operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, triangularSolve: matrix, rhs: rhs, lowerTriangular: lower_triangular, rightSide: right_side, unitDiagonal: unit_diagonal, name: name_ptr]
         }
     }
 
-    fn einsum(
-        &self,
-        tensors: &[&Retained<Tensor>],
-        equation: &str,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn einsum(&self, tensors: &[&Tensor], equation: &str, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
             let equation_ns = NSString::from_str(equation);
-
-            // Create NSArray by dereferencing each Retained<Tensor> to get the Tensor object
-            let tensor_ptrs: Vec<*const Tensor> =
-                tensors.iter().map(|t| &***t as *const _).collect();
-
-            let result: *mut Tensor = msg_send![
-                self,
-                einsumWithTensors: tensor_ptrs.as_ptr(),
-                equation: &*equation_ns,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create einsum operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let tensors_array = NSArray::from_slice(tensors);
+            msg_send![self, einsumWithTensors: &*tensors_array, equation: &*equation_ns, name: name_ptr]
         }
     }
 }

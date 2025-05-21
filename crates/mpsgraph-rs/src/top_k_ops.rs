@@ -211,30 +211,25 @@ impl GraphTopKOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self,
                 topKWithSourceTensor: source,
                 k: k,
                 name: name_ptr
             ];
 
-            if result_array.is_null() {
-                return None;
-            }
-
-            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
-            if result_array_retained.count() < 2 {
-                return None;
-            }
-
-            // Get the two tensors from the NSArray
-            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
-            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-
-            let values = Retained::retain_autoreleased(values_ptr).unwrap();
-            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
-
-            Some((values, indices))
+            result_array_opt.and_then(|array| {
+                if array.count() == 2 {
+                    let values: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0u64];
+                    let indices: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1u64];
+                    match (values, indices) {
+                        (Some(v), Some(i)) => Some((v, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -250,32 +245,25 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self,
                 topKWithSourceTensor: source,
                 axis: axis,
                 k: k,
                 name: name_ptr
             ];
-
-            if result_array.is_null() {
-                return None;
-            }
-
-            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
-            if result_array_retained.count() < 2 {
-                return None;
-            }
-
-            // Get the two tensors from the NSArray
-            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
-            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-
-            let values = Retained::retain_autoreleased(values_ptr).unwrap();
-            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
-
-            Some((values, indices))
+            result_array_opt.and_then(|array| {
+                if array.count() == 2 {
+                    let values: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0u64];
+                    let indices: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1u64];
+                    match (values, indices) {
+                        (Some(v), Some(i)) => Some((v, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -291,32 +279,25 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self,
                 bottomKWithSourceTensor: source,
                 axis: axis,
                 k: k,
                 name: name_ptr
             ];
-
-            if result_array.is_null() {
-                return None;
-            }
-
-            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
-            if result_array_retained.count() < 2 {
-                return None;
-            }
-
-            // Get the two tensors from the NSArray
-            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
-            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-
-            let values = Retained::retain_autoreleased(values_ptr).unwrap();
-            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
-
-            Some((values, indices))
+            result_array_opt.and_then(|array| {
+                if array.count() == 2 {
+                    let values: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0u64];
+                    let indices: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1u64];
+                    match (values, indices) {
+                        (Some(v), Some(i)) => Some((v, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -331,31 +312,24 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self,
                 topKWithSourceTensor: source,
                 kTensor: k_tensor,
                 name: name_ptr
             ];
-
-            if result_array.is_null() {
-                return None;
-            }
-
-            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
-            if result_array_retained.count() < 2 {
-                return None;
-            }
-
-            // Get the two tensors from the NSArray
-            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
-            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-
-            let values = Retained::retain_autoreleased(values_ptr).unwrap();
-            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
-
-            Some((values, indices))
+            result_array_opt.and_then(|array| {
+                if array.count() == 2 {
+                    let values: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0u64];
+                    let indices: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1u64];
+                    match (values, indices) {
+                        (Some(v), Some(i)) => Some((v, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -371,32 +345,25 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self,
                 topKWithSourceTensor: source,
                 axisTensor: axis_tensor,
                 kTensor: k_tensor,
                 name: name_ptr
             ];
-
-            if result_array.is_null() {
-                return None;
-            }
-
-            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
-            if result_array_retained.count() < 2 {
-                return None;
-            }
-
-            // Get the two tensors from the NSArray
-            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
-            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-
-            let values = Retained::retain_autoreleased(values_ptr).unwrap();
-            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
-
-            Some((values, indices))
+            result_array_opt.and_then(|array| {
+                if array.count() == 2 {
+                    let values: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0u64];
+                    let indices: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1u64];
+                    match (values, indices) {
+                        (Some(v), Some(i)) => Some((v, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -412,32 +379,25 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self,
                 bottomKWithSourceTensor: source,
                 axisTensor: axis_tensor,
                 kTensor: k_tensor,
                 name: name_ptr
             ];
-
-            if result_array.is_null() {
-                return None;
-            }
-
-            let result_array_retained = Retained::retain_autoreleased(result_array).unwrap();
-            if result_array_retained.count() < 2 {
-                return None;
-            }
-
-            // Get the two tensors from the NSArray
-            let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
-            let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-
-            let values = Retained::retain_autoreleased(values_ptr).unwrap();
-            let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
-
-            Some((values, indices))
+            result_array_opt.and_then(|array| {
+                if array.count() == 2 {
+                    let values: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0u64];
+                    let indices: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1u64];
+                    match (values, indices) {
+                        (Some(v), Some(i)) => Some((v, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -453,20 +413,13 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 topKWithGradientTensor: gradient,
                 source: source,
                 k: k,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -483,21 +436,14 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 topKWithGradientTensor: gradient,
                 source: source,
                 axis: axis,
                 k: k,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -514,21 +460,14 @@ impl GraphTopKOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 bottomKWithGradientTensor: gradient,
                 source: source,
                 axis: axis,
                 k: k,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 }

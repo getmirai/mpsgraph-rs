@@ -104,7 +104,7 @@ impl GraphNonMaximumSuppressionOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 nonMaximumSuppressionWithBoxesTensor: boxes_tensor,
                 scoresTensor: scores_tensor,
@@ -114,12 +114,7 @@ impl GraphNonMaximumSuppressionOps for Graph {
                 coordinateMode: coordinate_mode as u64,
                 name: name_ptr
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 
@@ -140,7 +135,7 @@ impl GraphNonMaximumSuppressionOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Option<Retained<Tensor>> = msg_send![
                 self,
                 nonMaximumSuppressionWithBoxesTensor: boxes_tensor,
                 scoresTensor: scores_tensor,
@@ -151,12 +146,7 @@ impl GraphNonMaximumSuppressionOps for Graph {
                 coordinateMode: coordinate_mode as u64,
                 name: name_ptr
             ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            result
         }
     }
 }

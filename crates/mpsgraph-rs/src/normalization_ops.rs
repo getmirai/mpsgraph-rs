@@ -1,5 +1,6 @@
 use objc2::msg_send;
 use objc2::rc::Retained;
+use objc2_foundation::NSArray;
 use objc2_foundation::NSString;
 
 use crate::core::create_ns_array_from_i64_slice;
@@ -163,6 +164,120 @@ pub trait GraphNormalizationOps {
         epsilon: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
+
+    /// Creates a layer normalization operation and returns the result tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `source` - The input tensor
+    /// * `axes` - The axes of normalization
+    /// * `gamma` - The tensor used to scale the normalized result
+    /// * `beta` - The tensor used to bias the normalized result
+    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
+    /// * `name` - An optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor object
+    fn layer_normalization(
+        &self,
+        source: &Tensor,
+        axes: &[i64],
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    /// Creates a layer normalization gradient operation and returns the result tensors.
+    ///
+    /// # Arguments
+    ///
+    /// * `incoming_gradient` - The incoming original result tensor gradient
+    /// * `source` - The original input source in forward direction
+    /// * `axes` - The axes of normalization
+    /// * `gamma` - The gamma tensor
+    /// * `beta` - The beta tensor
+    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
+    /// * `name` - An optional name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the source gradient, gamma gradient, and beta gradient
+    fn layer_normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        axes: &[i64],
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> (
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+    );
+
+    fn instance_normalization(
+        &self,
+        source: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    fn instance_normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> (
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+    );
+
+    fn local_response_normalization(
+        &self,
+        source: &Tensor,
+        size: usize,
+        alpha: f64,
+        beta: f64,
+        delta: f64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    fn batch_normalization(
+        &self,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
+    fn batch_normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> (
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+    );
 }
 
 impl GraphNormalizationOps for Graph {
@@ -423,6 +538,246 @@ impl GraphNormalizationOps for Graph {
             } else {
                 // This is a computational method that returns an autoreleased object
                 Retained::retain_autoreleased(result).unwrap()
+            }
+        }
+    }
+
+    fn layer_normalization(
+        &self,
+        source: &Tensor,
+        axes: &[i64],
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
+
+            let result: Option<Retained<Tensor>> = msg_send![
+                self,
+                layerNormalizationWithSourceTensor: source,
+                axes: &*axes_array,
+                gammaTensor: gamma.map_or(std::ptr::null(), |t| t as *const Tensor),
+                betaTensor: beta.map_or(std::ptr::null(), |t| t as *const Tensor),
+                epsilon: epsilon,
+                name: name_ptr
+            ];
+            result
+        }
+    }
+
+    fn layer_normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        axes: &[i64],
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> (
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+    ) {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let axes_array = crate::core::create_ns_array_from_i64_slice(axes);
+
+            let result_array: Option<Retained<NSArray<Tensor>>> = msg_send![
+                self,
+                layerNormalizationGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source,
+                axes: &*axes_array,
+                gammaTensor: gamma.map_or(std::ptr::null(), |t| t as *const Tensor),
+                betaTensor: beta.map_or(std::ptr::null(), |t| t as *const Tensor),
+                epsilon: epsilon,
+                name: name_ptr
+            ];
+
+            if let Some(array) = result_array {
+                let source_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0];
+                let gamma_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1];
+                let beta_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 2];
+                (source_grad, gamma_grad, beta_grad)
+            } else {
+                (None, None, None)
+            }
+        }
+    }
+
+    fn instance_normalization(
+        &self,
+        source: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: Option<Retained<Tensor>> = msg_send![
+                self,
+                instanceNormalizationWithSourceTensor: source,
+                gammaTensor: gamma.map_or(std::ptr::null(), |t| t as *const Tensor),
+                betaTensor: beta.map_or(std::ptr::null(), |t| t as *const Tensor),
+                epsilon: epsilon,
+                name: name_ptr
+            ];
+            result
+        }
+    }
+
+    fn instance_normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> (
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+    ) {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: Option<Retained<NSArray<Tensor>>> = msg_send![
+                self,
+                instanceNormalizationGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source,
+                gammaTensor: gamma.map_or(std::ptr::null(), |t| t as *const Tensor),
+                betaTensor: beta.map_or(std::ptr::null(), |t| t as *const Tensor),
+                epsilon: epsilon,
+                name: name_ptr
+            ];
+
+            if let Some(array) = result_array {
+                let source_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0];
+                let gamma_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1];
+                let beta_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 2];
+                (source_grad, gamma_grad, beta_grad)
+            } else {
+                (None, None, None)
+            }
+        }
+    }
+
+    fn local_response_normalization(
+        &self,
+        source: &Tensor,
+        size: usize,
+        alpha: f64,
+        beta: f64,
+        delta: f64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: Option<Retained<Tensor>> = msg_send![
+                self,
+                localResponseNormalizationWithSourceTensor: source,
+                size: size as u64,
+                alpha: alpha,
+                beta: beta,
+                delta: delta,
+                name: name_ptr
+            ];
+            result
+        }
+    }
+
+    fn batch_normalization(
+        &self,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: Option<Retained<Tensor>> = msg_send![
+                self,
+                batchNormalizationWithSourceTensor: source,
+                meanTensor: mean,
+                varianceTensor: variance,
+                gammaTensor: gamma.map_or(std::ptr::null(), |t| t as *const Tensor),
+                betaTensor: beta.map_or(std::ptr::null(), |t| t as *const Tensor),
+                epsilon: epsilon,
+                name: name_ptr
+            ];
+            result
+        }
+    }
+
+    fn batch_normalization_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source: &Tensor,
+        mean: &Tensor,
+        variance: &Tensor,
+        gamma: Option<&Tensor>,
+        beta: Option<&Tensor>,
+        epsilon: f32,
+        name: Option<&str>,
+    ) -> (
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+        Option<Retained<Tensor>>,
+    ) {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result_array: Option<Retained<NSArray<Tensor>>> = msg_send![
+                self,
+                batchNormalizationGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source,
+                meanTensor: mean,
+                varianceTensor: variance,
+                gammaTensor: gamma.map_or(std::ptr::null(), |t| t as *const Tensor),
+                betaTensor: beta.map_or(std::ptr::null(), |t| t as *const Tensor),
+                epsilon: epsilon,
+                name: name_ptr
+            ];
+
+            if let Some(array) = result_array {
+                let source_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 0];
+                let gamma_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 1];
+                let beta_grad: Option<Retained<Tensor>> = msg_send![&*array, objectAtIndex: 2];
+                (source_grad, gamma_grad, beta_grad)
+            } else {
+                (None, None, None)
             }
         }
     }

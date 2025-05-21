@@ -20,48 +20,43 @@ impl Operation {
     /// Returns the input tensors of this operation
     pub fn input_tensors(&self) -> Vec<Retained<Tensor>> {
         unsafe {
-            let input_tensors: *mut NSArray<Tensor> = msg_send![self, inputTensors];
-            let array_ptr = input_tensors;
-            let count: usize = msg_send![array_ptr, count];
-            let mut result = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
-                let tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
-                result.push(tensor);
+            let array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![self, inputTensors];
+            if let Some(array) = array_opt {
+                let count: usize = array.len();
+                let mut result = Vec::with_capacity(count);
+                for i in 0..count {
+                    let tensor: Retained<Tensor> = msg_send![&*array, objectAtIndex: i];
+                    result.push(tensor);
+                }
+                result
+            } else {
+                Vec::new()
             }
-
-            let _ = Retained::retain_autoreleased(array_ptr).unwrap();
-
-            result
         }
     }
 
     /// Returns the output tensors of this operation
     pub fn output_tensors(&self) -> Vec<Retained<Tensor>> {
         unsafe {
-            let output_tensors: *mut NSArray<Tensor> = msg_send![self, outputTensors];
-            let array_ptr = output_tensors;
-            let count: usize = msg_send![array_ptr, count];
-            let mut result = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let tensor_ptr: *mut Tensor = msg_send![array_ptr, objectAtIndex: i];
-                let tensor = Retained::retain_autoreleased(tensor_ptr).unwrap();
-                result.push(tensor);
+            let array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![self, outputTensors];
+            if let Some(array) = array_opt {
+                let count: usize = array.len();
+                let mut result = Vec::with_capacity(count);
+                for i in 0..count {
+                    let tensor: Retained<Tensor> = msg_send![&*array, objectAtIndex: i];
+                    result.push(tensor);
+                }
+                result
+            } else {
+                Vec::new()
             }
-
-            let _ = Retained::retain_autoreleased(array_ptr).unwrap();
-
-            result
         }
     }
 
     /// Returns the graph this operation belongs to
     pub fn graph(&self) -> Retained<Graph> {
         unsafe {
-            let graph_ptr: *mut Graph = msg_send![self, graph];
-            let graph = Retained::retain_autoreleased(graph_ptr).unwrap();
+            let graph: Retained<Graph> = msg_send![self, graph];
             graph
         }
     }
@@ -82,18 +77,19 @@ impl Operation {
     /// Returns the control dependencies of this operation
     pub fn control_dependencies(&self) -> Vec<Retained<Operation>> {
         unsafe {
-            let dependencies_ptr: *mut NSArray<Operation> = msg_send![self, controlDependencies];
-            let array = Retained::retain_autoreleased(dependencies_ptr).unwrap();
-            let count = array.len();
-            let mut result = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let op_ptr: *mut Operation = msg_send![&*array, objectAtIndex: i];
-                let op = Retained::retain_autoreleased(op_ptr).unwrap();
-                result.push(op);
+            let array_opt: Option<Retained<NSArray<Operation>>> =
+                msg_send![self, controlDependencies];
+            if let Some(array) = array_opt {
+                let count = array.len();
+                let mut result = Vec::with_capacity(count);
+                for i in 0..count {
+                    let op: Retained<Operation> = msg_send![&*array, objectAtIndex: i];
+                    result.push(op);
+                }
+                result
+            } else {
+                Vec::new()
             }
-
-            result
         }
     }
 }

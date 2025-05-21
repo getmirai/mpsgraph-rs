@@ -21,7 +21,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_sum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -39,7 +39,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_sum_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -57,7 +57,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -75,7 +75,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -93,7 +93,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -111,7 +111,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -129,7 +129,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_product_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -147,7 +147,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_product_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -165,7 +165,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_propagate_nan_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -183,7 +183,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_maximum_propagate_nan_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -201,7 +201,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_propagate_nan_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -219,7 +219,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_minimum_propagate_nan_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -237,7 +237,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_and_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -255,7 +255,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_and_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -273,7 +273,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_or_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -291,7 +291,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_or_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -309,7 +309,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_xor_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -327,7 +327,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object
     fn reduction_xor_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -345,7 +345,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object containing the indices of maximum values
     fn reduction_arg_maximum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -363,7 +363,7 @@ pub trait GraphReductionOps {
     /// A valid Tensor object containing the indices of minimum values
     fn reduction_arg_minimum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -372,7 +372,7 @@ pub trait GraphReductionOps {
 impl GraphReductionOps for Graph {
     fn reduction_sum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -381,25 +381,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionSumWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction sum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionSumWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_sum_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -408,33 +396,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionSumWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction sum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionSumWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_maximum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -443,25 +414,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMaximumWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction maximum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionMaximumWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_maximum_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -470,33 +429,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMaximumWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction maximum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionMaximumWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_minimum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -505,25 +447,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMinimumWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction minimum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionMinimumWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_minimum_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -532,33 +462,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMinimumWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction minimum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionMinimumWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_product_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -567,25 +480,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionProductWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction product tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionProductWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_product_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -594,33 +495,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionProductWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction product tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionProductWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_maximum_propagate_nan_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -629,25 +513,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMaximumWithPropagateNaNWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction maximum propagate NaN tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionMaximumWithPropagateNaNWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_maximum_propagate_nan_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -656,33 +528,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMaximumWithPropagateNaNWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction maximum propagate NaN tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionMaximumWithPropagateNaNWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_minimum_propagate_nan_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -691,25 +546,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMinimumWithPropagateNaNWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction minimum propagate NaN tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionMinimumWithPropagateNaNWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_minimum_propagate_nan_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -718,33 +561,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionMinimumWithPropagateNaNWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction minimum propagate NaN tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionMinimumWithPropagateNaNWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_and_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -753,25 +579,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionANDWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction AND tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionANDWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_and_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -780,33 +594,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionANDWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction AND tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionANDWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_or_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -815,25 +612,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionORWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction OR tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionORWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_or_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -842,33 +627,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionORWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction OR tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionORWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_xor_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -877,25 +645,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionXORWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction XOR tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionXORWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_xor_with_axes(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axes: Option<&[i64]>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -904,33 +660,16 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let axes_ptr = match axes {
-                Some(a) => {
-                    let axes_array = create_ns_array_from_i64_slice(a);
-                    &*axes_array as *const _
-                }
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionXORWithTensor: &**tensor,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction XOR tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let axes_ptr = axes.map_or(std::ptr::null(), |a| {
+                &*create_ns_array_from_i64_slice(a) as *const _
+            });
+            msg_send![self, reductionXORWithTensor: tensor, axes: axes_ptr, name: name_ptr]
         }
     }
 
     fn reduction_arg_maximum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -939,25 +678,13 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionArgMaximumWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction arg maximum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionArgMaximumWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
     fn reduction_arg_minimum_with_axis(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         axis: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -966,19 +693,7 @@ impl GraphReductionOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reductionArgMinimumWithTensor: &**tensor,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reduction arg minimum tensor");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reductionArgMinimumWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 }

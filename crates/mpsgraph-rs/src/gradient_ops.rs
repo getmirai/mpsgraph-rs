@@ -2,7 +2,7 @@ use crate::graph::Graph;
 use crate::tensor::Tensor;
 use objc2::msg_send;
 use objc2::rc::Retained;
-use objc2_foundation::{NSArray, NSObject, NSString};
+use objc2_foundation::{NSArray, NSDictionary, NSString};
 use std::collections::HashMap;
 
 /// Gradient (Automatic Differentiation) operations for Graph
@@ -28,50 +28,37 @@ impl GraphGradientOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            // Create NSArray from the Tensor references
-            let tensor_refs: Vec<&Tensor> = tensors.to_vec();
-            let tensors_array = NSArray::from_slice(&tensor_refs);
+            let tensors_array = NSArray::from_slice(tensors);
 
-            // Call the Objective-C method
-            let dict: *mut NSObject = msg_send![
+            // Objective-C method returns NSDictionary*
+            let dict_opt: Option<Retained<NSDictionary<Tensor, Tensor>>> = msg_send![
                 self,
                 gradientForPrimaryTensor: primary_tensor,
                 withTensors: &*tensors_array,
                 name: name_ptr
             ];
 
-            if dict.is_null() {
-                return None;
-            }
+            dict_opt.map(|dict_retained| {
+                let keys_opt: Option<Retained<NSArray<Tensor>>> =
+                    msg_send![&*dict_retained, allKeys];
+                let mut result_map = HashMap::new();
 
-            // Convert to Retained to get proper memory management
-            let dict_retained: Retained<NSObject> = Retained::retain_autoreleased(dict).unwrap();
-
-            // Get the keys array
-            let keys: *mut NSArray<Tensor> = msg_send![&*dict_retained, allKeys];
-
-            if keys.is_null() {
-                return None;
-            }
-
-            let keys_retained: Retained<NSArray<Tensor>> =
-                Retained::retain_autoreleased(keys).unwrap();
-            let keys_count: usize = msg_send![&*keys_retained, count];
-
-            // Convert NSDictionary to HashMap
-            let mut result = HashMap::with_capacity(keys_count);
-
-            for i in 0..keys_count {
-                let key: *mut Tensor = msg_send![&*keys_retained, objectAtIndex: i];
-                let key_retained = Retained::retain_autoreleased(key).unwrap();
-
-                let value: *mut Tensor = msg_send![&*dict_retained, objectForKey: &*key_retained];
-                let value_retained = Retained::retain_autoreleased(value).unwrap();
-
-                result.insert(key_retained, value_retained);
-            }
-
-            Some(result)
+                if let Some(keys_retained) = keys_opt {
+                    let keys_count: usize = keys_retained.len();
+                    for i in 0..keys_count {
+                        let key: Option<Retained<Tensor>> =
+                            msg_send![&*keys_retained, objectAtIndex: i];
+                        if let Some(k_retained) = key {
+                            let value: Option<Retained<Tensor>> =
+                                msg_send![&*dict_retained, objectForKey: &*k_retained];
+                            if let Some(v_retained) = value {
+                                result_map.insert(k_retained, v_retained);
+                            }
+                        }
+                    }
+                }
+                result_map
+            })
         }
     }
 }

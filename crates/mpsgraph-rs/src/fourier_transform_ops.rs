@@ -120,7 +120,7 @@ pub trait GraphFourierTransformOps {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a fast Fourier transform operation with axes specified by a tensor
     ///
@@ -144,7 +144,7 @@ pub trait GraphFourierTransformOps {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a real-to-complex Fast Fourier Transform.
     ///
@@ -164,7 +164,7 @@ pub trait GraphFourierTransformOps {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a real-to-complex Fast Fourier Transform using tensor axes.
     ///
@@ -184,7 +184,7 @@ pub trait GraphFourierTransformOps {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a complex-to-real Fast Fourier Transform.
     ///
@@ -204,7 +204,7 @@ pub trait GraphFourierTransformOps {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a complex-to-real Fast Fourier Transform using tensor axes.
     ///
@@ -224,7 +224,7 @@ pub trait GraphFourierTransformOps {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a real-to-Hermitean fast Fourier transform operation
     ///
@@ -248,7 +248,7 @@ pub trait GraphFourierTransformOps {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a real-to-Hermitean fast Fourier transform operation with axes specified by a tensor
     ///
@@ -272,7 +272,7 @@ pub trait GraphFourierTransformOps {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a Hermitean-to-real fast Fourier transform operation
     ///
@@ -296,7 +296,7 @@ pub trait GraphFourierTransformOps {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a Hermitean-to-real fast Fourier transform operation with axes specified by a tensor
     ///
@@ -320,7 +320,7 @@ pub trait GraphFourierTransformOps {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 
     /// Creates a forward FFT operation using complex-valued input.
     ///
@@ -415,7 +415,7 @@ pub trait GraphFourierTransformOps {
         imaginary: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
+    ) -> Retained<Tensor>;
 }
 
 /// Implementation of Fourier transform operations for Graph
@@ -427,29 +427,19 @@ impl GraphFourierTransformOps for Graph {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
-        // Convert axes to NSArray
         let axes_numbers: Vec<Retained<NSNumber>> =
             axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
-
         let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
         let ns_array = NSArray::from_slice(&refs);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, fastFourierTransformWithTensor: tensor,
                 axes: &*ns_array,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -460,22 +450,15 @@ impl GraphFourierTransformOps for Graph {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, fastFourierTransformWithTensor: tensor,
                 axesTensor: axes_tensor,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -486,29 +469,19 @@ impl GraphFourierTransformOps for Graph {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
-        // Convert axes to NSArray
         let axes_numbers: Vec<Retained<NSNumber>> =
             axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
-
         let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
         let ns_array = NSArray::from_slice(&refs);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, realToComplexFFTWithTensor: tensor,
                 axes: &*ns_array,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -519,22 +492,15 @@ impl GraphFourierTransformOps for Graph {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, realToComplexFFTWithTensor: tensor,
                 axesTensor: axes_tensor,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -545,29 +511,19 @@ impl GraphFourierTransformOps for Graph {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
-        // Convert axes to NSArray
         let axes_numbers: Vec<Retained<NSNumber>> =
             axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
-
         let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
         let ns_array = NSArray::from_slice(&refs);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, complexToRealFFTWithTensor: tensor,
                 axes: &*ns_array,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -578,22 +534,15 @@ impl GraphFourierTransformOps for Graph {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, complexToRealFFTWithTensor: tensor,
                 axesTensor: axes_tensor,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -604,29 +553,19 @@ impl GraphFourierTransformOps for Graph {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
-        // Convert axes to NSArray
         let axes_numbers: Vec<Retained<NSNumber>> =
             axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
-
         let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
         let ns_array = NSArray::from_slice(&refs);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, realToHermiteanFFTWithTensor: tensor,
                 axes: &*ns_array,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -637,22 +576,15 @@ impl GraphFourierTransformOps for Graph {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, realToHermiteanFFTWithTensor: tensor,
                 axesTensor: axes_tensor,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -663,29 +595,19 @@ impl GraphFourierTransformOps for Graph {
         axes: &[i64],
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
-        // Convert axes to NSArray
         let axes_numbers: Vec<Retained<NSNumber>> =
             axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
-
         let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
         let ns_array = NSArray::from_slice(&refs);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, hermiteanToRealFFTWithTensor: tensor,
                 axes: &*ns_array,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -696,22 +618,15 @@ impl GraphFourierTransformOps for Graph {
         axes_tensor: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            msg_send![
                 self, hermiteanToRealFFTWithTensor: tensor,
                 axesTensor: axes_tensor,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
-            ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            ]
         }
     }
 
@@ -726,37 +641,28 @@ impl GraphFourierTransformOps for Graph {
         name: Option<&str>,
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let result_ptr: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self, forwardFFTWithRealTensor: real,
                 imaginaryTensor: imaginary,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
             ];
 
-            if result_ptr.is_null() {
-                return None;
-            }
-
-            let result_array = Retained::retain_autoreleased(result_ptr).unwrap();
-            let count = result_array.count();
-
-            if count != 2 {
-                return None;
-            }
-
-            let real_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 0u64];
-            let imag_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 1u64];
-
-            if real_output_ptr.is_null() || imag_output_ptr.is_null() {
-                return None;
-            }
-
-            let real_output = Retained::retain_autoreleased(real_output_ptr).unwrap();
-            let imag_output = Retained::retain_autoreleased(imag_output_ptr).unwrap();
-
-            Some((real_output, imag_output))
+            result_array_opt.and_then(|result_array| {
+                if result_array.count() == 2 {
+                    let real_output: Option<Retained<Tensor>> =
+                        msg_send![&*result_array, objectAtIndex: 0u64];
+                    let imag_output: Option<Retained<Tensor>> =
+                        msg_send![&*result_array, objectAtIndex: 1u64];
+                    match (real_output, imag_output) {
+                        (Some(r), Some(i)) => Some((r, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -769,37 +675,27 @@ impl GraphFourierTransformOps for Graph {
         name: Option<&str>,
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let result_ptr: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self, inverseFFTWithRealTensor: real,
                 imaginaryTensor: imaginary,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
             ];
-
-            if result_ptr.is_null() {
-                return None;
-            }
-
-            let result_array = Retained::retain_autoreleased(result_ptr).unwrap();
-            let count = result_array.count();
-
-            if count != 2 {
-                return None;
-            }
-
-            let real_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 0u64];
-            let imag_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 1u64];
-
-            if real_output_ptr.is_null() || imag_output_ptr.is_null() {
-                return None;
-            }
-
-            let real_output = Retained::retain_autoreleased(real_output_ptr).unwrap();
-            let imag_output = Retained::retain_autoreleased(imag_output_ptr).unwrap();
-
-            Some((real_output, imag_output))
+            result_array_opt.and_then(|result_array| {
+                if result_array.count() == 2 {
+                    let real_output: Option<Retained<Tensor>> =
+                        msg_send![&*result_array, objectAtIndex: 0u64];
+                    let imag_output: Option<Retained<Tensor>> =
+                        msg_send![&*result_array, objectAtIndex: 1u64];
+                    match (real_output, imag_output) {
+                        (Some(r), Some(i)) => Some((r, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -811,36 +707,26 @@ impl GraphFourierTransformOps for Graph {
         name: Option<&str>,
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let result_ptr: *mut NSArray<Tensor> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
                 self, forwardRealFFTWithRealTensor: real,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
             ];
-
-            if result_ptr.is_null() {
-                return None;
-            }
-
-            let result_array = Retained::retain_autoreleased(result_ptr).unwrap();
-            let count = result_array.count();
-
-            if count != 2 {
-                return None;
-            }
-
-            let real_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 0u64];
-            let imag_output_ptr: *mut Tensor = msg_send![&*result_array, objectAtIndex: 1u64];
-
-            if real_output_ptr.is_null() || imag_output_ptr.is_null() {
-                return None;
-            }
-
-            let real_output = Retained::retain_autoreleased(real_output_ptr).unwrap();
-            let imag_output = Retained::retain_autoreleased(imag_output_ptr).unwrap();
-
-            Some((real_output, imag_output))
+            result_array_opt.and_then(|result_array| {
+                if result_array.count() == 2 {
+                    let real_output: Option<Retained<Tensor>> =
+                        msg_send![&*result_array, objectAtIndex: 0u64];
+                    let imag_output: Option<Retained<Tensor>> =
+                        msg_send![&*result_array, objectAtIndex: 1u64];
+                    match (real_output, imag_output) {
+                        (Some(r), Some(i)) => Some((r, i)),
+                        _ => None,
+                    }
+                } else {
+                    None
+                }
+            })
         }
     }
 
@@ -851,22 +737,16 @@ impl GraphFourierTransformOps for Graph {
         imaginary: &Tensor,
         descriptor: &FFTDescriptor,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         let name_obj = name.map(NSString::from_str);
-
         unsafe {
-            let tensor_ptr: *mut Tensor = msg_send![
+            let tensor: Retained<Tensor> = msg_send![
                 self, inverseRealFFTWithRealTensor: real,
                 imaginaryTensor: imaginary,
                 descriptor: descriptor,
                 name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
             ];
-
-            if tensor_ptr.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(tensor_ptr).unwrap())
-            }
+            tensor
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::shape::Shape;
 use crate::tensor::DataType;
-use objc2::rc::Retained;
+use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::{NSObjectProtocol, NSString};
@@ -56,13 +56,13 @@ impl ShapedType {
     pub fn new(shape: &Shape, data_type: DataType) -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
+            let allocated: Allocated<Self> = msg_send![class, alloc];
             // Call the correct initializer
-            let obj: *mut Self = msg_send![alloc,
+            let initialized: Retained<Self> = msg_send![allocated,
                 initWithShape: shape.as_ptr(), // Pass MPSShape* from our Shape struct
                 dataType: data_type as u32 // Pass MPSDataType
             ];
-            Retained::from_raw(obj).unwrap()
+            initialized
         }
     }
 

@@ -223,8 +223,7 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterNDWithUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
@@ -232,13 +231,7 @@ impl GraphScatterNdOps for Graph {
                 batchDimensions: batch_dimensions,
                 mode: mode as i64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -255,21 +248,14 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterNDWithUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
                 shape: shape.as_ptr(),
                 batchDimensions: batch_dimensions,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -287,8 +273,7 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterNDWithDataTensor: data_tensor,
                 updatesTensor: updates_tensor,
@@ -296,13 +281,7 @@ impl GraphScatterNdOps for Graph {
                 batchDimensions: batch_dimensions,
                 mode: mode as i64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -320,8 +299,7 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterWithUpdatesTensor: updates_tensor,
                 indicesTensor: indices_tensor,
@@ -329,13 +307,7 @@ impl GraphScatterNdOps for Graph {
                 axis: axis,
                 mode: mode as i64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -353,8 +325,7 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterWithDataTensor: data_tensor,
                 updatesTensor: updates_tensor,
@@ -362,13 +333,7 @@ impl GraphScatterNdOps for Graph {
                 axis: axis,
                 mode: mode as i64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -386,8 +351,7 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterAlongAxis: axis,
                 withUpdatesTensor: updates_tensor,
@@ -395,13 +359,7 @@ impl GraphScatterNdOps for Graph {
                 shape: shape.as_ptr(),
                 mode: mode as i64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -419,8 +377,7 @@ impl GraphScatterNdOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 scatterAlongAxis: axis,
                 withDataTensor: data_tensor,
@@ -428,13 +385,7 @@ impl GraphScatterNdOps for Graph {
                 indicesTensor: indices_tensor,
                 mode: mode as i64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 }

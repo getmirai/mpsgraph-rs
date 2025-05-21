@@ -1,9 +1,8 @@
 use objc2::msg_send;
 use objc2::rc::Retained;
-use objc2_foundation::NSString;
+use objc2_foundation::{NSArray, NSString};
 
 use crate::core::create_ns_array_from_i64_slice;
-use crate::core::create_ns_array_from_slice;
 use crate::graph::Graph;
 use crate::tensor::DataType;
 use crate::tensor::Tensor;
@@ -22,12 +21,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn transpose(
-        &self,
-        x: &Retained<Tensor>,
-        permutation: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn transpose(&self, x: &Tensor, permutation: &[i64], name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a reshape operation
     ///
@@ -40,7 +34,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn reshape(&self, x: &Retained<Tensor>, shape: &Shape, name: Option<&str>) -> Retained<Tensor>;
+    fn reshape(&self, x: &Tensor, shape: &Shape, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a reshape operation using a shape tensor
     ///
@@ -55,8 +49,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn reshape_with_tensor(
         &self,
-        x: &Retained<Tensor>,
-        shape_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        shape_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -71,7 +65,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn flatten2d(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Retained<Tensor>;
+    fn flatten2d(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a broadcast operation
     ///
@@ -84,12 +78,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn broadcast(
-        &self,
-        x: &Retained<Tensor>,
-        shape: &Shape,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn broadcast(&self, x: &Tensor, shape: &Shape, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a shape-of operation
     ///
@@ -101,7 +90,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object containing the shape
-    fn shape_of(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    fn shape_of(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a cast operation to change tensor data type
     ///
@@ -114,12 +103,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object with the new data type
-    fn cast(
-        &self,
-        x: &Retained<Tensor>,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn cast(&self, x: &Tensor, data_type: DataType, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a stack operation to combine tensors along a new axis
     ///
@@ -132,12 +116,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn stack(
-        &self,
-        tensors: &[&Retained<Tensor>],
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn stack(&self, tensors: &[&Tensor], axis: i64, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a split operation to split a tensor into multiple parts
     ///
@@ -153,7 +132,7 @@ pub trait GraphTensorShapeOps {
     /// A vector of Tensor objects
     fn split(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         num_splits: usize,
         axis: i64,
         name: Option<&str>,
@@ -174,7 +153,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         dimension: usize,
         start: i64,
         length: i64,
@@ -199,7 +178,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn strided_slice(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -227,10 +206,10 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn strided_slice_with_tensors(
         &self,
-        x: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        end_tensor: &Retained<Tensor>,
-        stride_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        start_tensor: &Tensor,
+        end_tensor: &Tensor,
+        stride_tensor: &Tensor,
         start_mask: u32,
         end_mask: u32,
         squeeze_mask: u32,
@@ -252,9 +231,9 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_with_tensors(
         &self,
-        x: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        size_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        start_tensor: &Tensor,
+        size_tensor: &Tensor,
         squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -274,7 +253,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_with_arrays(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -300,8 +279,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_gradient(
         &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -327,8 +306,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_gradient_with_masks(
         &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -357,11 +336,11 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_gradient_with_tensors(
         &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        end_tensor: &Retained<Tensor>,
-        stride_tensor: &Retained<Tensor>,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
+        start_tensor: &Tensor,
+        end_tensor: &Tensor,
+        stride_tensor: &Tensor,
         start_mask: u32,
         end_mask: u32,
         squeeze_mask: u32,
@@ -384,10 +363,10 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_gradient_with_size_tensor(
         &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        size_tensor: &Retained<Tensor>,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
+        start_tensor: &Tensor,
+        size_tensor: &Tensor,
         squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -411,8 +390,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_update(
         &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
+        data: &Tensor,
+        update: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -441,11 +420,11 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_update_with_tensors(
         &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
-        starts_tensor: &Retained<Tensor>,
-        ends_tensor: &Retained<Tensor>,
-        strides_tensor: &Retained<Tensor>,
+        data: &Tensor,
+        update: &Tensor,
+        starts_tensor: &Tensor,
+        ends_tensor: &Tensor,
+        strides_tensor: &Tensor,
         start_mask: u32,
         end_mask: u32,
         squeeze_mask: u32,
@@ -468,8 +447,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_update_zero_masks(
         &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
+        data: &Tensor,
+        update: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -492,11 +471,11 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn slice_update_zero_masks_with_tensors(
         &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
-        starts_tensor: &Retained<Tensor>,
-        ends_tensor: &Retained<Tensor>,
-        strides_tensor: &Retained<Tensor>,
+        data: &Tensor,
+        update: &Tensor,
+        starts_tensor: &Tensor,
+        ends_tensor: &Tensor,
+        strides_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -511,7 +490,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn squeeze(&self, x: &Retained<Tensor>, axes: &[i64], name: Option<&str>) -> Retained<Tensor>;
+    fn squeeze(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a squeeze operation to remove all dimensions of size 1
     ///
@@ -523,7 +502,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn squeeze_all(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    fn squeeze_all(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a squeeze operation to remove a dimension of size 1 at the specified axis
     ///
@@ -536,8 +515,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn squeeze_axis(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>)
-        -> Retained<Tensor>;
+    fn squeeze_axis(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a squeeze operation to remove dimensions with size 1 specified by a tensor
     ///
@@ -552,8 +530,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn squeeze_with_tensor(
         &self,
-        x: &Retained<Tensor>,
-        axes_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        axes_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -568,7 +546,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn expand_dims(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Retained<Tensor>;
+    fn expand_dims(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates an expand_dims operation to insert dimensions of size 1 at specified axes
     ///
@@ -581,12 +559,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn expand_dims_axes(
-        &self,
-        x: &Retained<Tensor>,
-        axes: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn expand_dims_axes(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates an expand_dims operation to insert dimensions with size 1 specified by a tensor
     ///
@@ -601,8 +574,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn expand_dims_with_tensor(
         &self,
-        x: &Retained<Tensor>,
-        axes_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        axes_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -617,8 +590,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn tile(&self, x: &Retained<Tensor>, multiples: &[i64], name: Option<&str>)
-        -> Retained<Tensor>;
+    fn tile(&self, x: &Tensor, multiples: &[i64], name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a pad operation to pad a tensor
     ///
@@ -634,7 +606,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn pad(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         padding: &[i64],
         constant: f64,
         name: Option<&str>,
@@ -651,12 +623,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn space_to_depth(
-        &self,
-        x: &Retained<Tensor>,
-        block_size: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn space_to_depth(&self, x: &Tensor, block_size: i64, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a depth-to-space operation
     ///
@@ -669,12 +636,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn depth_to_space(
-        &self,
-        x: &Retained<Tensor>,
-        block_size: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn depth_to_space(&self, x: &Tensor, block_size: i64, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a reverse operation to reverse a tensor along specified dimensions
     ///
@@ -687,7 +649,7 @@ pub trait GraphTensorShapeOps {
     /// # Returns
     ///
     /// A valid Tensor object
-    fn reverse(&self, x: &Retained<Tensor>, axes: &[i64], name: Option<&str>) -> Retained<Tensor>;
+    fn reverse(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a concatenation operation to concatenate two tensors
     ///
@@ -703,8 +665,8 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn concat(
         &self,
-        x: &Retained<Tensor>,
-        y: &Retained<Tensor>,
+        x: &Tensor,
+        y: &Tensor,
         dimension: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -722,7 +684,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn concat_tensors(
         &self,
-        tensors: &[&Retained<Tensor>],
+        tensors: &[&Tensor],
         dimension: i64,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -758,7 +720,7 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn coordinate_along_axis_tensor(
         &self,
-        axis_tensor: &Retained<Tensor>,
+        axis_tensor: &Tensor,
         shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -777,7 +739,7 @@ pub trait GraphTensorShapeOps {
     fn coordinate_along_axis_with_shape_tensor(
         &self,
         axis: i64,
-        shape_tensor: &Retained<Tensor>,
+        shape_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -794,17 +756,36 @@ pub trait GraphTensorShapeOps {
     /// A valid Tensor object
     fn coordinate_along_axis_tensor_with_shape_tensor(
         &self,
-        axis_tensor: &Retained<Tensor>,
-        shape_tensor: &Retained<Tensor>,
+        axis_tensor: &Tensor,
+        shape_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 }
 
 impl GraphTensorShapeOps for Graph {
-    fn transpose(
+    fn transpose(&self, x: &Tensor, permutation: &[i64], name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let permutation_array = create_ns_array_from_i64_slice(permutation);
+            msg_send![self, transposeTensor: x, permutation: &*permutation_array, name: name_ptr]
+        }
+    }
+    fn reshape(&self, x: &Tensor, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, reshapeTensor: x, withShape: shape.as_ptr(), name: name_ptr]
+        }
+    }
+    fn reshape_with_tensor(
         &self,
-        x: &Retained<Tensor>,
-        permutation: &[i64],
+        x: &Tensor,
+        shape_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -812,28 +793,88 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let permutation_array = create_ns_array_from_i64_slice(permutation);
-            let permutation_ptr = &*permutation_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                transposeTensor: &**x,
-                permutation: permutation_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create transpose operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reshapeTensor: x, withShapeTensor: shape_tensor, name: name_ptr]
         }
     }
-
+    fn flatten2d(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, flatten2DTensor: x, axis: axis, name: name_ptr]
+        }
+    }
+    fn broadcast(&self, x: &Tensor, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, broadcastTensor: x, toShape: shape.as_ptr(), name: name_ptr]
+        }
+    }
+    fn shape_of(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, shapeOfTensor: x, name: name_ptr]
+        }
+    }
+    fn cast(&self, x: &Tensor, data_type: DataType, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, castTensor: x, toType: data_type as u32, name: name_ptr]
+        }
+    }
+    fn stack(&self, tensors: &[&Tensor], axis: i64, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let tensor_array = NSArray::from_slice(tensors);
+            msg_send![self, stackTensors: &*tensor_array, axis: axis, name: name_ptr]
+        }
+    }
+    fn split(
+        &self,
+        x: &Tensor,
+        num_splits: usize,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Vec<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
+                self,
+                splitTensor: x,
+                numSplits: num_splits,
+                axis: axis,
+                name: name_ptr
+            ];
+            result_array_opt.map_or(Vec::new(), |arr| {
+                let count = arr.len();
+                let mut tensors = Vec::with_capacity(count);
+                for i in 0..count {
+                    let tensor: Retained<Tensor> = msg_send![&*arr, objectAtIndex: i];
+                    tensors.push(tensor);
+                }
+                tensors
+            })
+        }
+    }
     fn slice(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         dimension: usize,
         start: i64,
         length: i64,
@@ -844,68 +885,12 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceTensor: &**x,
-                dimension: dimension,
-                start: start,
-                length: length,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, sliceTensor: x, dimension: dimension, start: start, length: length, name: name_ptr]
         }
     }
-
-    fn slice_with_arrays(
-        &self,
-        x: &Retained<Tensor>,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArrays from slices
-            let starts_array = create_ns_array_from_i64_slice(starts);
-            let starts_ptr = &*starts_array as *const _;
-
-            let ends_array = create_ns_array_from_i64_slice(ends);
-            let ends_ptr = &*ends_array as *const _;
-
-            let strides_array = create_ns_array_from_i64_slice(strides);
-            let strides_ptr = &*strides_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceTensor: &**x,
-                starts: starts_ptr,
-                ends: ends_ptr,
-                strides: strides_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_with_arrays operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
     fn strided_slice(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         starts: &[i64],
         ends: &[i64],
         strides: &[i64],
@@ -919,43 +904,21 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArrays from slices
             let starts_array = create_ns_array_from_i64_slice(starts);
-            let starts_ptr = &*starts_array as *const _;
-
             let ends_array = create_ns_array_from_i64_slice(ends);
-            let ends_ptr = &*ends_array as *const _;
-
             let strides_array = create_ns_array_from_i64_slice(strides);
-            let strides_ptr = &*strides_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceTensor: &**x,
-                starts: starts_ptr,
-                ends: ends_ptr,
-                strides: strides_ptr,
-                startMask: start_mask,
-                endMask: end_mask,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create strided_slice operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![
+                self, sliceTensor: x, starts: &*starts_array, ends: &*ends_array, strides: &*strides_array,
+                startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
+            ]
         }
     }
-
     fn strided_slice_with_tensors(
         &self,
-        x: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        end_tensor: &Retained<Tensor>,
-        stride_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        start_tensor: &Tensor,
+        end_tensor: &Tensor,
+        stride_tensor: &Tensor,
         start_mask: u32,
         end_mask: u32,
         squeeze_mask: u32,
@@ -966,32 +929,17 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceTensor: &**x,
-                startTensor: &**start_tensor,
-                endTensor: &**end_tensor,
-                strideTensor: &**stride_tensor,
-                startMask: start_mask,
-                endMask: end_mask,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create strided_slice_with_tensors operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![
+                self, sliceTensor: x, startTensor: start_tensor, endTensor: end_tensor, strideTensor: stride_tensor,
+                startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
+            ]
         }
     }
-
     fn slice_with_tensors(
         &self,
-        x: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        size_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        start_tensor: &Tensor,
+        size_tensor: &Tensor,
         squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -1000,50 +948,18 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceTensor: &**x,
-                startTensor: &**start_tensor,
-                sizeTensor: &**size_tensor,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_with_tensors operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![
+                self, sliceTensor: x, startTensor: start_tensor, sizeTensor: size_tensor,
+                squeezeMask: squeeze_mask, name: name_ptr
+            ]
         }
     }
-
-    fn reshape(&self, x: &Retained<Tensor>, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reshapeTensor: &**x,
-                withShape: shape.as_ptr(),
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reshape operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn reshape_with_tensor(
+    fn slice_with_arrays(
         &self,
-        x: &Retained<Tensor>,
-        shape_tensor: &Retained<Tensor>,
+        x: &Tensor,
+        starts: &[i64],
+        ends: &[i64],
+        strides: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1051,48 +967,19 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reshapeTensor: &**x,
-                withShapeTensor: &**shape_tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reshape_with_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let starts_array = create_ns_array_from_i64_slice(starts);
+            let ends_array = create_ns_array_from_i64_slice(ends);
+            let strides_array = create_ns_array_from_i64_slice(strides);
+            msg_send![self, sliceTensor: x, starts: &*starts_array, ends: &*ends_array, strides: &*strides_array, name: name_ptr]
         }
     }
-
-    fn flatten2d(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                flatten2DTensor: &**x,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create flatten2d operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn broadcast(
+    fn slice_gradient(
         &self,
-        x: &Retained<Tensor>,
-        shape: &Shape,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
+        starts: &[i64],
+        ends: &[i64],
+        strides: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1100,47 +987,25 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                broadcastTensor: &**x,
-                toShape: shape.as_ptr(),
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create broadcast operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let starts_array = create_ns_array_from_i64_slice(starts);
+            let ends_array = create_ns_array_from_i64_slice(ends);
+            let strides_array = create_ns_array_from_i64_slice(strides);
+            msg_send![
+                self, sliceGradientTensor: input_gradient, fwdInShapeTensor: fwd_in_shape,
+                starts: &*starts_array, ends: &*ends_array, strides: &*strides_array, name: name_ptr
+            ]
         }
     }
-
-    fn shape_of(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                shapeOfTensor: &**x,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create shape_of operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn cast(
+    fn slice_gradient_with_masks(
         &self,
-        x: &Retained<Tensor>,
-        data_type: DataType,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
+        starts: &[i64],
+        ends: &[i64],
+        strides: &[i64],
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1148,26 +1013,26 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                castTensor: &**x,
-                toType: data_type as u32,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create cast operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let starts_array = create_ns_array_from_i64_slice(starts);
+            let ends_array = create_ns_array_from_i64_slice(ends);
+            let strides_array = create_ns_array_from_i64_slice(strides);
+            msg_send![
+                self, sliceGradientTensor: input_gradient, fwdInShapeTensor: fwd_in_shape,
+                starts: &*starts_array, ends: &*ends_array, strides: &*strides_array,
+                startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
+            ]
         }
     }
-
-    fn stack(
+    fn slice_gradient_with_tensors(
         &self,
-        tensors: &[&Retained<Tensor>],
-        axis: i64,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
+        start_tensor: &Tensor,
+        end_tensor: &Tensor,
+        stride_tensor: &Tensor,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1175,120 +1040,159 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create array of tensors
-            let tensor_ptrs: Vec<*const Tensor> =
-                tensors.iter().map(|t| &***t as *const Tensor).collect();
-
-            let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
-            let tensor_array_ptr = &*tensor_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                stackTensors: tensor_array_ptr,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create stack operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![
+                self, sliceGradientTensor: input_gradient, fwdInShapeTensor: fwd_in_shape,
+                startTensor: start_tensor, endTensor: end_tensor, strideTensor: stride_tensor,
+                startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
+            ]
         }
     }
-
-    fn split(
+    fn slice_gradient_with_size_tensor(
         &self,
-        x: &Retained<Tensor>,
-        num_splits: usize,
-        axis: i64,
+        input_gradient: &Tensor,
+        fwd_in_shape: &Tensor,
+        start_tensor: &Tensor,
+        size_tensor: &Tensor,
+        squeeze_mask: u32,
         name: Option<&str>,
-    ) -> Vec<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result_array: *mut objc2_foundation::NSArray<Tensor> = msg_send![
-                self,
-                splitTensor: &**x,
-                numSplits: num_splits,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result_array.is_null() {
-                return Vec::new();
-            }
-
-            // Convert NSArray to Vec<Retained<Tensor>>
-            let count = (*result_array).count();
-            let mut tensors = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let tensor: *mut Tensor = msg_send![result_array, objectAtIndex: i];
-                if !tensor.is_null() {
-                    tensors.push(Retained::retain_autoreleased(tensor).unwrap());
-                }
-            }
-
-            tensors
+            msg_send![
+                self, sliceGradientTensor: input_gradient, fwdInShapeTensor: fwd_in_shape,
+                startTensor: start_tensor, sizeTensor: size_tensor, squeezeMask: squeeze_mask, name: name_ptr
+            ]
         }
     }
-
-    fn squeeze(&self, x: &Retained<Tensor>, axes: &[i64], name: Option<&str>) -> Retained<Tensor> {
+    fn slice_update(
+        &self,
+        data: &Tensor,
+        update: &Tensor,
+        starts: &[i64],
+        ends: &[i64],
+        strides: &[i64],
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
+            let starts_array = create_ns_array_from_i64_slice(starts);
+            let ends_array = create_ns_array_from_i64_slice(ends);
+            let strides_array = create_ns_array_from_i64_slice(strides);
+            msg_send![
+                self, sliceUpdateDataTensor: data, updateTensor: update,
+                starts: &*starts_array, ends: &*ends_array, strides: &*strides_array,
+                startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
+            ]
+        }
+    }
+    fn slice_update_with_tensors(
+        &self,
+        data: &Tensor,
+        update: &Tensor,
+        starts_tensor: &Tensor,
+        ends_tensor: &Tensor,
+        strides_tensor: &Tensor,
+        start_mask: u32,
+        end_mask: u32,
+        squeeze_mask: u32,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self, sliceUpdateDataTensor: data, updateTensor: update,
+                startsTensor: starts_tensor, endsTensor: ends_tensor, stridesTensor: strides_tensor,
+                startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
+            ]
+        }
+    }
+    fn slice_update_zero_masks(
+        &self,
+        data: &Tensor,
+        update: &Tensor,
+        starts: &[i64],
+        ends: &[i64],
+        strides: &[i64],
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let starts_array = create_ns_array_from_i64_slice(starts);
+            let ends_array = create_ns_array_from_i64_slice(ends);
+            let strides_array = create_ns_array_from_i64_slice(strides);
+            msg_send![
+                self, sliceUpdateDataTensor: data, updateTensor: update,
+                starts: &*starts_array, ends: &*ends_array, strides: &*strides_array, name: name_ptr
+            ]
+        }
+    }
+    fn slice_update_zero_masks_with_tensors(
+        &self,
+        data: &Tensor,
+        update: &Tensor,
+        starts_tensor: &Tensor,
+        ends_tensor: &Tensor,
+        strides_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self, sliceUpdateDataTensor: data, updateTensor: update,
+                startsTensor: starts_tensor, endsTensor: ends_tensor, stridesTensor: strides_tensor, name: name_ptr
+            ]
+        }
+    }
+    fn squeeze(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
             let axes_array = create_ns_array_from_i64_slice(axes);
-            let axes_ptr = &*axes_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                squeezeTensor: &**x,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create squeeze operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, squeezeTensor: x, axes: &*axes_array, name: name_ptr]
         }
     }
-
-    fn expand_dims(&self, x: &Retained<Tensor>, axis: i64, name: Option<&str>) -> Retained<Tensor> {
+    fn squeeze_all(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                expandDimsOfTensor: &**x,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create expand_dims operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, squeezeTensor: x, name: name_ptr] // Assuming nil axes means all
         }
     }
-
-    fn expand_dims_axes(
+    fn squeeze_axis(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, squeezeTensor: x, axis: axis, name: name_ptr]
+        }
+    }
+    fn squeeze_with_tensor(
         &self,
-        x: &Retained<Tensor>,
-        axes: &[i64],
+        x: &Tensor,
+        axes_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1296,29 +1200,32 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
+            msg_send![self, squeezeTensor: x, axesTensor: axes_tensor, name: name_ptr]
+        }
+    }
+    fn expand_dims(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, expandDimsOfTensor: x, axis: axis, name: name_ptr]
+        }
+    }
+    fn expand_dims_axes(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
             let axes_array = create_ns_array_from_i64_slice(axes);
-            let axes_ptr = &*axes_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                expandDimsOfTensor: &**x,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create expand_dims_axes operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, expandDimsOfTensor: x, axes: &*axes_array, name: name_ptr]
         }
     }
-
-    fn tile(
+    fn expand_dims_with_tensor(
         &self,
-        x: &Retained<Tensor>,
-        multiples: &[i64],
+        x: &Tensor,
+        axes_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -1326,28 +1233,22 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
+            msg_send![self, expandDimsOfTensor: x, axesTensor: axes_tensor, name: name_ptr]
+        }
+    }
+    fn tile(&self, x: &Tensor, multiples: &[i64], name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
             let multiplier_array = create_ns_array_from_i64_slice(multiples);
-            let multiplier_ptr = &*multiplier_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                tileTensor: &**x,
-                withMultiplier: multiplier_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create tile operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, tileTensor: x, withMultiplier: &*multiplier_array, name: name_ptr]
         }
     }
-
     fn pad(
         &self,
-        x: &Retained<Tensor>,
+        x: &Tensor,
         padding: &[i64],
         constant: f64,
         name: Option<&str>,
@@ -1357,539 +1258,42 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
             let padding_array = create_ns_array_from_i64_slice(padding);
-            let padding_ptr = &*padding_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                padTensor: &**x,
-                paddings: padding_ptr,
-                constantValue: constant,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create pad operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, padTensor: x, paddings: &*padding_array, constantValue: constant, name: name_ptr]
         }
     }
-
-    fn space_to_depth(
-        &self,
-        x: &Retained<Tensor>,
-        block_size: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn space_to_depth(&self, x: &Tensor, block_size: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                spaceToDepthWithTensor: &**x,
-                blockSize: block_size,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create space_to_depth operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, spaceToDepthWithTensor: x, blockSize: block_size, name: name_ptr]
         }
     }
-
-    fn depth_to_space(
-        &self,
-        x: &Retained<Tensor>,
-        block_size: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn depth_to_space(&self, x: &Tensor, block_size: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                depthToSpaceWithTensor: &**x,
-                blockSize: block_size,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create depth_to_space operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, depthToSpaceWithTensor: x, blockSize: block_size, name: name_ptr]
         }
     }
-
-    fn reverse(&self, x: &Retained<Tensor>, axes: &[i64], name: Option<&str>) -> Retained<Tensor> {
+    fn reverse(&self, x: &Tensor, axes: &[i64], name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
             let axes_array = create_ns_array_from_i64_slice(axes);
-            let axes_ptr = &*axes_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                reverseTensor: &**x,
-                axes: axes_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create reverse operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, reverseTensor: x, axes: &*axes_array, name: name_ptr]
         }
     }
-
-    fn slice_gradient(
-        &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArrays from slices
-            let starts_array = create_ns_array_from_i64_slice(starts);
-            let starts_ptr = &*starts_array as *const _;
-
-            let ends_array = create_ns_array_from_i64_slice(ends);
-            let ends_ptr = &*ends_array as *const _;
-
-            let strides_array = create_ns_array_from_i64_slice(strides);
-            let strides_ptr = &*strides_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceGradientTensor: &**input_gradient,
-                fwdInShapeTensor: &**fwd_in_shape,
-                starts: starts_ptr,
-                ends: ends_ptr,
-                strides: strides_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_gradient operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_gradient_with_masks(
-        &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
-        start_mask: u32,
-        end_mask: u32,
-        squeeze_mask: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArrays from slices
-            let starts_array = create_ns_array_from_i64_slice(starts);
-            let starts_ptr = &*starts_array as *const _;
-
-            let ends_array = create_ns_array_from_i64_slice(ends);
-            let ends_ptr = &*ends_array as *const _;
-
-            let strides_array = create_ns_array_from_i64_slice(strides);
-            let strides_ptr = &*strides_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceGradientTensor: &**input_gradient,
-                fwdInShapeTensor: &**fwd_in_shape,
-                starts: starts_ptr,
-                ends: ends_ptr,
-                strides: strides_ptr,
-                startMask: start_mask,
-                endMask: end_mask,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_gradient_with_masks operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_gradient_with_tensors(
-        &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        end_tensor: &Retained<Tensor>,
-        stride_tensor: &Retained<Tensor>,
-        start_mask: u32,
-        end_mask: u32,
-        squeeze_mask: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceGradientTensor: &**input_gradient,
-                fwdInShapeTensor: &**fwd_in_shape,
-                startTensor: &**start_tensor,
-                endTensor: &**end_tensor,
-                strideTensor: &**stride_tensor,
-                startMask: start_mask,
-                endMask: end_mask,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_gradient_with_tensors operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_gradient_with_size_tensor(
-        &self,
-        input_gradient: &Retained<Tensor>,
-        fwd_in_shape: &Retained<Tensor>,
-        start_tensor: &Retained<Tensor>,
-        size_tensor: &Retained<Tensor>,
-        squeeze_mask: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceGradientTensor: &**input_gradient,
-                fwdInShapeTensor: &**fwd_in_shape,
-                startTensor: &**start_tensor,
-                sizeTensor: &**size_tensor,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_gradient_with_size_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_update(
-        &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
-        start_mask: u32,
-        end_mask: u32,
-        squeeze_mask: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArrays from slices
-            let starts_array = create_ns_array_from_i64_slice(starts);
-            let starts_ptr = &*starts_array as *const _;
-
-            let ends_array = create_ns_array_from_i64_slice(ends);
-            let ends_ptr = &*ends_array as *const _;
-
-            let strides_array = create_ns_array_from_i64_slice(strides);
-            let strides_ptr = &*strides_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceUpdateDataTensor: &**data,
-                updateTensor: &**update,
-                starts: starts_ptr,
-                ends: ends_ptr,
-                strides: strides_ptr,
-                startMask: start_mask,
-                endMask: end_mask,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_update operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_update_with_tensors(
-        &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
-        starts_tensor: &Retained<Tensor>,
-        ends_tensor: &Retained<Tensor>,
-        strides_tensor: &Retained<Tensor>,
-        start_mask: u32,
-        end_mask: u32,
-        squeeze_mask: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceUpdateDataTensor: &**data,
-                updateTensor: &**update,
-                startsTensor: &**starts_tensor,
-                endsTensor: &**ends_tensor,
-                stridesTensor: &**strides_tensor,
-                startMask: start_mask,
-                endMask: end_mask,
-                squeezeMask: squeeze_mask,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_update_with_tensors operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_update_zero_masks(
-        &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArrays from slices
-            let starts_array = create_ns_array_from_i64_slice(starts);
-            let starts_ptr = &*starts_array as *const _;
-
-            let ends_array = create_ns_array_from_i64_slice(ends);
-            let ends_ptr = &*ends_array as *const _;
-
-            let strides_array = create_ns_array_from_i64_slice(strides);
-            let strides_ptr = &*strides_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceUpdateDataTensor: &**data,
-                updateTensor: &**update,
-                starts: starts_ptr,
-                ends: ends_ptr,
-                strides: strides_ptr,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_update_zero_masks operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn slice_update_zero_masks_with_tensors(
-        &self,
-        data: &Retained<Tensor>,
-        update: &Retained<Tensor>,
-        starts_tensor: &Retained<Tensor>,
-        ends_tensor: &Retained<Tensor>,
-        strides_tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                sliceUpdateDataTensor: &**data,
-                updateTensor: &**update,
-                startsTensor: &**starts_tensor,
-                endsTensor: &**ends_tensor,
-                stridesTensor: &**strides_tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create slice_update_zero_masks_with_tensors operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn squeeze_all(&self, x: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                squeezeTensor: &**x,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create squeeze_all operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn squeeze_axis(
-        &self,
-        x: &Retained<Tensor>,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                squeezeTensor: &**x,
-                axis: axis,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create squeeze_axis operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn squeeze_with_tensor(
-        &self,
-        x: &Retained<Tensor>,
-        axes_tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                squeezeTensor: &**x,
-                axesTensor: &**axes_tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create squeeze_with_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn expand_dims_with_tensor(
-        &self,
-        x: &Retained<Tensor>,
-        axes_tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                expandDimsOfTensor: &**x,
-                axesTensor: &**axes_tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create expand_dims_with_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
     fn concat(
         &self,
-        x: &Retained<Tensor>,
-        y: &Retained<Tensor>,
+        x: &Tensor,
+        y: &Tensor,
         dimension: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -1898,26 +1302,12 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                concatTensor: &**x,
-                withTensor: &**y,
-                dimension: dimension,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create concat operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, concatTensor: x, withTensor: y, dimension: dimension, name: name_ptr]
         }
     }
-
     fn concat_tensors(
         &self,
-        tensors: &[&Retained<Tensor>],
+        tensors: &[&Tensor],
         dimension: i64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -1926,29 +1316,10 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            // Create NSArray from tensors
-            let tensor_ptrs: Vec<*const Tensor> =
-                tensors.iter().map(|t| &***t as *const Tensor).collect();
-
-            let tensor_array = create_ns_array_from_slice(&tensor_ptrs);
-            let tensor_array_ptr = &*tensor_array as *const _;
-
-            let result: *mut Tensor = msg_send![
-                self,
-                concatTensors: tensor_array_ptr,
-                dimension: dimension,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create concat_tensors operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            let tensor_array = NSArray::from_slice(tensors);
+            msg_send![self, concatTensors: &*tensor_array, dimension: dimension, name: name_ptr]
         }
     }
-
     fn coordinate_along_axis(
         &self,
         axis: i64,
@@ -1960,25 +1331,12 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                coordinateAlongAxis: axis,
-                shape: shape.as_ptr(),
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create coordinate_along_axis operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, coordinateAlongAxis: axis, shape: shape.as_ptr(), name: name_ptr]
         }
     }
-
     fn coordinate_along_axis_tensor(
         &self,
-        axis_tensor: &Retained<Tensor>,
+        axis_tensor: &Tensor,
         shape: &Shape,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -1987,26 +1345,13 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                coordinateAlongAxisTensor: &**axis_tensor,
-                withShape: shape.as_ptr(),
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create coordinate_along_axis_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, coordinateAlongAxisTensor: axis_tensor, withShape: shape.as_ptr(), name: name_ptr]
         }
     }
-
     fn coordinate_along_axis_with_shape_tensor(
         &self,
         axis: i64,
-        shape_tensor: &Retained<Tensor>,
+        shape_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -2014,26 +1359,13 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                coordinateAlongAxisWithShapeTensor: axis,
-                shapeTensor: &**shape_tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create coordinate_along_axis_with_shape_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, coordinateAlongAxisWithShapeTensor: axis, shapeTensor: shape_tensor, name: name_ptr]
         }
     }
-
     fn coordinate_along_axis_tensor_with_shape_tensor(
         &self,
-        axis_tensor: &Retained<Tensor>,
-        shape_tensor: &Retained<Tensor>,
+        axis_tensor: &Tensor,
+        shape_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -2041,19 +1373,7 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                coordinateAlongAxisTensorWithShapeTensor: &**axis_tensor,
-                shapeTensor: &**shape_tensor,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create coordinate_along_axis_tensor_with_shape_tensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            msg_send![self, coordinateAlongAxisTensorWithShapeTensor: axis_tensor, shapeTensor: shape_tensor, name: name_ptr]
         }
     }
 }

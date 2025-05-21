@@ -161,8 +161,7 @@ impl GraphOneHotOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
@@ -171,13 +170,7 @@ impl GraphOneHotOps for Graph {
                 onValue: on_value,
                 offValue: off_value,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -195,8 +188,7 @@ impl GraphOneHotOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
@@ -204,13 +196,7 @@ impl GraphOneHotOps for Graph {
                 onValue: on_value,
                 offValue: off_value,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -227,21 +213,14 @@ impl GraphOneHotOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
                 dataType: data_type as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -256,19 +235,12 @@ impl GraphOneHotOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -284,20 +256,13 @@ impl GraphOneHotOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 dataType: data_type as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -313,20 +278,13 @@ impl GraphOneHotOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 oneHotWithIndicesTensor: indices_tensor,
                 depth: depth,
                 axis: axis,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 }

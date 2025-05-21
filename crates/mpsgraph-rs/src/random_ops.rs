@@ -217,7 +217,7 @@ impl Graph {
                 None => std::ptr::null(),
             };
 
-            let result: Retained<NSArray<Tensor>> = msg_send![
+            let result_array: Retained<NSArray<Tensor>> = msg_send![
                 self,
                 randomTensorWithShape: shape.as_ptr(),
                 descriptor: descriptor,
@@ -225,20 +225,14 @@ impl Graph {
                 name: name_obj
             ];
 
-            // Extract the two tensors from the result array
-            let count = result.count();
+            let count = result_array.count();
             assert_eq!(
                 count, 2,
                 "Random tensor with state should return an array of 2 tensors"
             );
 
-            // Get the random tensor and updated state
-            let random_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 0];
-            let updated_state_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 1];
-
-            let random_tensor = Retained::retain(random_tensor_ptr).unwrap();
-            let updated_state = Retained::retain(updated_state_ptr).unwrap();
-
+            let random_tensor: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 0];
+            let updated_state: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 1];
             (random_tensor, updated_state)
         }
     }
@@ -294,27 +288,21 @@ impl Graph {
                 None => std::ptr::null(),
             };
 
-            let result: Retained<NSArray<Tensor>> = msg_send![
+            let result_array: Retained<NSArray<Tensor>> = msg_send![
                 self,
                 randomUniformTensorWithShape: shape.as_ptr(),
                 stateTensor: state,
                 name: name_obj
             ];
 
-            // Extract the two tensors from the result array
-            let count = result.count();
+            let count = result_array.count();
             assert_eq!(
                 count, 2,
                 "Random uniform tensor with state should return an array of 2 tensors"
             );
 
-            // Get the random tensor and updated state
-            let random_tensor_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 0];
-            let updated_state_ptr: *mut Tensor = msg_send![&*result, objectAtIndex: 1];
-
-            let random_tensor = Retained::retain(random_tensor_ptr).unwrap();
-            let updated_state = Retained::retain(updated_state_ptr).unwrap();
-
+            let random_tensor: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 0];
+            let updated_state: Retained<Tensor> = msg_send![&*result_array, objectAtIndex: 1];
             (random_tensor, updated_state)
         }
     }

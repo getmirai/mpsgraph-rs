@@ -24,8 +24,8 @@ pub trait GraphCallOps {
     fn call(
         &self,
         symbol_name: &str,
-        input_tensors: &[Retained<Tensor>],
-        output_types: &[Retained<ShapedType>],
+        input_tensors: &[&Tensor],
+        output_types: &[&ShapedType],
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>>;
 }
@@ -34,8 +34,8 @@ impl GraphCallOps for Graph {
     fn call(
         &self,
         symbol_name: &str,
-        input_tensors: &[Retained<Tensor>],
-        output_types: &[Retained<ShapedType>],
+        input_tensors: &[&Tensor],
+        output_types: &[&ShapedType],
         name: Option<&str>,
     ) -> Vec<Retained<Tensor>> {
         unsafe {
@@ -48,18 +48,12 @@ impl GraphCallOps for Graph {
             // Convert symbol_name to NSString
             let symbol_name_ns = NSString::from_str(symbol_name);
 
-            // Create references to pass to NSArray
-            let input_tensor_refs: Vec<&Tensor> =
-                input_tensors.iter().map(|t| t.as_ref()).collect();
-            let output_type_refs: Vec<&ShapedType> =
-                output_types.iter().map(|t| t.as_ref()).collect();
-
             // Create NSArray of input tensors and output types
-            let input_tensors_array = NSArray::from_slice(&input_tensor_refs);
-            let output_types_array = NSArray::from_slice(&output_type_refs);
+            let input_tensors_array = NSArray::from_slice(input_tensors);
+            let output_types_array = NSArray::from_slice(output_types);
 
             // Call the Objective-C method and get the result array
-            let result_array: *mut NSArray<Tensor> = msg_send![
+            let result_array_ptr: *mut NSArray<Tensor> = msg_send![
                 self,
                 callSymbolName: &*symbol_name_ns,
                 inputTensors: &*input_tensors_array,
@@ -68,7 +62,7 @@ impl GraphCallOps for Graph {
             ];
 
             // Convert the result array to a Vec of Retained<Tensor>
-            convert_nsarray_to_vec(result_array)
+            convert_nsarray_to_vec(result_array_ptr)
         }
     }
 }

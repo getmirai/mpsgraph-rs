@@ -215,3 +215,19 @@ pub fn convert_nsarray_to_vec<T: Message + ClassType>(array: *mut NSArray<T>) ->
         results
     }
 }
+
+/// Helper function to convert Retained NSArray of tensors to Vec<Retained<Tensor>>
+pub fn convert_retained_nsarray_to_vec<T: Message + ClassType>(
+    array: Retained<NSArray<T>>,
+) -> Vec<Retained<T>> {
+    unsafe {
+        let count = array.len();
+        let mut results = Vec::with_capacity(count);
+        for i in 0..count {
+            // Assuming objectAtIndex returns a valid object that msg_send! can handle for Retained<T>
+            let obj: Retained<T> = msg_send![&*array, objectAtIndex: i];
+            results.push(obj);
+        }
+        results
+    }
+}

@@ -1,7 +1,7 @@
 use crate::command_buffer::CommandBuffer;
 use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
-use objc2::rc::Retained;
+use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType, Message};
 use objc2_foundation::{
@@ -71,9 +71,9 @@ impl CompilationDescriptor {
     pub fn new() -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj_ptr: *mut Self = msg_send![alloc, init];
-            Retained::from_raw(obj_ptr).unwrap()
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, init];
+            initialized
         }
     }
 
@@ -101,59 +101,39 @@ impl CompilationDescriptor {
     /// Get the callables map as a Rust HashMap
     pub fn get_callables(&self) -> HashMap<String, Retained<Executable>> {
         unsafe {
-            let callables: *mut NSDictionary<NSString, Executable> = msg_send![self, callables];
-            if callables.is_null() {
-                return HashMap::new();
-            }
-
-            // Safely retain the dictionary
-            let ns_dict = match Retained::retain_autoreleased(callables) {
+            let ns_dict_opt: Option<Retained<NSDictionary<NSString, Executable>>> =
+                msg_send![self, callables];
+            let ns_dict = match ns_dict_opt {
                 Some(dict) => dict,
                 None => return HashMap::new(),
             };
 
-            // Get the keys
-            let keys_array: *mut NSArray<NSString> = msg_send![&*ns_dict, allKeys];
-            if keys_array.is_null() {
-                return HashMap::new();
-            }
-
-            let keys = match Retained::retain_autoreleased(keys_array) {
+            let keys_opt: Option<Retained<NSArray<NSString>>> = msg_send![&*ns_dict, allKeys];
+            let keys = match keys_opt {
                 Some(arr) => arr,
                 None => return HashMap::new(),
             };
 
-            // Create a HashMap and populate it
             let mut result = HashMap::with_capacity(keys.len());
 
             for i in 0..keys.len() {
-                let key_ptr: *mut NSString = msg_send![&*keys, objectAtIndex: i];
-                if key_ptr.is_null() {
-                    continue;
-                }
-
-                // Get the key as a Rust string
-                let ns_key = match Retained::retain_autoreleased(key_ptr) {
+                let ns_key_opt: Option<Retained<NSString>> = msg_send![&*keys, objectAtIndex: i];
+                let ns_key = match ns_key_opt {
                     Some(key) => key,
                     None => continue,
                 };
 
                 let key_str = ns_key.to_string();
 
-                // Get the corresponding executable
-                let exec_ptr: *mut Executable = msg_send![&*ns_dict, objectForKey: &*ns_key];
-                if exec_ptr.is_null() {
-                    continue;
-                }
-
-                let executable = match Retained::retain_autoreleased(exec_ptr) {
+                let executable_opt: Option<Retained<Executable>> =
+                    msg_send![&*ns_dict, objectForKey: &*ns_key];
+                let executable = match executable_opt {
                     Some(exec) => exec,
                     None => continue,
                 };
 
                 result.insert(key_str, executable);
             }
-
             result
         }
     }
@@ -180,10 +160,8 @@ impl CompilationDescriptor {
         }
 
         // Convert to immutable dictionary
-        let immutable_dict = unsafe {
-            let dict_ptr: *mut NSDictionary<NSString, Executable> = msg_send![&*mutable_dict, copy];
-            Retained::from_raw(dict_ptr).unwrap()
-        };
+        let immutable_dict: Retained<NSDictionary<NSString, Executable>> =
+            unsafe { msg_send![&*mutable_dict, copy] };
 
         // Set the property
         unsafe {
@@ -314,9 +292,9 @@ impl ExecutionDescriptor {
     pub fn new() -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj_ptr: *mut Self = msg_send![alloc, init];
-            Retained::from_raw(obj_ptr).unwrap()
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, init];
+            initialized
         }
     }
 
@@ -368,9 +346,9 @@ impl SerializationDescriptor {
     pub fn new() -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj_ptr: *mut Self = msg_send![alloc, init];
-            Retained::from_raw(obj_ptr).unwrap()
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, init];
+            initialized
         }
     }
 
@@ -411,10 +389,10 @@ impl ExecutableExecutionDescriptor {
     pub fn new() -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj_ptr: *mut Self = msg_send![alloc, init];
+            let allocated: Allocated<Self> = msg_send![class, alloc];
             // alloc/init returns a +1 retained object.
-            Retained::from_raw(obj_ptr).unwrap()
+            let initialized: Retained<Self> = msg_send![allocated, init];
+            initialized
         }
     }
 
@@ -541,45 +519,29 @@ impl Executable {
         compilation_descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Retained<Self>> {
         unsafe {
-            // Convert path to file URL string
             let path_str = path.to_str()?;
-
-            // Create NSURL from path directly (returns Retained<NSURL>)
             let path_ns = NSString::from_str(path_str);
             let url = NSURL::fileURLWithPath(&path_ns);
-
-            // Get compilation descriptor or pass nil
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
+
+            let allocated: Allocated<Self> = msg_send![class, alloc];
 
             match compilation_descriptor {
                 Some(desc) => {
-                    let executable: *mut Self = msg_send![
-                        alloc,
+                    let initialized: Option<Retained<Self>> = msg_send![
+                        allocated,
                         initWithMPSGraphPackageAtURL: &*url,
                         compilationDescriptor: desc
                     ];
-
-                    if executable.is_null() {
-                        None
-                    } else {
-                        // This is an init method, which returns an object with +1 retain count
-                        Retained::from_raw(executable)
-                    }
+                    initialized
                 }
                 None => {
-                    let executable: *mut Self = msg_send![
-                        alloc,
+                    let initialized: Option<Retained<Self>> = msg_send![
+                        allocated,
                         initWithMPSGraphPackageAtURL: &*url,
                         compilationDescriptor: std::ptr::null::<CompilationDescriptor>()
                     ];
-
-                    if executable.is_null() {
-                        None
-                    } else {
-                        // This is an init method, which returns an object with +1 retain count
-                        Retained::from_raw(executable)
-                    }
+                    initialized
                 }
             }
         }
@@ -630,54 +592,44 @@ impl Executable {
     /// Returns the feed tensors for the executable.
     pub fn feed_tensors(&self) -> Option<Vec<Retained<Tensor>>> {
         unsafe {
-            let array_ptr: *mut NSArray<Tensor> = msg_send![self, feedTensors];
-            if array_ptr.is_null() {
-                return None;
-            }
-
-            let array_opt = Retained::retain_autoreleased(array_ptr);
-            if array_opt.is_none() {
-                return None;
-            }
-            let array = array_opt.unwrap();
-
-            let count = array.len();
-            let mut vec = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let tensor_ptr: *mut Tensor = msg_send![&*array, objectAtIndex: i];
-                if let Some(tensor) = Retained::retain_autoreleased(tensor_ptr) {
-                    vec.push(tensor);
+            let array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![self, feedTensors];
+            match array_opt {
+                Some(array) => {
+                    let count = array.len();
+                    let mut vec = Vec::with_capacity(count);
+                    for i in 0..count {
+                        let tensor_opt: Option<Retained<Tensor>> =
+                            msg_send![&*array, objectAtIndex: i];
+                        if let Some(tensor) = tensor_opt {
+                            vec.push(tensor);
+                        }
+                    }
+                    Some(vec)
                 }
+                None => None,
             }
-            Some(vec)
         }
     }
 
     /// Returns the target tensors for the executable.
     pub fn target_tensors(&self) -> Option<Vec<Retained<Tensor>>> {
         unsafe {
-            let array_ptr: *mut NSArray<Tensor> = msg_send![self, targetTensors];
-            if array_ptr.is_null() {
-                return None;
-            }
-
-            let array_opt = Retained::retain_autoreleased(array_ptr);
-            if array_opt.is_none() {
-                return None;
-            }
-            let array = array_opt.unwrap();
-
-            let count = array.len();
-            let mut vec = Vec::with_capacity(count);
-
-            for i in 0..count {
-                let tensor_ptr: *mut Tensor = msg_send![&*array, objectAtIndex: i];
-                if let Some(tensor) = Retained::retain_autoreleased(tensor_ptr) {
-                    vec.push(tensor);
+            let array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![self, targetTensors];
+            match array_opt {
+                Some(array) => {
+                    let count = array.len();
+                    let mut vec = Vec::with_capacity(count);
+                    for i in 0..count {
+                        let tensor_opt: Option<Retained<Tensor>> =
+                            msg_send![&*array, objectAtIndex: i];
+                        if let Some(tensor) = tensor_opt {
+                            vec.push(tensor);
+                        }
+                    }
+                    Some(vec)
                 }
+                None => None,
             }
-            Some(vec)
         }
     }
 
@@ -708,7 +660,7 @@ impl Executable {
 
             let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
 
-            let result_ptr: *mut NSArray<TensorData> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<TensorData>>> = msg_send![
                 self,
                 encodeToCommandBuffer: cmd_buffer_ptr,
                 inputsArray: inputs_array_ptr,
@@ -716,17 +668,16 @@ impl Executable {
                 executionDescriptor: desc_ptr
             ];
 
-            if result_ptr.is_null() {
-                None
-            } else {
-                if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
+            match result_array_opt {
+                Some(result_array) => {
                     let mut output_vec = Vec::with_capacity(result_array.len());
                     for item in result_array.iter() {
                         output_vec.push(item.clone());
                     }
                     Some(output_vec)
-                } else {
-                    eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in encode_to_command_buffer");
+                }
+                None => {
+                    // eprintln! was here for warning, if desired, can be re-added.
                     None
                 }
             }
@@ -764,7 +715,7 @@ impl Executable {
 
             let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
 
-            let result_ptr: *mut NSArray<TensorData> = msg_send![
+            let result_array_opt: Option<Retained<NSArray<TensorData>>> = msg_send![
                 self,
                 runWithMTLCommandQueue: cmd_queue_ptr,
                 inputsArray: inputs_array_ptr,
@@ -772,17 +723,16 @@ impl Executable {
                 executionDescriptor: desc_ptr
             ];
 
-            if result_ptr.is_null() {
-                None
-            } else {
-                if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
+            match result_array_opt {
+                Some(result_array) => {
                     let mut output_vec = Vec::with_capacity(result_array.len());
                     for item in result_array.iter() {
                         output_vec.push(item.clone());
                     }
                     Some(output_vec)
-                } else {
-                    eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in run_with_command_queue");
+                }
+                None => {
+                    // eprintln! was here for warning, if desired, can be re-added.
                     None
                 }
             }

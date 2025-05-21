@@ -1,7 +1,7 @@
 use metal::foreign_types::ForeignType;
 use metal::{Buffer, Device as MetalDevice};
 use objc2::ffi::class_getInstanceMethod;
-use objc2::rc::Retained;
+use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, sel, ClassType};
 use objc2_foundation::{NSArray, NSData, NSNumber, NSObjectProtocol};
@@ -26,39 +26,26 @@ impl TensorData {
         shape_dimensions: &[i64],
         data_type: DataType,
     ) -> Retained<Self> {
-        // Create a Shape from dimensions
         let shape = Shape::from_dimensions(shape_dimensions);
-
         unsafe {
-            // Calculate the total data size
             let data_size = std::mem::size_of_val(data);
-
-            // Get the default Metal device
             let device = MetalDevice::system_default().expect("No Metal device found");
-
-            // Create NSData with our data
             let ns_data = NSData::with_bytes(std::slice::from_raw_parts(
                 data.as_ptr() as *const u8,
                 data_size,
             ));
-
-            // Create MPSGraphDevice from MTLDevice
             let mps_device = Device::with_device(&device);
-
-            // Create the TensorData with NSData
             let class = Self::class();
             let data_type_val = data_type as u32;
 
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj: *mut Self = msg_send![alloc,
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated,
                 initWithDevice:&*mps_device,
                 data:&*ns_data,
                 shape:shape.as_ptr(),
                 dataType:data_type_val
             ];
-            let tensor_data = Retained::from_raw(obj).unwrap();
-
-            tensor_data
+            initialized
         }
     }
 
@@ -69,38 +56,24 @@ impl TensorData {
         data_type: DataType,
     ) -> Option<Retained<Self>> {
         unsafe {
-            // Calculate the total data size
             let data_size = std::mem::size_of_val(data);
-
-            // Get the default Metal device
             let device = MetalDevice::system_default().expect("No Metal device found");
-
-            // Create NSData with our data
             let ns_data = NSData::with_bytes(std::slice::from_raw_parts(
                 data.as_ptr() as *const u8,
                 data_size,
             ));
-
-            // Create MPSGraphDevice from MTLDevice
             let mps_device = Device::with_device(&device);
-
-            // Create the TensorData with NSData
             let class = Self::class();
             let data_type_val = data_type as u32;
 
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj: *mut Self = msg_send![alloc,
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Option<Retained<Self>> = msg_send![allocated,
                 initWithDevice:&*mps_device,
                 data:&*ns_data,
                 shape:shape.as_ptr(),
                 dataType:data_type_val
             ];
-
-            if obj.is_null() {
-                None
-            } else {
-                Retained::from_raw(obj)
-            }
+            initialized
         }
     }
 
@@ -110,23 +83,20 @@ impl TensorData {
             let class = Self::class();
             let buffer_ptr = buffer.as_ptr() as *mut objc2::runtime::AnyObject;
 
-            let alloc: *mut Self = msg_send![class, alloc];
-            let obj: *mut Self = msg_send![alloc,
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated,
                 initWithMTLBuffer: buffer_ptr,
                 shape: shape.as_ptr(),
                 dataType: data_type as u32
             ];
-            let tensor_data = Retained::from_raw(obj).unwrap();
-
-            tensor_data
+            initialized
         }
     }
 
     /// Returns the shape of this tensor data
     pub fn shape(&self) -> Shape {
         unsafe {
-            let shape_ptr: *mut NSArray<NSNumber> = msg_send![self, shape];
-            let array = Retained::retain_autoreleased(shape_ptr).unwrap();
+            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
             Shape::new(&array)
         }
     }

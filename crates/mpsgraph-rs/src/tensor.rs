@@ -101,8 +101,7 @@ impl Tensor {
     /// Returns the shape of this tensor
     pub fn shape(&self) -> Shape {
         unsafe {
-            let array_ptr: *mut NSArray<NSNumber> = msg_send![self, shape];
-            let array = Retained::retain_autoreleased(array_ptr).unwrap();
+            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
             Shape::new(&array)
         }
     }
@@ -120,13 +119,8 @@ impl Tensor {
     /// Returns the name of this tensor
     pub fn name(&self) -> Option<String> {
         unsafe {
-            let name_ptr: *mut NSString = msg_send![self, name];
-            if name_ptr.is_null() {
-                None
-            } else {
-                let name = Retained::retain_autoreleased(name_ptr).unwrap();
-                Some(name.to_string())
-            }
+            let name_opt: Option<Retained<NSString>> = msg_send![self, name];
+            name_opt.map(|name_retained| name_retained.to_string())
         }
     }
 }

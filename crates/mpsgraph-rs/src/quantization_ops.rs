@@ -272,21 +272,14 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 quantizeTensor: tensor,
                 scale: scale,
                 zeroPoint: zero_point,
                 dataType: data_type as u32,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -303,21 +296,14 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 dequantizeTensor: tensor,
                 scale: scale,
                 zeroPoint: zero_point,
                 dataType: data_type as u32,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -335,8 +321,7 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 quantizeTensor: tensor,
                 scaleTensor: scale_tensor,
@@ -344,13 +329,7 @@ impl GraphQuantizationOps for Graph {
                 dataType: data_type as u32,
                 axis: axis,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -368,8 +347,7 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 dequantizeTensor: tensor,
                 scaleTensor: scale_tensor,
@@ -377,13 +355,7 @@ impl GraphQuantizationOps for Graph {
                 dataType: data_type as u32,
                 axis: axis,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -401,8 +373,7 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 quantizeTensor: tensor,
                 scaleTensor: scale_tensor,
@@ -410,13 +381,7 @@ impl GraphQuantizationOps for Graph {
                 dataType: data_type as u32,
                 axis: axis,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -434,8 +399,7 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 dequantizeTensor: tensor,
                 scaleTensor: scale_tensor,
@@ -443,13 +407,7 @@ impl GraphQuantizationOps for Graph {
                 dataType: data_type as u32,
                 axis: axis,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -464,19 +422,12 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 dequantizeTensor: tensor,
                 LUTTensor: lut_tensor,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -492,20 +443,13 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 dequantizeTensor: tensor,
                 LUTTensor: lut_tensor,
                 axis: axis,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -523,8 +467,7 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 quantizeTensor: &**x,
                 scale: &**scale,
@@ -532,13 +475,7 @@ impl GraphQuantizationOps for Graph {
                 axis: axis,
                 type: data_type as u32,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create quantize operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -556,8 +493,7 @@ impl GraphQuantizationOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 dequantizeTensor: &**x,
                 scale: &**scale,
@@ -565,13 +501,7 @@ impl GraphQuantizationOps for Graph {
                 axis: axis,
                 type: data_type as u32,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create dequantize operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 }

@@ -117,8 +117,7 @@ impl GraphSampleGridOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = objc2::msg_send![
+            objc2::msg_send![
                 self,
                 sampleGridWithSourceTensor: source,
                 coordinateTensor: coordinates,
@@ -130,13 +129,7 @@ impl GraphSampleGridOps for Graph {
                 samplingMode: sampling_mode as u64,
                 constantValue: constant_value,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 
@@ -158,8 +151,7 @@ impl GraphSampleGridOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = objc2::msg_send![
+            objc2::msg_send![
                 self,
                 sampleGridWithSourceTensor: source,
                 coordinateTensor: coordinates,
@@ -171,13 +163,7 @@ impl GraphSampleGridOps for Graph {
                 nearestRoundingMode: nearest_rounding_mode as u64,
                 constantValue: constant_value,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                None
-            } else {
-                Some(Retained::retain_autoreleased(result).unwrap())
-            }
+            ]
         }
     }
 }

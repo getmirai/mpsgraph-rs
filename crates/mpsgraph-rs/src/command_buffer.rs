@@ -1,6 +1,6 @@
 use metal::foreign_types::ForeignType;
 use metal::{CommandBuffer as MTLCommandBuffer, CommandQueue};
-use objc2::rc::Retained;
+use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::NSObjectProtocol;
@@ -39,18 +39,15 @@ impl CommandBuffer {
     pub fn from_command_buffer(command_buffer: &MTLCommandBuffer) -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let alloc: *mut Self = msg_send![class, alloc];
+            let allocated: Allocated<Self> = msg_send![class, alloc];
             let buffer_ptr = command_buffer.as_ptr() as *mut objc2::runtime::AnyObject;
 
             // Pass the MTLCommandBuffer pointer as an Objective-C object
-            let mps_command_buffer: *mut Self = msg_send![
-                alloc,
+            let initialized: Retained<Self> = msg_send![
+                allocated,
                 initWithCommandBuffer:buffer_ptr
             ];
-
-            // -[MPSCommandBuffer initWithCommandBuffer:] returns an *autoreleased* object.
-            // We must use retain_autoreleased to correctly manage its lifecycle.
-            Retained::retain_autoreleased(mps_command_buffer).unwrap()
+            initialized
         }
     }
 
@@ -63,18 +60,11 @@ impl CommandBuffer {
             let class = Self::class();
             let queue_ptr = command_queue.as_ptr() as *mut objc2::runtime::AnyObject;
 
-            // Pass the MTLCommandQueue pointer as an Objective-C object
-            let mps_command_buffer: *mut Self = msg_send![
+            let mps_command_buffer: Retained<Self> = msg_send![
                 class,
                 commandBufferFromCommandQueue:queue_ptr
             ];
-
-            // `commandBufferFromCommandQueue:` returns an *autoreleased*
-            // object. We must explicitly retain it to own one reference.
-            // Otherwise, when the surrounding autorelease pool drains, the
-            // object is freed while still in use by MPSGraph, leading to
-            // "message sent to deallocated instance" crashes.
-            Retained::retain_autoreleased(mps_command_buffer).unwrap()
+            mps_command_buffer
         }
     }
 

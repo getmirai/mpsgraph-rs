@@ -180,18 +180,11 @@ pub trait GraphVariableOps {
 impl GraphMemoryOps for Graph {
     fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Retained<Tensor> {
         unsafe {
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 constantWithRealPart: real_part,
                 imaginaryPart: imaginary_part
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create complex constant tensor");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -202,19 +195,12 @@ impl GraphMemoryOps for Graph {
         data_type: DataType,
     ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 constantWithRealPart: real_part,
                 imaginaryPart: imaginary_part,
                 dataType: data_type as u64
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create complex constant tensor with type");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -226,20 +212,13 @@ impl GraphMemoryOps for Graph {
         data_type: DataType,
     ) -> Retained<Tensor> {
         unsafe {
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 constantWithRealPart: real_part,
                 imaginaryPart: imaginary_part,
                 shape: shape.as_ptr(),
                 dataType: data_type as u64
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create complex constant tensor with shape");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -253,24 +232,14 @@ impl GraphMemoryOps for Graph {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
-
-            // Create NSData
             let ns_data = NSData::with_bytes(data);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 variableWithData: &*ns_data,
                 shape: shape.as_ptr(),
                 dataType: data_type as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create variable tensor from bytes");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -278,19 +247,11 @@ impl GraphMemoryOps for Graph {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 variableFromTensorWithTensor: tensor,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create variable from tensor");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -298,19 +259,11 @@ impl GraphMemoryOps for Graph {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 readVariable: variable,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to read variable tensor");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -323,20 +276,12 @@ impl GraphMemoryOps for Graph {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
-
-            let result: *mut Operation = msg_send![
+            msg_send![
                 self,
                 assignVariable: variable,
                 withValueOfTensor: tensor,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to assign variable tensor");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
@@ -349,38 +294,23 @@ impl GraphMemoryOps for Graph {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 placeholderTensorWithShape: shape.as_ptr(),
                 dataType: data_type as u64,
                 name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create placeholder tensor");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 
     fn storage_tensor(&self, handle: u64, shape: &Shape, data_type: DataType) -> Retained<Tensor> {
         unsafe {
-            let result: *mut Tensor = msg_send![
+            msg_send![
                 self,
                 storageTensorWithHandle: handle,
                 shape: shape.as_ptr(),
                 dataType: data_type as u64
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create storage tensor");
-            } else {
-                // This method returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            ]
         }
     }
 }

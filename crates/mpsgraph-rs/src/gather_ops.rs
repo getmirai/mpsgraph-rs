@@ -23,8 +23,8 @@ pub trait GraphGatherOps {
     /// A valid Tensor object
     fn gather_nd(
         &self,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         batch_dimensions: usize,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -46,8 +46,8 @@ pub trait GraphGatherOps {
     /// A valid Tensor object
     fn gather(
         &self,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
@@ -73,8 +73,8 @@ pub trait GraphGatherOps {
     fn gather_along_axis(
         &self,
         axis: isize,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -97,9 +97,9 @@ pub trait GraphGatherOps {
     /// A valid Tensor object
     fn gather_along_axis_tensor(
         &self,
-        axis_tensor: &Retained<Tensor>,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        axis_tensor: &Tensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 }
@@ -108,8 +108,8 @@ pub trait GraphGatherOps {
 impl GraphGatherOps for Graph {
     fn gather_nd(
         &self,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         batch_dimensions: usize,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -119,26 +119,21 @@ impl GraphGatherOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Retained<Tensor> = msg_send![
                 self,
-                gatherNDWithUpdatesTensor: &**updates_tensor,
-                indicesTensor: &**indices_tensor,
+                gatherNDWithUpdatesTensor: updates_tensor,
+                indicesTensor: indices_tensor,
                 batchDimensions: batch_dimensions,
                 name: name_ptr
             ];
-
-            if result.is_null() {
-                panic!("Failed to create GatherND operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            result
         }
     }
 
     fn gather(
         &self,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         axis: usize,
         batch_dimensions: usize,
         name: Option<&str>,
@@ -149,28 +144,23 @@ impl GraphGatherOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Retained<Tensor> = msg_send![
                 self,
-                gatherWithUpdatesTensor: &**updates_tensor,
-                indicesTensor: &**indices_tensor,
+                gatherWithUpdatesTensor: updates_tensor,
+                indicesTensor: indices_tensor,
                 axis: axis as isize,
                 batchDimensions: batch_dimensions,
                 name: name_ptr
             ];
-
-            if result.is_null() {
-                panic!("Failed to create Gather operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            result
         }
     }
 
     fn gather_along_axis(
         &self,
         axis: isize,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -179,27 +169,22 @@ impl GraphGatherOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Retained<Tensor> = msg_send![
                 self,
                 gatherAlongAxis: axis,
-                withUpdatesTensor: &**updates_tensor,
-                indicesTensor: &**indices_tensor,
+                withUpdatesTensor: updates_tensor,
+                indicesTensor: indices_tensor,
                 name: name_ptr
             ];
-
-            if result.is_null() {
-                panic!("Failed to create GatherAlongAxis operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            result
         }
     }
 
     fn gather_along_axis_tensor(
         &self,
-        axis_tensor: &Retained<Tensor>,
-        updates_tensor: &Retained<Tensor>,
-        indices_tensor: &Retained<Tensor>,
+        axis_tensor: &Tensor,
+        updates_tensor: &Tensor,
+        indices_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -208,19 +193,14 @@ impl GraphGatherOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let result: *mut Tensor = msg_send![
+            let result: Retained<Tensor> = msg_send![
                 self,
-                gatherAlongAxisTensor: &**axis_tensor,
-                withUpdatesTensor: &**updates_tensor,
-                indicesTensor: &**indices_tensor,
+                gatherAlongAxisTensor: axis_tensor,
+                withUpdatesTensor: updates_tensor,
+                indicesTensor: indices_tensor,
                 name: name_ptr
             ];
-
-            if result.is_null() {
-                panic!("Failed to create GatherAlongAxisTensor operation");
-            } else {
-                Retained::retain_autoreleased(result).unwrap()
-            }
+            result
         }
     }
 }
