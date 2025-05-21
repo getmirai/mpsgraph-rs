@@ -1,11 +1,11 @@
 use crate::graph::Graph;
+use crate::pooling_ops::TensorNamedDataLayout;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
-use crate::pooling_ops::TensorNamedDataLayout;
+use objc2::extern_class;
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2::runtime::AnyClass;
-use objc2::extern_class;
 use objc2_foundation::{NSObject, NSObjectProtocol, NSString};
 
 extern_class!(
@@ -50,7 +50,7 @@ impl ImToColOpDescriptor {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphImToColOpDescriptor").unwrap();
             msg_send![
-                cls, 
+                cls,
                 descriptorWithKernelWidth: kernel_width as u64,
                 kernelHeight: kernel_height as u64,
                 strideInX: stride_in_x as u64,
@@ -89,7 +89,7 @@ impl ImToColOpDescriptor {
         unsafe {
             let cls = AnyClass::get(c"MPSGraphImToColOpDescriptor").unwrap();
             msg_send![
-                cls, 
+                cls,
                 descriptorWithKernelWidth: kernel_width as u64,
                 kernelHeight: kernel_height as u64,
                 strideInX: stride_in_x as u64,

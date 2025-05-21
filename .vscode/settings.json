@@ -1,6 +1,11 @@
 {
     "editor.formatOnSave": true,
-    "files.associations": {
-        "typeinfo": "cpp"
-    }
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "rust-analyzer.rustfmt.extraArgs": [
+        "+nightly"
+    ],
+    "rust-analyzer.testExplorer": true
 }

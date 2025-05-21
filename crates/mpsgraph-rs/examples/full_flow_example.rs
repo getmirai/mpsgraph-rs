@@ -2,8 +2,8 @@
 use metal::{Device as MetalDevice, MTLResourceOptions};
 use mpsgraph::{
     CommandBuffer, CompilationDescriptor, DataType, DeploymentPlatform, Device, Executable,
-    ExecutableExecutionDescriptor, Graph, SerializationDescriptor, Shape,
-    ShapedType, Tensor, TensorData,
+    ExecutableExecutionDescriptor, Graph, SerializationDescriptor, Shape, ShapedType, Tensor,
+    TensorData,
 };
 use objc2::rc::Retained;
 use objc2_foundation::NSNumber;

@@ -9,21 +9,18 @@
 //!
 //! Run with: `cargo run --example tensor_operators`
 
-use mpsgraph_tools::prelude::*;
-use mpsgraph::Graph;
 use mpsgraph::shape::Shape;
 use mpsgraph::tensor::DataType;
+use mpsgraph::Graph;
+use mpsgraph_tools::prelude::*;
 use objc2_foundation::NSNumber;
 
 fn main() {
     // Create graph and input tensors
     let graph = Graph::new();
-    
+
     // Create a shape using NSNumber values
-    let numbers = [
-        NSNumber::new_usize(2),
-        NSNumber::new_usize(3),
-    ];
+    let numbers = [NSNumber::new_usize(2), NSNumber::new_usize(3)];
     let number_refs: Vec<&NSNumber> = numbers.iter().map(|n| n.as_ref()).collect();
     let shape = Shape::from_slice(&number_refs);
 
@@ -46,45 +43,45 @@ fn main() {
     println!("let c4 = a.clone() + b.clone(); // Values");
     println!("// You can also use a + b directly if a and b are moved:");
     println!("// let c5 = a + b;       // Direct value syntax (consumes values)");
-    
+
     // Example 2: Scalar operations
     println!("\nExample 2: Scalar operations");
     let d = &c1 * 2.0;
     println!("let d = &c1 * 2.0;  // Scalar multiplication");
-    
+
     // Example 3: Chaining operations with different operators
     println!("\nExample 3: Chaining operations");
     let e = &a + &b - &a;
     println!("let e = &a + &b - &a;  // Addition then subtraction");
-    
+
     // Example 4: Using parentheses to control precedence
     println!("\nExample 4: Controlling precedence with parentheses");
     let f = (&a + &b) * &a;
     println!("let f = (&a + &b) * &a;  // Parentheses control order");
-    
+
     // Example 5: More complex expressions
     println!("\nExample 5: More complex expressions");
     let g1 = (&a + &b) * (&a - &b) / (&a + 1.0);
     println!("let g1 = (&a + &b) * (&a - &b) / (&a + 1.0);  // With references");
-    
+
     // Now demonstrate the same expression with direct value syntax
     let a_clone = a.clone();
     let b_clone = b.clone();
     let g2 = (a_clone + b_clone) * (a.clone() - b.clone()) / (a.clone() + 1.0);
     println!("let g2 = (a + b) * (a - b) / (a + 1.0);       // Direct syntax (requires clones)");
-    
+
     // Example 6: Commutative scalar operations
     println!("\nExample 6: Commutative scalar operations");
     let h1 = &a * 3.0;
     let h2 = 3.0 * &a;
     println!("let h1 = &a * 3.0;  // Tensor * scalar");
     println!("let h2 = 3.0 * &a;  // scalar * Tensor (commutative)");
-    
+
     // Example 7: Negation
     println!("\nExample 7: Negation");
     let i = -&a;
     println!("let i = -&a;  // Negation");
-    
+
     // Example 8: Activation functions
     println!("\nExample 8: Activation functions");
     let j1 = a.sigmoid();
@@ -97,12 +94,12 @@ fn main() {
     println!("let j3 = a.tanh();     // Tanh activation");
     println!("let j4 = a.silu();     // SiLU activation");
     println!("let j5 = a.gelu();     // GELU activation");
-    
+
     // Example 9: Using with original mpsgraph API
     println!("\nExample 9: Interoperability with mpsgraph API");
     let k = Tensor(graph.add(&*a, &*b, Some("k")));
     println!("let k = Tensor(graph.add(&*a, &*b, Some(\"k\")));  // Wrap result from mpsgraph");
-    
+
     println!("\nSuccessfully demonstrated enhanced Tensor with operator overloading:");
     println!("1. Basic pattern: let c = &a + &b");
     println!("2. Scalar operations: let d = &c * 2.0");
@@ -113,7 +110,7 @@ fn main() {
     println!("7. Negation: -&a");
     println!("8. Activation functions: sigmoid, relu, tanh, silu, gelu");
     println!("9. Interoperability with mpsgraph API");
-    
+
     // List all the tensors we created to demonstrate the operations
     println!("\nCreated tensors:");
     let operation_tensors = [
@@ -136,11 +133,11 @@ fn main() {
         ("j5 (gelu)", &j5),
         ("k (mpsgraph wrapper)", &k),
     ];
-    
+
     for (name, tensor) in operation_tensors.iter() {
         println!("{}: {:?}", name, tensor);
     }
-    
+
     println!("\nKey Benefits:");
     println!("1. Simple, clean syntax: &a + &b instead of a.add(&b, None)");
     println!("2. Direct value syntax: a + b (consumes values)");

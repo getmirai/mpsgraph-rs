@@ -44,7 +44,10 @@ fn main() {
 
     // Print the current callables
     let callables = compilation_descriptor.get_callables();
-    println!("Registered callables: {:?}", callables.keys().collect::<Vec<_>>());
+    println!(
+        "Registered callables: {:?}",
+        callables.keys().collect::<Vec<_>>()
+    );
 
     // Create a new graph for our main computation
     let graph = Graph::new();

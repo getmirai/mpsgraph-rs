@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -88,10 +88,12 @@ impl GraphLossOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 softMaxCrossEntropyWithSourceTensor: &**source_tensor,
                 labelsTensor: &**labels_tensor,
                 axis: axis,
@@ -118,10 +120,12 @@ impl GraphLossOps for Graph {
     ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 softMaxCrossEntropyGradientWithIncomingGradientTensor: &**gradient_tensor,
                 sourceTensor: &**source_tensor,
                 labelsTensor: &**labels_tensor,

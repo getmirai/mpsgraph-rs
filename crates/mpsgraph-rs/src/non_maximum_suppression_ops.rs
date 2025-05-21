@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
@@ -100,10 +100,12 @@ impl GraphNonMaximumSuppressionOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 nonMaximumSuppressionWithBoxesTensor: boxes_tensor,
                 scoresTensor: scores_tensor,
                 IOUThreshold: iou_threshold,
@@ -134,10 +136,12 @@ impl GraphNonMaximumSuppressionOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
-                self, 
+                self,
                 nonMaximumSuppressionWithBoxesTensor: boxes_tensor,
                 scoresTensor: scores_tensor,
                 classIndicesTensor: class_indices_tensor,

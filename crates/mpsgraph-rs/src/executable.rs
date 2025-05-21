@@ -13,6 +13,7 @@ use std::path::Path;
 use crate::device::MPSGraphComputeDevice;
 use crate::tensor::Tensor;
 use crate::tensor_data::TensorData;
+use objc2::rc::autoreleasepool;
 
 /// Represents the optimization level for graph compilation
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -682,9 +683,6 @@ impl Executable {
         results: Option<&[&Retained<TensorData>]>,
         execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
     ) -> Option<Vec<Retained<TensorData>>> {
-        use objc2::rc::autoreleasepool;
-        use objc2_foundation::NSArray;
-
         autoreleasepool(|_pool| {
             unsafe {
                 // Use from_slice for inputs

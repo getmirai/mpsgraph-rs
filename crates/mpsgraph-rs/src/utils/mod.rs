@@ -62,12 +62,7 @@ pub mod tensor {
     }
 
     /// Create a shape descriptor for a 3D tensor
-    pub fn tensor3d_shape(
-        dim1: u64,
-        dim2: u64,
-        dim3: u64,
-        data_type: DataType,
-    ) -> ShapeDescriptor {
+    pub fn tensor3d_shape(dim1: u64, dim2: u64, dim3: u64, data_type: DataType) -> ShapeDescriptor {
         ShapeDescriptor::new(vec![dim1, dim2, dim3], data_type)
     }
 

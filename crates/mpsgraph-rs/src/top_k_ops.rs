@@ -1,5 +1,5 @@
-use objc2::rc::Retained;
 use objc2::msg_send;
+use objc2::rc::Retained;
 use objc2_foundation::{NSArray, NSString};
 
 use crate::graph::Graph;
@@ -207,7 +207,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result_array: *mut NSArray<Tensor> = msg_send![
                 self,
@@ -228,7 +230,7 @@ impl GraphTopKOps for Graph {
             // Get the two tensors from the NSArray
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-            
+
             let values = Retained::retain_autoreleased(values_ptr).unwrap();
             let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
@@ -245,7 +247,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result_array: *mut NSArray<Tensor> = msg_send![
                 self,
@@ -267,7 +271,7 @@ impl GraphTopKOps for Graph {
             // Get the two tensors from the NSArray
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-            
+
             let values = Retained::retain_autoreleased(values_ptr).unwrap();
             let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
@@ -284,7 +288,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result_array: *mut NSArray<Tensor> = msg_send![
                 self,
@@ -306,7 +312,7 @@ impl GraphTopKOps for Graph {
             // Get the two tensors from the NSArray
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-            
+
             let values = Retained::retain_autoreleased(values_ptr).unwrap();
             let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
@@ -322,7 +328,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result_array: *mut NSArray<Tensor> = msg_send![
                 self,
@@ -343,7 +351,7 @@ impl GraphTopKOps for Graph {
             // Get the two tensors from the NSArray
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-            
+
             let values = Retained::retain_autoreleased(values_ptr).unwrap();
             let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
@@ -360,7 +368,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result_array: *mut NSArray<Tensor> = msg_send![
                 self,
@@ -382,7 +392,7 @@ impl GraphTopKOps for Graph {
             // Get the two tensors from the NSArray
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-            
+
             let values = Retained::retain_autoreleased(values_ptr).unwrap();
             let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
@@ -399,7 +409,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result_array: *mut NSArray<Tensor> = msg_send![
                 self,
@@ -421,7 +433,7 @@ impl GraphTopKOps for Graph {
             // Get the two tensors from the NSArray
             let values_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 0u64];
             let indices_ptr: *mut Tensor = msg_send![&*result_array_retained, objectAtIndex: 1u64];
-            
+
             let values = Retained::retain_autoreleased(values_ptr).unwrap();
             let indices = Retained::retain_autoreleased(indices_ptr).unwrap();
 
@@ -438,7 +450,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -466,7 +480,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
@@ -495,7 +511,9 @@ impl GraphTopKOps for Graph {
     ) -> Option<Retained<Tensor>> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns.as_deref().map_or(std::ptr::null(), |s| s as *const _);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
