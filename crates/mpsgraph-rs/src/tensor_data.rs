@@ -127,7 +127,7 @@ impl TensorData {
         unsafe {
             let shape_ptr: *mut NSArray<NSNumber> = msg_send![self, shape];
             let array = Retained::retain_autoreleased(shape_ptr).unwrap();
-            Shape::new(array)
+            Shape::new(&array)
         }
     }
 

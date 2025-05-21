@@ -52,8 +52,8 @@ pub trait GraphSampleGridOps {
     /// A valid Tensor object or None if error
     fn sample_grid(
         &self,
-        source: &Retained<Tensor>,
-        coordinates: &Retained<Tensor>,
+        source: &Tensor,
+        coordinates: &Tensor,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -84,8 +84,8 @@ pub trait GraphSampleGridOps {
     /// A valid Tensor object or None if error
     fn sample_grid_nearest(
         &self,
-        source: &Retained<Tensor>,
-        coordinates: &Retained<Tensor>,
+        source: &Tensor,
+        coordinates: &Tensor,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -101,8 +101,8 @@ pub trait GraphSampleGridOps {
 impl GraphSampleGridOps for Graph {
     fn sample_grid(
         &self,
-        source: &Retained<Tensor>,
-        coordinates: &Retained<Tensor>,
+        source: &Tensor,
+        coordinates: &Tensor,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -120,8 +120,8 @@ impl GraphSampleGridOps for Graph {
 
             let result: *mut Tensor = objc2::msg_send![
                 self,
-                sampleGridWithSourceTensor: &**source,
-                coordinateTensor: &**coordinates,
+                sampleGridWithSourceTensor: source,
+                coordinateTensor: coordinates,
                 layout: layout as u64,
                 normalizeCoordinates: normalize_coordinates,
                 relativeCoordinates: relative_coordinates,
@@ -142,8 +142,8 @@ impl GraphSampleGridOps for Graph {
 
     fn sample_grid_nearest(
         &self,
-        source: &Retained<Tensor>,
-        coordinates: &Retained<Tensor>,
+        source: &Tensor,
+        coordinates: &Tensor,
         layout: TensorNamedDataLayout,
         normalize_coordinates: bool,
         relative_coordinates: bool,
@@ -161,8 +161,8 @@ impl GraphSampleGridOps for Graph {
 
             let result: *mut Tensor = objc2::msg_send![
                 self,
-                sampleGridWithSourceTensor: &**source,
-                coordinateTensor: &**coordinates,
+                sampleGridWithSourceTensor: source,
+                coordinateTensor: coordinates,
                 layout: layout as u64,
                 normalizeCoordinates: normalize_coordinates,
                 relativeCoordinates: relative_coordinates,

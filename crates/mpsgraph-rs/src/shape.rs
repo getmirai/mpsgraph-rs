@@ -10,8 +10,8 @@ pub struct Shape(Retained<NSArray<NSNumber>>);
 
 impl Shape {
     /// Create a new Shape from an NSArray
-    pub fn new(array: Retained<NSArray<NSNumber>>) -> Self {
-        Self(array)
+    pub fn new(array: &NSArray<NSNumber>) -> Self {
+        Self(Retained::from(array))
     }
 
     /// Create a Shape from a slice of NSNumber references
@@ -77,8 +77,8 @@ impl Shape {
     }
 
     /// Get the inner NSArray
-    pub fn as_array(&self) -> &NSArray<NSNumber> {
-        &self.0
+    pub fn as_array(&self) -> Retained<NSArray<NSNumber>> {
+        self.0.clone()
     }
 
     /// Unwrap the Shape into the inner NSArray

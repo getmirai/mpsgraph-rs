@@ -49,13 +49,13 @@ fn main() {
     let result_data = TensorData::from_buffer(&result_buffer, &shape, DataType::Float32);
 
     // Create input feeds
-    let mut feeds = HashMap::new();
-    feeds.insert(&a, &a_data);
-    feeds.insert(&b, &b_data);
+    let mut feeds_refs = HashMap::new();
+    feeds_refs.insert(a.as_ref(), a_data.as_ref());
+    feeds_refs.insert(b.as_ref(), b_data.as_ref());
 
     // Create results map
-    let mut results = HashMap::new();
-    results.insert(&result, &result_data);
+    let mut results_refs = HashMap::new();
+    results_refs.insert(result.as_ref(), result_data.as_ref());
 
     // Get a Metal command queue
     let command_queue = metal_device.new_command_queue();
@@ -78,9 +78,9 @@ fn main() {
     // Encode the graph to the command buffer
     graph.encode_to_command_buffer_with_results(
         &command_buffer,
-        &feeds,
+        &feeds_refs,
         None, // No specific target tensors
-        &results,
+        &results_refs,
         Some(&execution_descriptor),
     );
 
@@ -121,15 +121,15 @@ fn main() {
     );
 
     let sync_result_data = TensorData::from_buffer(&sync_result_buffer, &shape, DataType::Float32);
-    let mut sync_results = HashMap::new();
-    sync_results.insert(&result, &sync_result_data);
+    let mut sync_results_refs = HashMap::new();
+    sync_results_refs.insert(result.as_ref(), sync_result_data.as_ref());
 
     // Encode the graph to the command buffer synchronously
     graph.encode_to_command_buffer_with_results(
         &sync_command_buffer,
-        &feeds,
+        &feeds_refs,
         None,
-        &sync_results,
+        &sync_results_refs,
         Some(&sync_descriptor),
     );
 

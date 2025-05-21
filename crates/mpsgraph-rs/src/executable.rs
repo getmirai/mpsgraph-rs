@@ -3,7 +3,7 @@ use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
 use objc2::rc::Retained;
 use objc2::runtime::NSObject;
-use objc2::{extern_class, msg_send, ClassType};
+use objc2::{extern_class, msg_send, ClassType, Message};
 use objc2_foundation::{
     NSArray, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString, NSURL,
 };
@@ -159,7 +159,7 @@ impl CompilationDescriptor {
     }
 
     /// Set the callables map using a Rust HashMap
-    pub fn set_callables(&self, callables: &HashMap<String, Retained<Executable>>) {
+    pub fn set_callables(&self, callables: &HashMap<String, &Executable>) {
         if callables.is_empty() {
             // If the HashMap is empty, set the property to nil
             unsafe {
@@ -172,12 +172,10 @@ impl CompilationDescriptor {
         let mutable_dict = NSMutableDictionary::<NSString, Executable>::new();
 
         // Add each entry to the dictionary
-        for (key, executable) in callables {
+        for (key, &exec_ref) in callables {
             let ns_key = NSString::from_str(key);
             unsafe {
-                let exec_ptr = Retained::as_ptr(executable);
-                let key_ptr = &*ns_key;
-                let _: () = msg_send![&*mutable_dict, setObject: exec_ptr, forKey: key_ptr];
+                let _: () = msg_send![&*mutable_dict, setObject: exec_ref, forKey: &*ns_key];
             }
         }
 
@@ -189,28 +187,38 @@ impl CompilationDescriptor {
 
         // Set the property
         unsafe {
-            let dict_ptr = Retained::as_ptr(&immutable_dict);
-            let _: () = msg_send![self, setCallables: dict_ptr];
+            let _: () = msg_send![self, setCallables: &*immutable_dict];
         }
     }
 
     /// Add a callable executable for a specific symbol name
-    pub fn add_callable(&self, symbol_name: &str, executable: &Retained<Executable>) {
+    pub fn add_callable(&self, symbol_name: &str, executable: &Executable) {
         // Get the current callables
-        let mut callables = self.get_callables();
+        let mut callables_retained_map = self.get_callables();
 
-        // Add the new callable
-        callables.insert(symbol_name.to_string(), executable.clone());
+        // Add the new callable, retaining it for the map
+        callables_retained_map.insert(symbol_name.to_string(), executable.retain());
+
+        // Convert map values from Retained<Executable> to &Executable for set_callables
+        let callables_refs_map: HashMap<String, &Executable> = callables_retained_map
+            .iter()
+            .map(|(k, v)| (k.clone(), v.as_ref()))
+            .collect();
 
         // Update the callables property
-        self.set_callables(&callables);
+        self.set_callables(&callables_refs_map);
     }
 
     /// Remove a callable executable for a specific symbol name
     pub fn remove_callable(&self, symbol_name: &str) {
-        let mut callables = self.get_callables();
-        callables.remove(symbol_name);
-        self.set_callables(&callables);
+        let mut callables_retained_map = self.get_callables();
+        callables_retained_map.remove(symbol_name);
+
+        let callables_refs_map: HashMap<String, &Executable> = callables_retained_map
+            .iter()
+            .map(|(k, v)| (k.clone(), v.as_ref()))
+            .collect();
+        self.set_callables(&callables_refs_map);
     }
 
     pub fn set_allowed_device(&self, devices: u64) {
@@ -530,7 +538,7 @@ impl Executable {
     /// Create a new executable from a serialized package at the specified URL
     pub fn from_serialized_package(
         path: &Path,
-        compilation_descriptor: Option<&Retained<CompilationDescriptor>>,
+        compilation_descriptor: Option<&CompilationDescriptor>,
     ) -> Option<Retained<Self>> {
         unsafe {
             // Convert path to file URL string
@@ -549,7 +557,7 @@ impl Executable {
                     let executable: *mut Self = msg_send![
                         alloc,
                         initWithMPSGraphPackageAtURL: &*url,
-                        compilationDescriptor: desc.as_ref() as &CompilationDescriptor
+                        compilationDescriptor: desc
                     ];
 
                     if executable.is_null() {
@@ -577,7 +585,7 @@ impl Executable {
         }
     }
 
-    pub fn serialize_to_url(&self, path: &Path, descriptor: &Retained<SerializationDescriptor>) {
+    pub fn serialize_to_url(&self, path: &Path, descriptor: &SerializationDescriptor) {
         unsafe {
             // Convert path to NSURL using fileURLWithPath
             if let Some(path_str) = path.to_str() {
@@ -590,7 +598,7 @@ impl Executable {
                 let _: () = msg_send![
                     self,
                     serializeToMPSGraphPackageAtURL: &*url,
-                    descriptor: descriptor.as_ref() as &SerializationDescriptor
+                    descriptor: descriptor
                 ];
             } else {
                 eprintln!("Error: Could not convert path to string: {:?}", path);
@@ -601,17 +609,14 @@ impl Executable {
     /// Specialize the executable for a device and input types.
     pub fn specialize_with_device(
         &self,
-        device: Option<&Retained<crate::device::Device>>,
+        device: Option<&crate::device::Device>,
         input_types: &NSArray<crate::data_types::Type>,
-        compilation_descriptor: Option<&Retained<CompilationDescriptor>>,
+        compilation_descriptor: Option<&CompilationDescriptor>,
     ) {
         unsafe {
-            let device_ptr = device.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const crate::device::Device
-            });
-            let desc_ptr = compilation_descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const CompilationDescriptor
-            });
+            let device_ptr = device.map_or(std::ptr::null(), |d| d as *const crate::device::Device);
+            let desc_ptr = compilation_descriptor
+                .map_or(std::ptr::null(), |d| d as *const CompilationDescriptor);
 
             let _: () = msg_send![
                 self,
@@ -678,79 +683,51 @@ impl Executable {
 
     pub fn encode_to_command_buffer(
         &self,
-        command_buffer: &Retained<CommandBuffer>,
-        inputs: &[&Retained<TensorData>],
-        results: Option<&[&Retained<TensorData>]>,
-        execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
+        command_buffer: &CommandBuffer,
+        inputs: &[&TensorData],
+        results: Option<&[&TensorData]>,
+        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
     ) -> Option<Vec<Retained<TensorData>>> {
-        autoreleasepool(|_pool| {
-            unsafe {
-                // Use from_slice for inputs
-                let input_refs: Vec<&TensorData> = inputs
-                    .iter()
-                    .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
-                    .collect();
+        autoreleasepool(|_pool| unsafe {
+            let input_refs: Vec<&TensorData> = inputs.iter().map(|&r| r).collect();
+            let inputs_array = NSArray::from_slice(&input_refs);
 
-                // Create NSArray using from_slice with the Vec of references
-                let inputs_array = NSArray::from_slice(&input_refs);
+            let results_array_option: Option<Retained<NSArray<TensorData>>> =
+                results.map(|r_slice| {
+                    let result_refs: Vec<&TensorData> = r_slice.iter().map(|&r| r).collect();
+                    NSArray::from_slice(&result_refs)
+                });
+            let results_array_ptr: *const NSArray<TensorData> = results_array_option
+                .as_ref()
+                .map_or(std::ptr::null(), |arr| Retained::as_ptr(arr));
 
-                // --- Results Array (Optional) ---
-                let results_array_option: Option<Retained<NSArray<TensorData>>> =
-                    results.map(|r_slice| {
-                        let result_refs: Vec<&TensorData> = r_slice
-                            .iter()
-                            .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
-                            .collect();
-                        NSArray::from_slice(&result_refs)
-                    });
-                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
-                let results_array_ptr: *const NSArray<TensorData> = results_array_option
-                    .as_ref()
-                    .map_or(std::ptr::null(), |arr| Retained::as_ptr(arr));
+            let desc_ptr: *const ExecutableExecutionDescriptor =
+                execution_descriptor.map_or(std::ptr::null(), |d| d as *const _);
 
-                // --- Execution Descriptor (Optional) ---
-                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
-                let desc_ptr: *const ExecutableExecutionDescriptor =
-                    execution_descriptor.map_or(std::ptr::null(), |d| Retained::as_ptr(d));
+            let cmd_buffer_ptr: *const CommandBuffer = command_buffer as *const _;
 
-                // --- Command Buffer Pointer ---
-                // Use Retained::as_ptr to get the raw pointer
-                let cmd_buffer_ptr: *const crate::command_buffer::CommandBuffer =
-                    Retained::as_ptr(command_buffer);
+            let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
 
-                // --- Inputs Array Pointer ---
-                // Use Retained::as_ptr to get the raw pointer
-                let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
+            let result_ptr: *mut NSArray<TensorData> = msg_send![
+                self,
+                encodeToCommandBuffer: cmd_buffer_ptr,
+                inputsArray: inputs_array_ptr,
+                resultsArray: results_array_ptr,
+                executionDescriptor: desc_ptr
+            ];
 
-                // --- Call Objective-C Method ---
-                // Pass raw pointers for all arguments
-                let result_ptr: *mut NSArray<TensorData> = msg_send![
-                    self,
-                    encodeToCommandBuffer: cmd_buffer_ptr,
-                    inputsArray: inputs_array_ptr,
-                    resultsArray: results_array_ptr,
-                    executionDescriptor: desc_ptr
-                ];
-
-                // --- Handle Return Value ---
-                if result_ptr.is_null() {
-                    None
-                } else {
-                    // Attempt to take ownership of the potentially autoreleased NSArray*
-                    if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
-                        // Successfully retained the array, now process items
-                        let mut output_vec = Vec::with_capacity(result_array.len());
-                        for item in result_array.iter() {
-                            // iter() yields &Retained<TensorData>
-                            // Clone the item to transfer ownership to the output Vec
-                            output_vec.push(item.clone());
-                        }
-                        Some(output_vec)
-                    } else {
-                        // retain_autoreleased failed, pointer was likely invalid
-                        eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in encode_to_command_buffer");
-                        None
+            if result_ptr.is_null() {
+                None
+            } else {
+                if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
+                    let mut output_vec = Vec::with_capacity(result_array.len());
+                    for item in result_array.iter() {
+                        output_vec.push(item.clone());
                     }
+                    Some(output_vec)
+                } else {
+                    eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in encode_to_command_buffer");
+                    None
                 }
             }
         })
@@ -760,79 +737,53 @@ impl Executable {
     pub fn run_with_command_queue(
         &self,
         command_queue: &metal::CommandQueue,
-        inputs: &[&Retained<TensorData>],
-        results: Option<&[&Retained<TensorData>]>,
-        execution_descriptor: Option<&Retained<ExecutableExecutionDescriptor>>,
+        inputs: &[&TensorData],
+        results: Option<&[&TensorData]>,
+        execution_descriptor: Option<&ExecutableExecutionDescriptor>,
     ) -> Option<Vec<Retained<TensorData>>> {
         use objc2::rc::autoreleasepool;
         use objc2_foundation::NSArray;
 
-        autoreleasepool(|_pool| {
-            unsafe {
-                // Use from_slice for inputs
-                let input_refs: Vec<&TensorData> = inputs
-                    .iter()
-                    .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
-                    .collect();
+        autoreleasepool(|_pool| unsafe {
+            let input_refs: Vec<&TensorData> = inputs.iter().map(|&r| r).collect();
+            let inputs_array = NSArray::from_slice(&input_refs);
 
-                // Create NSArray using from_slice with the Vec of references
-                let inputs_array = NSArray::from_slice(&input_refs);
+            let results_array_option: Option<Retained<NSArray<TensorData>>> =
+                results.map(|r_slice| {
+                    let result_refs: Vec<&TensorData> = r_slice.iter().map(|&r| r).collect();
+                    NSArray::from_slice(&result_refs)
+                });
+            let results_array_ptr: *const NSArray<TensorData> = results_array_option
+                .as_ref()
+                .map_or(std::ptr::null(), |arr| Retained::as_ptr(arr));
 
-                // --- Results Array (Optional) ---
-                let results_array_option: Option<Retained<NSArray<TensorData>>> =
-                    results.map(|r_slice| {
-                        let result_refs: Vec<&TensorData> = r_slice
-                            .iter()
-                            .map(|r: &&Retained<TensorData>| -> &TensorData { &**r })
-                            .collect();
-                        NSArray::from_slice(&result_refs)
-                    });
-                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
-                let results_array_ptr: *const NSArray<TensorData> = results_array_option
-                    .as_ref()
-                    .map_or(std::ptr::null(), |arr| Retained::as_ptr(arr));
+            let desc_ptr: *const ExecutableExecutionDescriptor =
+                execution_descriptor.map_or(std::ptr::null(), |d| d as *const _);
 
-                // --- Execution Descriptor (Optional) ---
-                // Get a raw pointer (*const) or null for msg_send! Use Retained::as_ptr
-                let desc_ptr: *const ExecutableExecutionDescriptor =
-                    execution_descriptor.map_or(std::ptr::null(), |d| Retained::as_ptr(d));
+            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
 
-                // --- Command Queue Pointer ---
-                let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
+            let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
 
-                // --- Inputs Array Pointer ---
-                // Use Retained::as_ptr to get the raw pointer
-                let inputs_array_ptr: *const NSArray<TensorData> = Retained::as_ptr(&inputs_array);
+            let result_ptr: *mut NSArray<TensorData> = msg_send![
+                self,
+                runWithMTLCommandQueue: cmd_queue_ptr,
+                inputsArray: inputs_array_ptr,
+                resultsArray: results_array_ptr,
+                executionDescriptor: desc_ptr
+            ];
 
-                // --- Call Objective-C Method ---
-                // Pass raw pointers for all arguments
-                let result_ptr: *mut NSArray<TensorData> = msg_send![
-                    self,
-                    runWithMTLCommandQueue: cmd_queue_ptr,
-                    inputsArray: inputs_array_ptr,
-                    resultsArray: results_array_ptr,
-                    executionDescriptor: desc_ptr
-                ];
-
-                // --- Handle Return Value ---
-                if result_ptr.is_null() {
-                    None
-                } else {
-                    // Attempt to take ownership of the potentially autoreleased NSArray*
-                    if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
-                        // Successfully retained the array, now process items
-                        let mut output_vec = Vec::with_capacity(result_array.len());
-                        for item in result_array.iter() {
-                            // iter() yields &Retained<TensorData>
-                            // Clone the item to transfer ownership to the output Vec
-                            output_vec.push(item.clone());
-                        }
-                        Some(output_vec)
-                    } else {
-                        // retain_autoreleased failed, pointer was likely invalid
-                        eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in run_with_command_queue");
-                        None
+            if result_ptr.is_null() {
+                None
+            } else {
+                if let Some(result_array) = Retained::retain_autoreleased(result_ptr) {
+                    let mut output_vec = Vec::with_capacity(result_array.len());
+                    for item in result_array.iter() {
+                        output_vec.push(item.clone());
                     }
+                    Some(output_vec)
+                } else {
+                    eprintln!("Warning: retain_autoreleased failed for non-null result_ptr in run_with_command_queue");
+                    None
                 }
             }
         })

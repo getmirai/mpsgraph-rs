@@ -131,15 +131,15 @@ fn main() {
     let device_obj = mpsgraph::Device::new();
 
     // Create the feeds tensor types for compilation
-    let mut feeds = HashMap::new();
-    feeds.insert(&a, &float32_matrix);
-    feeds.insert(&b, &float32_matrix);
+    let mut feeds_refs = HashMap::new();
+    feeds_refs.insert(a.as_ref(), float32_matrix.as_ref());
+    feeds_refs.insert(b.as_ref(), float32_matrix.as_ref());
 
     // Compile the graph with our compilation descriptor that has the callables
     let executable = graph.compile(
         &device_obj,
-        &feeds,
-        &[&final_result],
+        &feeds_refs,
+        &[final_result.as_ref()],
         Some(&compilation_descriptor),
     );
 
@@ -168,16 +168,16 @@ fn main() {
     execution_descriptor.prefer_synchronous_execution();
 
     // Convert our vectors to the right format
-    let inputs: Vec<&Retained<TensorData>> = feed_data.iter().map(|x| *x).collect();
-    let results: Vec<&Retained<TensorData>> = results_data.iter().map(|x| *x).collect();
+    let inputs_refs: Vec<&TensorData> = feed_data.iter().map(|&x| x.as_ref()).collect();
+    let results_refs: Vec<&TensorData> = results_data.iter().map(|&x| x.as_ref()).collect();
 
     // Encode executable to command buffer
     println!("Encoding executable to command buffer...");
 
     executable.encode_to_command_buffer(
         &command_buffer,
-        &inputs,
-        Some(&results),
+        &inputs_refs,
+        Some(&results_refs),
         Some(&execution_descriptor),
     );
 
@@ -269,9 +269,9 @@ fn create_addition_executable() -> Retained<Executable> {
     let float32_matrix = ShapedType::new(&shape, DataType::Float32);
 
     // Set up feeds for compilation
-    let mut feeds = HashMap::new();
-    feeds.insert(&a, &float32_matrix);
-    feeds.insert(&b, &float32_matrix);
+    let mut feeds_refs_add = HashMap::new();
+    feeds_refs_add.insert(a.as_ref(), float32_matrix.as_ref());
+    feeds_refs_add.insert(b.as_ref(), float32_matrix.as_ref());
 
     // Create device object
     let device = mpsgraph::Device::new();
@@ -280,7 +280,12 @@ fn create_addition_executable() -> Retained<Executable> {
     let compilation_descriptor = CompilationDescriptor::new();
     compilation_descriptor.set_optimization_level(mpsgraph::Optimization::Level1);
 
-    graph.compile(&device, &feeds, &[&c], Some(&compilation_descriptor))
+    graph.compile(
+        &device,
+        &feeds_refs_add,
+        &[c.as_ref()],
+        Some(&compilation_descriptor),
+    )
 }
 
 /// Creates an executable for multiplication
@@ -300,9 +305,9 @@ fn create_multiplication_executable() -> Retained<Executable> {
     let float32_matrix = ShapedType::new(&shape, DataType::Float32);
 
     // Set up feeds for compilation
-    let mut feeds = HashMap::new();
-    feeds.insert(&a, &float32_matrix);
-    feeds.insert(&b, &float32_matrix);
+    let mut feeds_refs_mul = HashMap::new();
+    feeds_refs_mul.insert(a.as_ref(), float32_matrix.as_ref());
+    feeds_refs_mul.insert(b.as_ref(), float32_matrix.as_ref());
 
     // Create device object
     let device = mpsgraph::Device::new();
@@ -311,5 +316,10 @@ fn create_multiplication_executable() -> Retained<Executable> {
     let compilation_descriptor = CompilationDescriptor::new();
     compilation_descriptor.set_optimization_level(mpsgraph::Optimization::Level1);
 
-    graph.compile(&device, &feeds, &[&c], Some(&compilation_descriptor))
+    graph.compile(
+        &device,
+        &feeds_refs_mul,
+        &[c.as_ref()],
+        Some(&compilation_descriptor),
+    )
 }

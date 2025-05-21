@@ -109,8 +109,8 @@ impl Graph {
     /// Performs matrix multiplication of two tensors
     pub fn matmul(
         &self,
-        lhs: &Retained<Tensor>,
-        rhs: &Retained<Tensor>,
+        lhs: &Tensor,
+        rhs: &Tensor,
         _transpose_lhs: bool,
         _transpose_rhs: bool,
         name: Option<&str>,
@@ -123,8 +123,8 @@ impl Graph {
 
             let result_ptr: *mut Tensor = msg_send![
                 self,
-                matrixMultiplicationWithPrimaryTensor: lhs.as_ref() as &Tensor,
-                secondaryTensor: rhs.as_ref() as &Tensor,
+                matrixMultiplicationWithPrimaryTensor: lhs,
+                secondaryTensor: rhs,
                 name: name_ptr
             ];
 
@@ -147,9 +147,9 @@ impl Graph {
     /// - Returns: A dictionary mapping output tensors to their computed values
     pub fn run_async_with_feeds(
         &self,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
-        output_tensors: &[&Retained<Tensor>],
-        execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        output_tensors: &[&Tensor],
+        execution_descriptor: Option<&ExecutionDescriptor>,
     ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
         unsafe {
             // Create NSMutableDictionary for feeds
@@ -292,10 +292,10 @@ impl Graph {
     /// - Returns: A compiled executable
     pub fn compile(
         &self,
-        device: &Retained<Device>,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<ShapedType>>,
-        targets: &[&Retained<Tensor>],
-        descriptor: Option<&Retained<CompilationDescriptor>>,
+        device: &Device,
+        feeds: &HashMap<&Tensor, &ShapedType>,
+        targets: &[&Tensor],
+        descriptor: Option<&CompilationDescriptor>,
     ) -> Retained<Executable> {
         autoreleasepool(|_| unsafe {
             // Create immutable NSDictionary for feeds directly
@@ -320,15 +320,12 @@ impl Graph {
                 .collect();
             let targets_array = NSArray::from_slice(&targets_refs);
 
-            // Get descriptor pointer if provided
-            let desc_ptr = descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const CompilationDescriptor
-            });
+            let desc_ptr = descriptor.map_or(std::ptr::null(), |d_ref| &**d_ref as *const _);
 
             // Compile the graph
             let executable_ptr: *mut Executable = msg_send![
                 self,
-                compileWithDevice: device.as_ref() as &Device,
+                compileWithDevice: device as &Device,
                 feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
                 targetOperations: std::ptr::null::<NSArray<Operation>>(),
@@ -355,11 +352,11 @@ impl Graph {
     /// - Returns: A compiled executable
     pub fn compile_with_targets_and_ops(
         &self,
-        device: &Retained<Device>,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<ShapedType>>,
-        targets: &[&Retained<Tensor>],
-        target_ops: &[&Retained<Operation>],
-        descriptor: Option<&Retained<CompilationDescriptor>>,
+        device: &Device,
+        feeds: &HashMap<&Tensor, &ShapedType>,
+        targets: &[&Tensor],
+        target_ops: &[&Operation],
+        descriptor: Option<&CompilationDescriptor>,
     ) -> Retained<Executable> {
         autoreleasepool(|_| unsafe {
             // Create immutable NSDictionary for feeds directly
@@ -388,15 +385,12 @@ impl Graph {
             let ops_refs: Vec<&Operation> = target_ops.iter().map(|op| op.as_ref()).collect();
             let ops_array = NSArray::from_slice(&ops_refs);
 
-            // Get descriptor pointer if provided
-            let desc_ptr = descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const CompilationDescriptor
-            });
+            let desc_ptr = descriptor.map_or(std::ptr::null(), |d_ref| &**d_ref as *const _);
 
             // Compile the graph
             let executable_ptr: *mut Executable = msg_send![
                 self,
-                compileWithDevice: device.as_ref() as &Device,
+                compileWithDevice: device as &Device,
                 feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
                 targetOperations: &*ops_array,
@@ -423,11 +417,11 @@ impl Graph {
     /// - Returns: A dictionary mapping output tensors to their computed values
     pub fn encode_to_command_buffer(
         &self,
-        command_buffer: &Retained<CommandBuffer>,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
-        target_tensors: Option<&[&Retained<Tensor>]>,
-        target_operations: Option<&[Retained<Operation>]>,
-        execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
+        command_buffer: &CommandBuffer,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        target_tensors: Option<&[&Tensor]>,
+        target_operations: Option<&[&Operation]>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
     ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
         autoreleasepool(|_| unsafe {
             // Create NSMutableDictionary for feeds
@@ -483,7 +477,7 @@ impl Graph {
             // Encode the graph to the command buffer
             let results_ptr: *mut NSMutableDictionary<Tensor, TensorData> = msg_send![
                 self,
-                encodeToCommandBuffer: command_buffer.as_ref() as &CommandBuffer,
+                encodeToCommandBuffer: command_buffer as &CommandBuffer,
                 feeds: &*dictionary,
                 targetTensors: targets_array_ptr,
                 targetOperations: ops_array_ptr,
@@ -531,11 +525,11 @@ impl Graph {
     ///   - execution_descriptor: Optional execution descriptor
     pub fn encode_to_command_buffer_with_results(
         &self,
-        command_buffer: &Retained<CommandBuffer>,
-        feeds: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
-        target_operations: Option<&[Retained<Operation>]>,
-        results_dict: &HashMap<&Retained<Tensor>, &Retained<TensorData>>,
-        execution_descriptor: Option<&Retained<ExecutionDescriptor>>,
+        command_buffer: &CommandBuffer,
+        feeds: &HashMap<&Tensor, &TensorData>,
+        target_operations: Option<&[&Operation]>,
+        results_dict: &HashMap<&Tensor, &TensorData>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
     ) {
         autoreleasepool(|_| unsafe {
             // Create NSMutableDictionary for feeds
@@ -588,7 +582,7 @@ impl Graph {
             // Encode the graph to the command buffer with results
             let _: () = msg_send![
                 self,
-                encodeToCommandBuffer: command_buffer.as_ref() as &CommandBuffer,
+                encodeToCommandBuffer: command_buffer as &CommandBuffer,
                 feeds: &*feeds_dictionary,
                 targetOperations: ops_array_ptr,
                 resultsDictionary: &*results_dictionary,
@@ -668,8 +662,8 @@ impl Graph {
     /// Adds two tensors element-wise
     pub fn add(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -680,8 +674,8 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                additionWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
+                additionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
                 name: name_ptr
             ];
 
@@ -696,8 +690,8 @@ impl Graph {
     /// Multiplies two tensors element-wise
     pub fn multiply(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -708,8 +702,8 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                multiplicationWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
+                multiplicationWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
                 name: name_ptr
             ];
 
@@ -724,8 +718,8 @@ impl Graph {
     /// Subtracts one tensor from another element-wise
     pub fn subtract(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -736,8 +730,8 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                subtractionWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
+                subtractionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
                 name: name_ptr
             ];
 
@@ -752,8 +746,8 @@ impl Graph {
     /// Divides one tensor by another element-wise
     pub fn divide(
         &self,
-        primary: &Retained<Tensor>,
-        secondary: &Retained<Tensor>,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -764,8 +758,8 @@ impl Graph {
 
             let tensor_ptr: *mut Tensor = msg_send![
                 self,
-                divisionWithPrimaryTensor: primary.as_ref() as &Tensor,
-                secondaryTensor: secondary.as_ref() as &Tensor,
+                divisionWithPrimaryTensor: primary,
+                secondaryTensor: secondary,
                 name: name_ptr
             ];
 

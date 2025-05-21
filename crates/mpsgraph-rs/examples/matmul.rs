@@ -109,13 +109,13 @@ fn main() {
     let command_queue = device.new_command_queue();
 
     // Prepare feeds
-    let mut feeds = HashMap::new();
-    feeds.insert(&a, &a_tensor.tensor_data);
-    feeds.insert(&b, &b_tensor.tensor_data);
+    let mut feeds_refs = HashMap::new();
+    feeds_refs.insert(a.as_ref(), a_tensor.tensor_data.as_ref());
+    feeds_refs.insert(b.as_ref(), b_tensor.tensor_data.as_ref());
 
     // Output tensor
-    let mut results = HashMap::new();
-    results.insert(&result, &result_tensor.tensor_data);
+    let mut results_refs = HashMap::new();
+    results_refs.insert(result.as_ref(), result_tensor.tensor_data.as_ref());
 
     println!("Executing matrix multiplication...");
 
@@ -127,9 +127,9 @@ fn main() {
     // Encode graph to command buffer
     graph.encode_to_command_buffer_with_results(
         &command_buffer,
-        &feeds,
+        &feeds_refs,
         None, // No specific target tensors
-        &results,
+        &results_refs,
         Some(&execution_descriptor),
     );
 

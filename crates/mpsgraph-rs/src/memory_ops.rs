@@ -90,11 +90,7 @@ pub trait GraphMemoryOps {
     /// # Returns
     ///
     /// A valid Tensor object representing the variable.
-    fn variable_from_tensor(
-        &self,
-        tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
+    fn variable_from_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates a read op which reads at this point of execution of the graph.
     ///
@@ -106,7 +102,7 @@ pub trait GraphMemoryOps {
     /// # Returns
     ///
     /// A valid Tensor object.
-    fn read_variable(&self, variable: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor>;
+    fn read_variable(&self, variable: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
     /// Creates an assign operation which writes at this point of execution of the graph.
     ///
@@ -121,8 +117,8 @@ pub trait GraphMemoryOps {
     /// A valid Operation object.
     fn assign_variable(
         &self,
-        variable: &Retained<Tensor>,
-        tensor: &Retained<Tensor>,
+        variable: &Tensor,
+        tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Operation>;
 
@@ -278,18 +274,14 @@ impl GraphMemoryOps for Graph {
         }
     }
 
-    fn variable_from_tensor(
-        &self,
-        tensor: &Retained<Tensor>,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    fn variable_from_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                variableFromTensorWithTensor: &**tensor,
+                variableFromTensorWithTensor: tensor,
                 name: name_ptr
             ];
 
@@ -302,14 +294,14 @@ impl GraphMemoryOps for Graph {
         }
     }
 
-    fn read_variable(&self, variable: &Retained<Tensor>, name: Option<&str>) -> Retained<Tensor> {
+    fn read_variable(&self, variable: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns.as_deref().map_or(ptr::null(), |s| s as *const _);
 
             let result: *mut Tensor = msg_send![
                 self,
-                readVariable: &**variable,
+                readVariable: variable,
                 name: name_ptr
             ];
 
@@ -324,8 +316,8 @@ impl GraphMemoryOps for Graph {
 
     fn assign_variable(
         &self,
-        variable: &Retained<Tensor>,
-        tensor: &Retained<Tensor>,
+        variable: &Tensor,
+        tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Operation> {
         unsafe {
@@ -334,8 +326,8 @@ impl GraphMemoryOps for Graph {
 
             let result: *mut Operation = msg_send![
                 self,
-                assignVariable: &**variable,
-                withValueOfTensor: &**tensor,
+                assignVariable: variable,
+                withValueOfTensor: tensor,
                 name: name_ptr
             ];
 

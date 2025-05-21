@@ -49,11 +49,11 @@ fn test_encode_to_command_buffer() {
 
     // Maps of inputs for compilation
     let mut feeds = HashMap::new();
-    feeds.insert(&a, &a_shape);
-    feeds.insert(&b, &b_shape);
+    feeds.insert(a.as_ref(), a_shape.as_ref());
+    feeds.insert(b.as_ref(), b_shape.as_ref());
 
     // Compile the graph
-    let targets = [&result];
+    let targets = [result.as_ref()];
     let executable = graph.compile(&device, &feeds, &targets, Some(&compilation_descriptor));
 
     // Step 3: Create inputs and expected outputs
@@ -98,8 +98,8 @@ fn test_encode_to_command_buffer() {
     execution_descriptor.set_wait_until_completed(true);
 
     // Step 6: Call encode_to_command_buffer
-    let inputs = [&a_tensor_data, &b_tensor_data];
-    let results = [&result_tensor_data];
+    let inputs = [a_tensor_data.as_ref(), b_tensor_data.as_ref()];
+    let results = [result_tensor_data.as_ref()];
 
     let _output = executable.encode_to_command_buffer(
         &cmd_buffer,
@@ -151,11 +151,11 @@ fn test_encode_to_command_buffer_memory_management() {
     let a_shape = ShapedType::new(&shape, DataType::Float32);
     let b_shape = ShapedType::new(&shape, DataType::Float32);
     let mut feeds = HashMap::new();
-    feeds.insert(&a, &a_shape);
-    feeds.insert(&b, &b_shape);
+    feeds.insert(a.as_ref(), a_shape.as_ref());
+    feeds.insert(b.as_ref(), b_shape.as_ref());
 
     // Compile the graph
-    let targets = [&result];
+    let targets = [result.as_ref()];
     let executable = graph.compile(&device, &feeds, &targets, Some(&compilation_descriptor));
 
     // Create inputs
@@ -195,8 +195,8 @@ fn test_encode_to_command_buffer_memory_management() {
 
     // Call encode_to_command_buffer multiple times to test memory management
     for i in 0..5 {
-        let inputs = [&a_tensor_data, &b_tensor_data];
-        let results = [&result_tensor_data];
+        let inputs = [a_tensor_data.as_ref(), b_tensor_data.as_ref()];
+        let results = [result_tensor_data.as_ref()];
 
         // This will test both retain_autoreleased patterns in encode_to_command_buffer:
         // 1. On the result array from the Objective-C method

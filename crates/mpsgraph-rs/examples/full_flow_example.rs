@@ -38,11 +38,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n--- Compiling Graph ---");
     let comp_desc = CompilationDescriptor::new();
     let shaped_type = ShapedType::new(&shape, DataType::Float32);
-    let mut feed_types = HashMap::new();
-    feed_types.insert(&a, &shaped_type);
-    feed_types.insert(&b, &shaped_type);
+    let mut feed_types_refs = HashMap::new();
+    feed_types_refs.insert(a.as_ref(), shaped_type.as_ref());
+    feed_types_refs.insert(b.as_ref(), shaped_type.as_ref());
 
-    let executable = graph.compile(&mps_device, &feed_types, &[&c], Some(&comp_desc));
+    let executable = graph.compile(
+        &mps_device,
+        &feed_types_refs,
+        &[c.as_ref()],
+        Some(&comp_desc),
+    );
     println!("Graph compiled successfully.");
 
     // --- 4. Serialize Executable ---
@@ -151,8 +156,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         return Ok(());
     }
-    let inputs_for_exec = [&a_tensor_data, &b_tensor_data];
-    let outputs_for_exec = [&c_tensor_data];
+    let inputs_for_exec_refs = [a_tensor_data.as_ref(), b_tensor_data.as_ref()];
+    let outputs_for_exec_refs = [c_tensor_data.as_ref()];
 
     // Execute using the deserialized executable
     let command_buffer = CommandBuffer::from_command_queue(&command_queue);
@@ -162,8 +167,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Encoding using deserialized executable...");
     let _result = deserialized_executable.encode_to_command_buffer(
         &command_buffer,
-        &inputs_for_exec,        // Use the prepared TensorData slice
-        Some(&outputs_for_exec), // Use the prepared TensorData slice
+        &inputs_for_exec_refs,
+        Some(&outputs_for_exec_refs),
         Some(&exec_desc),
     );
     println!("Encode call completed.");

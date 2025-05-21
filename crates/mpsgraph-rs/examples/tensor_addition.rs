@@ -75,12 +75,12 @@ fn main() {
 
         println!("Setting up input and output mappings...");
 
-        let mut feeds = HashMap::new();
-        feeds.insert(&a, &a_tensor_data);
-        feeds.insert(&b, &b_tensor_data);
+        let mut feeds_refs = HashMap::new();
+        feeds_refs.insert(a.as_ref(), a_tensor_data.as_ref());
+        feeds_refs.insert(b.as_ref(), b_tensor_data.as_ref());
 
-        let mut results = HashMap::new();
-        results.insert(&c, &c_tensor_data);
+        let mut results_refs = HashMap::new();
+        results_refs.insert(c.as_ref(), c_tensor_data.as_ref());
 
         println!("Creating execution descriptor...");
         let execution_descriptor = ExecutionDescriptor::new();
@@ -92,9 +92,9 @@ fn main() {
         println!("Encoding graph to command buffer...");
         graph.encode_to_command_buffer_with_results(
             &command_buffer,
-            &feeds,
+            &feeds_refs,
             None,
-            &results,
+            &results_refs,
             Some(&execution_descriptor),
         );
 

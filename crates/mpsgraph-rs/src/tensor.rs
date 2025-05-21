@@ -103,7 +103,7 @@ impl Tensor {
         unsafe {
             let array_ptr: *mut NSArray<NSNumber> = msg_send![self, shape];
             let array = Retained::retain_autoreleased(array_ptr).unwrap();
-            Shape::new(array)
+            Shape::new(&array)
         }
     }
 

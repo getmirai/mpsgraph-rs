@@ -56,9 +56,9 @@ pub trait GraphOptimizerOps {
     /// A tensor representing the updated values.
     fn sgd_update(
         &self,
-        learning_rate: &Retained<Tensor>,
-        values: &Retained<Tensor>,
-        gradient: &Retained<Tensor>,
+        learning_rate: &Tensor,
+        values: &Tensor,
+        gradient: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -84,17 +84,17 @@ pub trait GraphOptimizerOps {
     /// A tensor containing the updated values.
     fn adam_update(
         &self,
-        learning_rate: &Retained<Tensor>,
-        beta1: &Retained<Tensor>,
-        beta2: &Retained<Tensor>,
-        epsilon: &Retained<Tensor>,
-        beta1_power: &Retained<Tensor>,
-        beta2_power: &Retained<Tensor>,
-        values: &Retained<Tensor>,
-        momentum: &Retained<Tensor>,
-        velocity: &Retained<Tensor>,
-        maximum_velocity: Option<&Retained<Tensor>>,
-        gradient: &Retained<Tensor>,
+        learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        beta1_power: &Tensor,
+        beta2_power: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 
@@ -119,15 +119,15 @@ pub trait GraphOptimizerOps {
     /// A tensor containing the updated values.
     fn rmsprop_update(
         &self,
-        current_learning_rate: &Retained<Tensor>,
-        beta1: &Retained<Tensor>,
-        beta2: &Retained<Tensor>,
-        epsilon: &Retained<Tensor>,
-        values: &Retained<Tensor>,
-        momentum: &Retained<Tensor>,
-        velocity: &Retained<Tensor>,
-        maximum_velocity: Option<&Retained<Tensor>>,
-        gradient: &Retained<Tensor>,
+        current_learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
         centered: bool,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -145,7 +145,7 @@ pub trait GraphOptimizerOps {
     /// A tensor containing the clipped values.
     fn l2_norm_gradient_clipping(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         norm_limit: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -163,8 +163,8 @@ pub trait GraphOptimizerOps {
     /// A tensor containing the scaled gradients.
     fn multiply_gradients_by_scalar(
         &self,
-        learning_rate: &Retained<Tensor>,
-        gradient: &Retained<Tensor>,
+        learning_rate: &Tensor,
+        gradient: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor>;
 }
@@ -173,9 +173,9 @@ pub trait GraphOptimizerOps {
 impl GraphOptimizerOps for Graph {
     fn sgd_update(
         &self,
-        learning_rate: &Retained<Tensor>,
-        values: &Retained<Tensor>,
-        gradient: &Retained<Tensor>,
+        learning_rate: &Tensor,
+        values: &Tensor,
+        gradient: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -186,9 +186,9 @@ impl GraphOptimizerOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                SGDWithLearningRate: &**learning_rate,
-                values: &**values,
-                gradient: &**gradient,
+                SGDWithLearningRate: learning_rate,
+                values: values,
+                gradient: gradient,
                 name: name_ptr
             ];
 
@@ -203,17 +203,17 @@ impl GraphOptimizerOps for Graph {
 
     fn adam_update(
         &self,
-        learning_rate: &Retained<Tensor>,
-        beta1: &Retained<Tensor>,
-        beta2: &Retained<Tensor>,
-        epsilon: &Retained<Tensor>,
-        beta1_power: &Retained<Tensor>,
-        beta2_power: &Retained<Tensor>,
-        values: &Retained<Tensor>,
-        momentum: &Retained<Tensor>,
-        velocity: &Retained<Tensor>,
-        maximum_velocity: Option<&Retained<Tensor>>,
-        gradient: &Retained<Tensor>,
+        learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        beta1_power: &Tensor,
+        beta2_power: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -223,23 +223,23 @@ impl GraphOptimizerOps for Graph {
                 .map_or(std::ptr::null(), |s| s as *const _);
 
             let maximum_velocity_ptr = match maximum_velocity {
-                Some(mv) => &**mv as *const _,
+                Some(mv) => mv as *const _,
                 None => std::ptr::null(),
             };
 
             let result: *mut Tensor = msg_send![
                 self,
-                AdamWithLearningRate: &**learning_rate,
-                beta1: &**beta1,
-                beta2: &**beta2,
-                epsilon: &**epsilon,
-                beta1Power: &**beta1_power,
-                beta2Power: &**beta2_power,
-                values: &**values,
-                momentum: &**momentum,
-                velocity: &**velocity,
+                AdamWithLearningRate: learning_rate,
+                beta1: beta1,
+                beta2: beta2,
+                epsilon: epsilon,
+                beta1Power: beta1_power,
+                beta2Power: beta2_power,
+                values: values,
+                momentum: momentum,
+                velocity: velocity,
                 maximumVelocity: maximum_velocity_ptr,
-                gradient: &**gradient,
+                gradient: gradient,
                 name: name_ptr
             ];
 
@@ -254,15 +254,15 @@ impl GraphOptimizerOps for Graph {
 
     fn rmsprop_update(
         &self,
-        current_learning_rate: &Retained<Tensor>,
-        beta1: &Retained<Tensor>,
-        beta2: &Retained<Tensor>,
-        epsilon: &Retained<Tensor>,
-        values: &Retained<Tensor>,
-        momentum: &Retained<Tensor>,
-        velocity: &Retained<Tensor>,
-        maximum_velocity: Option<&Retained<Tensor>>,
-        gradient: &Retained<Tensor>,
+        current_learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
         centered: bool,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -273,21 +273,21 @@ impl GraphOptimizerOps for Graph {
                 .map_or(std::ptr::null(), |s| s as *const _);
 
             let maximum_velocity_ptr = match maximum_velocity {
-                Some(mv) => &**mv as *const _,
+                Some(mv) => mv as *const _,
                 None => std::ptr::null(),
             };
 
             let result: *mut Tensor = msg_send![
                 self,
-                RMSPropWithLearningRate: &**current_learning_rate,
-                beta1: &**beta1,
-                beta2: &**beta2,
-                epsilon: &**epsilon,
-                values: &**values,
-                momentum: &**momentum,
-                velocity: &**velocity,
+                RMSPropWithLearningRate: current_learning_rate,
+                beta1: beta1,
+                beta2: beta2,
+                epsilon: epsilon,
+                values: values,
+                momentum: momentum,
+                velocity: velocity,
                 maximumVelocity: maximum_velocity_ptr,
-                gradient: &**gradient,
+                gradient: gradient,
                 centered: centered,
                 name: name_ptr
             ];
@@ -303,7 +303,7 @@ impl GraphOptimizerOps for Graph {
 
     fn l2_norm_gradient_clipping(
         &self,
-        tensor: &Retained<Tensor>,
+        tensor: &Tensor,
         norm_limit: f32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -315,7 +315,7 @@ impl GraphOptimizerOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                l2NormGradientClippingWithTensor: &**tensor,
+                l2NormGradientClippingWithTensor: tensor,
                 normLimit: norm_limit as f64,
                 name: name_ptr
             ];
@@ -331,8 +331,8 @@ impl GraphOptimizerOps for Graph {
 
     fn multiply_gradients_by_scalar(
         &self,
-        learning_rate: &Retained<Tensor>,
-        gradient: &Retained<Tensor>,
+        learning_rate: &Tensor,
+        gradient: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -343,8 +343,8 @@ impl GraphOptimizerOps for Graph {
 
             let result: *mut Tensor = msg_send![
                 self,
-                multiplyGradientsByScalarWithLearningRate: &**learning_rate,
-                gradient: &**gradient,
+                multiplyGradientsByScalarWithLearningRate: learning_rate,
+                gradient: gradient,
                 name: name_ptr
             ];
 
