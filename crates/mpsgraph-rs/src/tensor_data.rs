@@ -93,6 +93,28 @@ impl TensorData {
         }
     }
 
+    /// Creates a new TensorData from a Metal buffer specifying rowBytes (stride between rows)
+    pub fn from_buffer_row_bytes(
+        buffer: &Buffer,
+        shape: &Shape,
+        data_type: DataType,
+        row_bytes: u64,
+    ) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let buffer_ptr = buffer.as_ptr() as *mut objc2::runtime::AnyObject;
+
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated,
+                initWithMTLBuffer: buffer_ptr,
+                shape: shape.as_ptr(),
+                dataType: data_type as u32,
+                rowBytes: row_bytes
+            ];
+            initialized
+        }
+    }
+
     /// Returns the shape of this tensor data
     pub fn shape(&self) -> Shape {
         unsafe {
