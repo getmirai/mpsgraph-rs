@@ -2,7 +2,7 @@ use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::{NSArray, NSString};
 
-use crate::core::create_ns_array_from_i64_slice;
+use crate::core::{create_ns_array_from_i32_slice, create_ns_array_from_i64_slice};
 use crate::graph::Graph;
 use crate::tensor::DataType;
 use crate::tensor::Tensor;
@@ -179,9 +179,9 @@ pub trait GraphTensorShapeOps {
     fn strided_slice(
         &self,
         x: &Tensor,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
+        starts: &[i32],
+        ends: &[i32],
+        strides: &[i32],
         start_mask: u32,
         end_mask: u32,
         squeeze_mask: u32,
@@ -891,9 +891,9 @@ impl GraphTensorShapeOps for Graph {
     fn strided_slice(
         &self,
         x: &Tensor,
-        starts: &[i64],
-        ends: &[i64],
-        strides: &[i64],
+        starts: &[i32],
+        ends: &[i32],
+        strides: &[i32],
         start_mask: u32,
         end_mask: u32,
         squeeze_mask: u32,
@@ -904,9 +904,9 @@ impl GraphTensorShapeOps for Graph {
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            let starts_array = create_ns_array_from_i64_slice(starts);
-            let ends_array = create_ns_array_from_i64_slice(ends);
-            let strides_array = create_ns_array_from_i64_slice(strides);
+            let starts_array = create_ns_array_from_i32_slice(starts);
+            let ends_array = create_ns_array_from_i32_slice(ends);
+            let strides_array = create_ns_array_from_i32_slice(strides);
             msg_send![
                 self, sliceTensor: x, starts: &*starts_array, ends: &*ends_array, strides: &*strides_array,
                 startMask: start_mask, endMask: end_mask, squeezeMask: squeeze_mask, name: name_ptr
