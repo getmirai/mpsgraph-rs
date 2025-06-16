@@ -12,6 +12,9 @@ pub trait GraphArithmeticOps {
     /// Creates an identity operation
     fn identity(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
+    /// Returns the error function of the input tensor
+    fn erf(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor>;
+
     /// Returns e raised to the power of the input tensor
     fn exp(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor>;
 
@@ -305,6 +308,16 @@ impl GraphArithmeticOps for Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self, atan2WithPrimaryTensor: y, secondaryTensor: x, name: name_ptr]
+        }
+    }
+
+    fn erf(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, erfWithTensor: x, name: name_ptr]
         }
     }
 
