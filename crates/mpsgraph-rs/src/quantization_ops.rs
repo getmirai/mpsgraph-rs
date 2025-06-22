@@ -165,6 +165,32 @@ pub trait GraphQuantizationOps {
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
+    /// Creates a Dequantize operation with scale and zero point tensors and returns the result tensor.
+    /// This version does not take an axis.
+    ///
+    /// Convert the i8 or u8 `tensor` to a float tensor by applying a scale + bias transform:
+    /// result = scaleTensor(tensor - zeroPointTensor)
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Input tensor to be dequantized
+    /// * `scale_tensor` - Scale Tensor parameter
+    /// * `zero_point_tensor` - Bias Tensor parameter
+    /// * `data_type` - Float data type of the result tensor
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid Tensor of datatype `data_type` or None if error
+    fn dequantize_with_tensors_no_axis(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point_tensor: &Tensor,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
     /// Creates a lookup-table based dequantization operation and returns the result tensor.
     ///
     /// Converts a u8 or u4 `tensor` to a float tensor by applying a lookup operation:
@@ -406,6 +432,30 @@ impl GraphQuantizationOps for Graph {
                 zeroPointTensor: zero_point_tensor,
                 dataType: data_type as u32,
                 axis: axis,
+                name: name_ptr
+            ]
+        }
+    }
+
+    fn dequantize_with_tensors_no_axis(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point_tensor: &Tensor,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                dequantizeTensor: tensor,
+                scaleTensor: scale_tensor,
+                zeroPointTensor: zero_point_tensor,
+                dataType: data_type as u32,
                 name: name_ptr
             ]
         }
