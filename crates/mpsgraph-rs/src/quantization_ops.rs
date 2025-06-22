@@ -313,6 +313,50 @@ impl MPSGraph {
         }
     }
 
+    /// Creates a Dequantize operation with scale and zero point tensors and returns the result tensor.
+    /// This version does not take an axis.
+    ///
+    /// Convert the i8 or u8 `tensor` to a float tensor by applying a scale + bias transform:
+    /// result = scaleTensor(tensor - zeroPointTensor)
+    ///
+    /// # Arguments
+    ///
+    /// * `tensor` - Input tensor to be dequantized
+    /// * `scale_tensor` - Scale Tensor parameter
+    /// * `zero_point_tensor` - Bias Tensor parameter
+    /// * `data_type` - Float data type of the result tensor
+    /// * `name` - The name for the operation
+    ///
+    /// # Returns
+    ///
+    /// A valid MPSGraphTensor of datatype `data_type`
+    pub fn dequantize_with_tensors_no_axis(
+        &self,
+        tensor: &MPSGraphTensor,
+        scale_tensor: &MPSGraphTensor,
+        zero_point_tensor: &MPSGraphTensor,
+        data_type: MPSDataType,
+        name: Option<&str>,
+    ) -> MPSGraphTensor {
+        let name_obj = match name {
+            Some(s) => NSString::from_str(s).as_raw_object(),
+            None => std::ptr::null_mut(),
+        };
+
+        unsafe {
+            let result: *mut AnyObject = msg_send![
+                self.0, dequantizeTensor: tensor.0,
+                scaleTensor: scale_tensor.0,
+                zeroPointTensor: zero_point_tensor.0,
+                dataType: data_type as u64,
+                name: name_obj
+            ];
+
+            let result = objc2::ffi::objc_retain(result as *mut _);
+            MPSGraphTensor(result)
+        }
+    }
+
     /// Creates a vector lookup-table based dequantization operation and returns the result tensor.
     ///
     /// Converts a u8 or u4 `tensor` to a float tensor by applying a lookup operation.
