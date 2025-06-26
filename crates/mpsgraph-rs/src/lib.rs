@@ -138,7 +138,7 @@ pub use pooling_ops::{
     GraphPoolingOps, PaddingStyle, Pooling2DOpDescriptor, Pooling4DOpDescriptor,
     PoolingReturnIndicesMode, TensorNamedDataLayout,
 };
-pub use quantization_ops::{GraphQuantizationOps, GraphQuantizationOpsExtension};
+pub use quantization_ops::GraphQuantizationOps;
 pub use random_ops::{RandomDistribution, RandomNormalSamplingMethod, RandomOpDescriptor};
 pub use reduction_ops::GraphReductionOps;
 pub use resize_ops::{GraphResizeOps, ResizeMode, ResizeNearestRoundingMode};
