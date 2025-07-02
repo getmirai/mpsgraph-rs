@@ -5,6 +5,7 @@ use objc2_foundation::{NSArray, NSNumber, NSObjectProtocol, NSString};
 use std::hash::{Hash, Hasher};
 
 use crate::shape::Shape;
+use crate::ShapedType;
 
 /// Data type for Metal Performance Shaders Graph tensors
 ///
@@ -122,6 +123,10 @@ impl Tensor {
             let name_opt: Option<Retained<NSString>> = msg_send![self, name];
             name_opt.map(|name_retained| name_retained.to_string())
         }
+    }
+
+    pub fn shaped_type(&self) -> Retained<ShapedType> {
+        ShapedType::new(&self.shape(), self.data_type())
     }
 }
 
