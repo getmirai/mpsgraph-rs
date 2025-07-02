@@ -101,31 +101,6 @@ impl Graph {
         }
     }
 
-    /// Performs matrix multiplication of two tensors
-    pub fn matmul(
-        &self,
-        lhs: &Tensor,
-        rhs: &Tensor,
-        _transpose_lhs: bool,
-        _transpose_rhs: bool,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: Retained<Tensor> = msg_send![
-                self,
-                matrixMultiplicationWithPrimaryTensor: lhs,
-                secondaryTensor: rhs,
-                name: name_ptr
-            ];
-            result
-        }
-    }
-
     /// Execute the graph asynchronously with feeds and optional execution descriptor
     /// (Maps to ObjC runAsyncWithFeeds:targetTensors:targetOperations:executionDescriptor:)
     ///

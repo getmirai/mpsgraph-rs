@@ -3,24 +3,10 @@ use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
-use crate::shape::Shape;
 use crate::tensor::Tensor;
 
 /// Trait for matrix operations on Graph
 pub trait GraphMatrixOps {
-    /// Creates a transpose operation
-    ///
-    /// # Arguments
-    ///
-    /// * `x` - The tensor to transpose
-    /// * `dimensions` - The permutation of dimensions to apply
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object.
-    fn transpose(&self, x: &Tensor, dimensions: &[i64], name: Option<&str>) -> Retained<Tensor>;
-
     /// Creates a matrix multiplication operation.
     ///
     /// # Arguments
@@ -182,22 +168,6 @@ pub trait GraphMatrixOps {
 }
 
 impl GraphMatrixOps for Graph {
-    fn transpose(&self, x: &Tensor, dimensions: &[i64], name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            let dimensions_shape = Shape::from_dimensions(dimensions);
-            msg_send![
-                self,
-                transposeTensor: x,
-                permutation: dimensions_shape.as_ptr(),
-                name: name_ptr
-            ]
-        }
-    }
-
     fn matmul(&self, primary: &Tensor, secondary: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
