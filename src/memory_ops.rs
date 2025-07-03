@@ -154,29 +154,6 @@ pub trait GraphMemoryOps {
     fn storage_tensor(&self, handle: u64, shape: &Shape, data_type: DataType) -> Retained<Tensor>;
 }
 
-/// Extension methods to provide generic variable creation
-pub trait GraphVariableOps {
-    /// Creates a variable operation and returns the result tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `data` - The data for the tensor.
-    /// * `shape` - The shape of the output tensor. This has to be statically shaped.
-    /// * `data_type` - The dataType of the variable tensor.
-    /// * `name` - The name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object.
-    fn variable<T: Copy>(
-        &self,
-        data: &[T],
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-}
-
 impl GraphMemoryOps for Graph {
     fn complex_constant(&self, real_part: f64, imaginary_part: f64) -> Retained<Tensor> {
         unsafe {
@@ -311,24 +288,6 @@ impl GraphMemoryOps for Graph {
                 shape: shape.as_ptr(),
                 dataType: data_type as u64
             ]
-        }
-    }
-}
-
-impl GraphVariableOps for Graph {
-    fn variable<T: Copy>(
-        &self,
-        data: &[T],
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            // Create NSData
-            let bytes_len = std::mem::size_of_val(data);
-            let data_slice = std::slice::from_raw_parts(data.as_ptr() as *const u8, bytes_len);
-
-            self.variable_with_bytes(data_slice, shape, data_type, name)
         }
     }
 }

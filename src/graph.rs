@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
+use crate::memory_ops::GraphMemoryOps;
 use crate::operation::Operation;
 use crate::shape::Shape;
 use crate::tensor::{DataType, Tensor};
@@ -211,6 +212,27 @@ impl Graph {
                 dataType: data_type as u32
             ];
             tensor
+        }
+    }
+
+    /// Creates a variable tensor backed by the provided data.
+    ///
+    /// * `data`      – Raw values for the tensor (any scalar type that is `Copy`).
+    /// * `shape`     – Final tensor shape (must be static).
+    /// * `data_type` – MPS data type of the tensor contents.
+    /// * `name`      – Optional operation name shown in Graph debugging output.
+    pub fn variable<T: Copy>(
+        &self,
+        data: &[T],
+        shape: &Shape,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let bytes =
+                std::slice::from_raw_parts(data.as_ptr() as *const u8, std::mem::size_of_val(data));
+
+            self.variable_with_bytes(bytes, shape, data_type, name)
         }
     }
 

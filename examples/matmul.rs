@@ -92,9 +92,8 @@ fn main() {
     let a = graph.placeholder(DataType::Float32, &a_tensor_shape, None);
     let b = graph.placeholder(DataType::Float32, &b_tensor_shape, None);
 
-    // Perform matrix multiplication: A * B
-    // The matmul method takes transpose flags for both inputs
-    let result = graph.matmul(&a, &b, false, false, None);
+    // Perform matrix multiplication: A * B using the new simplified API
+    let result = graph.matmul(&a, &b, None);
 
     // Create TensorBuffers for inputs
     let a_tensor = TensorBuffer::new(&device, &a_data, &a_shape, DataType::Float32);

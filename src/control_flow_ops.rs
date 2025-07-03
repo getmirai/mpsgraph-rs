@@ -13,137 +13,10 @@ use crate::utils::block_wrapper::{
     create_tensor_block,
 };
 
-/// Trait for control flow operations on Graph
-pub trait GraphControlFlowOps {
-    /// Creates a control dependency between operations.
-    ///
-    /// This ensures that operations in the dependent_block are executed
-    /// only after all operations in the operations list have been executed.
-    ///
-    /// # Parameters
-    ///
-    /// * `operations` - Operations that must be completed before the dependent block executes
-    /// * `dependent_block` - A closure that returns tensors that depend on the operations
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A vector of tensors that are the result of the dependent_block
-    fn control_dependency<F>(
-        &self,
-        operations: &[&Operation],
-        dependent_block: F,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn() -> Vec<Retained<Tensor>> + 'static;
-
-    /// Creates an if-then-else operation.
-    ///
-    /// This allows for conditional execution of operations based on a predicate tensor.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - A scalar tensor that determines which branch to execute
-    /// * `then_block` - A closure that returns tensors for the "then" branch
-    /// * `else_block` - An optional closure that returns tensors for the "else" branch
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A vector of tensors that are the result of either the then_block or else_block,
-    /// depending on the value of the predicate tensor
-    fn if_op<F, G>(
-        &self,
-        predicate: &Tensor,
-        then_block: F,
-        else_block: Option<G>,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn() -> Vec<Retained<Tensor>> + 'static,
-        G: Fn() -> Vec<Retained<Tensor>> + 'static;
-
-    /// Creates a while loop operation.
-    ///
-    /// This allows for iterative execution of operations until a condition is met.
-    ///
-    /// # Parameters
-    ///
-    /// * `initial_inputs` - Initial tensors passed to the loop
-    /// * `before_block` - A closure that evaluates the condition and produces intermediate tensors
-    /// * `after_block` - A closure that executes the loop body
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A vector of tensors that are the final result of the while loop
-    fn while_loop<F, G>(
-        &self,
-        initial_inputs: &[&Tensor],
-        before_block: F,
-        after_block: G,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn(&[&Tensor], &mut Vec<Retained<Tensor>>) -> Retained<Tensor> + 'static,
-        G: Fn(&[&Tensor]) -> Vec<Retained<Tensor>> + 'static;
-
-    /// Creates a for loop operation.
-    ///
-    /// This allows for iterative execution of operations for a specified range.
-    ///
-    /// # Parameters
-    ///
-    /// * `lower_bound` - Lower bound value of the loop (inclusive)
-    /// * `upper_bound` - Upper bound value of the loop (exclusive)
-    /// * `step` - Step value of the loop (must be positive)
-    /// * `initial_body_arguments` - Initial tensors passed to the loop body
-    /// * `body_block` - A closure that executes the loop body for each iteration
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A vector of tensors that are the final result of the for loop
-    fn for_loop<F>(
-        &self,
-        lower_bound: &Tensor,
-        upper_bound: &Tensor,
-        step: &Tensor,
-        initial_body_arguments: &[&Tensor],
-        body_block: F,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn(&Tensor, &[&Tensor]) -> Vec<Retained<Tensor>> + 'static;
-
-    /// Creates a for loop operation with a specific number of iterations.
-    ///
-    /// This is a more direct version of the for loop that just specifies the total number of iterations.
-    ///
-    /// # Parameters
-    ///
-    /// * `num_iterations` - Number of iterations for the loop
-    /// * `initial_body_arguments` - Initial tensors passed to the loop body
-    /// * `body_block` - A closure that executes the loop body for each iteration
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A vector of tensors that are the final result of the for loop
-    fn for_loop_with_iterations<F>(
-        &self,
-        num_iterations: &Tensor,
-        initial_body_arguments: &[&Tensor],
-        body_block: F,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn(&Tensor, &[&Tensor]) -> Vec<Retained<Tensor>> + 'static;
-}
-
-impl GraphControlFlowOps for Graph {
-    fn control_dependency<F>(
+/// Control-flow helpers are now inherent methods on `Graph`.
+impl Graph {
+    // Public wrappers ---------------------------------------------------------
+    pub fn control_dependency<F>(
         &self,
         operations: &[&Operation],
         dependent_block: F,
@@ -179,7 +52,7 @@ impl GraphControlFlowOps for Graph {
         }
     }
 
-    fn if_op<F, G>(
+    pub fn if_op<F, G>(
         &self,
         predicate: &Tensor,
         then_block: F,
@@ -231,7 +104,7 @@ impl GraphControlFlowOps for Graph {
         }
     }
 
-    fn while_loop<F, G>(
+    pub fn while_loop<F, G>(
         &self,
         initial_inputs: &[&Tensor],
         before_block: F,
@@ -296,7 +169,7 @@ impl GraphControlFlowOps for Graph {
         }
     }
 
-    fn for_loop<F>(
+    pub fn for_loop<F>(
         &self,
         lower_bound: &Tensor,
         upper_bound: &Tensor,
@@ -348,7 +221,7 @@ impl GraphControlFlowOps for Graph {
         }
     }
 
-    fn for_loop_with_iterations<F>(
+    pub fn for_loop_with_iterations<F>(
         &self,
         num_iterations: &Tensor,
         initial_body_arguments: &[&Tensor],

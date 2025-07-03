@@ -762,3 +762,176 @@ impl GraphFourierTransformOpsExtension for Graph {
         self
     }
 }
+
+impl Graph {
+    // Inherent wrappers around Fourier-transform helpers --------------------
+    pub fn fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::fast_fourier_transform(self, tensor, axes, descriptor, name)
+    }
+
+    pub fn fft_with_axes_tensor(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::fast_fourier_transform_with_tensor_axes(
+            self,
+            tensor,
+            axes_tensor,
+            descriptor,
+            name,
+        )
+    }
+
+    pub fn r2c_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::real_to_complex_fft(self, tensor, axes, descriptor, name)
+    }
+
+    pub fn r2c_fft_with_axes_tensor(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::real_to_complex_fft_with_tensor_axes(
+            self,
+            tensor,
+            axes_tensor,
+            descriptor,
+            name,
+        )
+    }
+
+    pub fn c2r_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::complex_to_real_fft(self, tensor, axes, descriptor, name)
+    }
+
+    pub fn c2r_fft_with_axes_tensor(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::complex_to_real_fft_with_tensor_axes(
+            self,
+            tensor,
+            axes_tensor,
+            descriptor,
+            name,
+        )
+    }
+
+    pub fn r2h_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::real_to_hermitean_fft(self, tensor, axes, descriptor, name)
+    }
+
+    pub fn r2h_fft_with_axes_tensor(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::real_to_hermitean_fft_with_tensor_axes(
+            self,
+            tensor,
+            axes_tensor,
+            descriptor,
+            name,
+        )
+    }
+
+    pub fn h2r_fft(
+        &self,
+        tensor: &Tensor,
+        axes: &[i64],
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::hermitean_to_real_fft(self, tensor, axes, descriptor, name)
+    }
+
+    pub fn h2r_fft_with_axes_tensor(
+        &self,
+        tensor: &Tensor,
+        axes_tensor: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::hermitean_to_real_fft_with_tensor_axes(
+            self,
+            tensor,
+            axes_tensor,
+            descriptor,
+            name,
+        )
+    }
+
+    // Legacy wrappers --------------------------------------------------------
+    pub fn forward_fft(
+        &self,
+        real: &Tensor,
+        imaginary: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        GraphFourierTransformOps::forward_fft(self, real, imaginary, descriptor, name)
+    }
+
+    pub fn inverse_fft(
+        &self,
+        real: &Tensor,
+        imaginary: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        GraphFourierTransformOps::inverse_fft(self, real, imaginary, descriptor, name)
+    }
+
+    pub fn forward_real_fft(
+        &self,
+        real: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
+        GraphFourierTransformOps::forward_real_fft(self, real, descriptor, name)
+    }
+
+    pub fn inverse_real_fft(
+        &self,
+        real: &Tensor,
+        imaginary: &Tensor,
+        descriptor: &FFTDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        GraphFourierTransformOps::inverse_real_fft(self, real, imaginary, descriptor, name)
+    }
+}

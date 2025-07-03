@@ -1,7 +1,7 @@
 use metal::{Device, MTLResourceOptions};
 use mpsgraph::{
-    CompilationDescriptor, DataType, Executable, ExecutableExecutionDescriptor, Graph,
-    GraphCallOps, Shape, ShapedType, TensorData,
+    CompilationDescriptor, DataType, Executable, ExecutableExecutionDescriptor, Graph, Shape,
+    ShapedType, TensorData,
 };
 use ndarray::Array2;
 use objc2::rc::Retained;

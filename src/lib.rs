@@ -21,14 +21,9 @@ pub mod prelude {
     pub use crate::tensor::Tensor;
     pub use crate::tensor_data::TensorData;
 
-    // Operation traits
-    pub use crate::activation_ops::{GraphActivationOps, GraphActivationOpsExtension};
-    pub use crate::arithmetic_ops::{GraphArithmeticOps, GraphArithmeticOpsExtension};
-    pub use crate::call_ops::GraphCallOps;
-    pub use crate::control_flow_ops::GraphControlFlowOps;
-    pub use crate::gradient_ops::{GraphGradientOps, GraphGradientOpsExtension};
+    // Operation traits now inherent on `Graph`; no trait re-exports needed.
+    // control-flow helpers are inherent on Graph.
     pub use crate::reduction_ops::{GraphReductionOps, GraphReductionOpsExtension};
-    pub use crate::tensor_shape_ops::{GraphTensorShapeOps, GraphTensorShapeOpsExtension};
 
     // Re-export objc2 types that users would need
     pub use objc2::rc::Retained;
@@ -62,8 +57,6 @@ pub mod gradient_ops;
 pub mod im2col_ops;
 pub mod linear_algebra_ops;
 pub mod loss_ops;
-pub mod matrix_inverse_ops;
-pub mod matrix_ops;
 pub mod memory_ops;
 pub mod non_maximum_suppression_ops;
 pub mod non_zero_ops;
@@ -100,31 +93,19 @@ pub use shape::Shape;
 pub use tensor::Tensor;
 pub use tensor_data::TensorData;
 
-pub use activation_ops::{GraphActivationOps, GraphActivationOpsExtension};
-pub use arithmetic_ops::{GraphArithmeticOps, GraphArithmeticOpsExtension};
-pub use call_ops::GraphCallOps;
+// Arithmetic and cumulative helpers are inherent on `Graph` now – no trait re-export.
 pub use command_buffer::{CommandBuffer, CommandBufferStatus};
-pub use control_flow_ops::GraphControlFlowOps;
 pub use convolution_ops::{
     Convolution2DOpDescriptor, Convolution3DOpDescriptor, ConvolutionDataLayout, PaddingMode,
     WeightsLayout,
 };
-pub use convolution_transpose_ops::GraphConvolutionTransposeOps;
-pub use cumulative_ops::GraphCumulativeOps;
 pub use data_types::{DataTypeAttributeValue, ExecutionMode, ShapeDescriptor, ShapedType, Type};
 pub use depthwise_convolution_ops::{
     DepthwiseConvolution2DOpDescriptor, DepthwiseConvolution3DOpDescriptor,
 };
-pub use fourier_transform_ops::{
-    FFTDescriptor, FFTScalingMode, GraphFourierTransformOps, GraphFourierTransformOpsExtension,
-};
-pub use gather_ops::{GraphGatherOps, GraphGatherOpsExtension};
-pub use gradient_ops::{GraphGradientOps, GraphGradientOpsExtension};
+pub use fourier_transform_ops::{FFTDescriptor, FFTScalingMode};
 pub use im2col_ops::ImToColOpDescriptor;
-pub use linear_algebra_ops::{GraphLinearAlgebraOps, GraphLinearAlgebraOpsExtension};
-pub use loss_ops::{GraphLossOps, GraphLossOpsExtension, LossReductionType};
-pub use matrix_inverse_ops::{GraphMatrixInverseOps, GraphMatrixInverseOpsExtension};
-pub use matrix_ops::GraphMatrixOps;
+pub use loss_ops::LossReductionType;
 pub use memory_ops::{GraphMemoryOps, GraphMemoryOpsExtension};
 pub use non_maximum_suppression_ops::{
     GraphNonMaximumSuppressionOps, GraphNonMaximumSuppressionOpsExtension,
@@ -150,7 +131,6 @@ pub use scatter_nd_ops::{GraphScatterNdOps, GraphScatterNdOpsExtension, ScatterM
 pub use sort_ops::{GraphSortOps, GraphSortOpsExtension};
 pub use sparse_ops::{CreateSparseOpDescriptor, SparseStorageType};
 pub use stencil_ops::{BoundaryMode, ReductionMode, StencilOpDescriptor};
-pub use tensor_shape_ops::GraphTensorShapeOps;
 pub use top_k_ops::{GraphTopKOps, GraphTopKOpsExtension};
 pub use utils::buffer;
 pub use utils::tensor as tensor_utils;
@@ -160,3 +140,5 @@ mod tests {
     mod data_types_tests;
     mod executable_tests;
 }
+
+pub mod matrix_inverse_ops;
