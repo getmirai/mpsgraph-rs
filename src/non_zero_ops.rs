@@ -6,33 +6,10 @@ use crate::graph::Graph;
 use crate::tensor::Tensor;
 
 /// Trait defining NonZero operations for a Graph
-pub trait GraphNonZeroOps {
-    /// Computes the indices of the non-zero elements of the input tensor.
-    ///
-    /// The indices are returned as a two-dimensional tensor of size `[number_of_nonzeros, input_rank]`.
-    /// Each row in the result contains indices of a nonzero elements in input.
-    /// For example:
-    /// ```text
-    /// tensor = [[ 1,  0, 3],
-    ///           [ 0, 10, 0]]
-    /// indices = [[ 0, 0],
-    ///            [ 0, 2],
-    ///            [ 1, 1]]
-    /// ```
-    ///
-    /// # Parameters
-    ///
-    /// * `tensor` - An Tensor of which to compute the non-zero indices.
-    /// * `name` - The name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor containing indices in signed int32 data type.
-    fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor>;
-}
+
 
 /// Implementation of NonZero operations for Graph
-impl GraphNonZeroOps for Graph {
+impl Graph {
     /// Computes the indices of the non-zero elements of the input tensor.
     ///
     /// The indices are returned as a two-dimensional tensor of size `[number_of_nonzeros, input_rank]`.
@@ -54,7 +31,7 @@ impl GraphNonZeroOps for Graph {
     /// # Returns
     ///
     /// A valid Tensor containing indices in signed int32 data type.
-    fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
@@ -71,14 +48,3 @@ impl GraphNonZeroOps for Graph {
     }
 }
 
-/// Extension trait for easier access to NonZero operations
-pub trait GraphNonZeroOpsExtension {
-    /// Get access to non-zero operations
-    fn non_zero_ops(&self) -> &dyn GraphNonZeroOps;
-}
-
-impl GraphNonZeroOpsExtension for Graph {
-    fn non_zero_ops(&self) -> &dyn GraphNonZeroOps {
-        self
-    }
-}

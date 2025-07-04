@@ -214,7 +214,7 @@ impl DepthwiseConvolution3DOpDescriptor {
 }
 
 /// Helper function to create an NSArray of NSNumbers from a slice of usizes
-fn create_number_array(values: &[usize]) -> Retained<NSArray<NSNumber>> {
+pub fn create_number_array(values: &[usize]) -> Retained<NSArray<NSNumber>> {
     // Create NSNumber objects
     let numbers: Vec<Retained<NSNumber>> = values
         .iter()

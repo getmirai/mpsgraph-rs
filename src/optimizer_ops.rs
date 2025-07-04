@@ -33,324 +33,7 @@ impl VariableOp {
     }
 }
 
-/// Optimizer operations for Graph
-pub trait GraphOptimizerOps {
-    /// Creates a stochastic gradient descent update operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `learning_rate` - Tensor containing the learning rate.
-    /// * `values` - Tensor containing the values to be updated.
-    /// * `gradient` - Tensor containing the gradient of the loss with respect to the values.
-    /// * `name` - Optional name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A tensor representing the updated values.
-    fn sgd_update(
-        &self,
-        learning_rate: &Tensor,
-        values: &Tensor,
-        gradient: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an Adam update operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `learning_rate` - Current learning rate for the Adam update.
-    /// * `beta1` - Exponential decay rate for the first moment estimates.
-    /// * `beta2` - Exponential decay rate for the second moment estimates.
-    /// * `epsilon` - Small constant for numerical stability.
-    /// * `beta1_power` - Beta1 raised to the power of time step t.
-    /// * `beta2_power` - Beta2 raised to the power of time step t.
-    /// * `values` - Values to be updated.
-    /// * `momentum` - Tensor to store the first moment estimates.
-    /// * `velocity` - Tensor to store the second moment estimates.
-    /// * `maximum_velocity` - Optional tensor to store the clamped second moment estimates.
-    /// * `gradient` - Gradient to be used in the update.
-    /// * `name` - Optional name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A tensor containing the updated values.
-    fn adam_update(
-        &self,
-        learning_rate: &Tensor,
-        beta1: &Tensor,
-        beta2: &Tensor,
-        epsilon: &Tensor,
-        beta1_power: &Tensor,
-        beta2_power: &Tensor,
-        values: &Tensor,
-        momentum: &Tensor,
-        velocity: &Tensor,
-        maximum_velocity: Option<&Tensor>,
-        gradient: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a RMSProp update operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `current_learning_rate` - Current learning rate.
-    /// * `beta1` - RMSProp beta1 value (decay rate).
-    /// * `beta2` - RMSProp beta2 value (decay rate for velocity).
-    /// * `epsilon` - Small constant for numerical stability.
-    /// * `values` - Values to be updated.
-    /// * `momentum` - Tensor to store momentum.
-    /// * `velocity` - Tensor to store velocity.
-    /// * `maximum_velocity` - Optional tensor to clamp velocity.
-    /// * `gradient` - Gradient tensor.
-    /// * `centered` - Whether to use centered RMSProp.
-    /// * `name` - Optional name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A tensor containing the updated values.
-    fn rmsprop_update(
-        &self,
-        current_learning_rate: &Tensor,
-        beta1: &Tensor,
-        beta2: &Tensor,
-        epsilon: &Tensor,
-        values: &Tensor,
-        momentum: &Tensor,
-        velocity: &Tensor,
-        maximum_velocity: Option<&Tensor>,
-        gradient: &Tensor,
-        centered: bool,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an L2 norm gradient clipping operation.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Tensor to be clipped.
-    /// * `norm_limit` - L2 norm limit.
-    /// * `name` - Optional name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A tensor containing the clipped values.
-    fn l2_norm_gradient_clipping(
-        &self,
-        tensor: &Tensor,
-        norm_limit: f32,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an operation to multiply gradients by a scalar.
-    ///
-    /// # Arguments
-    ///
-    /// * `learning_rate` - Learning rate tensor.
-    /// * `gradient` - Gradient tensor.
-    /// * `name` - Optional name for the operation.
-    ///
-    /// # Returns
-    ///
-    /// A tensor containing the scaled gradients.
-    fn multiply_gradients_by_scalar(
-        &self,
-        learning_rate: &Tensor,
-        gradient: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-}
-
-/// Implementation of optimizer operations for Graph
-impl GraphOptimizerOps for Graph {
-    fn sgd_update(
-        &self,
-        learning_rate: &Tensor,
-        values: &Tensor,
-        gradient: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                SGDWithLearningRate: learning_rate,
-                values: values,
-                gradient: gradient,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create SGD operation");
-            } else {
-                // This is a computational method that returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn adam_update(
-        &self,
-        learning_rate: &Tensor,
-        beta1: &Tensor,
-        beta2: &Tensor,
-        epsilon: &Tensor,
-        beta1_power: &Tensor,
-        beta2_power: &Tensor,
-        values: &Tensor,
-        momentum: &Tensor,
-        velocity: &Tensor,
-        maximum_velocity: Option<&Tensor>,
-        gradient: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let maximum_velocity_ptr = match maximum_velocity {
-                Some(mv) => mv as *const _,
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                AdamWithLearningRate: learning_rate,
-                beta1: beta1,
-                beta2: beta2,
-                epsilon: epsilon,
-                beta1Power: beta1_power,
-                beta2Power: beta2_power,
-                values: values,
-                momentum: momentum,
-                velocity: velocity,
-                maximumVelocity: maximum_velocity_ptr,
-                gradient: gradient,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create Adam update operation");
-            } else {
-                // This is a computational method that returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn rmsprop_update(
-        &self,
-        current_learning_rate: &Tensor,
-        beta1: &Tensor,
-        beta2: &Tensor,
-        epsilon: &Tensor,
-        values: &Tensor,
-        momentum: &Tensor,
-        velocity: &Tensor,
-        maximum_velocity: Option<&Tensor>,
-        gradient: &Tensor,
-        centered: bool,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let maximum_velocity_ptr = match maximum_velocity {
-                Some(mv) => mv as *const _,
-                None => std::ptr::null(),
-            };
-
-            let result: *mut Tensor = msg_send![
-                self,
-                RMSPropWithLearningRate: current_learning_rate,
-                beta1: beta1,
-                beta2: beta2,
-                epsilon: epsilon,
-                values: values,
-                momentum: momentum,
-                velocity: velocity,
-                maximumVelocity: maximum_velocity_ptr,
-                gradient: gradient,
-                centered: centered,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create RMSProp update operation");
-            } else {
-                // This is a computational method that returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn l2_norm_gradient_clipping(
-        &self,
-        tensor: &Tensor,
-        norm_limit: f32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                l2NormGradientClippingWithTensor: tensor,
-                normLimit: norm_limit as f64,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create L2 norm gradient clipping operation");
-            } else {
-                // This is a computational method that returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-
-    fn multiply_gradients_by_scalar(
-        &self,
-        learning_rate: &Tensor,
-        gradient: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let result: *mut Tensor = msg_send![
-                self,
-                multiplyGradientsByScalarWithLearningRate: learning_rate,
-                gradient: gradient,
-                name: name_ptr
-            ];
-
-            if result.is_null() {
-                panic!("Failed to create multiply gradients by scalar operation");
-            } else {
-                // This is a computational method that returns an autoreleased object
-                Retained::retain_autoreleased(result).unwrap()
-            }
-        }
-    }
-}
-
+/// Inherent implementation of optimizer update operations for Graph
 impl Graph {
     /// Stochastic gradient descent optimization.
     ///
@@ -641,6 +324,192 @@ impl Graph {
 
             // This is a computational method that returns an autoreleased object
             Retained::retain_autoreleased(result).unwrap()
+        }
+    }
+
+    pub fn sgd_update(
+        &self,
+        learning_rate: &Tensor,
+        values: &Tensor,
+        gradient: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                SGDWithLearningRate: learning_rate,
+                values: values,
+                gradient: gradient,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create SGD operation");
+            } else {
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
+        }
+    }
+
+    pub fn adam_update(
+        &self,
+        learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        beta1_power: &Tensor,
+        beta2_power: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let maximum_velocity_ptr = match maximum_velocity {
+                Some(mv) => mv as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                AdamWithLearningRate: learning_rate,
+                beta1: beta1,
+                beta2: beta2,
+                epsilon: epsilon,
+                beta1Power: beta1_power,
+                beta2Power: beta2_power,
+                values: values,
+                momentum: momentum,
+                velocity: velocity,
+                maximumVelocity: maximum_velocity_ptr,
+                gradient: gradient,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create Adam update operation");
+            } else {
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
+        }
+    }
+
+    pub fn rmsprop_update(
+        &self,
+        current_learning_rate: &Tensor,
+        beta1: &Tensor,
+        beta2: &Tensor,
+        epsilon: &Tensor,
+        values: &Tensor,
+        momentum: &Tensor,
+        velocity: &Tensor,
+        maximum_velocity: Option<&Tensor>,
+        gradient: &Tensor,
+        centered: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let maximum_velocity_ptr = match maximum_velocity {
+                Some(mv) => mv as *const _,
+                None => std::ptr::null(),
+            };
+
+            let result: *mut Tensor = msg_send![
+                self,
+                RMSPropWithLearningRate: current_learning_rate,
+                beta1: beta1,
+                beta2: beta2,
+                epsilon: epsilon,
+                values: values,
+                momentum: momentum,
+                velocity: velocity,
+                maximumVelocity: maximum_velocity_ptr,
+                gradient: gradient,
+                centered: centered,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create RMSProp update operation");
+            } else {
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
+        }
+    }
+
+    pub fn l2_norm_gradient_clipping(
+        &self,
+        tensor: &Tensor,
+        norm_limit: f32,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                l2NormGradientClippingWithTensor: tensor,
+                normLimit: norm_limit as f64,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create L2 norm gradient clipping operation");
+            } else {
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
+        }
+    }
+
+    pub fn multiply_gradients_by_scalar(
+        &self,
+        learning_rate: &Tensor,
+        gradient: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            let result: *mut Tensor = msg_send![
+                self,
+                multiplyGradientsByScalarWithLearningRate: learning_rate,
+                gradient: gradient,
+                name: name_ptr
+            ];
+
+            if result.is_null() {
+                panic!("Failed to create multiply gradients by scalar operation");
+            } else {
+                // This is a computational method that returns an autoreleased object
+                Retained::retain_autoreleased(result).unwrap()
+            }
         }
     }
 }

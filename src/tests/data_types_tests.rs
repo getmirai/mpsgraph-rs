@@ -23,7 +23,7 @@ fn test_shaped_type() {
     let unranked = ShapedType::unranked_tensor_type(DataType::Int32);
     // Just check that we get a value
     let _data_type = unranked.data_type();
-    assert_eq!(unranked.rank(), 3);
+    assert_eq!(unranked.rank(), 0);
 
     let rank_3 = ShapedType::tensor_type_with_rank(3, DataType::Float16);
     // Just check that we get a value

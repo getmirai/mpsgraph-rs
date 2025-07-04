@@ -3,6 +3,7 @@ use crate::tensor::DataType;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
+use objc2_foundation::{NSArray, NSNumber};
 use objc2_foundation::{NSObjectProtocol, NSString};
 
 extern_class!(
@@ -66,41 +67,39 @@ impl ShapedType {
         }
     }
 
-    /// Returns the shape of this type
+    /// Returns the shape associated with this shaped type by querying the
+    /// Objective-C `shape` property (`MPSShape*`). We then convert the returned
+    /// NSArray<NSNumber> into our Rust `Shape` wrapper just like we do for
+    /// `Tensor::shape()`.
     pub fn shape(&self) -> Shape {
-        // For test purposes, return a fixed shape
-        Shape::tensor3d(2, 3, 4)
+        unsafe {
+            // The Objective-C property returns an NSArray<NSNumber *>
+            let array: Retained<NSArray<NSNumber>> = msg_send![self, shape];
+            Shape::new(&array)
+        }
     }
 
-    /// Returns the data type of this type
+    /// Returns the data type of this shaped type
+    ///
+    /// This fetches the `dataType` property from the underlying Objective-C
+    /// `MPSGraphShapedType` instance and converts it into our Rust `DataType`
+    /// enum using `DataType::from`.
     pub fn data_type(&self) -> DataType {
-        // For test purposes - always return the expected test value
-        if std::ptr::addr_of!(*self.shape()) as usize % 3 == 0 {
-            // This matches tensor_type_with_rank for the test
-            DataType::Float16
-        } else {
-            // All other cases return Int32
-            DataType::Int32
+        unsafe {
+            // Objective-C property – returns an `MPSDataType` (typedef'd as u32)
+            let raw: u32 = msg_send![self, dataType];
+            DataType::from(raw as u64)
         }
     }
 
-    /// Returns the rank of this type (calculated from shape)
+    /// Rank is simply `shape.len()`.
     pub fn rank(&self) -> usize {
-        let shape = self.shape();
-        if shape.dimensions().is_empty() {
-            0
-        } else {
-            shape.dimensions().len()
-        }
+        self.shape().len()
     }
 
-    /// Returns whether this type is ranked (has a specific rank) or unranked
+    /// A shaped type is considered ranked when its shape is non-empty.
     pub fn is_ranked(&self) -> bool {
-        // In a real implementation, we would check if the shape has dimensions
-        // For test purposes, we're making our own behavior for testing
-
-        // Check if the shape has any dimensions
-        !self.shape().dimensions().is_empty()
+        self.rank() > 0
     }
 
     /// Create a tensor type with the specified rank

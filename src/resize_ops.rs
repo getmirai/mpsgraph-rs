@@ -35,8 +35,11 @@ pub enum ResizeNearestRoundingMode {
     RoundToOdd = 5,
 }
 
-/// Trait for resize operations on Graph
-pub trait GraphResizeOps {
+/*
+Removed GraphResizeOps trait and its extension; all methods are now inherent.
+*/
+
+impl Graph {
     /// Creates a Resize operation and returns the result tensor.
     ///
     /// Resamples input images to given size. Result images will be distorted if size is of different aspect ratio.
@@ -50,212 +53,7 @@ pub trait GraphResizeOps {
     ///   - layout: Specifies what layout the provided tensor is in.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object
-    fn resize(
-        &self,
-        images_tensor: &Tensor,
-        size: &Shape,
-        mode: ResizeMode,
-        center_result: bool,
-        align_corners: bool,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation using a tensor for size specification and returns the result tensor.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
-    ///   - mode: The resampling mode to use.
-    ///   - center_result: Controls if the result image is centered on the input image.
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
-    ///   - layout: Specifies what layout the provided tensor is in.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_with_size_tensor(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        mode: ResizeMode,
-        center_result: bool,
-        align_corners: bool,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation using a tensor for size specification and returns the result tensor.
-    ///
-    /// This is a rank-agnostic version that works with tensors of any rank (iOS 17+/macOS 14+).
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
-    ///   - mode: The resampling mode to use.
-    ///   - center_result: Controls if the result image is centered on the input image.
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_rank_agnostic(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        mode: ResizeMode,
-        center_result: bool,
-        align_corners: bool,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation with nearest neighbor sampling and a specific rounding mode.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
-    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling.
-    ///   - center_result: Controls if the result image is centered on the input image.
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
-    ///   - layout: Specifies what layout the provided tensor is in.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_nearest(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        nearest_rounding_mode: ResizeNearestRoundingMode,
-        center_result: bool,
-        align_corners: bool,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation with nearest neighbor sampling and a specific rounding mode.
-    ///
-    /// This is a rank-agnostic version that works with tensors of any rank (iOS 17+/macOS 14+).
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
-    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling.
-    ///   - center_result: Controls if the result image is centered on the input image.
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_nearest_rank_agnostic(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        nearest_rounding_mode: ResizeNearestRoundingMode,
-        center_result: bool,
-        align_corners: bool,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation with bilinear interpolation.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
-    ///   - center_result: Controls if the result image is centered on the input image.
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
-    ///   - layout: Specifies what layout the provided tensor is in.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_bilinear(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        center_result: bool,
-        align_corners: bool,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation with bilinear interpolation.
-    ///
-    /// This is a rank-agnostic version that works with tensors of any rank (iOS 17+/macOS 14+).
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
-    ///   - center_result: Controls if the result image is centered on the input image.
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_bilinear_rank_agnostic(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        center_result: bool,
-        align_corners: bool,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation using explicit scale and offset tensors.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
-    ///   - scale_offset_tensor: 1D float tensor. A 4-element shape as [scaleY, scaleX, offsetY, offsetX]
-    ///   - mode: The resampling mode to use.
-    ///   - layout: Specifies what layout the provided tensor is in.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_with_scale_offset(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        scale_offset_tensor: &Tensor,
-        mode: ResizeMode,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize operation using separate scale and offset tensors.
-    ///
-    /// Available on iOS 17+/macOS 14+.
-    ///
-    /// - Parameters:
-    ///   - images_tensor: Tensor containing input images.
-    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
-    ///   - scale_tensor: 1D float tensor of size equal to rank of input.
-    ///   - offset_tensor: 1D float tensor of size equal to rank of input.
-    ///   - mode: The resampling mode to use.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid Tensor object
-    fn resize_with_separate_scale_offset(
-        &self,
-        images_tensor: &Tensor,
-        size_tensor: &Tensor,
-        scale_tensor: &Tensor,
-        offset_tensor: &Tensor,
-        mode: ResizeMode,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a Resize gradient operation for backpropagation.
-    ///
-    /// - Parameters:
-    ///   - gradient: Incoming gradient tensor
-    ///   - input: Forward pass input tensor
-    ///   - mode: The resampling mode to use
-    ///   - center_result: Controls if the result image is centered on the input image
-    ///   - align_corners: When true, the result image will have the same value as the input image in the corners
-    ///   - layout: Specifies what layout the provided tensor is in
-    ///   - name: The name for the operation
-    /// - Returns: A valid Tensor object
-    fn resize_gradient(
-        &self,
-        gradient: &Tensor,
-        input: &Tensor,
-        mode: ResizeMode,
-        center_result: bool,
-        align_corners: bool,
-        layout: TensorNamedDataLayout,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-}
-
-impl GraphResizeOps for Graph {
-    fn resize(
+    pub fn resize(
         &self,
         images_tensor: &Tensor,
         size: &Shape,
@@ -283,7 +81,18 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_with_size_tensor(
+    /// Creates a Resize operation using a tensor for size specification and returns the result tensor.
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
+    ///   - mode: The resampling mode to use.
+    ///   - center_result: Controls if the result image is centered on the input image.
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
+    ///   - layout: Specifies what layout the provided tensor is in.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_with_size_tensor(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -311,7 +120,19 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_rank_agnostic(
+    /// Creates a Resize operation using a tensor for size specification and returns the result tensor.
+    ///
+    /// This is a rank-agnostic version that works with tensors of any rank (iOS 17+/macOS 14+).
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
+    ///   - mode: The resampling mode to use.
+    ///   - center_result: Controls if the result image is centered on the input image.
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_rank_agnostic(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -337,7 +158,18 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_nearest(
+    /// Creates a Resize operation with nearest neighbor sampling and a specific rounding mode.
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
+    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling.
+    ///   - center_result: Controls if the result image is centered on the input image.
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
+    ///   - layout: Specifies what layout the provided tensor is in.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_nearest(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -365,7 +197,19 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_nearest_rank_agnostic(
+    /// Creates a Resize operation with nearest neighbor sampling and a specific rounding mode.
+    ///
+    /// This is a rank-agnostic version that works with tensors of any rank (iOS 17+/macOS 14+).
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
+    ///   - nearest_rounding_mode: The rounding mode to use when using nearest resampling.
+    ///   - center_result: Controls if the result image is centered on the input image.
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_nearest_rank_agnostic(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -391,7 +235,17 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_bilinear(
+    /// Creates a Resize operation with bilinear interpolation.
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
+    ///   - center_result: Controls if the result image is centered on the input image.
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
+    ///   - layout: Specifies what layout the provided tensor is in.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_bilinear(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -417,7 +271,18 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_bilinear_rank_agnostic(
+    /// Creates a Resize operation with bilinear interpolation.
+    ///
+    /// This is a rank-agnostic version that works with tensors of any rank (iOS 17+/macOS 14+).
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
+    ///   - center_result: Controls if the result image is centered on the input image.
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_bilinear_rank_agnostic(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -441,7 +306,17 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_with_scale_offset(
+    /// Creates a Resize operation using explicit scale and offset tensors.
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: 1D Int32 or Int64 tensor. A 2-element shape as [newHeight, newWidth]
+    ///   - scale_offset_tensor: 1D float tensor. A 4-element shape as [scaleY, scaleX, offsetY, offsetX]
+    ///   - mode: The resampling mode to use.
+    ///   - layout: Specifies what layout the provided tensor is in.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_with_scale_offset(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -467,7 +342,19 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_with_separate_scale_offset(
+    /// Creates a Resize operation using separate scale and offset tensors.
+    ///
+    /// Available on iOS 17+/macOS 14+.
+    ///
+    /// - Parameters:
+    ///   - images_tensor: Tensor containing input images.
+    ///   - size_tensor: The target size of the result tensor. 1D Int32 or Int64 tensor of size equal to rank of input.
+    ///   - scale_tensor: 1D float tensor of size equal to rank of input.
+    ///   - offset_tensor: 1D float tensor of size equal to rank of input.
+    ///   - mode: The resampling mode to use.
+    ///   - name: The name for the operation.
+    /// - Returns: A valid Tensor object
+    pub fn resize_with_separate_scale_offset(
         &self,
         images_tensor: &Tensor,
         size_tensor: &Tensor,
@@ -493,7 +380,18 @@ impl GraphResizeOps for Graph {
         }
     }
 
-    fn resize_gradient(
+    /// Creates a Resize gradient operation for backpropagation.
+    ///
+    /// - Parameters:
+    ///   - gradient: Incoming gradient tensor
+    ///   - input: Forward pass input tensor
+    ///   - mode: The resampling mode to use
+    ///   - center_result: Controls if the result image is centered on the input image
+    ///   - align_corners: When true, the result image will have the same value as the input image in the corners
+    ///   - layout: Specifies what layout the provided tensor is in
+    ///   - name: The name for the operation
+    /// - Returns: A valid Tensor object
+    pub fn resize_gradient(
         &self,
         gradient: &Tensor,
         input: &Tensor,

@@ -5,71 +5,56 @@ use objc2_foundation::NSString;
 use crate::graph::Graph;
 use crate::tensor::{DataType, Tensor};
 
-/// Trait for performing quantization operations on a graph
-pub trait GraphQuantizationOps {
-    fn dequantize_with_scale_tensor(
+impl Graph {
+    /// Quantize a floating-point tensor to int8/uint8 using scale and zero-point scalars.
+    pub fn quantize(
         &self,
         tensor: &Tensor,
-        scale_tensor: &Tensor,
+        scale: f64,
+        zero_point: f64,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    fn dequantize_with_scale_tensor_and_zero_point_tensor(
-        &self,
-        tensor: &Tensor,
-        scale_tensor: &Tensor,
-        zero_point_tensor: &Tensor,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-}
-
-/// Implementation of quantization operations for Graph
-impl GraphQuantizationOps for Graph {
-    fn dequantize_with_scale_tensor(
-        &self,
-        tensor: &Tensor,
-        scale_tensor: &Tensor,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![
-                self,
-                dequantizeTensor: tensor,
-                scaleTensor: scale_tensor,
+            let result: Retained<Tensor> = msg_send![self,
+                quantizeTensor: tensor,
+                scale: scale,
+                zeroPoint: zero_point,
                 dataType: data_type as u32,
                 name: name_ptr
-            ]
+            ];
+            result
         }
     }
 
-    fn dequantize_with_scale_tensor_and_zero_point_tensor(
+    /// Dequantize an int8/uint8 tensor to float using scalar scale and zero-point.
+    pub fn dequantize(
         &self,
         tensor: &Tensor,
-        scale_tensor: &Tensor,
-        zero_point_tensor: &Tensor,
+        scale: f64,
+        zero_point: f64,
         data_type: DataType,
         name: Option<&str>,
-    ) -> Option<Retained<Tensor>> {
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![
-                self,
+            let result: Retained<Tensor> = msg_send![self,
                 dequantizeTensor: tensor,
-                scaleTensor: scale_tensor,
-                zeroPointTensor: zero_point_tensor,
+                scale: scale,
+                zeroPoint: zero_point,
                 dataType: data_type as u32,
                 name: name_ptr
-            ]
+            ];
+            result
         }
     }
 }
+
+//

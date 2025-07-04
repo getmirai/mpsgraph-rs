@@ -8,280 +8,10 @@ use crate::graph::Graph;
 use crate::tensor::Tensor;
 
 /// Trait for normalization operations on Graph
-pub trait GraphNormalizationOps {
-    /// Returns the mean of the input tensor along the specified axes.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - A list of axes over which to perform the reduction
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn mean(&self, tensor: &Retained<Tensor>, axes: &[i64], name: Option<&str>)
-        -> Retained<Tensor>;
 
-    /// Returns the variance of the input tensor along the specified axes when the mean has been precomputed.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `mean_tensor` - The precomputed mean tensor
-    /// * `axes` - A list of axes over which to perform the reduction
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn variance_with_mean(
-        &self,
-        tensor: &Retained<Tensor>,
-        mean_tensor: &Retained<Tensor>,
-        axes: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
 
-    /// Returns the variance of the input tensor along the specified axes.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - A list of axes over which to perform the reduction
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn variance(
-        &self,
-        tensor: &Retained<Tensor>,
-        axes: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a batch normalization operation and returns the result tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `mean` - The mean tensor
-    /// * `variance` - The variance tensor
-    /// * `gamma` - The tensor used to scale the normalized result
-    /// * `beta` - The tensor used to bias the normalized result
-    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn normalize(
-        &self,
-        tensor: &Retained<Tensor>,
-        mean: &Retained<Tensor>,
-        variance: &Retained<Tensor>,
-        gamma: Option<&Retained<Tensor>>,
-        beta: Option<&Retained<Tensor>>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a normalization gamma-gradient operation and returns the result tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `incoming_gradient` - The incoming original result tensor gradient
-    /// * `source` - The original input source in forward direction
-    /// * `mean` - The mean tensor
-    /// * `variance` - The variance tensor
-    /// * `axes` - The axes of normalization
-    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn normalization_gamma_gradient(
-        &self,
-        incoming_gradient: &Retained<Tensor>,
-        source: &Retained<Tensor>,
-        mean: &Retained<Tensor>,
-        variance: &Retained<Tensor>,
-        axes: &[i64],
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a normalization beta-gradient operation and returns the result tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `incoming_gradient` - The incoming original result tensor gradient
-    /// * `source` - The original input source in forward direction
-    /// * `axes` - The axes of normalization
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn normalization_beta_gradient(
-        &self,
-        incoming_gradient: &Retained<Tensor>,
-        source: &Retained<Tensor>,
-        axes: &[i64],
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a normalization input gradient operation and returns the result tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `incoming_gradient` - The incoming original result tensor gradient
-    /// * `source` - The original input source in forward direction
-    /// * `mean` - The mean tensor
-    /// * `variance` - The variance tensor
-    /// * `gamma` - The gamma tensor
-    /// * `gamma_gradient` - The gamma gradient tensor
-    /// * `beta_gradient` - The beta gradient tensor
-    /// * `axes` - The axes of normalization
-    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn normalization_gradient(
-        &self,
-        incoming_gradient: &Retained<Tensor>,
-        source: &Retained<Tensor>,
-        mean: &Retained<Tensor>,
-        variance: &Retained<Tensor>,
-        gamma: Option<&Retained<Tensor>>,
-        gamma_gradient: Option<&Retained<Tensor>>,
-        beta_gradient: Option<&Retained<Tensor>>,
-        axes: &[i64],
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a layer normalization operation and returns the result tensor.
-    ///
-    /// # Arguments
-    ///
-    /// * `source` - The input tensor
-    /// * `axes` - The axes of normalization
-    /// * `gamma` - The tensor used to scale the normalized result
-    /// * `beta` - The tensor used to bias the normalized result
-    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn layer_normalization(
-        &self,
-        source: &Tensor,
-        axes: &[i64],
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    /// Creates a layer normalization gradient operation and returns the result tensors.
-    ///
-    /// # Arguments
-    ///
-    /// * `incoming_gradient` - The incoming original result tensor gradient
-    /// * `source` - The original input source in forward direction
-    /// * `axes` - The axes of normalization
-    /// * `gamma` - The gamma tensor
-    /// * `beta` - The beta tensor
-    /// * `epsilon` - A small value to add to the variance when normalizing the inputs
-    /// * `name` - An optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A tuple containing the source gradient, gamma gradient, and beta gradient
-    fn layer_normalization_gradient(
-        &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        axes: &[i64],
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> (
-        Option<Retained<Tensor>>,
-        Option<Retained<Tensor>>,
-        Option<Retained<Tensor>>,
-    );
-
-    fn instance_normalization(
-        &self,
-        source: &Tensor,
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    fn instance_normalization_gradient(
-        &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> (
-        Option<Retained<Tensor>>,
-        Option<Retained<Tensor>>,
-        Option<Retained<Tensor>>,
-    );
-
-    fn local_response_normalization(
-        &self,
-        source: &Tensor,
-        size: usize,
-        alpha: f64,
-        beta: f64,
-        delta: f64,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    fn batch_normalization(
-        &self,
-        source: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> Option<Retained<Tensor>>;
-
-    fn batch_normalization_gradient(
-        &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
-        mean: &Tensor,
-        variance: &Tensor,
-        gamma: Option<&Tensor>,
-        beta: Option<&Tensor>,
-        epsilon: f32,
-        name: Option<&str>,
-    ) -> (
-        Option<Retained<Tensor>>,
-        Option<Retained<Tensor>>,
-        Option<Retained<Tensor>>,
-    );
-}
-
-impl GraphNormalizationOps for Graph {
-    fn mean(
+impl Graph {
+    pub fn mean(
         &self,
         tensor: &Retained<Tensor>,
         axes: &[i64],
@@ -313,7 +43,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn variance_with_mean(
+    pub fn variance_with_mean(
         &self,
         tensor: &Retained<Tensor>,
         mean_tensor: &Retained<Tensor>,
@@ -347,7 +77,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn variance(
+    pub fn variance(
         &self,
         tensor: &Retained<Tensor>,
         axes: &[i64],
@@ -379,7 +109,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn normalize(
+    pub fn normalize(
         &self,
         tensor: &Retained<Tensor>,
         mean: &Retained<Tensor>,
@@ -418,7 +148,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn normalization_gamma_gradient(
+    pub fn normalization_gamma_gradient(
         &self,
         incoming_gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
@@ -458,7 +188,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn normalization_beta_gradient(
+    pub fn normalization_beta_gradient(
         &self,
         incoming_gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
@@ -492,7 +222,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn normalization_gradient(
+    pub fn normalization_gradient(
         &self,
         incoming_gradient: &Retained<Tensor>,
         source: &Retained<Tensor>,
@@ -542,7 +272,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn layer_normalization(
+    pub fn layer_normalization(
         &self,
         source: &Tensor,
         axes: &[i64],
@@ -571,7 +301,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn layer_normalization_gradient(
+    pub fn layer_normalization_gradient(
         &self,
         incoming_gradient: &Tensor,
         source: &Tensor,
@@ -614,7 +344,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn instance_normalization(
+    pub fn instance_normalization(
         &self,
         source: &Tensor,
         gamma: Option<&Tensor>,
@@ -640,7 +370,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn instance_normalization_gradient(
+    pub fn instance_normalization_gradient(
         &self,
         incoming_gradient: &Tensor,
         source: &Tensor,
@@ -680,7 +410,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn local_response_normalization(
+    pub fn local_response_normalization(
         &self,
         source: &Tensor,
         size: usize,
@@ -708,7 +438,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn batch_normalization(
+    pub fn batch_normalization(
         &self,
         source: &Tensor,
         mean: &Tensor,
@@ -738,7 +468,7 @@ impl GraphNormalizationOps for Graph {
         }
     }
 
-    fn batch_normalization_gradient(
+    pub fn batch_normalization_gradient(
         &self,
         incoming_gradient: &Tensor,
         source: &Tensor,

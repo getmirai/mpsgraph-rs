@@ -97,331 +97,12 @@ impl FFTDescriptor {
 }
 
 /// Trait for performing Fourier transform operations on a graph
-pub trait GraphFourierTransformOps {
-    /// Creates a fast Fourier transform operation
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Tensor to transform (complex tensor)
-    /// * `axes` - Axes along which to apply the transform
-    /// * `descriptor` - FFT descriptor specifying parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A transformed tensor
-    ///
-    /// # Availability
-    ///
-    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    fn fast_fourier_transform(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
 
-    /// Creates a fast Fourier transform operation with axes specified by a tensor
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Tensor to transform (complex tensor)
-    /// * `axes_tensor` - Tensor containing the axes along which to apply the transform
-    /// * `descriptor` - FFT descriptor specifying parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A transformed tensor
-    ///
-    /// # Availability
-    ///
-    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    fn fast_fourier_transform_with_tensor_axes(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a real-to-complex Fast Fourier Transform.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Input tensor (real tensor)
-    /// * `axes` - Axes along which to perform the FFT
-    /// * `descriptor` - Descriptor for the FFT operation
-    /// * `name` - The name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object or None if error
-    fn real_to_complex_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a real-to-complex Fast Fourier Transform using tensor axes.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Input tensor (real tensor)
-    /// * `axes_tensor` - Tensor containing the axes along which to perform the FFT
-    /// * `descriptor` - Descriptor for the FFT operation
-    /// * `name` - The name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object or None if error
-    fn real_to_complex_fft_with_tensor_axes(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a complex-to-real Fast Fourier Transform.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Input tensor (complex tensor with alternating real and imaginary components)
-    /// * `axes` - Axes along which to perform the FFT
-    /// * `descriptor` - Descriptor for the FFT operation
-    /// * `name` - The name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object or None if error
-    fn complex_to_real_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a complex-to-real Fast Fourier Transform using tensor axes.
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Input tensor (complex tensor with alternating real and imaginary components)
-    /// * `axes_tensor` - Tensor containing the axes along which to perform the FFT
-    /// * `descriptor` - Descriptor for the FFT operation
-    /// * `name` - The name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object or None if error
-    fn complex_to_real_fft_with_tensor_axes(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a real-to-Hermitean fast Fourier transform operation
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Real tensor to transform
-    /// * `axes` - Axes along which to apply the transform
-    /// * `descriptor` - FFT descriptor specifying parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A complex tensor in Hermitean format
-    ///
-    /// # Availability
-    ///
-    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    fn real_to_hermitean_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a real-to-Hermitean fast Fourier transform operation with axes specified by a tensor
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Real tensor to transform
-    /// * `axes_tensor` - Tensor containing the axes along which to apply the transform
-    /// * `descriptor` - FFT descriptor specifying parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A complex tensor in Hermitean format
-    ///
-    /// # Availability
-    ///
-    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    fn real_to_hermitean_fft_with_tensor_axes(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a Hermitean-to-real fast Fourier transform operation
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Complex tensor in Hermitean format to transform
-    /// * `axes` - Axes along which to apply the transform
-    /// * `descriptor` - FFT descriptor specifying parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A real tensor
-    ///
-    /// # Availability
-    ///
-    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    fn hermitean_to_real_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a Hermitean-to-real fast Fourier transform operation with axes specified by a tensor
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - Complex tensor in Hermitean format to transform
-    /// * `axes_tensor` - Tensor containing the axes along which to apply the transform
-    /// * `descriptor` - FFT descriptor specifying parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A real tensor
-    ///
-    /// # Availability
-    ///
-    /// Available since macOS 14.0, iOS 17.0, tvOS 17.0
-    fn hermitean_to_real_fft_with_tensor_axes(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a forward FFT operation using complex-valued input.
-    ///
-    /// # Arguments
-    ///
-    /// * `real` - Tensor with the real part of the input
-    /// * `imaginary` - Tensor with the imaginary part of the input
-    /// * `descriptor` - FFT descriptor specifying the transform parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A tuple of Tensor objects (real_output, imaginary_output).
-    ///
-    /// # Deprecated
-    ///
-    /// This method uses the older API. Consider using `fast_fourier_transform` instead.
-    fn forward_fft(
-        &self,
-        real: &Tensor,
-        imaginary: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
-
-    /// Creates an inverse FFT operation using complex-valued input.
-    ///
-    /// # Arguments
-    ///
-    /// * `real` - Tensor with the real part of the input
-    /// * `imaginary` - Tensor with the imaginary part of the input
-    /// * `descriptor` - FFT descriptor specifying the transform parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A tuple of Tensor objects (real_output, imaginary_output).
-    ///
-    /// # Deprecated
-    ///
-    /// This method uses the older API. Consider using `fast_fourier_transform` instead
-    /// with `descriptor.set_inverse(true)`.
-    fn inverse_fft(
-        &self,
-        real: &Tensor,
-        imaginary: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
-
-    /// Creates a forward FFT operation using real-valued input.
-    ///
-    /// # Arguments
-    ///
-    /// * `real` - Tensor with the real input values
-    /// * `descriptor` - FFT descriptor specifying the transform parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A tuple of Tensor objects (real_output, imaginary_output).
-    ///
-    /// # Deprecated
-    ///
-    /// This method uses the older API. Consider using `real_to_hermitean_fft` instead.
-    fn forward_real_fft(
-        &self,
-        real: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Option<(Retained<Tensor>, Retained<Tensor>)>;
-
-    /// Creates an inverse FFT operation that produces real-valued output.
-    ///
-    /// # Arguments
-    ///
-    /// * `real` - Tensor with the real part of the input
-    /// * `imaginary` - Tensor with the imaginary part of the input
-    /// * `descriptor` - FFT descriptor specifying the transform parameters
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// The real-valued output as an Tensor object.
-    ///
-    /// # Deprecated
-    ///
-    /// This method uses the older API. Consider using `hermitean_to_real_fft` instead.
-    fn inverse_real_fft(
-        &self,
-        real: &Tensor,
-        imaginary: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-}
 
 /// Implementation of Fourier transform operations for Graph
-impl GraphFourierTransformOps for Graph {
+impl Graph {
     /// Creates a fast Fourier transform operation
-    fn fast_fourier_transform(
+    pub fn fast_fourier_transform(
         &self,
         tensor: &Tensor,
         axes: &[i64],
@@ -444,7 +125,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a fast Fourier transform operation with axes specified by a tensor
-    fn fast_fourier_transform_with_tensor_axes(
+    pub fn fast_fourier_transform_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
@@ -463,7 +144,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a real-to-complex Fast Fourier Transform.
-    fn real_to_complex_fft(
+    pub fn real_to_complex_fft(
         &self,
         tensor: &Tensor,
         axes: &[i64],
@@ -486,7 +167,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a real-to-complex Fast Fourier Transform using tensor axes.
-    fn real_to_complex_fft_with_tensor_axes(
+    pub fn real_to_complex_fft_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
@@ -505,7 +186,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a complex-to-real Fast Fourier Transform.
-    fn complex_to_real_fft(
+    pub fn complex_to_real_fft(
         &self,
         tensor: &Tensor,
         axes: &[i64],
@@ -528,7 +209,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a complex-to-real Fast Fourier Transform using tensor axes.
-    fn complex_to_real_fft_with_tensor_axes(
+    pub fn complex_to_real_fft_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
@@ -547,7 +228,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a real-to-Hermitean fast Fourier transform operation
-    fn real_to_hermitean_fft(
+    pub fn real_to_hermitean_fft(
         &self,
         tensor: &Tensor,
         axes: &[i64],
@@ -570,7 +251,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a real-to-Hermitean fast Fourier transform operation with axes specified by a tensor
-    fn real_to_hermitean_fft_with_tensor_axes(
+    pub fn real_to_hermitean_fft_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
@@ -589,7 +270,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a Hermitean-to-real fast Fourier transform operation
-    fn hermitean_to_real_fft(
+    pub fn hermitean_to_real_fft(
         &self,
         tensor: &Tensor,
         axes: &[i64],
@@ -612,7 +293,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a Hermitean-to-real fast Fourier transform operation with axes specified by a tensor
-    fn hermitean_to_real_fft_with_tensor_axes(
+    pub fn hermitean_to_real_fft_with_tensor_axes(
         &self,
         tensor: &Tensor,
         axes_tensor: &Tensor,
@@ -633,7 +314,7 @@ impl GraphFourierTransformOps for Graph {
     // Legacy API methods for backward compatibility
 
     /// Creates a forward FFT operation using complex-valued input.
-    fn forward_fft(
+    pub fn forward_fft(
         &self,
         real: &Tensor,
         imaginary: &Tensor,
@@ -667,7 +348,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates an inverse FFT operation using complex-valued input.
-    fn inverse_fft(
+    pub fn inverse_fft(
         &self,
         real: &Tensor,
         imaginary: &Tensor,
@@ -700,7 +381,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates a forward FFT operation using real-valued input.
-    fn forward_real_fft(
+    pub fn forward_real_fft(
         &self,
         real: &Tensor,
         descriptor: &FFTDescriptor,
@@ -731,7 +412,7 @@ impl GraphFourierTransformOps for Graph {
     }
 
     /// Creates an inverse FFT operation that produces real-valued output.
-    fn inverse_real_fft(
+    pub fn inverse_real_fft(
         &self,
         real: &Tensor,
         imaginary: &Tensor,
@@ -751,187 +432,3 @@ impl GraphFourierTransformOps for Graph {
     }
 }
 
-/// Extension trait for easier access to Fourier transform operations
-pub trait GraphFourierTransformOpsExtension {
-    /// Get access to Fourier transform operations
-    fn fourier_transform_ops(&self) -> &dyn GraphFourierTransformOps;
-}
-
-impl GraphFourierTransformOpsExtension for Graph {
-    fn fourier_transform_ops(&self) -> &dyn GraphFourierTransformOps {
-        self
-    }
-}
-
-impl Graph {
-    // Inherent wrappers around Fourier-transform helpers --------------------
-    pub fn fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::fast_fourier_transform(self, tensor, axes, descriptor, name)
-    }
-
-    pub fn fft_with_axes_tensor(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::fast_fourier_transform_with_tensor_axes(
-            self,
-            tensor,
-            axes_tensor,
-            descriptor,
-            name,
-        )
-    }
-
-    pub fn r2c_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::real_to_complex_fft(self, tensor, axes, descriptor, name)
-    }
-
-    pub fn r2c_fft_with_axes_tensor(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::real_to_complex_fft_with_tensor_axes(
-            self,
-            tensor,
-            axes_tensor,
-            descriptor,
-            name,
-        )
-    }
-
-    pub fn c2r_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::complex_to_real_fft(self, tensor, axes, descriptor, name)
-    }
-
-    pub fn c2r_fft_with_axes_tensor(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::complex_to_real_fft_with_tensor_axes(
-            self,
-            tensor,
-            axes_tensor,
-            descriptor,
-            name,
-        )
-    }
-
-    pub fn r2h_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::real_to_hermitean_fft(self, tensor, axes, descriptor, name)
-    }
-
-    pub fn r2h_fft_with_axes_tensor(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::real_to_hermitean_fft_with_tensor_axes(
-            self,
-            tensor,
-            axes_tensor,
-            descriptor,
-            name,
-        )
-    }
-
-    pub fn h2r_fft(
-        &self,
-        tensor: &Tensor,
-        axes: &[i64],
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::hermitean_to_real_fft(self, tensor, axes, descriptor, name)
-    }
-
-    pub fn h2r_fft_with_axes_tensor(
-        &self,
-        tensor: &Tensor,
-        axes_tensor: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::hermitean_to_real_fft_with_tensor_axes(
-            self,
-            tensor,
-            axes_tensor,
-            descriptor,
-            name,
-        )
-    }
-
-    // Legacy wrappers --------------------------------------------------------
-    pub fn forward_fft(
-        &self,
-        real: &Tensor,
-        imaginary: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
-        GraphFourierTransformOps::forward_fft(self, real, imaginary, descriptor, name)
-    }
-
-    pub fn inverse_fft(
-        &self,
-        real: &Tensor,
-        imaginary: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
-        GraphFourierTransformOps::inverse_fft(self, real, imaginary, descriptor, name)
-    }
-
-    pub fn forward_real_fft(
-        &self,
-        real: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Option<(Retained<Tensor>, Retained<Tensor>)> {
-        GraphFourierTransformOps::forward_real_fft(self, real, descriptor, name)
-    }
-
-    pub fn inverse_real_fft(
-        &self,
-        real: &Tensor,
-        imaginary: &Tensor,
-        descriptor: &FFTDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        GraphFourierTransformOps::inverse_real_fft(self, real, imaginary, descriptor, name)
-    }
-}

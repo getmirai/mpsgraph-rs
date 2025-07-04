@@ -9,7 +9,6 @@ use std::collections::HashMap;
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
-use crate::memory_ops::GraphMemoryOps;
 use crate::operation::Operation;
 use crate::shape::Shape;
 use crate::tensor::{DataType, Tensor};

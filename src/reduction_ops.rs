@@ -7,370 +7,10 @@ use crate::graph::Graph;
 use crate::tensor::Tensor;
 
 /// Trait for reduction operations on Graph
-pub trait GraphReductionOps {
-    /// Creates a reduction sum operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_sum_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
 
-    /// Creates a reduction sum operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_sum_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
 
-    /// Creates a reduction maximum operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_maximum_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction maximum operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_maximum_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction minimum operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_minimum_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction minimum operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_minimum_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction product operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_product_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction product operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_product_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction maximum propagate NaN operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_maximum_propagate_nan_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction maximum propagate NaN operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_maximum_propagate_nan_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction minimum propagate NaN operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_minimum_propagate_nan_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction minimum propagate NaN operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_minimum_propagate_nan_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction AND operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_and_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction AND operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_and_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction OR operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_or_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction OR operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_or_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction XOR operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_xor_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction XOR operation along multiple axes
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axes` - Optional list of axes along which to perform the reduction (None for all axes)
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object
-    fn reduction_xor_with_axes(
-        &self,
-        tensor: &Tensor,
-        axes: Option<&[i64]>,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction argmax operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object containing the indices of maximum values
-    fn reduction_arg_maximum_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a reduction argmin operation along a single axis
-    ///
-    /// # Arguments
-    ///
-    /// * `tensor` - The input tensor
-    /// * `axis` - Axis along which to perform the reduction
-    /// * `name` - Optional name for the operation
-    ///
-    /// # Returns
-    ///
-    /// A valid Tensor object containing the indices of minimum values
-    fn reduction_arg_minimum_with_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-}
-
-impl GraphReductionOps for Graph {
-    fn reduction_sum_with_axis(
+impl Graph {
+    pub fn reduction_sum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -385,7 +25,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_sum_with_axes(
+    pub fn reduction_sum_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -403,7 +43,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_maximum_with_axis(
+    pub fn reduction_maximum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -418,7 +58,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_maximum_with_axes(
+    pub fn reduction_maximum_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -436,7 +76,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_minimum_with_axis(
+    pub fn reduction_minimum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -451,7 +91,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_minimum_with_axes(
+    pub fn reduction_minimum_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -469,7 +109,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_product_with_axis(
+    pub fn reduction_product_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -484,7 +124,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_product_with_axes(
+    pub fn reduction_product_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -502,7 +142,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_maximum_propagate_nan_with_axis(
+    pub fn reduction_maximum_propagate_nan_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -517,7 +157,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_maximum_propagate_nan_with_axes(
+    pub fn reduction_maximum_propagate_nan_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -535,7 +175,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_minimum_propagate_nan_with_axis(
+    pub fn reduction_minimum_propagate_nan_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -550,7 +190,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_minimum_propagate_nan_with_axes(
+    pub fn reduction_minimum_propagate_nan_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -568,7 +208,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_and_with_axis(
+    pub fn reduction_and_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -583,7 +223,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_and_with_axes(
+    pub fn reduction_and_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -601,7 +241,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_or_with_axis(
+    pub fn reduction_or_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -616,7 +256,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_or_with_axes(
+    pub fn reduction_or_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -634,7 +274,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_xor_with_axis(
+    pub fn reduction_xor_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -649,7 +289,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_xor_with_axes(
+    pub fn reduction_xor_with_axes(
         &self,
         tensor: &Tensor,
         axes: Option<&[i64]>,
@@ -667,7 +307,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_arg_maximum_with_axis(
+    pub fn reduction_arg_maximum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -682,7 +322,7 @@ impl GraphReductionOps for Graph {
         }
     }
 
-    fn reduction_arg_minimum_with_axis(
+    pub fn reduction_arg_minimum_with_axis(
         &self,
         tensor: &Tensor,
         axis: i64,
@@ -698,14 +338,3 @@ impl GraphReductionOps for Graph {
     }
 }
 
-/// Extension trait providing a method for Graph to access reduction operations
-pub trait GraphReductionOpsExtension {
-    /// Access reduction operations for this graph
-    fn reduction_ops(&self) -> &dyn GraphReductionOps;
-}
-
-impl GraphReductionOpsExtension for Graph {
-    fn reduction_ops(&self) -> &dyn GraphReductionOps {
-        self
-    }
-}

@@ -252,7 +252,7 @@ impl Pooling4DOpDescriptor {
     }
 
     /// Helper function to create NSArray of NSNumbers from a slice of usize values
-    fn create_number_array(values: &[usize]) -> Retained<NSArray<NSNumber>> {
+    pub fn create_number_array(values: &[usize]) -> Retained<NSArray<NSNumber>> {
         // Create NSNumber objects
         let numbers: Vec<Retained<NSNumber>> = values
             .iter()
@@ -268,169 +268,11 @@ impl Pooling4DOpDescriptor {
 }
 
 /// Graph trait extension for pooling operations
-pub trait GraphPoolingOps {
-    /// Creates a 2D max pooling operation
-    fn max_pooling_2d(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
 
-    /// Creates a 2D max pooling operation that returns indices
-    fn max_pooling_2d_return_indices(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> (Retained<Tensor>, Retained<Tensor>);
-
-    /// Creates a max pooling gradient operation
-    fn max_pooling_2d_gradient(
-        &self,
-        gradient: &Tensor,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a max pooling gradient operation using indices
-    fn max_pooling_2d_gradient_with_indices(
-        &self,
-        gradient: &Tensor,
-        indices: &Tensor,
-        output_shape: &Shape,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a max pooling gradient operation using indices tensor
-    fn max_pooling_2d_gradient_with_indices_tensor(
-        &self,
-        gradient: &Tensor,
-        indices: &Tensor,
-        output_shape_tensor: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a 2D average pooling operation
-    fn avg_pooling_2d(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an average pooling gradient operation
-    fn avg_pooling_2d_gradient(
-        &self,
-        gradient: &Tensor,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a 2D L2 norm pooling operation
-    fn l2_norm_pooling_2d(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an L2 norm pooling gradient operation
-    fn l2_norm_pooling_2d_gradient(
-        &self,
-        gradient: &Tensor,
-        source: &Tensor,
-        descriptor: &Pooling2DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a 4D max pooling operation
-    fn max_pooling_4d(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a 4D max pooling operation that returns indices
-    fn max_pooling_4d_return_indices(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> (Retained<Tensor>, Retained<Tensor>);
-
-    /// Creates a max pooling gradient operation
-    fn max_pooling_4d_gradient(
-        &self,
-        gradient: &Tensor,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a max pooling gradient operation using indices
-    fn max_pooling_4d_gradient_with_indices(
-        &self,
-        gradient: &Tensor,
-        indices: &Tensor,
-        output_shape: &Shape,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a max pooling gradient operation using indices tensor
-    fn max_pooling_4d_gradient_with_indices_tensor(
-        &self,
-        gradient: &Tensor,
-        indices: &Tensor,
-        output_shape_tensor: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a 4D average pooling operation
-    fn avg_pooling_4d(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an average pooling gradient operation
-    fn avg_pooling_4d_gradient(
-        &self,
-        gradient: &Tensor,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates a 4D L2 norm pooling operation
-    fn l2_norm_pooling_4d(
-        &self,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-
-    /// Creates an L2 norm pooling gradient operation
-    fn l2_norm_pooling_4d_gradient(
-        &self,
-        gradient: &Tensor,
-        source: &Tensor,
-        descriptor: &Pooling4DOpDescriptor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-}
 
 /// Implementation of pooling operations for Graph
-impl GraphPoolingOps for Graph {
-    fn max_pooling_2d(
+impl Graph {
+    pub fn max_pooling_2d(
         &self,
         source: &Tensor,
         descriptor: &Pooling2DOpDescriptor,
@@ -451,7 +293,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_2d_return_indices(
+    pub fn max_pooling_2d_return_indices(
         &self,
         source: &Tensor,
         descriptor: &Pooling2DOpDescriptor,
@@ -484,7 +326,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_2d_gradient(
+    pub fn max_pooling_2d_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -502,7 +344,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_2d_gradient_with_indices(
+    pub fn max_pooling_2d_gradient_with_indices(
         &self,
         gradient: &Tensor,
         indices: &Tensor,
@@ -524,7 +366,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_2d_gradient_with_indices_tensor(
+    pub fn max_pooling_2d_gradient_with_indices_tensor(
         &self,
         gradient: &Tensor,
         indices: &Tensor,
@@ -544,7 +386,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn avg_pooling_2d(
+    pub fn avg_pooling_2d(
         &self,
         source: &Tensor,
         descriptor: &Pooling2DOpDescriptor,
@@ -560,7 +402,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn avg_pooling_2d_gradient(
+    pub fn avg_pooling_2d_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -578,7 +420,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn l2_norm_pooling_2d(
+    pub fn l2_norm_pooling_2d(
         &self,
         source: &Tensor,
         descriptor: &Pooling2DOpDescriptor,
@@ -594,7 +436,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn l2_norm_pooling_2d_gradient(
+    pub fn l2_norm_pooling_2d_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -612,7 +454,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_4d(
+    pub fn max_pooling_4d(
         &self,
         source: &Tensor,
         descriptor: &Pooling4DOpDescriptor,
@@ -628,7 +470,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_4d_return_indices(
+    pub fn max_pooling_4d_return_indices(
         &self,
         source: &Tensor,
         descriptor: &Pooling4DOpDescriptor,
@@ -661,7 +503,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_4d_gradient(
+    pub fn max_pooling_4d_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -679,7 +521,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_4d_gradient_with_indices(
+    pub fn max_pooling_4d_gradient_with_indices(
         &self,
         gradient: &Tensor,
         indices: &Tensor,
@@ -701,7 +543,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn max_pooling_4d_gradient_with_indices_tensor(
+    pub fn max_pooling_4d_gradient_with_indices_tensor(
         &self,
         gradient: &Tensor,
         indices: &Tensor,
@@ -721,7 +563,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn avg_pooling_4d(
+    pub fn avg_pooling_4d(
         &self,
         source: &Tensor,
         descriptor: &Pooling4DOpDescriptor,
@@ -737,7 +579,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn avg_pooling_4d_gradient(
+    pub fn avg_pooling_4d_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -755,7 +597,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn l2_norm_pooling_4d(
+    pub fn l2_norm_pooling_4d(
         &self,
         source: &Tensor,
         descriptor: &Pooling4DOpDescriptor,
@@ -771,7 +613,7 @@ impl GraphPoolingOps for Graph {
         }
     }
 
-    fn l2_norm_pooling_4d_gradient(
+    pub fn l2_norm_pooling_4d_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,

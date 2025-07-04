@@ -17,7 +17,39 @@ extern_class!(
     pub struct TensorData;
 );
 
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSMatrix"]
+    pub struct Matrix;
+);
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSVector"]
+    pub struct Vector;
+);
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSNDArray"]
+    pub struct NDArray;
+);
+
+extern_class!(
+    #[derive(Debug, PartialEq, Eq)]
+    #[unsafe(super = NSObject)]
+    #[name = "MPSImageBatch"]
+    pub struct ImageBatch;
+);
+
 unsafe impl NSObjectProtocol for TensorData {}
+unsafe impl NSObjectProtocol for Matrix {}
+unsafe impl NSObjectProtocol for Vector {}
+unsafe impl NSObjectProtocol for NDArray {}
+unsafe impl NSObjectProtocol for ImageBatch {}
 
 impl TensorData {
     /// Creates a new TensorData from a slice of data and a shape dimensions
@@ -192,5 +224,68 @@ impl TensorData {
                 false // Method not available
             }
         }
+    }
+
+    // -------- Additional initializers matching MPSGraphTensorData.h -----------------------------
+
+    pub fn from_matrix(matrix: &Matrix) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, initWithMPSMatrix: matrix];
+            initialized
+        }
+    }
+
+    pub fn from_matrix_rank(matrix: &Matrix, rank: usize) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> =
+                msg_send![allocated, initWithMPSMatrix: matrix, rank: rank];
+            initialized
+        }
+    }
+
+    pub fn from_vector(vector: &Vector) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, initWithMPSVector: vector];
+            initialized
+        }
+    }
+
+    pub fn from_vector_rank(vector: &Vector, rank: usize) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> =
+                msg_send![allocated, initWithMPSVector: vector, rank: rank];
+            initialized
+        }
+    }
+
+    pub fn from_ndarray(ndarray: &NDArray) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, initWithMPSNDArray: ndarray];
+            initialized
+        }
+    }
+
+    pub fn from_image_batch(batch: &ImageBatch) -> Retained<Self> {
+        unsafe {
+            let class = Self::class();
+            let allocated: Allocated<Self> = msg_send![class, alloc];
+            let initialized: Retained<Self> = msg_send![allocated, initWithMPSImageBatch: batch];
+            initialized
+        }
+    }
+
+    /// Returns an `MPSNDArray` representing the tensor data, copying if necessary.
+    pub fn to_ndarray(&self) -> Option<Retained<NDArray>> {
+        unsafe { msg_send![self, mpsndarray] }
     }
 }

@@ -4,7 +4,7 @@ use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
-use crate::convolution_ops::{Convolution2DOpDescriptor, PaddingMode};
+use crate::convolution_ops::Convolution2DOpDescriptor;
 use crate::graph::Graph;
 use crate::shape::Shape;
 use crate::tensor::Tensor;
