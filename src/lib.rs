@@ -24,10 +24,12 @@ pub mod prelude {
     // Operation traits now inherent on `Graph`; no trait re-exports needed.
     // control-flow helpers are inherent on Graph.
 
-
     // Re-export objc2 types that users would need
     pub use objc2::rc::Retained;
     pub use objc2_foundation::NSObject;
+
+    // Extension traits for overloaded methods
+    pub use crate::activation_ops::LeakyReLUAlphaTensorExt;
 }
 
 // Core types
@@ -107,24 +109,14 @@ pub use fourier_transform_ops::{FFTDescriptor, FFTScalingMode};
 pub use im2col_ops::ImToColOpDescriptor;
 pub use loss_ops::LossReductionType;
 
-pub use non_maximum_suppression_ops::{
-
-    NonMaximumSuppressionCoordinateMode,
-};
-
-
+pub use non_maximum_suppression_ops::NonMaximumSuppressionCoordinateMode;
 
 pub use optimizer_ops::VariableOp;
-pub use pooling_ops::{
-
-    PoolingReturnIndicesMode, TensorNamedDataLayout,
-};
+pub use pooling_ops::{PoolingReturnIndicesMode, TensorNamedDataLayout};
 
 pub use random_ops::{RandomDistribution, RandomNormalSamplingMethod, RandomOpDescriptor};
 
-
 pub use rnn_ops::{GRUDescriptor, LSTMDescriptor, RNNActivation, SingleGateRNNDescriptor};
-
 
 pub use sparse_ops::{CreateSparseOpDescriptor, SparseStorageType};
 pub use stencil_ops::{BoundaryMode, ReductionMode, StencilOpDescriptor};
@@ -139,3 +131,6 @@ mod tests {
 }
 
 pub mod matrix_inverse_ops;
+
+// Re-export extension traits so they are in scope by default
+pub use activation_ops::LeakyReLUAlphaTensorExt;

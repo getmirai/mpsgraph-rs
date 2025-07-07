@@ -13,7 +13,26 @@ pub use crate::pooling_ops::{PaddingStyle, TensorNamedDataLayout};
 
 impl Graph {
     // ----- Forward ----------------------------------------------------------
-    pub fn convolution_transpose_2d(
+    /// Creates a 2-D convolution-transpose operation and returns the result tensor.
+    ///
+    /// Convolution-transpose is identical to the convolution *data-gradient* operation
+    /// (`convolution_2d_data_gradient_with_incoming_gradient_tensor_weights_tensor_output_shape_forward_convolution_descriptor`).
+    /// A stride `s` upsamples the spatial dimensions by a factor of `s`.
+    /// The relationship between the width of the *source* and the width of the *destination* is:
+    ///
+    /// `(sourceWidth - 1) * stride + 1 + (kernelWidth - 1) * dilationRate`
+    /// `    <= destinationWidth + paddingLeft + paddingRight`.
+    ///
+    /// Because this inequality can hold for `stride - 1` different destination widths,
+    /// the `output_shape` parameter is used to disambiguate.
+    ///
+    /// Parameters
+    /// * `source` — Input tensor.
+    /// * `weights` — Weights tensor.
+    /// * `output_shape` — Desired shape of the result tensor.
+    /// * `descriptor` — Descriptor of the corresponding forward 2-D convolution.
+    /// * `name` — Optional debug name.
+    pub fn convolution_transpose_2d_with_source_tensor_weights_tensor_output_shape_descriptor(
         &self,
         source: &Tensor,
         weights: &Tensor,
@@ -29,13 +48,15 @@ impl Graph {
             msg_send![self,
                 convolutionTranspose2DWithSourceTensor: source,
                 weightsTensor: weights,
-                outputShape: output_shape,
+                outputShape: output_shape.as_ptr(),
                 descriptor: descriptor,
                 name: name_ptr]
         }
     }
 
-    pub fn convolution_transpose_2d_with_tensor_shape(
+    /// Same as [`convolution_transpose_2d_with_source_tensor_weights_tensor_output_shape_descriptor`]
+    /// but receives the *output shape* as a rank-1 Int32/Int64 tensor.
+    pub fn convolution_transpose_2d_with_source_tensor_weights_tensor_output_shape_tensor_descriptor(
         &self,
         source: &Tensor,
         weights: &Tensor,
@@ -58,10 +79,19 @@ impl Graph {
     }
 
     // ----- Gradients --------------------------------------------------------
-    pub fn convolution_transpose_2d_data_gradient(
+    /// Creates a convolution-transpose *data-gradient* operation and returns the gradient
+    /// with respect to the **source** tensor of the forward convolution-transpose.
+    ///
+    /// Parameters
+    /// * `incoming_gradient_tensor` — Incoming gradient.
+    /// * `weights_tensor` — Forward-pass weights tensor.
+    /// * `output_shape` — Shape of the forward-pass *source* tensor.
+    /// * `forward_convolution_descriptor` — Descriptor used in the forward op.
+    /// * `name` — Optional debug name.
+    pub fn convolution_transpose_2d_data_gradient_with_incoming_gradient_tensor_weights_tensor_output_shape_forward_convolution_descriptor(
         &self,
-        incoming_gradient: &Tensor,
-        weights: &Tensor,
+        incoming_gradient_tensor: &Tensor,
+        weights_tensor: &Tensor,
         output_shape: &Shape,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -72,18 +102,20 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self,
-                convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient,
-                weightsTensor: weights,
-                outputShape: output_shape,
+                convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                weightsTensor: weights_tensor,
+                outputShape: output_shape.as_ptr(),
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr]
         }
     }
 
-    pub fn convolution_transpose_2d_data_gradient_with_tensor_shape(
+    /// Same as [`convolution_transpose_2d_data_gradient_with_incoming_gradient_tensor_weights_tensor_output_shape_forward_convolution_descriptor`]
+    /// but takes `output_shape_tensor` instead of a [`Shape`] object.
+    pub fn convolution_transpose_2d_data_gradient_with_incoming_gradient_tensor_weights_tensor_output_shape_tensor_forward_convolution_descriptor(
         &self,
-        incoming_gradient: &Tensor,
-        weights: &Tensor,
+        incoming_gradient_tensor: &Tensor,
+        weights_tensor: &Tensor,
         output_shape_tensor: &Tensor,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -94,18 +126,23 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self,
-                convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient,
-                weightsTensor: weights,
+                convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                weightsTensor: weights_tensor,
                 outputShapeTensor: output_shape_tensor,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr]
         }
     }
 
-    pub fn convolution_transpose_2d_weights_gradient(
+    /// Creates a convolution-transpose *weights-gradient* operation and returns the gradient
+    /// with respect to the **weights** tensor of the forward convolution-transpose.
+    ///
+    /// Parameters are analogous to the data-gradient variant, replacing `weights_tensor`
+    /// with `source_tensor` and `output_shape` with the *weights* shape.
+    pub fn convolution_transpose_2d_weights_gradient_with_incoming_gradient_tensor_source_tensor_output_shape_forward_convolution_descriptor(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
+        incoming_gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
         output_shape: &Shape,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -116,18 +153,20 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self,
-                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
-                outputShape: output_shape,
+                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                sourceTensor: source_tensor,
+                outputShape: output_shape.as_ptr(),
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr]
         }
     }
 
-    pub fn convolution_transpose_2d_weights_gradient_with_tensor_shape(
+    /// Same as [`convolution_transpose_2d_weights_gradient_with_incoming_gradient_tensor_source_tensor_output_shape_forward_convolution_descriptor`]
+    /// but takes `output_shape_tensor` instead of a [`Shape`] object.
+    pub fn convolution_transpose_2d_weights_gradient_with_incoming_gradient_tensor_source_tensor_output_shape_tensor_forward_convolution_descriptor(
         &self,
-        incoming_gradient: &Tensor,
-        source: &Tensor,
+        incoming_gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
         output_shape_tensor: &Tensor,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
@@ -138,8 +177,8 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self,
-                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient,
-                sourceTensor: source,
+                convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                sourceTensor: source_tensor,
                 outputShapeTensor: output_shape_tensor,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr]
