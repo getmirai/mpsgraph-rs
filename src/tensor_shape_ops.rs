@@ -13,6 +13,17 @@ use crate::Shape;
 // been removed.
 
 impl Graph {
+    /// Creates a transpose operation and returns the result tensor.
+    ///
+    /// Permutes the dimensions of the input tensor according to `permutation`.
+    /// The length of `permutation` must equal the rank of `x` and encode a valid
+    /// permutation of the dimensions.
+    ///
+    /// * `x` – The tensor to be transposed.
+    /// * `permutation` – A slice describing the new order of the dimensions.
+    /// * `name` – Optional name for the operation.
+    ///
+    /// Returns the transposed tensor.
     pub fn transpose(
         &self,
         x: &Tensor,
@@ -28,6 +39,11 @@ impl Graph {
             msg_send![self, transposeTensor: x, permutation: &*permutation_array, name: name_ptr]
         }
     }
+    /// Creates a reshape operation and returns the result tensor.
+    ///
+    /// Reshapes the input tensor `x` to match `shape`. The total number of
+    /// elements must remain the same. Shape entries may include `-1` to denote
+    /// a dimension that should be inferred.
     pub fn reshape(&self, x: &Tensor, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -37,6 +53,8 @@ impl Graph {
             msg_send![self, reshapeTensor: x, withShape: shape.as_ptr(), name: name_ptr]
         }
     }
+    /// Variant of `reshape` where the target shape is provided as a tensor.
+    /// The tensor must be 1-D and contain `i32` or `i64` values.
     pub fn reshape_with_tensor(
         &self,
         x: &Tensor,
@@ -51,6 +69,10 @@ impl Graph {
             msg_send![self, reshapeTensor: x, withShapeTensor: shape_tensor, name: name_ptr]
         }
     }
+    /// Creates a `flatten2D` operation and returns a rank-2 tensor.
+    ///
+    /// Dimensions before `axis` are collapsed into the first output dimension,
+    /// and dimensions starting at `axis` are collapsed into the second.
     pub fn flatten2d(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -60,6 +82,9 @@ impl Graph {
             msg_send![self, flatten2DTensor: x, axis: axis, name: name_ptr]
         }
     }
+    /// Creates a broadcast operation that matches `x` to `shape`.
+    /// Broadcasting semantics follow those of arithmetic ops – trailing
+    /// dimensions are matched first.
     pub fn broadcast(&self, x: &Tensor, shape: &Shape, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -69,6 +94,7 @@ impl Graph {
             msg_send![self, broadcastTensor: x, toShape: shape.as_ptr(), name: name_ptr]
         }
     }
+    /// Returns a rank-1 tensor containing the (static) shape of `x`.
     pub fn shape_of(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -78,6 +104,10 @@ impl Graph {
             msg_send![self, shapeOfTensor: x, name: name_ptr]
         }
     }
+    /// Creates a cast operation and returns the result tensor.
+    ///
+    /// Converts the elements of `x` to `data_type` without changing the
+    /// underlying values (subject to precision).
     pub fn cast(&self, x: &Tensor, data_type: DataType, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -87,6 +117,7 @@ impl Graph {
             msg_send![self, castTensor: x, toType: data_type as u32, name: name_ptr]
         }
     }
+    /// Stacks `tensors` along `axis`, returning a tensor of rank `rank+1`.
     pub fn stack(&self, tensors: &[&Tensor], axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -97,6 +128,7 @@ impl Graph {
             msg_send![self, stackTensors: &*tensor_array, axis: axis, name: name_ptr]
         }
     }
+    /// Splits `x` into `num_splits` tensors of equal size along `axis`.
     pub fn split(
         &self,
         x: &Tensor,
@@ -127,6 +159,8 @@ impl Graph {
             })
         }
     }
+    /// Creates a basic slice operation extracting a contiguous segment along a
+    /// single `dimension`.
     pub fn slice(
         &self,
         x: &Tensor,
@@ -143,6 +177,8 @@ impl Graph {
             msg_send![self, sliceTensor: x, dimension: dimension, start: start, length: length, name: name_ptr]
         }
     }
+    /// Creates a strided slice operation analogous to TensorFlow's
+    /// `tf.strided_slice`.
     pub fn strided_slice(
         &self,
         x: &Tensor,
@@ -168,6 +204,7 @@ impl Graph {
             ]
         }
     }
+    /// Strided slice where start/end/stride are provided as tensors.
     pub fn strided_slice_with_tensors(
         &self,
         x: &Tensor,
@@ -644,6 +681,447 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self, coordinateAlongAxisTensorWithShapeTensor: axis_tensor, shapeTensor: shape_tensor, name: name_ptr]
+        }
+    }
+    /// Creates a transpose operation swapping two dimensions.
+    /// Corresponds to Objective-C selector `transposeTensor:dimension:withDimension:name:`.
+    pub fn transpose_dims(
+        &self,
+        x: &Tensor,
+        dim0: usize,
+        dim1: usize,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, transposeTensor: x, dimension: dim0, withDimension: dim1, name: name_ptr]
+        }
+    }
+    /// Concatenates `tensors` along `dimension`, optionally `interleave`-ing inputs.
+    pub fn concat_tensors_interleave(
+        &self,
+        tensors: &[&Tensor],
+        dimension: i64,
+        interleave: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let tensor_array = NSArray::from_slice(tensors);
+            msg_send![
+                self,
+                concatTensors: &*tensor_array,
+                dimension: dimension,
+                interleave: interleave,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Tile gradient counterpart for `tileTensor`.
+    pub fn tile_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source_tensor: &Tensor,
+        multiplier: &Shape,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                tileGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source_tensor,
+                withMultiplier: multiplier.as_ptr(),
+                name: name_ptr
+            ]
+        }
+    }
+    /// Padding gradient counterpart for `padTensor`.
+    pub fn pad_gradient(
+        &self,
+        incoming_gradient: &Tensor,
+        source_tensor: &Tensor,
+        padding_mode: u32,
+        left_padding: &Shape,
+        right_padding: &Shape,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                padGradientWithIncomingGradientTensor: incoming_gradient,
+                sourceTensor: source_tensor,
+                paddingMode: padding_mode,
+                leftPadding: left_padding.as_ptr(),
+                rightPadding: right_padding.as_ptr(),
+                name: name_ptr
+            ]
+        }
+    }
+    /// Broadcast variant where the target shape is provided as a tensor.
+    pub fn broadcast_with_shape_tensor(
+        &self,
+        x: &Tensor,
+        shape_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, broadcastTensor: x, toShapeTensor: shape_tensor, name: name_ptr]
+        }
+    }
+    /// flatten2D variant where `axis` is provided as a tensor.
+    pub fn flatten2d_axis_tensor(
+        &self,
+        x: &Tensor,
+        axis_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, flatten2DTensor: x, axisTensor: axis_tensor, name: name_ptr]
+        }
+    }
+    /// Reverse tensor along axes specified by a tensor.
+    pub fn reverse_with_axes_tensor(
+        &self,
+        x: &Tensor,
+        axes_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, reverseTensor: x, axesTensor: axes_tensor, name: name_ptr]
+        }
+    }
+    /// Reverse tensor on all axes.
+    pub fn reverse_all(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, reverseTensor: x, name: name_ptr]
+        }
+    }
+    /// Splits tensor with explicit `split_sizes` array.
+    pub fn split_with_sizes(
+        &self,
+        x: &Tensor,
+        split_sizes: &[i64],
+        axis: i64,
+        name: Option<&str>,
+    ) -> Vec<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let split_sizes_array = create_ns_array_from_i64_slice(split_sizes);
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
+                self,
+                splitTensor: x,
+                splitSizes: &*split_sizes_array,
+                axis: axis,
+                name: name_ptr
+            ];
+            result_array_opt.map_or(Vec::new(), |arr| {
+                let count = arr.len();
+                let mut tensors = Vec::with_capacity(count);
+                for i in 0..count {
+                    let tensor: Retained<Tensor> = msg_send![&*arr, objectAtIndex: i];
+                    tensors.push(tensor);
+                }
+                tensors
+            })
+        }
+    }
+    /// Split tensor where `split_sizes` provided as a tensor.
+    pub fn split_with_sizes_tensor(
+        &self,
+        x: &Tensor,
+        split_sizes_tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Vec<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let result_array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![
+                self,
+                splitTensor: x,
+                splitSizesTensor: split_sizes_tensor,
+                axis: axis,
+                name: name_ptr
+            ];
+            result_array_opt.map_or(Vec::new(), |arr| {
+                let count = arr.len();
+                let mut tensors = Vec::with_capacity(count);
+                for i in 0..count {
+                    let tensor: Retained<Tensor> = msg_send![&*arr, objectAtIndex: i];
+                    tensors.push(tensor);
+                }
+                tensors
+            })
+        }
+    }
+    /// Re-interprets the tensor element type without changing underlying data.
+    pub fn reinterpret_cast(
+        &self,
+        x: &Tensor,
+        data_type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, reinterpretCastTensor: x, toType: data_type as u32, name: name_ptr]
+        }
+    }
+    /// Space-to-Depth 2-D.
+    pub fn space_to_depth_2d(
+        &self,
+        x: &Tensor,
+        width_axis: usize,
+        height_axis: usize,
+        depth_axis: usize,
+        block_size: usize,
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                spaceToDepth2DTensor: x,
+                widthAxis: width_axis,
+                heightAxis: height_axis,
+                depthAxis: depth_axis,
+                blockSize: block_size,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Space-to-Depth 2-D variant with axis tensors.
+    pub fn space_to_depth_2d_tensor(
+        &self,
+        x: &Tensor,
+        width_axis_tensor: &Tensor,
+        height_axis_tensor: &Tensor,
+        depth_axis_tensor: &Tensor,
+        block_size: usize,
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                spaceToDepth2DTensor: x,
+                widthAxisTensor: width_axis_tensor,
+                heightAxisTensor: height_axis_tensor,
+                depthAxisTensor: depth_axis_tensor,
+                blockSize: block_size,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Depth-to-Space 2-D.
+    pub fn depth_to_space_2d(
+        &self,
+        x: &Tensor,
+        width_axis: usize,
+        height_axis: usize,
+        depth_axis: usize,
+        block_size: usize,
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                depthToSpace2DTensor: x,
+                widthAxis: width_axis,
+                heightAxis: height_axis,
+                depthAxis: depth_axis,
+                blockSize: block_size,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Depth-to-Space 2-D variant with axis tensors.
+    pub fn depth_to_space_2d_tensor(
+        &self,
+        x: &Tensor,
+        width_axis_tensor: &Tensor,
+        height_axis_tensor: &Tensor,
+        depth_axis_tensor: &Tensor,
+        block_size: usize,
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                depthToSpace2DTensor: x,
+                widthAxisTensor: width_axis_tensor,
+                heightAxisTensor: height_axis_tensor,
+                depthAxisTensor: depth_axis_tensor,
+                blockSize: block_size,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Space-to-Batch operation.
+    pub fn space_to_batch(
+        &self,
+        x: &Tensor,
+        spatial_axes: &[i64],
+        batch_axis: i64,
+        block_dimensions: &[i64],
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let spatial_axes_array = create_ns_array_from_i64_slice(spatial_axes);
+            let block_dims_array = create_ns_array_from_i64_slice(block_dimensions);
+            msg_send![
+                self,
+                spaceToBatchTensor: x,
+                spatialAxes: &*spatial_axes_array,
+                batchAxis: batch_axis,
+                blockDimensions: &*block_dims_array,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Space-to-Batch variant with tensor parameters.
+    pub fn space_to_batch_tensor(
+        &self,
+        x: &Tensor,
+        spatial_axes_tensor: &Tensor,
+        batch_axis_tensor: &Tensor,
+        block_dimensions_tensor: &Tensor,
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                spaceToBatchTensor: x,
+                spatialAxesTensor: spatial_axes_tensor,
+                batchAxisTensor: batch_axis_tensor,
+                blockDimensionsTensor: block_dimensions_tensor,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Batch-to-Space operation.
+    pub fn batch_to_space(
+        &self,
+        x: &Tensor,
+        spatial_axes: &[i64],
+        batch_axis: i64,
+        block_dimensions: &[i64],
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            let spatial_axes_array = create_ns_array_from_i64_slice(spatial_axes);
+            let block_dims_array = create_ns_array_from_i64_slice(block_dimensions);
+            msg_send![
+                self,
+                batchToSpaceTensor: x,
+                spatialAxes: &*spatial_axes_array,
+                batchAxis: batch_axis,
+                blockDimensions: &*block_dims_array,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
+        }
+    }
+    /// Batch-to-Space variant with tensor parameters.
+    pub fn batch_to_space_tensor(
+        &self,
+        x: &Tensor,
+        spatial_axes_tensor: &Tensor,
+        batch_axis_tensor: &Tensor,
+        block_dimensions_tensor: &Tensor,
+        pixel_shuffle: bool,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                batchToSpaceTensor: x,
+                spatialAxesTensor: spatial_axes_tensor,
+                batchAxisTensor: batch_axis_tensor,
+                blockDimensionsTensor: block_dimensions_tensor,
+                usePixelShuffleOrder: pixel_shuffle,
+                name: name_ptr
+            ]
         }
     }
 }

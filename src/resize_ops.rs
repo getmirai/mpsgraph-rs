@@ -418,4 +418,137 @@ impl Graph {
             ]
         }
     }
+
+    /// Resize using nearest-neighbour sampling with explicit scale/offset tensor.
+    pub fn resize_nearest_with_scale_offset(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_offset_tensor: &Tensor,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
+        layout: TensorNamedDataLayout,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                resizeNearestWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                scaleOffsetTensor: scale_offset_tensor,
+                nearestRoundingMode: nearest_rounding_mode as u64,
+                layout: layout as u64,
+                name: name_ptr
+            ]
+        }
+    }
+
+    /// Resize using nearest-neighbour sampling with separate scale and offset tensors.
+    pub fn resize_nearest_with_separate_scale_offset(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                resizeNearestWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                scaleTensor: scale_tensor,
+                offsetTensor: offset_tensor,
+                nearestRoundingMode: nearest_rounding_mode as u64,
+                name: name_ptr
+            ]
+        }
+    }
+
+    /// Resize using bilinear interpolation with explicit scale/offset tensor.
+    pub fn resize_bilinear_with_scale_offset(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_offset_tensor: &Tensor,
+        layout: TensorNamedDataLayout,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                resizeBilinearWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                scaleOffsetTensor: scale_offset_tensor,
+                layout: layout as u64,
+                name: name_ptr
+            ]
+        }
+    }
+
+    /// Resize using bilinear interpolation with separate scale and offset tensors.
+    pub fn resize_bilinear_with_separate_scale_offset(
+        &self,
+        images_tensor: &Tensor,
+        size_tensor: &Tensor,
+        scale_tensor: &Tensor,
+        offset_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                resizeBilinearWithTensor: images_tensor,
+                sizeTensor: size_tensor,
+                scaleTensor: scale_tensor,
+                offsetTensor: offset_tensor,
+                name: name_ptr
+            ]
+        }
+    }
+
+    /// Gradient for nearest-neighbour resize (with rounding mode).
+    pub fn resize_nearest_gradient(
+        &self,
+        gradient: &Tensor,
+        input: &Tensor,
+        nearest_rounding_mode: ResizeNearestRoundingMode,
+        center_result: bool,
+        align_corners: bool,
+        layout: TensorNamedDataLayout,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                resizeNearestWithGradientTensor: gradient,
+                input: input,
+                nearestRoundingMode: nearest_rounding_mode as u64,
+                centerResult: center_result,
+                alignCorners: align_corners,
+                layout: layout as u64,
+                name: name_ptr
+            ]
+        }
+    }
 }

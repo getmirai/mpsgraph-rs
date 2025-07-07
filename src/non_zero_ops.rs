@@ -7,7 +7,6 @@ use crate::tensor::Tensor;
 
 /// Trait defining NonZero operations for a Graph
 
-
 /// Implementation of NonZero operations for Graph
 impl Graph {
     /// Computes the indices of the non-zero elements of the input tensor.
@@ -25,12 +24,12 @@ impl Graph {
     ///
     /// # Parameters
     ///
-    /// * `tensor` - An Tensor of which to compute the non-zero indices.
+    /// * `tensor` - An MPSGraphTensor of which to compute the non-zero indices.
     /// * `name` - The name for the operation.
     ///
     /// # Returns
     ///
-    /// A valid Tensor containing indices in signed int32 data type.
+    /// A valid MPSGraphTensor containing indices in signed int32 data type.
     pub fn non_zero_indices(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -47,4 +46,3 @@ impl Graph {
         }
     }
 }
-

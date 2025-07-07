@@ -10,14 +10,17 @@ extern_class!(
     #[derive(Debug, PartialEq, Eq)]
     #[unsafe(super = NSObject)]
     #[name = "MPSGraphOperation"]
-    /// A wrapper for MPSGraph operation objects
+    /// A symbolic representation of a compute operation.
+    ///
+    /// `NSCopy` will take a refrence, this is so `NSDictionary` can work with the tensor.
+    /// All operations are created, owned and destroyed by the graph.
     pub struct Operation;
 );
 
 unsafe impl NSObjectProtocol for Operation {}
 
 impl Operation {
-    /// Returns the input tensors of this operation
+    /// The input tensors of the operation.
     pub fn input_tensors(&self) -> Vec<Retained<Tensor>> {
         unsafe {
             let array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![self, inputTensors];
@@ -35,7 +38,7 @@ impl Operation {
         }
     }
 
-    /// Returns the output tensors of this operation
+    /// The output tensors of the operation.
     pub fn output_tensors(&self) -> Vec<Retained<Tensor>> {
         unsafe {
             let array_opt: Option<Retained<NSArray<Tensor>>> = msg_send![self, outputTensors];
@@ -53,7 +56,7 @@ impl Operation {
         }
     }
 
-    /// Returns the graph this operation belongs to
+    /// The graph on which the operation is defined.
     pub fn graph(&self) -> Retained<Graph> {
         unsafe {
             let graph: Retained<Graph> = msg_send![self, graph];
@@ -61,20 +64,15 @@ impl Operation {
         }
     }
 
-    /// Returns the name of this operation
-    pub fn name(&self) -> Option<String> {
+    /// Name of the operation.
+    pub fn name(&self) -> String {
         unsafe {
-            let name_ptr: *mut NSString = msg_send![self, name];
-            if name_ptr.is_null() {
-                None
-            } else {
-                let name = Retained::retain_autoreleased(name_ptr).unwrap();
-                Some(name.to_string())
-            }
+            let name_ptr: Retained<NSString> = msg_send![self, name];
+            name_ptr.to_string()
         }
     }
 
-    /// Returns the control dependencies of this operation
+    /// The set of operations guaranteed to execute before this operation.
     pub fn control_dependencies(&self) -> Vec<Retained<Operation>> {
         unsafe {
             let array_opt: Option<Retained<NSArray<Operation>>> =

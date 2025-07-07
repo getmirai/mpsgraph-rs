@@ -75,6 +75,7 @@ impl Graph {
     ///
     /// # Arguments
     ///
+    /// * `storage_type` - The storage format of the sparse tensor
     /// * `tensors` - Tensors representing the sparse tensor components (indices, values)
     /// * `shape` - The shape of the corresponding dense tensor
     /// * `data_type` - The data type of the sparse tensor
@@ -85,6 +86,7 @@ impl Graph {
     /// A new Tensor representing the sparse tensor
     pub fn sparse_tensor_with_type(
         &self,
+        storage_type: SparseStorageType,
         tensors: &[&Tensor],
         shape: &Shape,
         data_type: DataType,
@@ -102,9 +104,10 @@ impl Graph {
 
             msg_send![
                 self,
-                sparseTensorWithType: data_type as u32,
+                sparseTensorWithType: storage_type as u64,
                 tensors: &*tensors_array,
                 shape: shape.as_ptr(),
+                dataType: data_type as u32,
                 name: name_obj
             ]
         }
