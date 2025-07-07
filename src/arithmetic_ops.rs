@@ -13,292 +13,309 @@ use crate::tensor::Tensor;
 impl Graph {
     // MARK: - Unary operations -------------------------------------------------
 
-    pub fn identity(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn identity_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, identityWithTensor: x, name: name_ptr]
+            msg_send![self, identityWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn erf(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn erf_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, erfWithTensor: x, name: name_ptr]
+            msg_send![self, erfWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn exp(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn exponent_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, exponentWithTensor: x, name: name_ptr]
+            msg_send![self, exponentWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn exp2(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn exponent_base2_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, exponentBase2WithTensor: x, name: name_ptr]
+            msg_send![self, exponentBase2WithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn log(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn logarithm_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logarithmWithTensor: x, name: name_ptr]
+            msg_send![self, logarithmWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn log2(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn logarithm_base2_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logarithmBase2WithTensor: x, name: name_ptr]
+            msg_send![self, logarithmBase2WithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn square(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn square_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, squareWithTensor: x, name: name_ptr]
+            msg_send![self, squareWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn sqrt(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn square_root_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, squareRootWithTensor: x, name: name_ptr]
+            msg_send![self, squareRootWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn rsqrt(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn reciprocal_square_root_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, reciprocalSquareRootWithTensor: x, name: name_ptr]
+            msg_send![self, reciprocalSquareRootWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn reciprocal(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn reciprocal_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, reciprocalWithTensor: x, name: name_ptr]
+            msg_send![self, reciprocalWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn abs(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn absolute_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, absoluteWithTensor: x, name: name_ptr]
+            msg_send![self, absoluteWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn negative(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn negative_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, negativeWithTensor: x, name: name_ptr]
+            msg_send![self, negativeWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn sign(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn sign_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, signWithTensor: x, name: name_ptr]
+            msg_send![self, signWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn ceil(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn ceil_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, ceilWithTensor: x, name: name_ptr]
+            msg_send![self, ceilWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn sin(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn sin_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, sineWithTensor: x, name: name_ptr]
+            msg_send![self, sineWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn cos(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn cos_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, cosineWithTensor: x, name: name_ptr]
+            msg_send![self, cosineWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn tan(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn tan_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, tangentWithTensor: x, name: name_ptr]
+            msg_send![self, tangentWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn sinh(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn sinh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, hyperbolicSineWithTensor: x, name: name_ptr]
+            msg_send![self, hyperbolicSineWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn cosh(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn cosh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, hyperbolicCosineWithTensor: x, name: name_ptr]
+            msg_send![self, hyperbolicCosineWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn floor(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn floor_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, floorWithTensor: x, name: name_ptr]
+            msg_send![self, floorWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn round(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn round_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, roundWithTensor: x, name: name_ptr]
+            msg_send![self, roundWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn asin(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn asin_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, asinWithTensor: x, name: name_ptr]
+            msg_send![self, asinWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn acos(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn acos_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, acosWithTensor: x, name: name_ptr]
+            msg_send![self, acosWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn atan(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn atan_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, atanWithTensor: x, name: name_ptr]
+            msg_send![self, atanWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn asinh(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn asinh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, asinhWithTensor: x, name: name_ptr]
+            msg_send![self, asinhWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn acosh(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn acosh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, acoshWithTensor: x, name: name_ptr]
+            msg_send![self, acoshWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn atanh(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn atanh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, atanhWithTensor: x, name: name_ptr]
+            msg_send![self, atanhWithTensor: tensor, name: name_ptr]
         }
     }
 
-    pub fn atan2(&self, y: &Tensor, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn atan2_with_primary_tensor_secondary_tensor(
+        &self,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, atan2WithPrimaryTensor: y, secondaryTensor: x, name: name_ptr]
+            msg_send![self, atan2WithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
     // MARK: - Binary helpers (add / subtract / multiply / divide are already inherent)
 
-    pub fn division_no_nan(
+    pub fn division_no_nan_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -306,14 +323,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, divisionNoNaNWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, divisionNoNaNWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn modulo(
+    pub fn modulo_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -321,14 +338,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, moduloWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, moduloWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn power(
+    pub fn power_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -336,14 +353,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, powerWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, powerWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn minimum(
+    pub fn minimum_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -351,14 +368,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, minimumWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, minimumWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn maximum(
+    pub fn maximum_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -366,16 +383,16 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, maximumWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, maximumWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
     // MARK: - Comparisons ------------------------------------------------------
 
-    pub fn equal(
+    pub fn equal_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -383,14 +400,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, equalWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, equalWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn not_equal(
+    pub fn not_equal_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -398,14 +415,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, notEqualWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, notEqualWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn less_than(
+    pub fn less_than_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -413,14 +430,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, lessThanWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, lessThanWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn less_than_or_equal(
+    pub fn less_than_or_equal_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -428,14 +445,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, lessThanOrEqualWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, lessThanOrEqualWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn greater_than(
+    pub fn greater_than_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -443,14 +460,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, greaterThanWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, greaterThanWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn greater_than_or_equal(
+    pub fn greater_than_or_equal_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -458,16 +475,16 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, greaterThanOrEqualWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, greaterThanOrEqualWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
     // MARK: - Logical ---------------------------------------------------------
 
-    pub fn logical_and(
+    pub fn logical_and_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -475,14 +492,14 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logicalANDWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, logicalANDWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn logical_or(
+    pub fn logical_or_with_primary_tensor_secondary_tensor(
         &self,
-        primary: &Tensor,
-        secondary: &Tensor,
+        primary_tensor: &Tensor,
+        secondary_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -490,27 +507,27 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logicalORWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
+            msg_send![self, logicalORWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
         }
     }
 
-    pub fn logical_not(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn not_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logicalNOTWithTensor: x, name: name_ptr]
+            msg_send![self, logicalNOTWithTensor: tensor, name: name_ptr]
         }
     }
 
     // MARK: - Ternary ----------------------------------------------------------
 
-    pub fn select(
+    pub fn select_with_predicate_tensor_true_predicate_tensor_false_predicate_tensor(
         &self,
-        predicate: &Tensor,
-        true_tensor: &Tensor,
-        false_tensor: &Tensor,
+        predicate_tensor: &Tensor,
+        true_predicate_tensor: &Tensor,
+        false_predicate_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -519,18 +536,18 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self,
-                selectWithPredicateTensor: predicate,
-                truePredicateTensor: true_tensor,
-                falsePredicateTensor: false_tensor,
+                selectWithPredicateTensor: predicate_tensor,
+                truePredicateTensor: true_predicate_tensor,
+                falsePredicateTensor: false_predicate_tensor,
                 name: name_ptr]
         }
     }
 
-    pub fn clamp(
+    pub fn clamp_with_tensor_min_value_tensor_max_value_tensor(
         &self,
         tensor: &Tensor,
-        min_tensor: &Tensor,
-        max_tensor: &Tensor,
+        min_value_tensor: &Tensor,
+        max_value_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -538,7 +555,155 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, clampWithTensor: tensor, minValueTensor: min_tensor, maxValueTensor: max_tensor, name: name_ptr]
+            msg_send![self, clampWithTensor: tensor, minValueTensor: min_value_tensor, maxValueTensor: max_value_tensor, name: name_ptr]
+        }
+    }
+
+    // Additional unary operations to fully mirror Objective-C header ---------
+
+    pub fn exponent_base10_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, exponentBase10WithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn logarithm_base10_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, logarithmBase10WithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn absolute_square_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, absoluteSquareWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn signbit_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, signbitWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn tanh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, tanhWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn rint_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, rintWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn truncate_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, truncateWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn bitwise_not_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, bitwiseNOTWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn bitwise_population_count_with_tensor(
+        &self,
+        tensor: &Tensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, bitwisePopulationCountWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn conjugate_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, conjugateWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn is_infinite_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, isInfiniteWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn is_finite_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, isFiniteWithTensor: tensor, name: name_ptr]
+        }
+    }
+
+    pub fn is_nan_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![self, isNaNWithTensor: tensor, name: name_ptr]
         }
     }
 }
