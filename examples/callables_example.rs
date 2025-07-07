@@ -63,7 +63,7 @@ fn main() {
     let float32_matrix = ShapedType::new(&shape, DataType::Float32);
 
     // Call the addition executable
-    let addition_result = graph.call(
+    let addition_result = graph.call_symbol_name(
         "addition",
         &[a.as_ref(), b.as_ref()],
         &[float32_matrix.as_ref()],
@@ -71,7 +71,7 @@ fn main() {
     );
 
     // Call the multiplication executable
-    let multiplication_result = graph.call(
+    let multiplication_result = graph.call_symbol_name(
         "multiplication",
         &[a.as_ref(), b.as_ref()],
         &[float32_matrix.as_ref()],

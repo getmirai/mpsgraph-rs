@@ -50,12 +50,12 @@ fn main() {
 
     // Create input feeds
     let mut feeds_refs = HashMap::new();
-    feeds_refs.insert(a.as_ref(), a_data.as_ref());
-    feeds_refs.insert(b.as_ref(), b_data.as_ref());
+    feeds_refs.insert(&*a, &*a_data);
+    feeds_refs.insert(&*b, &*b_data);
 
     // Create results map
     let mut results_refs = HashMap::new();
-    results_refs.insert(result.as_ref(), result_data.as_ref());
+    results_refs.insert(&*result, &*result_data);
 
     // Get a Metal command queue
     let command_queue = metal_device.new_command_queue();

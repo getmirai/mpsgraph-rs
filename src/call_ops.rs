@@ -18,7 +18,7 @@ impl Graph {
     /// * `name` – Optional debug name.
     ///
     /// Returns the tensors produced by the callee.
-    pub fn call(
+    pub fn call_symbol_name(
         &self,
         symbol_name: &str,
         input_tensors: &[&Tensor],
