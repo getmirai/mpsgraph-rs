@@ -13,7 +13,7 @@ use crate::tensor::Tensor;
 impl Graph {
     // MARK: - Unary operations -------------------------------------------------
 
-    pub fn identity_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn identity(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -23,7 +23,7 @@ impl Graph {
         }
     }
 
-    pub fn erf_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn erf(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -33,7 +33,7 @@ impl Graph {
         }
     }
 
-    pub fn exponent_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn exponent(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -43,11 +43,7 @@ impl Graph {
         }
     }
 
-    pub fn exponent_base2_with_tensor(
-        &self,
-        tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn exponent_base2(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -57,7 +53,7 @@ impl Graph {
         }
     }
 
-    pub fn logarithm_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn logarithm(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -67,11 +63,7 @@ impl Graph {
         }
     }
 
-    pub fn logarithm_base2_with_tensor(
-        &self,
-        tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn logarithm_base2(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -81,7 +73,7 @@ impl Graph {
         }
     }
 
-    pub fn square_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn square(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -91,7 +83,7 @@ impl Graph {
         }
     }
 
-    pub fn square_root_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn square_root(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -101,11 +93,7 @@ impl Graph {
         }
     }
 
-    pub fn reciprocal_square_root_with_tensor(
-        &self,
-        tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn reciprocal_square_root(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -115,7 +103,7 @@ impl Graph {
         }
     }
 
-    pub fn reciprocal_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn reciprocal(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -125,7 +113,7 @@ impl Graph {
         }
     }
 
-    pub fn absolute_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn absolute(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -135,7 +123,7 @@ impl Graph {
         }
     }
 
-    pub fn negative_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn negative(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -145,7 +133,7 @@ impl Graph {
         }
     }
 
-    pub fn sign_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn sign(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -155,7 +143,7 @@ impl Graph {
         }
     }
 
-    pub fn ceil_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn ceil(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -165,7 +153,7 @@ impl Graph {
         }
     }
 
-    pub fn sin_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn sine(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -175,7 +163,7 @@ impl Graph {
         }
     }
 
-    pub fn cos_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn cosine(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -185,7 +173,7 @@ impl Graph {
         }
     }
 
-    pub fn tan_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn tangent(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -195,7 +183,7 @@ impl Graph {
         }
     }
 
-    pub fn sinh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn hyperbolic_sine(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -205,7 +193,7 @@ impl Graph {
         }
     }
 
-    pub fn cosh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn hyperbolic_cosine(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -215,7 +203,7 @@ impl Graph {
         }
     }
 
-    pub fn floor_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn floor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -225,7 +213,7 @@ impl Graph {
         }
     }
 
-    pub fn round_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn round(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -235,7 +223,7 @@ impl Graph {
         }
     }
 
-    pub fn asin_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn asin(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -245,7 +233,7 @@ impl Graph {
         }
     }
 
-    pub fn acos_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn acos(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -255,7 +243,7 @@ impl Graph {
         }
     }
 
-    pub fn atan_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn atan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -265,7 +253,7 @@ impl Graph {
         }
     }
 
-    pub fn asinh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn asinh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -275,7 +263,7 @@ impl Graph {
         }
     }
 
-    pub fn acosh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn acosh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -285,7 +273,7 @@ impl Graph {
         }
     }
 
-    pub fn atanh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn atanh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -295,7 +283,7 @@ impl Graph {
         }
     }
 
-    pub fn atan2_with_primary_tensor_secondary_tensor(
+    pub fn atan2(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -312,7 +300,7 @@ impl Graph {
 
     // MARK: - Binary helpers (add / subtract / multiply / divide are already inherent)
 
-    pub fn division_no_nan_with_primary_tensor_secondary_tensor(
+    pub fn division_no_nan(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -327,7 +315,7 @@ impl Graph {
         }
     }
 
-    pub fn modulo_with_primary_tensor_secondary_tensor(
+    pub fn modulo(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -342,7 +330,7 @@ impl Graph {
         }
     }
 
-    pub fn power_with_primary_tensor_secondary_tensor(
+    pub fn power(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -357,7 +345,7 @@ impl Graph {
         }
     }
 
-    pub fn minimum_with_primary_tensor_secondary_tensor(
+    pub fn minimum(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -372,7 +360,7 @@ impl Graph {
         }
     }
 
-    pub fn maximum_with_primary_tensor_secondary_tensor(
+    pub fn maximum(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -389,7 +377,7 @@ impl Graph {
 
     // MARK: - Comparisons ------------------------------------------------------
 
-    pub fn equal_with_primary_tensor_secondary_tensor(
+    pub fn equal(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -404,7 +392,7 @@ impl Graph {
         }
     }
 
-    pub fn not_equal_with_primary_tensor_secondary_tensor(
+    pub fn not_equal(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -419,7 +407,7 @@ impl Graph {
         }
     }
 
-    pub fn less_than_with_primary_tensor_secondary_tensor(
+    pub fn less_than(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -434,7 +422,7 @@ impl Graph {
         }
     }
 
-    pub fn less_than_or_equal_with_primary_tensor_secondary_tensor(
+    pub fn less_than_or_equal(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -449,7 +437,7 @@ impl Graph {
         }
     }
 
-    pub fn greater_than_with_primary_tensor_secondary_tensor(
+    pub fn greater_than(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -464,7 +452,7 @@ impl Graph {
         }
     }
 
-    pub fn greater_than_or_equal_with_primary_tensor_secondary_tensor(
+    pub fn greater_than_or_equal(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -481,7 +469,7 @@ impl Graph {
 
     // MARK: - Logical ---------------------------------------------------------
 
-    pub fn logical_and_with_primary_tensor_secondary_tensor(
+    pub fn logical_and(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -496,7 +484,7 @@ impl Graph {
         }
     }
 
-    pub fn logical_or_with_primary_tensor_secondary_tensor(
+    pub fn logical_or(
         &self,
         primary_tensor: &Tensor,
         secondary_tensor: &Tensor,
@@ -511,7 +499,7 @@ impl Graph {
         }
     }
 
-    pub fn not_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn logical_not(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -523,7 +511,7 @@ impl Graph {
 
     // MARK: - Ternary ----------------------------------------------------------
 
-    pub fn select_with_predicate_tensor_true_predicate_tensor_false_predicate_tensor(
+    pub fn select(
         &self,
         predicate_tensor: &Tensor,
         true_predicate_tensor: &Tensor,
@@ -543,7 +531,7 @@ impl Graph {
         }
     }
 
-    pub fn clamp_with_tensor_min_value_tensor_max_value_tensor(
+    pub fn clamp(
         &self,
         tensor: &Tensor,
         min_value_tensor: &Tensor,
@@ -561,11 +549,7 @@ impl Graph {
 
     // Additional unary operations to fully mirror Objective-C header ---------
 
-    pub fn exponent_base10_with_tensor(
-        &self,
-        tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn exponent_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -575,11 +559,7 @@ impl Graph {
         }
     }
 
-    pub fn logarithm_base10_with_tensor(
-        &self,
-        tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn logarithm_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -589,11 +569,7 @@ impl Graph {
         }
     }
 
-    pub fn absolute_square_with_tensor(
-        &self,
-        tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    pub fn absolute_square(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -603,7 +579,7 @@ impl Graph {
         }
     }
 
-    pub fn signbit_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn signbit(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -613,7 +589,7 @@ impl Graph {
         }
     }
 
-    pub fn tanh_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn tanh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -623,7 +599,7 @@ impl Graph {
         }
     }
 
-    pub fn rint_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn rint(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -633,7 +609,7 @@ impl Graph {
         }
     }
 
-    pub fn truncate_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn truncate(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -643,7 +619,7 @@ impl Graph {
         }
     }
 
-    pub fn bitwise_not_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn bitwise_not(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -653,7 +629,7 @@ impl Graph {
         }
     }
 
-    pub fn bitwise_population_count_with_tensor(
+    pub fn bitwise_population_count(
         &self,
         tensor: &Tensor,
         name: Option<&str>,
@@ -667,7 +643,7 @@ impl Graph {
         }
     }
 
-    pub fn conjugate_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn conjugate(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -677,7 +653,7 @@ impl Graph {
         }
     }
 
-    pub fn is_infinite_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn is_infinite(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -687,7 +663,7 @@ impl Graph {
         }
     }
 
-    pub fn is_finite_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn is_finite(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -697,7 +673,7 @@ impl Graph {
         }
     }
 
-    pub fn is_nan_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn is_nan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)

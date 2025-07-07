@@ -30,6 +30,11 @@ pub mod prelude {
 
     // Extension traits for overloaded methods
     pub use crate::activation_ops::LeakyReLUAlphaTensorExt;
+    pub use crate::control_flow_ops::ForLoopIterationsExt;
+    pub use crate::convolution_ops::{
+        Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
+        Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
+    };
 }
 
 // Core types
@@ -134,3 +139,8 @@ pub mod matrix_inverse_ops;
 
 // Re-export extension traits so they are in scope by default
 pub use activation_ops::LeakyReLUAlphaTensorExt;
+pub use control_flow_ops::ForLoopIterationsExt;
+pub use convolution_ops::{
+    Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
+    Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
+};

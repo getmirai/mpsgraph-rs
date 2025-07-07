@@ -233,7 +233,7 @@ impl Graph {
     /// * `name` – Optional debug name.
     ///
     /// Returns a valid `Retained<Tensor>` with the convolution result.
-    pub fn convolution_2d_with_source_tensor_weights_tensor_descriptor(
+    pub fn convolution_2d(
         &self,
         source_tensor: &Tensor,
         weights_tensor: &Tensor,
@@ -266,7 +266,7 @@ impl Graph {
     /// * `output_shape` – Shape of the forward-pass source tensor.
     /// * `forward_convolution_descriptor` – Descriptor used in the forward op.
     /// * `name` – Optional debug name.
-    pub fn convolution_2d_data_gradient_with_incoming_gradient_tensor_weights_tensor_output_shape_forward_convolution_descriptor(
+    pub fn convolution_2d_data_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,
         weights_tensor: &Tensor,
@@ -322,7 +322,7 @@ impl Graph {
     ///
     /// Parameters are analogous to the data-gradient variant, replacing `weights_tensor` with
     /// `source_tensor`.
-    pub fn convolution_2d_weights_gradient_with_incoming_gradient_tensor_source_tensor_output_shape_forward_convolution_descriptor(
+    pub fn convolution_2d_weights_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
@@ -372,7 +372,7 @@ impl Graph {
     }
 
     /// Creates a 3-D (forward) convolution operation. See the 2-D variant for parameter meaning.
-    pub fn convolution_3d_with_source_tensor_weights_tensor_descriptor(
+    pub fn convolution_3d(
         &self,
         source_tensor: &Tensor,
         weights_tensor: &Tensor,
@@ -395,7 +395,7 @@ impl Graph {
     }
 
     /// 3-D convolution data-gradient (output shape object).
-    pub fn convolution_3d_data_gradient_with_incoming_gradient_tensor_weights_tensor_output_shape_forward_convolution_descriptor(
+    pub fn convolution_3d_data_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,
         weights_tensor: &Tensor,
@@ -445,7 +445,7 @@ impl Graph {
     }
 
     /// 3-D convolution weights-gradient (output shape object).
-    pub fn convolution_3d_weights_gradient_with_incoming_gradient_tensor_source_tensor_output_shape_forward_convolution_descriptor(
+    pub fn convolution_3d_weights_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
@@ -471,6 +471,158 @@ impl Graph {
 
     /// 3-D convolution weights-gradient (output shape tensor).
     pub fn convolution_3d_weights_gradient_with_incoming_gradient_tensor_source_tensor_output_shape_tensor_forward_convolution_descriptor(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution3DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                convolution3DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                sourceTensor: source_tensor,
+                outputShapeTensor: output_shape_tensor,
+                forwardConvolutionDescriptor: forward_convolution_descriptor,
+                name: name_ptr
+            ]
+        }
+    }
+}
+
+// -------------------------------------------------------------------------
+// Extension traits providing tensor-shape overloads
+// -------------------------------------------------------------------------
+
+pub trait Convolution2DDataGradientTensorShapeExt {
+    fn convolution_2d_data_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        weights_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+}
+
+impl Convolution2DDataGradientTensorShapeExt for Graph {
+    fn convolution_2d_data_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        weights_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                convolution2DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                weightsTensor: weights_tensor,
+                outputShapeTensor: output_shape_tensor,
+                forwardConvolutionDescriptor: forward_convolution_descriptor,
+                name: name_ptr
+            ]
+        }
+    }
+}
+
+pub trait Convolution2DWeightsGradientTensorShapeExt {
+    fn convolution_2d_weights_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+}
+
+impl Convolution2DWeightsGradientTensorShapeExt for Graph {
+    fn convolution_2d_weights_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution2DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                convolution2DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                sourceTensor: source_tensor,
+                outputShapeTensor: output_shape_tensor,
+                forwardConvolutionDescriptor: forward_convolution_descriptor,
+                name: name_ptr
+            ]
+        }
+    }
+}
+
+pub trait Convolution3DDataGradientTensorShapeExt {
+    fn convolution_3d_data_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        weights_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution3DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+}
+
+impl Convolution3DDataGradientTensorShapeExt for Graph {
+    fn convolution_3d_data_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        weights_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution3DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                convolution3DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
+                weightsTensor: weights_tensor,
+                outputShapeTensor: output_shape_tensor,
+                forwardConvolutionDescriptor: forward_convolution_descriptor,
+                name: name_ptr
+            ]
+        }
+    }
+}
+
+pub trait Convolution3DWeightsGradientTensorShapeExt {
+    fn convolution_3d_weights_gradient(
+        &self,
+        incoming_gradient_tensor: &Tensor,
+        source_tensor: &Tensor,
+        output_shape_tensor: &Tensor,
+        forward_convolution_descriptor: &Convolution3DOpDescriptor,
+        name: Option<&str>,
+    ) -> Retained<Tensor>;
+}
+
+impl Convolution3DWeightsGradientTensorShapeExt for Graph {
+    fn convolution_3d_weights_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
