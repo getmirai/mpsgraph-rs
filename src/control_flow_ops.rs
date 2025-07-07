@@ -15,7 +15,6 @@ use crate::utils::block_wrapper::{
 
 /// Control-flow helpers are now inherent methods on `Graph`.
 impl Graph {
-    // Public wrappers ---------------------------------------------------------
     pub fn control_dependency<F>(
         &self,
         operations: &[&Operation],
@@ -220,9 +219,22 @@ impl Graph {
             result_array_opt.map_or(Vec::new(), convert_retained_nsarray_to_vec)
         }
     }
+}
 
-    // Private helper implementing the number-of-iterations variant.
-    fn for_loop_impl_with_iterations<F>(
+pub trait ForLoopIterationsExt {
+    fn for_loop<F>(
+        &self,
+        num_iterations: &Tensor,
+        initial_body_arguments: &[&Tensor],
+        body_block: F,
+        name: Option<&str>,
+    ) -> Vec<Retained<Tensor>>
+    where
+        F: Fn(&Tensor, &[&Tensor]) -> Vec<Retained<Tensor>> + 'static;
+}
+
+impl ForLoopIterationsExt for Graph {
+    fn for_loop<F>(
         &self,
         num_iterations: &Tensor,
         initial_body_arguments: &[&Tensor],
@@ -268,36 +280,5 @@ impl Graph {
 
             result_array_opt.map_or(Vec::new(), convert_retained_nsarray_to_vec)
         }
-    }
-}
-
-// -------------------------------------------------------------------------
-// Extension trait providing the overloaded `for_loop` variant (iterations)
-// -------------------------------------------------------------------------
-
-pub trait ForLoopIterationsExt {
-    fn for_loop<F>(
-        &self,
-        num_iterations: &Tensor,
-        initial_body_arguments: &[&Tensor],
-        body_block: F,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn(&Tensor, &[&Tensor]) -> Vec<Retained<Tensor>> + 'static;
-}
-
-impl ForLoopIterationsExt for Graph {
-    fn for_loop<F>(
-        &self,
-        num_iterations: &Tensor,
-        initial_body_arguments: &[&Tensor],
-        body_block: F,
-        name: Option<&str>,
-    ) -> Vec<Retained<Tensor>>
-    where
-        F: Fn(&Tensor, &[&Tensor]) -> Vec<Retained<Tensor>> + 'static,
-    {
-        self.for_loop_impl_with_iterations(num_iterations, initial_body_arguments, body_block, name)
     }
 }

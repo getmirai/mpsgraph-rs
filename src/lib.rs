@@ -144,3 +144,4 @@ pub use convolution_ops::{
     Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
     Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
 };
+pub use fourier_transform_ops::FFTAxesTensorExt;

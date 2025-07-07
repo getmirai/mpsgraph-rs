@@ -11,8 +11,6 @@ use crate::graph::Graph;
 use crate::tensor::Tensor;
 
 impl Graph {
-    // MARK: - Unary operations -------------------------------------------------
-
     pub fn identity(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ptr = name
@@ -375,8 +373,6 @@ impl Graph {
         }
     }
 
-    // MARK: - Comparisons ------------------------------------------------------
-
     pub fn equal(
         &self,
         primary_tensor: &Tensor,
@@ -467,8 +463,6 @@ impl Graph {
         }
     }
 
-    // MARK: - Logical ---------------------------------------------------------
-
     pub fn logical_and(
         &self,
         primary_tensor: &Tensor,
@@ -509,8 +503,6 @@ impl Graph {
         }
     }
 
-    // MARK: - Ternary ----------------------------------------------------------
-
     pub fn select(
         &self,
         predicate_tensor: &Tensor,
@@ -546,8 +538,6 @@ impl Graph {
             msg_send![self, clampWithTensor: tensor, minValueTensor: min_value_tensor, maxValueTensor: max_value_tensor, name: name_ptr]
         }
     }
-
-    // Additional unary operations to fully mirror Objective-C header ---------
 
     pub fn exponent_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
