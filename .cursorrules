@@ -55,3 +55,11 @@ The rules below are CRITICAL. Each rule should be respected. Rules can only be o
 - If two or more Obj-C methods map to the same Rust name, keep one inherent method on `Graph` and expose any additional overloads via extension traits (same base name, different parameter list).
 - The Obj-C function comments should be ported and adapted to rust, for example: MPSGraphTensor -> Retained<Tensor>.
 - Re-export all such extension traits from the crate root so they are in scope by default when users `use mpsgraph_rs::*;`.
+- name: Option<&str> in arguments should be transformed to 
+  ```rust
+  let name = name
+            .map(NSString::from_str)
+            .as_deref()
+            .map_or(std::ptr::null(), |s| s as *const _);
+  ```
+  to be passed furher to objc.

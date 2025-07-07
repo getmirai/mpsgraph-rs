@@ -209,7 +209,10 @@ impl Graph {
         descriptor: &FFTDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
-        let name_obj = name.map(NSString::from_str);
+        let name = name
+            .map(NSString::from_str)
+            .as_deref()
+            .map_or(std::ptr::null(), |s| s as *const _);
         let axes_numbers: Vec<Retained<NSNumber>> =
             axes.iter().map(|&x| NSNumber::new_i64(x)).collect();
         let refs: Vec<&NSNumber> = axes_numbers.iter().map(|n| n.as_ref()).collect();
@@ -219,7 +222,7 @@ impl Graph {
                 self, hermiteanToRealFFTWithTensor: tensor,
                 axes: &*ns_array,
                 descriptor: descriptor,
-                name: name_obj.as_deref().map_or(std::ptr::null(), |s| s as *const _),
+                name: name,
             ]
         }
     }
