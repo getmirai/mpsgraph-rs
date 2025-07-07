@@ -16,13 +16,13 @@ impl Graph {
     ///   - tensor: The input tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object.
-    pub fn relu(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn relu_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, reLUWithTensor: x, name: name_ptr]
+            msg_send![self, reLUWithTensor: tensor, name: name_ptr]
         }
     }
 
@@ -33,7 +33,7 @@ impl Graph {
     ///   - source: The input tensor from forward pass.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object.
-    pub fn relu_gradient(
+    pub fn relu_gradient_with_incoming_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -59,13 +59,13 @@ impl Graph {
     ///   - tensor: The input tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object.
-    pub fn sigmoid(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    pub fn sigmoid_with_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, sigmoidWithTensor: x, name: name_ptr]
+            msg_send![self, sigmoidWithTensor: tensor, name: name_ptr]
         }
     }
 
@@ -76,7 +76,7 @@ impl Graph {
     ///   - source: The input tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn sigmoid_gradient(
+    pub fn sigmoid_gradient_with_incoming_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -103,13 +103,18 @@ impl Graph {
     ///   - axis: The axis along which softmax is computed.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn softmax(&self, x: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
+    pub fn soft_max_with_tensor(
+        &self,
+        tensor: &Tensor,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, softMaxWithTensor: x, axis: axis, name: name_ptr]
+            msg_send![self, softMaxWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
@@ -121,7 +126,7 @@ impl Graph {
     ///   - axis: The axis along which softmax is computed.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn softmax_gradient(
+    pub fn soft_max_gradient_with_incoming_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -152,13 +157,18 @@ impl Graph {
     ///   - alpha: The scalar value alpha used by all elements in the input tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn leaky_relu(&self, x: &Tensor, alpha: f64, name: Option<&str>) -> Retained<Tensor> {
+    pub fn leaky_relu_with_tensor_alpha(
+        &self,
+        tensor: &Tensor,
+        alpha: f64,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
             let name_ptr = name_ns
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, leakyReLUWithTensor: x, alpha: alpha, name: name_ptr]
+            msg_send![self, leakyReLUWithTensor: tensor, alpha: alpha, name: name_ptr]
         }
     }
 
@@ -172,9 +182,9 @@ impl Graph {
     ///   - alpha: The alpha tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn leaky_relu_with_alpha_tensor(
+    pub fn leaky_relu_with_tensor_alpha_tensor(
         &self,
-        x: &Tensor,
+        tensor: &Tensor,
         alpha_tensor: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -185,7 +195,7 @@ impl Graph {
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
-                leakyReLUWithTensor: x,
+                leakyReLUWithTensor: tensor,
                 alphaTensor: alpha_tensor,
                 name: name_ptr
             ]
@@ -202,7 +212,7 @@ impl Graph {
     ///   - alpha: The alpha tensor
     ///   - name: The name for the operation.
     /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn leaky_relu_gradient_with_alpha_tensor(
+    pub fn leaky_relu_gradient_with_incoming_gradient(
         &self,
         gradient: &Tensor,
         source: &Tensor,
@@ -221,26 +231,6 @@ impl Graph {
                 alphaTensor: alpha_tensor,
                 name: name_ptr
             ]
-        }
-    }
-
-    pub fn elu(&self, x: &Tensor, alpha: f32, name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, eluWithTensor: x, alpha: alpha, name: name_ptr]
-        }
-    }
-
-    pub fn gelu(&self, x: &Tensor, name: Option<&str>) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, geluWithTensor: x, name: name_ptr]
         }
     }
 }
