@@ -5,17 +5,18 @@ use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
+use crate::scalar_or_tensor::ScalarOrTensor;
 use crate::tensor::Tensor;
 
 impl Graph {
-    /// Computes the ReLU (rectified linear activation unit) function on `tensor`.
+    /// Computes the ReLU (rectified linear activation unit) function with the input tensor.
     ///
     /// The operation is:  f(x) = max(x, 0).
     ///
     /// - Parameters:
     ///   - tensor: The input tensor.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object.
+    /// - Returns: A valid `Tensor` object.
     pub fn relu(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             let name_ns = name.map(NSString::from_str);
@@ -26,13 +27,13 @@ impl Graph {
         }
     }
 
-    /// Computes the gradient of the ReLU activation.
+    /// Computes the gradient of the ReLU  (rectified linear activation unit) function using the incoming gradient.
     ///
     /// - Parameters:
     ///   - gradient: The incoming gradient tensor.
     ///   - source: The input tensor from forward pass.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object.
+    /// - Returns: A valid `Tensor` object.
     pub fn relu_gradient(
         &self,
         gradient: &Tensor,
@@ -40,8 +41,8 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
@@ -53,29 +54,29 @@ impl Graph {
         }
     }
 
-    /// Computes the sigmoid function on `tensor`.
+    /// Computes the sigmoid operation on an input tensor.
     ///
     /// - Parameters:
     ///   - tensor: The input tensor.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object.
+    /// - Returns: A valid `Tensor` object.
     pub fn sigmoid(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self, sigmoidWithTensor: tensor, name: name_ptr]
         }
     }
 
-    /// Computes the gradient of the sigmoid function.
+    /// Computes the gradient of the sigmoid function using the incoming gradient tensor.
     ///
     /// - Parameters:
     ///   - gradient: The incoming gradient tensor.
     ///   - source: The input tensor.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object
+    /// - Returns: A valid `Tensor` object.
     pub fn sigmoid_gradient(
         &self,
         gradient: &Tensor,
@@ -83,8 +84,8 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
@@ -96,31 +97,31 @@ impl Graph {
         }
     }
 
-    /// Computes the soft-max function on `tensor` along `axis`.
+    /// Computes the softmax function on the input tensor along the specified axis.
     ///
     /// - Parameters:
     ///   - tensor: The input tensor.
     ///   - axis: The axis along which softmax is computed.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object
+    /// - Returns: A valid `Tensor` object.
     pub fn soft_max(&self, tensor: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self, softMaxWithTensor: tensor, axis: axis, name: name_ptr]
         }
     }
 
-    /// Computes the gradient of the soft-max function along `axis`.
+    /// Computes the gradient of the softmax function along the specified axis using the incoming gradient tensor.
     ///
     /// - Parameters:
     ///   - gradient: The incoming gradient tensor.
     ///   - source: The input tensor.
     ///   - axis: The axis along which softmax is computed.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object
+    /// - Returns: A valid `Tensor` object.
     pub fn soft_max_gradient(
         &self,
         gradient: &Tensor,
@@ -129,8 +130,8 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
@@ -143,7 +144,7 @@ impl Graph {
         }
     }
 
-    /// Computes the leaky-ReLU activation with scalar `alpha`.
+    /// Computes the leaky rectified linear unit (ReLU) activation function on the input tensor.
     ///
     /// The operation is: f(x) = max(x, alpha).
     ///
@@ -151,18 +152,30 @@ impl Graph {
     ///   - tensor: An input tensor.
     ///   - alpha: The scalar value alpha used by all elements in the input tensor.
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object
-    pub fn leaky_relu(&self, tensor: &Tensor, alpha: f64, name: Option<&str>) -> Retained<Tensor> {
+    /// - Returns: A valid `Tensor` object.
+    pub fn leaky_relu(
+        &self,
+        tensor: &Tensor,
+        alpha: ScalarOrTensor,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, leakyReLUWithTensor: tensor, alpha: alpha, name: name_ptr]
+            match alpha {
+                ScalarOrTensor::Scalar(alpha) => {
+                    msg_send![self, leakyReLUWithTensor: tensor, alpha: alpha, name: name_ptr]
+                }
+                ScalarOrTensor::Tensor(alpha_tensor) => {
+                    msg_send![self, leakyReLUWithTensor: tensor, alphaTensor: alpha_tensor, name: name_ptr]
+                }
+            }
         }
     }
 
-    /// Computes the gradient of the leaky-ReLU activation.
+    /// Computes the gradient of the leaky rectified linear unit (ReLU) activation.
     ///
     /// This operation supports broadcasting with the alpha tensor.
     ///
@@ -171,7 +184,7 @@ impl Graph {
     ///   - source: The input tensor in forward pass.
     ///   - alpha: The alpha tensor
     ///   - name: The name for the operation.
-    /// - Returns: A valid ``MPSGraphTensor`` object
+    /// - Returns: A valid `Tensor` object.
     pub fn leaky_relu_gradient(
         &self,
         gradient: &Tensor,
@@ -180,46 +193,14 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 leakyReLUGradientWithIncomingGradient: gradient,
                 sourceTensor: source,
-                alphaTensor: alpha_tensor,
-                name: name_ptr
-            ]
-        }
-    }
-}
-
-/// Provides the `leaky_relu` overload that takes an `alpha_tensor` instead of a scalar alpha.
-pub trait LeakyReLUAlphaTensorExt {
-    fn leaky_relu(
-        &self,
-        tensor: &Tensor,
-        alpha_tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor>;
-}
-
-impl LeakyReLUAlphaTensorExt for Graph {
-    fn leaky_relu(
-        &self,
-        tensor: &Tensor,
-        alpha_tensor: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![
-                self,
-                leakyReLUWithTensor: tensor,
                 alphaTensor: alpha_tensor,
                 name: name_ptr
             ]
