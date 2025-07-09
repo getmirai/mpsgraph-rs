@@ -15,6 +15,16 @@ pub trait GraphQuantizationOps {
         name: Option<&str>,
     ) -> Option<Retained<Tensor>>;
 
+    fn dequantize_with_scale_tensor_zero_point_and_axis(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point: f64,
+        data_type: DataType,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>>;
+
     fn dequantize_with_scale_tensor_and_zero_point_tensor(
         &self,
         tensor: &Tensor,
@@ -44,6 +54,32 @@ impl GraphQuantizationOps for Graph {
                 dequantizeTensor: tensor,
                 scaleTensor: scale_tensor,
                 dataType: data_type as u32,
+                name: name_ptr
+            ]
+        }
+    }
+
+    fn dequantize_with_scale_tensor_zero_point_and_axis(
+        &self,
+        tensor: &Tensor,
+        scale_tensor: &Tensor,
+        zero_point: f64,
+        data_type: DataType,
+        axis: i64,
+        name: Option<&str>,
+    ) -> Option<Retained<Tensor>> {
+        unsafe {
+            let name_ns = name.map(NSString::from_str);
+            let name_ptr = name_ns
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+            msg_send![
+                self,
+                dequantizeTensor: tensor,
+                scaleTensor: scale_tensor,
+                zeroPoint: zero_point,
+                dataType: data_type as u32,
+                axis: axis as i64,
                 name: name_ptr
             ]
         }
