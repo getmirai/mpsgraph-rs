@@ -1,5 +1,3 @@
-//! Subgraph calling helper exposed directly on `Graph`.
-
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::{NSArray, NSString};
@@ -7,24 +5,23 @@ use objc2_foundation::{NSArray, NSString};
 use crate::data_types::ShapedType;
 use crate::graph::Graph;
 use crate::tensor::Tensor;
-use crate::utils::block_wrapper::convert_nsarray_to_vec;
 
 impl Graph {
-    /// Invoke another compiled executable by symbol name.
+    /// Creates an operation which invokes another executable.
     ///
-    /// * `symbol_name` – Identifier of the executable in the compilation descriptor.
-    /// * `input_tensors` – Inputs passed to the executable.
-    /// * `output_types` – Expected shapes/dtypes of the outputs.
-    /// * `name` – Optional debug name.
-    ///
-    /// Returns the tensors produced by the callee.
+    /// - Parameters:
+    ///   - symbol_name: The unique identifier used to find the executable in the `MPSGraphCompilationDescriptor.callables` directory.
+    ///   - input_tensors: The tensors which are passed as inputs to the executable being invoked.
+    ///   - output_types: The expected return types of the executable being invoked.
+    ///   - name: name of operation.
+    /// - Returns: A boxed slice of valid `Tensor` objects representing the return tensors of the invoked executable.
     pub fn call_symbol_name(
         &self,
         symbol_name: &str,
         input_tensors: &[&Tensor],
         output_types: &[&ShapedType],
         name: Option<&str>,
-    ) -> Vec<Retained<Tensor>> {
+    ) -> Box<[Retained<Tensor>]> {
         unsafe {
             let name_ptr = name
                 .map(NSString::from_str)
@@ -35,7 +32,7 @@ impl Graph {
             let input_tensors_array = NSArray::from_slice(input_tensors);
             let output_types_array = NSArray::from_slice(output_types);
 
-            let result_array_ptr: *mut NSArray<Tensor> = msg_send![
+            let result_nsarray: Retained<NSArray<Tensor>> = msg_send![
                 self,
                 callSymbolName: &*symbol_name_ns,
                 inputTensors: &*input_tensors_array,
@@ -43,7 +40,7 @@ impl Graph {
                 name: name_ptr,
             ];
 
-            convert_nsarray_to_vec(result_array_ptr)
+            result_nsarray.to_vec().into_boxed_slice()
         }
     }
 }
