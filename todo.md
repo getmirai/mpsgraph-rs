@@ -27,7 +27,7 @@ let name = name.map(NSString::from_str)
                          
 - [x] ActivationOps
 - [x] ArithmeticOps
-- [ ] CallOps
+- [x] CallOps
 - [ ] ConvolutionOps
 - [ ] ConvolutionTransposeOps
 - [ ] ControlFlowOps

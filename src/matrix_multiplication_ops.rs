@@ -11,14 +11,14 @@ impl Graph {
     /// Computes the matrix multiplication of 2 input tensors with support for broadcasting.
     ///
     /// - Parameters:
-    ///   - primary_tensor: The left-hand side tensor.
-    ///   - secondary_tensor: The right-hand side tensor.
+    ///   - primary: The left-hand side tensor.
+    ///   - secondary: The right-hand side tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid tensor containing the product of the input matrices.
     pub fn matrix_multiplication(
         &self,
-        primary_tensor: &Tensor,
-        secondary_tensor: &Tensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -26,7 +26,7 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, matrixMultiplicationWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, name: name_ptr]
+            msg_send![self, matrixMultiplicationWithPrimaryTensor: primary, secondaryTensor: secondary, name: name_ptr]
         }
     }
 
@@ -36,15 +36,15 @@ impl Graph {
     /// input tensor is considered a vector.
     ///
     /// - Parameters:
-    ///   - primary_tensor: The first input tensor.
-    ///   - secondary_tensor: The second input tensor.
+    ///   - primary: The first input tensor.
+    ///   - secondary: The second input tensor.
     ///   - result_data_type: The datatype of the return Tensor. Must be either `DataType::UInt32` or `DataType::UInt16`.
     ///   - name: The name for the operation.
     /// - Returns: A valid tensor containing the hamming distance between the input tensors.
     pub fn hamming_distance(
         &self,
-        primary_tensor: &Tensor,
-        secondary_tensor: &Tensor,
+        primary: &Tensor,
+        secondary: &Tensor,
         result_data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -53,7 +53,7 @@ impl Graph {
                 .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, HammingDistanceWithPrimaryTensor: primary_tensor, secondaryTensor: secondary_tensor, resultDataType: result_data_type as u32, name: name_ptr]
+            msg_send![self, HammingDistanceWithPrimaryTensor: primary, secondaryTensor: secondary, resultDataType: result_data_type as u32, name: name_ptr]
         }
     }
 
@@ -66,9 +66,9 @@ impl Graph {
     /// [B, Hv, Nkv, F] should satisfy the matmul (QK^T + M)V.
     ///
     /// - Parameters:
-    ///   - query_tensor: A tensor that represents the query projection.
-    ///   - key_tensor: A tensor that represents the key projection.
-    ///   - value_tensor: A tensor that represents the value projection.
+    ///   - query: A tensor that represents the query projection.
+    ///   - key: A tensor that represents the key projection.
+    ///   - value: A tensor that represents the value projection.
     ///   - mask_tensor: An optional tensor that contains a mask that is applied to the scaled, matrix
     ///   multiplied query and value matrices. If mask tensor is nil, the QK^T is not element-wise masked.
     ///   - scale: A scale that is applied to the result of query and value matrix multiply.
@@ -76,9 +76,9 @@ impl Graph {
     /// - Returns: A valid Tensor object.
     pub fn scaled_dot_product_attention(
         &self,
-        query_tensor: &Tensor,
-        key_tensor: &Tensor,
-        value_tensor: &Tensor,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
         mask_tensor: &Tensor,
         scale: f32,
         name: Option<&str>,
@@ -90,9 +90,9 @@ impl Graph {
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
-                scaledDotProductAttentionWithQueryTensor: query_tensor,
-                keyTensor: key_tensor,
-                valueTensor: value_tensor,
+                scaledDotProductAttentionWithQueryTensor: query,
+                keyTensor: key,
+                valueTensor: value,
                 maskTensor: mask_tensor,
                 scale: scale,
                 name: name_ptr
@@ -104,9 +104,9 @@ impl Graph {
 pub trait ScaledDotProductAttentionExt {
     fn scaled_dot_product_attention(
         &self,
-        query_tensor: &Tensor,
-        key_tensor: &Tensor,
-        value_tensor: &Tensor,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor>;
@@ -116,17 +116,17 @@ impl ScaledDotProductAttentionExt for Graph {
     /// Creates a scaled dot product attention (SDPA) operation (without a mask) and returns the result tensor.
     ///
     /// - Parameters:
-    ///   - query_tensor: A tensor that represents the query projection.
-    ///   - key_tensor: A tensor that represents the key projection.
-    ///   - value_tensor: A tensor that represents the value projection.
+    ///   - query: A tensor that represents the query projection.
+    ///   - key: A tensor that represents the key projection.
+    ///   - value: A tensor that represents the value projection.
     ///   - scale: A scale that is applied on the result of query and value matrix multiply.
     ///   - name: The name for the operation.
     /// - Returns: A valid Tensor object.
     fn scaled_dot_product_attention(
         &self,
-        query_tensor: &Tensor,
-        key_tensor: &Tensor,
-        value_tensor: &Tensor,
+        query: &Tensor,
+        key: &Tensor,
+        value: &Tensor,
         scale: f32,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -137,9 +137,9 @@ impl ScaledDotProductAttentionExt for Graph {
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
-                scaledDotProductAttentionWithQueryTensor: query_tensor,
-                keyTensor: key_tensor,
-                valueTensor: value_tensor,
+                scaledDotProductAttentionWithQueryTensor: query,
+                keyTensor: key,
+                valueTensor: value,
                 scale: scale,
                 name: name_ptr
             ]

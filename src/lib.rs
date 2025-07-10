@@ -28,13 +28,11 @@ pub mod prelude {
     pub use objc2::rc::Retained;
     pub use objc2_foundation::NSObject;
 
-    // Extension traits for overloaded methods
-    pub use crate::activation_ops::LeakyReLUAlphaTensorExt;
-    pub use crate::control_flow_ops::ForLoopIterationsExt;
     pub use crate::convolution_ops::{
         Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
         Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
     };
+    pub use crate::matrix_multiplication_ops::ScaledDotProductAttentionExt;
 }
 
 // Core types
@@ -53,7 +51,6 @@ pub mod tensor_data;
 pub mod activation_ops;
 pub mod arithmetic_ops;
 pub mod call_ops;
-pub mod control_flow_ops;
 pub mod convolution_ops;
 pub mod convolution_transpose_ops;
 pub mod cumulative_ops;
@@ -62,8 +59,8 @@ pub mod fourier_transform_ops;
 pub mod gather_ops;
 pub mod gradient_ops;
 pub mod im2col_ops;
-pub mod linear_algebra_ops;
 pub mod loss_ops;
+pub mod matrix_multiplication_ops;
 pub mod memory_ops;
 pub mod non_maximum_suppression_ops;
 pub mod non_zero_ops;
@@ -137,11 +134,13 @@ mod tests {
 
 pub mod matrix_inverse_ops;
 
-// Re-export extension traits so they are in scope by default
-pub use activation_ops::LeakyReLUAlphaTensorExt;
-pub use control_flow_ops::ForLoopIterationsExt;
+pub mod scalar_or_tensor;
+
+pub use scalar_or_tensor::ScalarOrTensor;
+
 pub use convolution_ops::{
     Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
     Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
 };
 pub use fourier_transform_ops::FFTAxesTensorExt;
+pub use matrix_multiplication_ops::ScaledDotProductAttentionExt;

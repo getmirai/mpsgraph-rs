@@ -181,6 +181,55 @@ impl ImToColOpDescriptor {
         }
         self
     }
+
+    /// Sets the kernel width.
+    pub fn set_kernel_width(&self, kernel_width: usize) {
+        unsafe {
+            let _: () = msg_send![self, setKernelWidth: kernel_width as u64];
+        }
+    }
+
+    /// Sets the kernel height.
+    pub fn set_kernel_height(&self, kernel_height: usize) {
+        unsafe {
+            let _: () = msg_send![self, setKernelHeight: kernel_height as u64];
+        }
+    }
+
+    /// Sets the horizontal stride.
+    pub fn set_stride_x(&self, stride_x: usize) {
+        unsafe {
+            let _: () = msg_send![self, setStrideInX: stride_x as u64];
+        }
+    }
+
+    /// Sets the vertical stride.
+    pub fn set_stride_y(&self, stride_y: usize) {
+        unsafe {
+            let _: () = msg_send![self, setStrideInY: stride_y as u64];
+        }
+    }
+
+    /// Sets the horizontal dilation rate.
+    pub fn set_dilation_rate_x(&self, dilation_x: usize) {
+        unsafe {
+            let _: () = msg_send![self, setDilationRateInX: dilation_x as u64];
+        }
+    }
+
+    /// Sets the vertical dilation rate.
+    pub fn set_dilation_rate_y(&self, dilation_y: usize) {
+        unsafe {
+            let _: () = msg_send![self, setDilationRateInY: dilation_y as u64];
+        }
+    }
+
+    /// Sets the data layout (NCHW / NHWC).
+    pub fn set_data_layout(&self, layout: TensorNamedDataLayout) {
+        unsafe {
+            let _: () = msg_send![self, setDataLayout: layout as u64];
+        }
+    }
 }
 
 /// ImToCol operations for Graph

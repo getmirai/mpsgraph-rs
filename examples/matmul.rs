@@ -93,7 +93,7 @@ fn main() {
     let b = graph.placeholder(DataType::Float32, &b_tensor_shape, None);
 
     // Perform matrix multiplication: A * B using the new simplified API
-    let result = graph.matmul(&a, &b, None);
+    let result = graph.matrix_multiplication(&a, &b, None);
 
     // Create TensorBuffers for inputs
     let a_tensor = TensorBuffer::new(&device, &a_data, &a_shape, DataType::Float32);

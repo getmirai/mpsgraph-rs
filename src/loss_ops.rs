@@ -43,7 +43,7 @@ impl Graph {
     /// # Returns
     ///
     /// A tensor containing the computed loss
-    pub fn softmax_cross_entropy(
+    pub fn soft_max_cross_entropy(
         &self,
         source_tensor: &Tensor,
         labels_tensor: &Tensor,
@@ -79,7 +79,7 @@ impl Graph {
     /// # Returns
     ///
     /// A tensor containing the gradient with respect to the source tensor
-    pub fn softmax_cross_entropy_gradient(
+    pub fn soft_max_cross_entropy_gradient(
         &self,
         gradient_tensor: &Tensor,
         source_tensor: &Tensor,
