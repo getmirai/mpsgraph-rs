@@ -28,10 +28,6 @@ pub mod prelude {
     pub use objc2::rc::Retained;
     pub use objc2_foundation::NSObject;
 
-    pub use crate::convolution_ops::{
-        Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
-        Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
-    };
     pub use crate::matrix_multiplication_ops::ScaledDotProductAttentionExt;
 }
 
@@ -99,10 +95,6 @@ pub use tensor_data::TensorData;
 
 // Arithmetic and cumulative helpers are inherent on `Graph` now – no trait re-export.
 pub use command_buffer::{CommandBuffer, CommandBufferStatus};
-pub use convolution_ops::{
-    Convolution2DOpDescriptor, Convolution3DOpDescriptor, ConvolutionDataLayout, PaddingMode,
-    WeightsLayout,
-};
 pub use data_types::{DataTypeAttributeValue, ExecutionMode, ShapeDescriptor, ShapedType, Type};
 pub use depthwise_convolution_ops::{
     DepthwiseConvolution2DOpDescriptor, DepthwiseConvolution3DOpDescriptor,
@@ -138,9 +130,5 @@ pub mod scalar_or_tensor;
 
 pub use scalar_or_tensor::ScalarOrTensor;
 
-pub use convolution_ops::{
-    Convolution2DDataGradientTensorShapeExt, Convolution2DWeightsGradientTensorShapeExt,
-    Convolution3DDataGradientTensorShapeExt, Convolution3DWeightsGradientTensorShapeExt,
-};
 pub use fourier_transform_ops::FFTAxesTensorExt;
 pub use matrix_multiplication_ops::ScaledDotProductAttentionExt;
