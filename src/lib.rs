@@ -14,9 +14,8 @@ mod graph;
 // mod convolution_ops;
 // mod convolution_transpose_ops;
 
-pub use core::ClassType;
 pub use core::Shape;
-pub use device::Device;
+pub use device::{ComputeDevice, Device};
 // pub use executable::{
 //     CompilationDescriptor, DeploymentPlatform, Executable, ExecutableExecutionDescriptor,
 //     ExecutionDescriptor, ExecutionResult, ExecutionStage, Optimization, OptimizationProfile,
