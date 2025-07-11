@@ -6,6 +6,7 @@ mod core;
 mod device;
 mod executable;
 mod graph;
+mod ops;
 // mod scalar_or_tensor;
 
 // mod activation_ops;
@@ -14,8 +15,8 @@ mod graph;
 // mod convolution_ops;
 // mod convolution_transpose_ops;
 
-pub use core::Shape;
-pub use device::{ComputeDevice, Device};
+pub use core::{GraphObject, Shape};
+pub use device::{ComputeDevice, Device, DeviceType};
 // pub use executable::{
 //     CompilationDescriptor, DeploymentPlatform, Executable, ExecutableExecutionDescriptor,
 //     ExecutionDescriptor, ExecutionResult, ExecutionStage, Optimization, OptimizationProfile,

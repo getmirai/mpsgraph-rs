@@ -5,8 +5,8 @@ use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
 use crate::graph::Graph;
-use crate::scalar_or_tensor::ScalarOrTensor;
-use crate::tensor::Tensor;
+use crate::ScalarOrTensor;
+use crate::Tensor;
 
 impl Graph {
     /// Computes the ReLU (rectified linear activation unit) function with the input tensor.

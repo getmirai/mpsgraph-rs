@@ -1,26 +1,41 @@
+use crate::DeviceType;
+use crate::GraphObject;
 use metal::foreign_types::ForeignType;
 use metal::Device as MetalDevice;
 use objc2::rc::Retained;
-use objc2::runtime::NSObject;
-use objc2::{extern_class, msg_send, ClassType};
+use objc2::runtime::{AnyObject, NSObject};
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
 use objc2_foundation::NSObjectProtocol;
-use std::fmt;
-use std::str::FromStr;
 
-// The extern_class macro will generate the struct definition
 extern_class!(
+    /// A class that describes the compute device.
+    ///
+    /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphdevice?language=objc)
+    #[unsafe(super(GraphObject, NSObject))]
     #[derive(Debug, PartialEq, Eq, Hash)]
-    #[unsafe(super = NSObject)]
     #[name = "MPSGraphDevice"]
     pub struct Device;
 );
 
-unsafe impl NSObjectProtocol for Device {}
+extern_conformance!(
+    unsafe impl NSObjectProtocol for Device {}
+);
+
+impl Device {
+    extern_methods!(
+        /// Device of the MPSGraphDevice.
+        #[unsafe(method(type))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn r#type(&self) -> DeviceType;
+    );
+}
 
 impl Device {
     /// Creates a new Device using the system default Metal device
     pub fn new() -> Retained<Self> {
-        let device = metal::Device::system_default().expect("No Metal device found");
+        let device = MetalDevice::system_default()
+            .expect("No Metal device found")
+            .to_owned();
         Self::with_device(&device)
     }
 
@@ -28,12 +43,8 @@ impl Device {
     pub fn with_device(device: &MetalDevice) -> Retained<Self> {
         unsafe {
             let class = Self::class();
-            let device_ptr = device.as_ptr();
-
-            // Cast the raw device pointer to id type (NSObject) as expected by MPS
-            let device_id = device_ptr as *mut objc2::runtime::AnyObject;
-
-            msg_send![class, deviceWithMTLDevice: device_id]
+            let device_ptr = device.as_ptr() as *mut AnyObject;
+            msg_send![class, deviceWithMTLDevice: device_ptr]
         }
     }
 }
