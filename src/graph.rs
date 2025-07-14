@@ -10,10 +10,9 @@ use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
 use crate::operation::Operation;
-use crate::tensor::{DataType, Tensor};
-use crate::tensor_data::TensorData;
 use crate::Shape;
 use crate::ShapedType;
+use crate::{DataType, Tensor, TensorData};
 
 /// Trait for scalar types that can be used in Graph operations
 /// This trait is used for both single scalar values and arrays of values
@@ -86,18 +85,17 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor: Retained<Tensor> = msg_send![
+            msg_send![
                 self,
-                placeholderWithShape: shape.as_ptr(),
+                placeholderWithShape: &*shape,
                 dataType: data_type as u32,
                 name: name_ptr
-            ];
-            tensor
+            ]
         }
     }
 
@@ -177,7 +175,7 @@ impl Graph {
             let tensor: Retained<Tensor> = msg_send![
                 self,
                 constantWithData: &*ns_data,
-                shape: shape.as_ptr(),
+                shape: shape,
                 dataType: data_type as u32
             ];
             tensor
@@ -204,13 +202,12 @@ impl Graph {
         shape: &Shape,
     ) -> Retained<Tensor> {
         unsafe {
-            let tensor: Retained<Tensor> = msg_send![
+            msg_send![
                 self,
                 constantWithScalar: value,
-                shape: shape.as_ptr(),
+                shape: shape,
                 dataType: data_type as u32
-            ];
-            tensor
+            ]
         }
     }
 
@@ -530,7 +527,7 @@ impl Graph {
 
             let tensor: Retained<Tensor> = msg_send![
                 self,
-                randomUniformTensorWithShape: shape.as_ptr(),
+                randomUniformTensorWithShape: shape,
                 min: min,
                 max: max,
                 dataType: data_type as u64,
@@ -559,7 +556,7 @@ impl Graph {
 
             let tensor: Retained<Tensor> = msg_send![
                 self,
-                randomNormalTensorWithShape: shape.as_ptr(),
+                randomNormalTensorWithShape: shape,
                 mean: mean,
                 standardDeviation: std_dev,
                 dataType: data_type as u64,
@@ -583,13 +580,12 @@ impl Graph {
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
 
-            let tensor: Retained<Tensor> = msg_send![
+            msg_send![
                 self,
                 additionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
                 name: name_ptr
-            ];
-            tensor
+            ]
         }
     }
 

@@ -2,9 +2,8 @@ use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::{NSArray, NSString};
 
-use crate::data_types::ShapedType;
 use crate::graph::Graph;
-use crate::tensor::Tensor;
+use crate::{ShapedType, Tensor};
 
 impl Graph {
     /// Creates an operation which invokes another executable.

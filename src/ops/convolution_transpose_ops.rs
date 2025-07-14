@@ -4,12 +4,10 @@ use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::NSString;
 
-use crate::convolution_ops::Convolution2DOpDescriptor;
+use super::convolution_ops::Convolution2DOpDescriptor;
 use crate::graph::Graph;
 use crate::tensor::Tensor;
 use crate::Shape;
-// Re-export types for external convenience
-pub use crate::pooling_ops::{PaddingStyle, TensorNamedDataLayout};
 
 impl Graph {
     // ----- Forward ----------------------------------------------------------
@@ -48,9 +46,10 @@ impl Graph {
             msg_send![self,
                 convolutionTranspose2DWithSourceTensor: source,
                 weightsTensor: weights,
-                outputShape: output_shape.as_ptr(),
+                outputShape: &*output_shape,
                 descriptor: descriptor,
-                name: name_ptr]
+                name: name_ptr,
+            ]
         }
     }
 
@@ -104,7 +103,7 @@ impl Graph {
             msg_send![self,
                 convolutionTranspose2DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 weightsTensor: weights_tensor,
-                outputShape: output_shape.as_ptr(),
+                outputShape: &*output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr]
         }
@@ -155,7 +154,7 @@ impl Graph {
             msg_send![self,
                 convolutionTranspose2DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 sourceTensor: source_tensor,
-                outputShape: output_shape.as_ptr(),
+                outputShape: &*output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr]
         }

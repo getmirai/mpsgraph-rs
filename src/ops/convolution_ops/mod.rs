@@ -1,6 +1,4 @@
-use crate::graph::Graph;
-use crate::shape::Shape;
-use crate::tensor::Tensor;
+use crate::{Graph, Shape, Tensor};
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::NSString;
@@ -79,7 +77,7 @@ impl Graph {
                 self,
                 convolution2DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 weightsTensor: weights_tensor,
-                outputShape: output_shape.as_ptr(),
+                outputShape: output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr
             ]
@@ -135,7 +133,7 @@ impl Graph {
                 self,
                 convolution2DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 sourceTensor: source_tensor,
-                outputShape: output_shape.as_ptr(),
+                outputShape: output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr
             ]
@@ -208,7 +206,7 @@ impl Graph {
                 self,
                 convolution3DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 weightsTensor: weights_tensor,
-                outputShape: output_shape.as_ptr(),
+                outputShape: output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr
             ]
@@ -258,7 +256,7 @@ impl Graph {
                 self,
                 convolution3DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 sourceTensor: source_tensor,
-                outputShape: output_shape.as_ptr(),
+                outputShape: output_shape,
                 forwardConvolutionDescriptor: forward_convolution_descriptor,
                 name: name_ptr
             ]

@@ -19,8 +19,8 @@ impl Graph {
     /// - Returns: A valid `Tensor` object.
     pub fn relu(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
+            let name_ptr = name
+                .map(NSString::from_str)
                 .as_deref()
                 .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![self, reLUWithTensor: tensor, name: name_ptr]

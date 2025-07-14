@@ -4,13 +4,12 @@ use objc2::runtime::NSObject;
 use objc2::{extern_class, msg_send, ClassType};
 use objc2_foundation::{NSArray, NSObjectProtocol, NSString, NSURL};
 use std::path::Path;
-use metal::foreign_types::ForeignType
 
 use crate::command_buffer::CommandBuffer;
 use crate::executable::{
     CompilationDescriptor, ExecutableExecutionDescriptor, SerializationDescriptor,
 };
-use crate::{Device, Tensor, TensorData};
+use crate::{DataType, Device, Tensor};
 
 extern_class!(
     #[derive(Debug, PartialEq, Eq)]
