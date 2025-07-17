@@ -1,81 +1,324 @@
-use objc2::rc::{autoreleasepool, Retained};
+use objc2::rc::{autoreleasepool, Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, msg_send, ClassType};
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
 use objc2_foundation::{
     NSArray, NSData, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString,
 };
 use std::collections::HashMap;
 
+use super::{GraphOptions, TensorShapedTypeHashMap};
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
 use crate::operation::Operation;
+use crate::GraphObject;
 use crate::Shape;
 use crate::ShapedType;
 use crate::{DataType, Tensor, TensorData};
 
-/// Trait for scalar types that can be used in Graph operations
-/// This trait is used for both single scalar values and arrays of values
-pub trait TensorDataScalar: Copy {
-    /// Convert a scalar value to f64 for use with Objective-C scalar methods
-    fn to_f64(&self) -> f64;
-}
-
-// Implement for common numeric types
-impl TensorDataScalar for f32 {
-    fn to_f64(&self) -> f64 {
-        *self as f64
-    }
-}
-
-impl TensorDataScalar for f64 {
-    fn to_f64(&self) -> f64 {
-        *self
-    }
-}
-
-impl TensorDataScalar for i32 {
-    fn to_f64(&self) -> f64 {
-        *self as f64
-    }
-}
-
-impl TensorDataScalar for i64 {
-    fn to_f64(&self) -> f64 {
-        *self as f64 // This may lose precision for large values
-    }
-}
-
-impl TensorDataScalar for u32 {
-    fn to_f64(&self) -> f64 {
-        *self as f64
-    }
-}
-
-impl TensorDataScalar for u64 {
-    fn to_f64(&self) -> f64 {
-        *self as f64 // This may lose precision for large values
-    }
-}
-
 extern_class!(
+    /// The optimized representation of a compute graph of operations and tensors.
+    ///
+    /// An MPSGraph is a symbolic representation of operations to be utilized to execute compute graphs on a device.
+    ///
+    /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraph?language=objc)
+    #[unsafe(super(GraphObject, NSObject))]
     #[derive(Debug, PartialEq, Eq, Hash)]
-    #[unsafe(super = NSObject)]
     #[name = "MPSGraph"]
     pub struct Graph;
 );
 
-unsafe impl NSObjectProtocol for Graph {}
+extern_conformance!(
+    unsafe impl NSObjectProtocol for Graph {}
+);
 
 impl Graph {
-    /// Creates a new Graph
-    pub fn new() -> Retained<Self> {
-        unsafe {
-            let class = Self::class();
-            // 'new' is a class method that returns an object with +1 retain count.
-            let obj: Retained<Self> = msg_send![class, new];
-            obj
-        }
+    extern_methods!(
+        /// Options for the graph.
+        ///
+        /// The default value is `MPSGraphOptionsDefault`.
+        #[unsafe(method(options))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn options(&self) -> GraphOptions;
+
+        /// Setter for [`options`][Self::options].
+        #[unsafe(method(setOptions:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn setOptions(&self, options: GraphOptions);
+
+        /// Creates a new graph to insert nodes in.
+        #[unsafe(method(new))]
+        #[unsafe(method_family = new)]
+        pub unsafe fn new() -> Retained<Self>;
+
+        /// Initialize an MPSGraph to insert nodes in.
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData"
+        ))]
+        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+        ///
+        /// This call blocks until execution has completed.
+        ///
+        /// - Parameters:
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
+        #[unsafe(method(runWithFeeds:targetTensors:targetOperations:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn runWithFeeds_targetTensors_targetOperations(
+            &self,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_tensors: &NSArray<MPSGraphTensor>,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+        ) -> Retained<MPSGraphTensorDataDictionary>;
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData"
+        ))]
+        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+        ///
+        /// This call blocks until execution has completed.
+        ///
+        /// - Parameters:
+        /// - commandQueue: CommandQueue passed to exectute the graph on.
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
+        #[unsafe(method(runWithMTLCommandQueue:feeds:targetTensors:targetOperations:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn runWithMTLCommandQueue_feeds_targetTensors_targetOperations(
+            &self,
+            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_tensors: &NSArray<MPSGraphTensor>,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+        ) -> Retained<MPSGraphTensorDataDictionary>;
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData"
+        ))]
+        /// Runs the graph for the given feeds and returns the target tensor values in the results dictionary provided by the user.
+        ///
+        /// It also ensures all target operations also executed. This call blocks until execution has completed.
+        ///
+        /// - Parameters:
+        /// - commandQueue: CommandQueue passed to exectute the graph on.
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - resultsDictionary: MPSGraphTensors dictionary passed by user, these will be filled with graph output data.
+        #[unsafe(method(runWithMTLCommandQueue:feeds:targetOperations:resultsDictionary:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn runWithMTLCommandQueue_feeds_targetOperations_resultsDictionary(
+            &self,
+            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+            results_dictionary: &MPSGraphTensorDataDictionary,
+        );
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData"
+        ))]
+        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+        ///
+        /// This call is asynchronous and will return immediately if a completionHandler is set.
+        ///
+        /// - Parameters:
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
+        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
+        #[unsafe(method(runAsyncWithFeeds:targetTensors:targetOperations:executionDescriptor:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn runAsyncWithFeeds_targetTensors_targetOperations_executionDescriptor(
+            &self,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_tensors: &NSArray<MPSGraphTensor>,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        ) -> Retained<MPSGraphTensorDataDictionary>;
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData"
+        ))]
+        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+        ///
+        /// This call is asynchronous and will return immediately if a completionHandler is set.
+        ///
+        /// - Parameters:
+        /// - commandQueue: CommandQueue passed to exectute the graph on.
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
+        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory if MPSGraphOptionsSynchronizeResults set.
+        #[unsafe(method(runAsyncWithMTLCommandQueue:feeds:targetTensors:targetOperations:executionDescriptor:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn runAsyncWithMTLCommandQueue_feeds_targetTensors_targetOperations_executionDescriptor(
+            &self,
+            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_tensors: &NSArray<MPSGraphTensor>,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        ) -> Retained<MPSGraphTensorDataDictionary>;
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData"
+        ))]
+        /// Encodes the graph for the given feeds to returns the target tensor values in the results dictionary provided by the user.
+        ///
+        /// It ensures all target operations also executed. This call is asynchronous and will return immediately if a completionHandler is set.
+        ///
+        /// - Parameters:
+        /// - commandQueue: CommandQueue passed to exectute the graph on.
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - resultsDictionary: MPSGraphTensors dictionary passed by user, these will be filled with graph output data.
+        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
+        #[unsafe(method(runAsyncWithMTLCommandQueue:feeds:targetOperations:resultsDictionary:executionDescriptor:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn runAsyncWithMTLCommandQueue_feeds_targetOperations_resultsDictionary_executionDescriptor(
+            &self,
+            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+            results_dictionary: &MPSGraphTensorDataDictionary,
+            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        );
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData",
+            feature = "objc2-metal-performance-shaders"
+        ))]
+        /// Encodes the graph for the given feeds to returns the target tensor values, ensuring all target operations also executed.
+        ///
+        /// This call is asynchronous and will return immediately if a completionHandler is set.
+        ///
+        /// - Parameters:
+        /// - commandBuffer: commandBuffer passed to exectute the graph on, it is an MPSCommandBuffer, commitAndContinue might be called, please don't rely on underlying MTLCommandBuffer to remain uncommitted.
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
+        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory if MPSGraphOptionsSynchronizeResults set.
+        #[unsafe(method(encodeToCommandBuffer:feeds:targetTensors:targetOperations:executionDescriptor:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn encodeToCommandBuffer_feeds_targetTensors_targetOperations_executionDescriptor(
+            &self,
+            command_buffer: &MPSCommandBuffer,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_tensors: &NSArray<MPSGraphTensor>,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        ) -> Retained<MPSGraphTensorDataDictionary>;
+
+        #[cfg(all(
+            feature = "MPSGraphOperation",
+            feature = "MPSGraphTensor",
+            feature = "MPSGraphTensorData",
+            feature = "objc2-metal-performance-shaders"
+        ))]
+        /// Encodes the graph for the given feeds to returns the target tensor values in the results dictionary provided by the user.
+        ///
+        /// It ensures all target operations also executed. This call is asynchronous and will return immediately if a completionHandler is set.
+        ///
+        /// - Parameters:
+        /// - commandBuffer: commandBuffer passed to execute the graph on, commitAndContinue might be called, please don't rely on underlying MTLCommandBuffer to remain uncommitted.
+        /// - feeds: Feeds dictionary for the placeholder tensors.
+        /// - targetOperations: Operations to be completed at the end of the run.
+        /// - resultsDictionary: MPSGraphTensors dictionary passed by user, these will be filled with graph output data.
+        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
+        #[unsafe(method(encodeToCommandBuffer:feeds:targetOperations:resultsDictionary:executionDescriptor:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn encodeToCommandBuffer_feeds_targetOperations_resultsDictionary_executionDescriptor(
+            &self,
+            command_buffer: &MPSCommandBuffer,
+            feeds: &MPSGraphTensorDataDictionary,
+            target_operations: Option<&NSArray<MPSGraphOperation>>,
+            results_dictionary: &MPSGraphTensorDataDictionary,
+            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
+        );
+    );
+}
+
+impl Graph {
+    /// Compiles the graph for the given feeds to returns the target tensor values, ensuring all target operations would be executed.
+    ///
+    /// This call blocks until execution has completed. The compilation descriptor helps specialize the executable returned.
+    ///
+    /// - Parameters:
+    /// - device: MPSGraph device to optimize for.
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+    /// - targetOperations: Operations to be completed at the end of the run.
+    /// - compilationDescriptor: compilation descriptor to set different compilation parameters.
+    /// - Returns: A valid MPSGraphExecutable object
+    #[unsafe(method(compileWithDevice:feeds:targetTensors:targetOperations:compilationDescriptor:))]
+    #[unsafe(method_family = none)]
+    pub unsafe fn compileWithDevice_feeds_targetTensors_targetOperations_compilationDescriptor(
+        &self,
+        device: Option<&MPSGraphDevice>,
+        feeds: &MPSGraphTensorShapedTypeDictionary,
+        target_tensors: &NSArray<MPSGraphTensor>,
+        target_operations: Option<&NSArray<MPSGraphOperation>>,
+        compilation_descriptor: Option<&MPSGraphCompilationDescriptor>,
+    ) -> Retained<MPSGraphExecutable>;
+
+    /// Compiles the graph against a given set of feeds and targets
+    ///
+    /// - Parameters:
+    ///   - device: Metal device to compile for
+    ///   - feeds: A dictionary mapping input tensors to their values
+    ///   - targets: An array of tensors whose values should be computed
+    ///   - descriptor: Optional compilation descriptor
+    ///
+    /// - Returns: A compiled executable
+    pub fn compile(
+        &self,
+        device: &Device,
+        feeds: &TensorShapedTypeHashMap,
+        targets: &[&Tensor],
+        target_operations: Option<&[&Operation]>,
+        descriptor: Option<&CompilationDescriptor>,
+    ) -> Retained<Executable> {
+        autoreleasepool(|_| unsafe {
+            let feeds_keys: Vec<&Tensor> = feeds.keys().copied().collect();
+            let feeds_values: Vec<&ShapedType> = feeds.values().copied().collect();
+            let feeds_dict = NSDictionary::from_slices(&feeds_keys, &feeds_values);
+            let targets_array = NSArray::from_slice(targets);
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let executable: Retained<Executable> = msg_send![
+                self,
+                compileWithDevice: device as &Device,
+                feeds: &*feeds_dict,
+                targetTensors: &*targets_array,
+                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                compilationDescriptor: descriptor
+            ];
+            executable
+        })
     }
 
     pub fn placeholder(
@@ -230,55 +473,6 @@ impl Graph {
 
             self.variable_with_bytes(bytes, shape, data_type, name)
         }
-    }
-
-    /// Compiles the graph against a given set of feeds and targets
-    ///
-    /// - Parameters:
-    ///   - device: Metal device to compile for
-    ///   - feeds: A dictionary mapping input tensors to their values
-    ///   - targets: An array of tensors whose values should be computed
-    ///   - descriptor: Optional compilation descriptor
-    ///
-    /// - Returns: A compiled executable
-    pub fn compile(
-        &self,
-        device: &Device,
-        feeds: &HashMap<&Tensor, &ShapedType>,
-        targets: &[&Tensor],
-        descriptor: Option<&CompilationDescriptor>,
-    ) -> Retained<Executable> {
-        autoreleasepool(|_| unsafe {
-            // Create immutable NSDictionary for feeds directly
-            let keys: Vec<&Tensor> = feeds.keys().map(|k| k.as_ref()).collect();
-            let values: Vec<&ShapedType> = feeds.values().map(|v| v.as_ref()).collect();
-            let keys_array = NSArray::from_slice(&keys);
-            let values_array = NSArray::from_slice(&values);
-
-            // dictionaryWithObjects returns an autoreleased object, so we need to retain it
-            let dictionary_class = NSDictionary::<Tensor, ShapedType>::class();
-            let feeds_dict: Retained<NSDictionary<Tensor, ShapedType>> = msg_send![dictionary_class, dictionaryWithObjects: &*values_array, forKeys: &*keys_array];
-
-            // Create NSArray for target tensors
-            let targets_refs: Vec<&Tensor> = targets
-                .iter()
-                .map(|retained_tensor| retained_tensor.as_ref())
-                .collect();
-            let targets_array = NSArray::from_slice(&targets_refs);
-
-            let desc_ptr = descriptor.map_or(std::ptr::null(), |d_ref| &**d_ref as *const _);
-
-            // Compile the graph
-            let executable: Retained<Executable> = msg_send![
-                self,
-                compileWithDevice: device as &Device,
-                feeds: &*feeds_dict,
-                targetTensors: &*targets_array,
-                targetOperations: std::ptr::null::<NSArray<Operation>>(),
-                compilationDescriptor: desc_ptr
-            ];
-            executable
-        })
     }
 
     /// Compiles the graph against a given set of feeds, targets, and target operations
@@ -658,19 +852,11 @@ impl Graph {
         }
     }
 
-    /// Gets the placeholder tensors associated with the graph, returned as a Vec of retained Tensors.
-    pub fn placeholder_tensors(&self) -> Vec<Retained<Tensor>> {
+    /// Boxed slice of all the placeholder tensors.
+    pub fn placeholder_tensors(&self) -> Box<[Retained<Tensor>]> {
         unsafe {
-            let array: Retained<NSArray<Tensor>> = msg_send![self, placeholderTensors];
-
-            let count = array.len();
-            let mut vec = Vec::with_capacity(count);
-            for i in 0..count {
-                // objectAtIndex: returns a borrowed reference, so we need to retain it.
-                let retained_tensor: Retained<Tensor> = msg_send![&*array, objectAtIndex: i];
-                vec.push(retained_tensor);
-            }
-            vec
+            let ns_array: Retained<NSArray<Tensor>> = msg_send![self, placeholderTensors];
+            ns_array.to_vec().into_boxed_slice()
         }
     }
 

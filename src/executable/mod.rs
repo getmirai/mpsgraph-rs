@@ -8,6 +8,8 @@ mod optimization;
 mod optimization_profile;
 mod serialization_descriptor;
 
+use super::{Tensor, TensorData};
+use objc2::rc::Retained;
 use std::collections::HashMap;
 
 pub use compilation_descriptor::CompilationDescriptor;

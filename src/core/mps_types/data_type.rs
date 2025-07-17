@@ -1,5 +1,4 @@
-use objc2::Encoding;
-use objc2::{Encode, RefEncode};
+use objc2::{Encode, Encoding, RefEncode};
 
 #[allow(dead_code)]
 #[repr(u32)]
