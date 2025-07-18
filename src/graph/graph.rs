@@ -6,7 +6,10 @@ use objc2_foundation::{
 };
 use std::collections::HashMap;
 
-use super::{GraphOptions, TensorShapedTypeHashMap};
+use super::{
+    GraphOptions, TensorDataDictionary, TensorDataHashMap, TensorShapedTypeHashMap,
+    ToTensorDataDictionary,
+};
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
@@ -55,29 +58,6 @@ impl Graph {
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData"
-        ))]
-        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
-        ///
-        /// This call blocks until execution has completed.
-        ///
-        /// - Parameters:
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
-        #[unsafe(method(runWithFeeds:targetTensors:targetOperations:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn runWithFeeds_targetTensors_targetOperations(
-            &self,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_tensors: &NSArray<MPSGraphTensor>,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-        ) -> Retained<MPSGraphTensorDataDictionary>;
 
         #[cfg(all(
             feature = "MPSGraphOperation",
@@ -269,32 +249,12 @@ impl Graph {
     /// This call blocks until execution has completed. The compilation descriptor helps specialize the executable returned.
     ///
     /// - Parameters:
-    /// - device: MPSGraph device to optimize for.
+    /// - device: Device to optimize for.
     /// - feeds: Feeds dictionary for the placeholder tensors.
-    /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
-    /// - targetOperations: Operations to be completed at the end of the run.
-    /// - compilationDescriptor: compilation descriptor to set different compilation parameters.
-    /// - Returns: A valid MPSGraphExecutable object
-    #[unsafe(method(compileWithDevice:feeds:targetTensors:targetOperations:compilationDescriptor:))]
-    #[unsafe(method_family = none)]
-    pub unsafe fn compileWithDevice_feeds_targetTensors_targetOperations_compilationDescriptor(
-        &self,
-        device: Option<&MPSGraphDevice>,
-        feeds: &MPSGraphTensorShapedTypeDictionary,
-        target_tensors: &NSArray<MPSGraphTensor>,
-        target_operations: Option<&NSArray<MPSGraphOperation>>,
-        compilation_descriptor: Option<&MPSGraphCompilationDescriptor>,
-    ) -> Retained<MPSGraphExecutable>;
-
-    /// Compiles the graph against a given set of feeds and targets
-    ///
-    /// - Parameters:
-    ///   - device: Metal device to compile for
-    ///   - feeds: A dictionary mapping input tensors to their values
-    ///   - targets: An array of tensors whose values should be computed
-    ///   - descriptor: Optional compilation descriptor
-    ///
-    /// - Returns: A compiled executable
+    /// - targets: Tensors for which the caller wishes TensorData to be returned.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - descriptor: compilation descriptor to set different compilation parameters.
+    /// - Returns: A valid Executable object
     pub fn compile(
         &self,
         device: &Device,
@@ -309,15 +269,44 @@ impl Graph {
             let feeds_dict = NSDictionary::from_slices(&feeds_keys, &feeds_values);
             let targets_array = NSArray::from_slice(targets);
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
-            let executable: Retained<Executable> = msg_send![
+            msg_send![
                 self,
                 compileWithDevice: device as &Device,
                 feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
                 targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
                 compilationDescriptor: descriptor
+            ]
+        })
+    }
+
+    /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+    ///
+    /// This call blocks until execution has completed.
+    ///
+    /// - Parameters:
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+    /// - targetOperations: Operations to be completed at the end of the run.
+    /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
+    pub fn run(
+        &self,
+        feeds: &TensorDataHashMap,
+        targets: &[&Tensor],
+        target_operations: Option<&[&Operation]>,
+    ) -> Retained<TensorDataHashMap> {
+        autoreleasepool(|_| unsafe {
+            let feeds_dict = feeds.to_dictionary();
+            let targets_array = NSArray::from_slice(targets);
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let result: Retained<TensorDataDictionary> = msg_send![
+                self,
+                runWithFeeds: &*feeds_dict,
+                targetTensors: &*targets_array,
+                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
             ];
-            executable
+
+            result.to_tensor_data_dictionary()
         })
     }
 
@@ -701,155 +690,6 @@ impl Graph {
                 executionDescriptor: desc_ptr
             ];
         })
-    }
-
-    /// Creates a tensor with random uniform values
-    pub fn random_uniform(
-        &self,
-        shape: &Shape,
-        min: f32,
-        max: f32,
-        data_type: DataType,
-        seed: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor: Retained<Tensor> = msg_send![
-                self,
-                randomUniformTensorWithShape: shape,
-                min: min,
-                max: max,
-                dataType: data_type as u64,
-                seed: seed,
-                name: name_ptr
-            ];
-            tensor
-        }
-    }
-
-    /// Creates a tensor with random normal values
-    pub fn random_normal(
-        &self,
-        shape: &Shape,
-        mean: f32,
-        std_dev: f32,
-        data_type: DataType,
-        seed: u32,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor: Retained<Tensor> = msg_send![
-                self,
-                randomNormalTensorWithShape: shape,
-                mean: mean,
-                standardDeviation: std_dev,
-                dataType: data_type as u64,
-                seed: seed,
-                name: name_ptr
-            ];
-            tensor
-        }
-    }
-
-    /// Adds two tensors element-wise
-    pub fn add(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            msg_send![
-                self,
-                additionWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
-                name: name_ptr
-            ]
-        }
-    }
-
-    /// Multiplies two tensors element-wise
-    pub fn multiply(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor: Retained<Tensor> = msg_send![
-                self,
-                multiplicationWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
-                name: name_ptr
-            ];
-            tensor
-        }
-    }
-
-    /// Subtracts one tensor from another element-wise
-    pub fn subtract(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor: Retained<Tensor> = msg_send![
-                self,
-                subtractionWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
-                name: name_ptr
-            ];
-            tensor
-        }
-    }
-
-    /// Divides one tensor by another element-wise
-    pub fn divide(
-        &self,
-        primary: &Tensor,
-        secondary: &Tensor,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ns = name.map(NSString::from_str);
-            let name_ptr = name_ns
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            let tensor: Retained<Tensor> = msg_send![
-                self,
-                divisionWithPrimaryTensor: primary,
-                secondaryTensor: secondary,
-                name: name_ptr
-            ];
-            tensor
-        }
     }
 
     /// Boxed slice of all the placeholder tensors.
