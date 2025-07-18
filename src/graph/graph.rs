@@ -7,8 +7,8 @@ use objc2_foundation::{
 use std::collections::HashMap;
 
 use super::{
-    GraphOptions, TensorDataDictionary, TensorDataHashMap, TensorShapedTypeHashMap,
-    ToTensorDataDictionary,
+    GraphOptions, RetainedTensorDataHashMap, TensorDataDictionary, TensorDataHashMap,
+    TensorShapedTypeHashMap,
 };
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
@@ -18,6 +18,7 @@ use crate::GraphObject;
 use crate::Shape;
 use crate::ShapedType;
 use crate::{DataType, Tensor, TensorData};
+use crate::{NSDictionaryExt, ToNSDictionary};
 
 extern_class!(
     /// The optimized representation of a compute graph of operations and tensors.
@@ -294,7 +295,7 @@ impl Graph {
         feeds: &TensorDataHashMap,
         targets: &[&Tensor],
         target_operations: Option<&[&Operation]>,
-    ) -> Retained<TensorDataHashMap> {
+    ) -> RetainedTensorDataHashMap {
         autoreleasepool(|_| unsafe {
             let feeds_dict = feeds.to_dictionary();
             let targets_array = NSArray::from_slice(targets);
@@ -306,7 +307,7 @@ impl Graph {
                 targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
             ];
 
-            result.to_tensor_data_dictionary()
+            result.to_hashmap()
         })
     }
 

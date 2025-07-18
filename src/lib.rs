@@ -2,6 +2,7 @@
 compile_error!("MetalPerformanceShadersGraph is only available on macOS and iOS");
 
 mod command_buffer;
+mod conversion;
 mod core;
 mod device;
 mod executable;
@@ -13,6 +14,7 @@ mod tensor;
 mod tensor_data;
 
 pub use command_buffer::*;
+pub use conversion::*;
 pub use core::*;
 pub use device::*;
 pub use executable::*;
