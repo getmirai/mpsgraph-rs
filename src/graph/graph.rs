@@ -1,11 +1,3 @@
-use objc2::rc::{autoreleasepool, Allocated, Retained};
-use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
-use objc2_foundation::{
-    NSArray, NSData, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString,
-};
-use std::collections::HashMap;
-
 use super::{
     GraphOptions, RetainedTensorDataHashMap, TensorDataDictionary, TensorDataHashMap,
     TensorShapedTypeHashMap,
@@ -19,6 +11,14 @@ use crate::Shape;
 use crate::ShapedType;
 use crate::{DataType, Tensor, TensorData};
 use crate::{NSDictionaryExt, ToNSDictionary};
+use metal::{foreign_types::ForeignType, CommandQueue};
+use objc2::rc::{autoreleasepool, Allocated, Retained};
+use objc2::runtime::NSObject;
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
+use objc2_foundation::{
+    NSArray, NSData, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString,
+};
+use std::collections::HashMap;
 
 extern_class!(
     /// The optimized representation of a compute graph of operations and tensors.
@@ -59,55 +59,6 @@ impl Graph {
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData"
-        ))]
-        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
-        ///
-        /// This call blocks until execution has completed.
-        ///
-        /// - Parameters:
-        /// - commandQueue: CommandQueue passed to exectute the graph on.
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
-        #[unsafe(method(runWithMTLCommandQueue:feeds:targetTensors:targetOperations:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn runWithMTLCommandQueue_feeds_targetTensors_targetOperations(
-            &self,
-            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_tensors: &NSArray<MPSGraphTensor>,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-        ) -> Retained<MPSGraphTensorDataDictionary>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData"
-        ))]
-        /// Runs the graph for the given feeds and returns the target tensor values in the results dictionary provided by the user.
-        ///
-        /// It also ensures all target operations also executed. This call blocks until execution has completed.
-        ///
-        /// - Parameters:
-        /// - commandQueue: CommandQueue passed to exectute the graph on.
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - resultsDictionary: MPSGraphTensors dictionary passed by user, these will be filled with graph output data.
-        #[unsafe(method(runWithMTLCommandQueue:feeds:targetOperations:resultsDictionary:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn runWithMTLCommandQueue_feeds_targetOperations_resultsDictionary(
-            &self,
-            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-            results_dictionary: &MPSGraphTensorDataDictionary,
-        );
 
         #[cfg(all(
             feature = "MPSGraphOperation",
@@ -244,6 +195,11 @@ impl Graph {
     );
 }
 
+pub enum GraphRunTargetFeedsOrResultsDictionary<'a> {
+    TargetFeeds(&'a NSArray<Tensor>),
+    TargetResults(TensorDataHashMap<'a>),
+}
+
 impl Graph {
     /// Compiles the graph for the given feeds to returns the target tensor values, ensuring all target operations would be executed.
     ///
@@ -311,25 +267,69 @@ impl Graph {
         })
     }
 
-    pub fn placeholder(
+    /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+    ///
+    /// This call blocks until execution has completed.
+    ///
+    /// - Parameters:
+    /// - command_queue: CommandQueue passed to exectute the graph on.
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - target_tensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
+    pub unsafe fn run_with_command_queue(
         &self,
-        data_type: DataType,
-        shape: &Shape,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
-            msg_send![
+        command_queue: &CommandQueue,
+        feeds: &TensorDataHashMap,
+        target_tensors: &[&Tensor],
+        target_operations: Option<&[&Operation]>,
+    ) -> RetainedTensorDataHashMap {
+        autoreleasepool(|_| unsafe {
+            let feeds_dict = feeds.to_dictionary();
+            let targets_array = NSArray::from_slice(target_tensors);
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
+            let result: Retained<TensorDataDictionary> = msg_send![
                 self,
-                placeholderWithShape: &*shape,
-                dataType: data_type as u32,
-                name: name_ptr
-            ]
-        }
+                runWithMTLCommandQueue: cmd_queue_ptr,
+                feeds: &*feeds_dict,
+                targetTensors: &*targets_array,
+                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+            ];
+            result.to_hashmap()
+        })
+    }
+
+    /// Runs the graph for the given feeds and returns the target tensor values in the results dictionary provided by the user.
+    ///
+    /// It also ensures all target operations also executed. This call blocks until execution has completed.
+    ///
+    /// - Parameters:
+    /// - command_queue: CommandQueue passed to exectute the graph on.
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - results: Tensors hashmap passed by user, these will be filled with graph output data.
+    pub unsafe fn run_with_command_queue_results_filled_in_place(
+        &self,
+        command_queue: &CommandQueue,
+        feeds: &TensorDataHashMap,
+        target_operations: Option<&[&Operation]>,
+        results: &mut RetainedTensorDataHashMap,
+    ) {
+        autoreleasepool(|_| unsafe {
+            let feeds_dict = feeds.to_dictionary();
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
+            let results_dict = NSMutableDictionary::<Tensor, TensorData>::new();
+            let _: () = msg_send![
+                self,
+                runWithMTLCommandQueue: cmd_queue_ptr,
+                feeds: &*feeds_dict,
+                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                resultsDictionary: &*results_dict,
+            ];
+            results.extend(results_dict.to_hashmap());
+        })
     }
 
     /// Execute the graph asynchronously with feeds and optional execution descriptor
@@ -441,27 +441,6 @@ impl Graph {
                 shape: shape,
                 dataType: data_type as u32
             ]
-        }
-    }
-
-    /// Creates a variable tensor backed by the provided data.
-    ///
-    /// * `data`      – Raw values for the tensor (any scalar type that is `Copy`).
-    /// * `shape`     – Final tensor shape (must be static).
-    /// * `data_type` – MPS data type of the tensor contents.
-    /// * `name`      – Optional operation name shown in Graph debugging output.
-    pub fn variable<T: Copy>(
-        &self,
-        data: &[T],
-        shape: &Shape,
-        data_type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
-        unsafe {
-            let bytes =
-                std::slice::from_raw_parts(data.as_ptr() as *const u8, std::mem::size_of_val(data));
-
-            self.variable_with_bytes(bytes, shape, data_type, name)
         }
     }
 
@@ -698,6 +677,27 @@ impl Graph {
         unsafe {
             let ns_array: Retained<NSArray<Tensor>> = msg_send![self, placeholderTensors];
             ns_array.to_vec().into_boxed_slice()
+        }
+    }
+
+    pub fn placeholder(
+        &self,
+        data_type: DataType,
+        shape: &Shape,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            let name_ptr = name
+                .map(NSString::from_str)
+                .as_deref()
+                .map_or(std::ptr::null(), |s| s as *const _);
+
+            msg_send![
+                self,
+                placeholderWithShape: &*shape,
+                dataType: data_type as u32,
+                name: name_ptr
+            ]
         }
     }
 
