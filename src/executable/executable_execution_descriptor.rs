@@ -1,49 +1,86 @@
-use super::ExecutionStage;
+use super::{ExecutableCompletionHandler, ExecutableScheduledHandler, ExecutionStage};
 use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, msg_send, ClassType};
-use objc2_foundation::NSObjectProtocol;
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
+use objc2_foundation::{CopyingHelper, NSCopying, NSObjectProtocol};
+
+use crate::GraphObject;
 
 extern_class!(
-    #[derive(Debug, PartialEq, Eq)]
-    #[unsafe(super = NSObject)]
-    #[name = "MPSGraphExecutableExecutionDescriptor"]
+    /// A class that consists of all the levers  to synchronize and schedule executable execution.
+    ///
+    /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphexecutableexecutiondescriptor?language=objc)
+    #[unsafe(super(GraphObject, NSObject))]
+    #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct ExecutableExecutionDescriptor;
 );
 
-unsafe impl NSObjectProtocol for ExecutableExecutionDescriptor {}
+extern_conformance!(
+    unsafe impl NSCopying for ExecutableExecutionDescriptor {}
+);
+
+unsafe impl CopyingHelper for ExecutableExecutionDescriptor {
+    type Result = Self;
+}
+
+extern_conformance!(
+    unsafe impl NSObjectProtocol for ExecutableExecutionDescriptor {}
+);
 
 impl ExecutableExecutionDescriptor {
-    /// Create a new executable execution descriptor
-    pub fn new() -> Retained<Self> {
-        unsafe {
-            let class = Self::class();
-            let allocated: Allocated<Self> = msg_send![class, alloc];
-            // alloc/init returns a +1 retained object.
-            let initialized: Retained<Self> = msg_send![allocated, init];
-            initialized
-        }
-    }
+    extern_methods!(
+        #[unsafe(method(init))]
+        #[unsafe(method_family = init)]
+        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
 
-    /// Set wait until completed flag
-    pub fn set_wait_until_completed(&self, wait: bool) {
-        unsafe {
-            let _: () = msg_send![self, setWaitUntilCompleted: wait];
-        }
-    }
+        #[unsafe(method(new))]
+        #[unsafe(method_family = new)]
+        pub unsafe fn new() -> Retained<Self>;
 
-    /// Set the state of the execution descriptor to prefer synchronous execution
-    pub fn prefer_synchronous_execution(&self) {
-        self.set_wait_until_completed(true);
-    }
+        /// A notification that appears when graph-executable execution is scheduled.
+        ///
+        /// Default value is nil.
+        #[unsafe(method(scheduledHandler))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn scheduled_handler(&self) -> ExecutableScheduledHandler;
 
-    /// Set the state of the execution descriptor to prefer asynchronous execution
-    pub fn prefer_asynchronous_execution(&self) {
-        self.set_wait_until_completed(false);
-    }
+        /// Setter for [`scheduledHandler`][Self::scheduledHandler].
+        #[unsafe(method(setScheduledHandler:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn set_scheduled_handler(&self, scheduled_handler: ExecutableScheduledHandler);
 
+        /// A notification that appears when graph-executable execution is finished.
+        ///
+        /// Default value is nil.
+        #[unsafe(method(completionHandler))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn completion_handler(&self) -> ExecutableCompletionHandler;
+
+        /// Setter for [`completionHandler`][Self::completionHandler].
+        #[unsafe(method(setCompletionHandler:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn set_completion_handler(
+            &self,
+            completion_handler: ExecutableCompletionHandler,
+        );
+
+        /// Flag for the graph executable to wait till the execution has completed.
+        ///
+        /// Default value is false.
+        #[unsafe(method(waitUntilCompleted))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn wait_until_completed(&self) -> bool;
+
+        /// Setter for [`waitUntilCompleted`][Self::waitUntilCompleted].
+        #[unsafe(method(setWaitUntilCompleted:))]
+        #[unsafe(method_family = none)]
+        pub unsafe fn set_wait_until_completed(&self, wait_until_completed: bool);
+    );
+}
+
+impl ExecutableExecutionDescriptor {
     /// Wait for a Metal shared event with a specific value before scheduling execution
     pub fn wait_for_event(&self, event: &SharedEvent, value: u64) {
         unsafe {
@@ -59,7 +96,10 @@ impl ExecutableExecutionDescriptor {
             let _: () = msg_send![self, signalEvent: event_ptr, atExecutionEvent: execution_stage as u64, value: value];
         }
     }
+}
 
+/// Private methods
+impl ExecutableExecutionDescriptor {
     pub fn set_enable_commit_and_continue(&self, enable: bool) {
         unsafe {
             let _: () = msg_send![self, setEnableCommitAndContinue: enable];
