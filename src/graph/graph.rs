@@ -65,33 +65,6 @@ impl Graph {
             feature = "MPSGraphTensor",
             feature = "MPSGraphTensorData"
         ))]
-        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
-        ///
-        /// This call is asynchronous and will return immediately if a completionHandler is set.
-        ///
-        /// - Parameters:
-        /// - commandQueue: CommandQueue passed to exectute the graph on.
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
-        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory if MPSGraphOptionsSynchronizeResults set.
-        #[unsafe(method(runAsyncWithMTLCommandQueue:feeds:targetTensors:targetOperations:executionDescriptor:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn runAsyncWithMTLCommandQueue_feeds_targetTensors_targetOperations_executionDescriptor(
-            &self,
-            command_queue: &ProtocolObject<dyn MTLCommandQueue>,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_tensors: &NSArray<MPSGraphTensor>,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-        ) -> Retained<MPSGraphTensorDataDictionary>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData"
-        ))]
         /// Encodes the graph for the given feeds to returns the target tensor values in the results dictionary provided by the user.
         ///
         /// It ensures all target operations also executed. This call is asynchronous and will return immediately if a completionHandler is set.
@@ -340,6 +313,45 @@ impl Graph {
                 executionDescriptor: desc_ptr
             ];
 
+            results.to_hashmap()
+        })
+    }
+
+    /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+    ///
+    /// This call is asynchronous and will return immediately if a completionHandler is set.
+    ///
+    /// - Parameters:
+    /// - command_queue: CommandQueue passed to exectute the graph on.
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - target_tensors: Tensors for which the caller wishes TensorData to be returned.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
+    /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
+    pub unsafe fn run_async_with_command_queue(
+        &self,
+        command_queue: &CommandQueue,
+        feeds: &TensorDataHashMap,
+        target_tensors: &[&Tensor],
+        target_operations: Option<&[&Operation]>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> RetainedTensorDataHashMap {
+        autoreleasepool(|_| unsafe {
+            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
+            let feeds_dict = feeds.to_dictionary();
+            let targets_array = NSArray::from_slice(target_tensors);
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
+                d.as_ref() as *const ExecutionDescriptor
+            });
+            let results: Retained<TensorDataDictionary> = msg_send![
+                self,
+                runAsyncWithMTLCommandQueue: cmd_queue_ptr,
+                feeds: &*feeds_dict,
+                targetTensors: &*targets_array,
+                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                executionDescriptor: desc_ptr
+            ];
             results.to_hashmap()
         })
     }
