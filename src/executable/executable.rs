@@ -34,24 +34,11 @@ impl Executable {
 
             let allocated: Allocated<Self> = msg_send![class, alloc];
 
-            match compilation_descriptor {
-                Some(desc) => {
-                    let initialized: Option<Retained<Self>> = msg_send![
-                        allocated,
-                        initWithMPSGraphPackageAtURL: &*url,
-                        compilationDescriptor: desc
-                    ];
-                    initialized
-                }
-                None => {
-                    let initialized: Option<Retained<Self>> = msg_send![
-                        allocated,
-                        initWithMPSGraphPackageAtURL: &*url,
-                        compilationDescriptor: std::ptr::null::<CompilationDescriptor>()
-                    ];
-                    initialized
-                }
-            }
+            msg_send![
+                allocated,
+                initWithMPSGraphPackageAtURL: &*url,
+                compilationDescriptor: compilation_descriptor.as_deref()
+            ]
         }
     }
 
