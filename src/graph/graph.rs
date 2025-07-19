@@ -70,31 +70,6 @@ impl Graph {
         /// This call is asynchronous and will return immediately if a completionHandler is set.
         ///
         /// - Parameters:
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
-        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory.
-        #[unsafe(method(runAsyncWithFeeds:targetTensors:targetOperations:executionDescriptor:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn runAsyncWithFeeds_targetTensors_targetOperations_executionDescriptor(
-            &self,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_tensors: &NSArray<MPSGraphTensor>,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-        ) -> Retained<MPSGraphTensorDataDictionary>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData"
-        ))]
-        /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
-        ///
-        /// This call is asynchronous and will return immediately if a completionHandler is set.
-        ///
-        /// - Parameters:
         /// - commandQueue: CommandQueue passed to exectute the graph on.
         /// - feeds: Feeds dictionary for the placeholder tensors.
         /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
@@ -309,7 +284,7 @@ impl Graph {
     /// - feeds: Feeds dictionary for the placeholder tensors.
     /// - target_operations: Operations to be completed at the end of the run.
     /// - results: Tensors hashmap passed by user, these will be filled with graph output data.
-    pub unsafe fn run_with_command_queue_results_filled_in_place(
+    pub unsafe fn run_with_command_queue_in_place_results(
         &self,
         command_queue: &CommandQueue,
         feeds: &TensorDataHashMap,
@@ -332,70 +307,45 @@ impl Graph {
         })
     }
 
-    /// Execute the graph asynchronously with feeds and optional execution descriptor
-    /// (Maps to ObjC runAsyncWithFeeds:targetTensors:targetOperations:executionDescriptor:)
+    /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
+    ///
+    /// This call is asynchronous and will return immediately if a completionHandler is set.
     ///
     /// - Parameters:
-    ///   - feeds: A dictionary mapping input tensors to their values
-    ///   - output_tensors: An array of tensors whose values should be computed
-    ///   - execution_descriptor: Optional descriptor controlling execution options
-    ///
-    /// - Returns: A dictionary mapping output tensors to their computed values
-    pub fn run_async_with_feeds(
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - target_tensors: Tensors for which the caller wishes TensorData to be returned.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
+    /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
+    pub unsafe fn run_async(
         &self,
-        feeds: &HashMap<&Tensor, &TensorData>,
-        output_tensors: &[&Tensor],
+        feeds: &TensorDataHashMap,
+        target_tensors: &[&Tensor],
+        target_operations: Option<&[&Operation]>,
         execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
-        unsafe {
-            // Create NSMutableDictionary for feeds
-            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary: Retained<NSMutableDictionary<Tensor, TensorData>> =
-                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-
-            // Add entries to dictionary
-            for (tensor, data) in feeds {
-                let _: () = msg_send![&*dictionary, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
-            }
-
-            // Create NSArray for output tensors
-            let output_refs: Vec<&Tensor> = output_tensors.iter().map(|t| t.as_ref()).collect();
-            let output_array = NSArray::from_slice(&output_refs);
-
-            // Get descriptor pointer or null
+    ) -> RetainedTensorDataHashMap {
+        autoreleasepool(|_| unsafe {
+            let feeds_dict = feeds.to_dictionary();
+            let targets_array = NSArray::from_slice(target_tensors);
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
             let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
                 d.as_ref() as *const ExecutionDescriptor
             });
 
-            // Always call the async version
-            let results_dict_opt: Option<Retained<NSMutableDictionary<Tensor, TensorData>>> = msg_send![
+            let results: Retained<TensorDataDictionary> = msg_send![
                 self,
-                runAsyncWithFeeds: &*dictionary,
-                targetTensors: &*output_array,
-                targetOperations: std::ptr::null::<NSArray<Operation>>(), // Pass nil for operations
-                executionDescriptor: desc_ptr // Pass pointer or null
+                runAsyncWithFeeds: &*feeds_dict,
+                targetTensors: &*targets_array,
+                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                executionDescriptor: desc_ptr
             ];
 
-            let results_dict = match results_dict_opt {
-                Some(dict) => dict,
-                None => return HashMap::new(), // Preserve original early return logic
-            };
-
-            // Convert NSDictionary to HashMap
-            let mut result = HashMap::new();
-            let keys: Retained<NSArray<Tensor>> = msg_send![&*results_dict, allKeys];
-            let keys_count: usize = keys.len();
-
-            for i in 0..keys_count {
-                let key: Retained<Tensor> = msg_send![&*keys, objectAtIndex: i];
-                let value: Retained<TensorData> = msg_send![&*results_dict, objectForKey: &*key];
-                result.insert(key, value);
-            }
-
-            result
-        }
+            results.to_hashmap()
+        })
     }
+}
 
+impl Graph {
     /// Creates a constant tensor with the given raw bytes
     pub fn constant_with_data(
         &self,
