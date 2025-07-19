@@ -2,8 +2,8 @@
 use metal::{Device as MetalDevice, MTLResourceOptions};
 use mpsgraph::{
     CommandBuffer, CompilationDescriptor, DataType, DeploymentPlatform, Device, Executable,
-    ExecutableExecutionDescriptor, Graph, SerializationDescriptor, Shape, ShapedType, Tensor,
-    TensorData,
+    ExecutableExecutionDescriptor, ExecutableSerializationDescriptor, Graph, Shape, ShapedType,
+    Tensor, TensorData,
 };
 use objc2::rc::Retained;
 use objc2_foundation::NSNumber;
@@ -52,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // --- 4. Serialize Executable ---
     println!("\n--- Serializing Executable ---");
-    let serialization_desc = SerializationDescriptor::new();
+    let serialization_desc = ExecutableSerializationDescriptor::new();
     serialization_desc.set_deployment_platform(DeploymentPlatform::MacOS);
 
     // Create a path for the package in the examples directory

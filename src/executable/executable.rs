@@ -7,7 +7,7 @@ use std::path::Path;
 
 use crate::command_buffer::CommandBuffer;
 use crate::executable::{
-    CompilationDescriptor, ExecutableExecutionDescriptor, SerializationDescriptor,
+    CompilationDescriptor, ExecutableExecutionDescriptor, ExecutableSerializationDescriptor,
 };
 use crate::{DataType, Device, Tensor};
 
@@ -42,7 +42,7 @@ impl Executable {
         }
     }
 
-    pub fn serialize_to_url(&self, path: &Path, descriptor: &SerializationDescriptor) {
+    pub fn serialize_to_url(&self, path: &Path, descriptor: &ExecutableSerializationDescriptor) {
         unsafe {
             // Convert path to NSURL using fileURLWithPath
             if let Some(path_str) = path.to_str() {
