@@ -59,33 +59,6 @@ impl Graph {
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Encodes the graph for the given feeds to returns the target tensor values in the results dictionary provided by the user.
-        ///
-        /// It ensures all target operations also executed. This call is asynchronous and will return immediately if a completionHandler is set.
-        ///
-        /// - Parameters:
-        /// - commandBuffer: commandBuffer passed to execute the graph on, commitAndContinue might be called, please don't rely on underlying MTLCommandBuffer to remain uncommitted.
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - resultsDictionary: MPSGraphTensors dictionary passed by user, these will be filled with graph output data.
-        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
-        #[unsafe(method(encodeToCommandBuffer:feeds:targetOperations:resultsDictionary:executionDescriptor:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn encodeToCommandBuffer_feeds_targetOperations_resultsDictionary_executionDescriptor(
-            &self,
-            command_buffer: &MPSCommandBuffer,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-            results_dictionary: &MPSGraphTensorDataDictionary,
-            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-        );
     );
 }
 
@@ -358,6 +331,40 @@ impl Graph {
                 executionDescriptor: execution_descriptor.as_deref()
             ];
             results.to_hashmap()
+        })
+    }
+
+    /// Encodes the graph for the given feeds to returns the target tensor values in the results dictionary provided by the user.
+    ///
+    /// It ensures all target operations also executed. This call is asynchronous and will return immediately if a completionHandler is set.
+    ///
+    /// - Parameters:
+    /// - command_buffer: commandBuffer passed to execute the graph on, commitAndContinue might be called, please don't rely on underlying MTLCommandBuffer to remain uncommitted.
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - results: Tensors hashmap passed by user, these will be filled with graph output data.
+    /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
+    pub unsafe fn encode_to_command_buffer_in_place_results(
+        &self,
+        command_buffer: &CommandBuffer,
+        feeds: &TensorDataHashMap,
+        target_operations: Option<&[&Operation]>,
+        results: &mut RetainedTensorDataHashMap,
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) {
+        autoreleasepool(|_| unsafe {
+            let feeds_dict = feeds.to_dictionary();
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let results_dict = NSMutableDictionary::<Tensor, TensorData>::new();
+            let _: () = msg_send![
+                self,
+                encodeToCommandBuffer: command_buffer,
+                feeds: &*feeds_dict,
+                targetOperations: target_operations_array.as_deref(),
+                resultsDictionary: &*results_dict,
+                executionDescriptor: execution_descriptor.as_deref()
+            ];
+            results.extend(results_dict.to_hashmap());
         })
     }
 }
