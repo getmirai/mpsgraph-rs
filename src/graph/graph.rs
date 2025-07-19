@@ -66,34 +66,6 @@ impl Graph {
             feature = "MPSGraphTensorData",
             feature = "objc2-metal-performance-shaders"
         ))]
-        /// Encodes the graph for the given feeds to returns the target tensor values, ensuring all target operations also executed.
-        ///
-        /// This call is asynchronous and will return immediately if a completionHandler is set.
-        ///
-        /// - Parameters:
-        /// - commandBuffer: commandBuffer passed to exectute the graph on, it is an MPSCommandBuffer, commitAndContinue might be called, please don't rely on underlying MTLCommandBuffer to remain uncommitted.
-        /// - feeds: Feeds dictionary for the placeholder tensors.
-        /// - targetTensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
-        /// - targetOperations: Operations to be completed at the end of the run.
-        /// - executionDescriptor: ExecutionDescriptor to be passed in and used.
-        /// - Returns: A valid MPSGraphTensor : MPSGraphTensorData dictionary with results synchronized to the CPU memory if MPSGraphOptionsSynchronizeResults set.
-        #[unsafe(method(encodeToCommandBuffer:feeds:targetTensors:targetOperations:executionDescriptor:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn encodeToCommandBuffer_feeds_targetTensors_targetOperations_executionDescriptor(
-            &self,
-            command_buffer: &MPSCommandBuffer,
-            feeds: &MPSGraphTensorDataDictionary,
-            target_tensors: &NSArray<MPSGraphTensor>,
-            target_operations: Option<&NSArray<MPSGraphOperation>>,
-            execution_descriptor: Option<&MPSGraphExecutionDescriptor>,
-        ) -> Retained<MPSGraphTensorDataDictionary>;
-
-        #[cfg(all(
-            feature = "MPSGraphOperation",
-            feature = "MPSGraphTensor",
-            feature = "MPSGraphTensorData",
-            feature = "objc2-metal-performance-shaders"
-        ))]
         /// Encodes the graph for the given feeds to returns the target tensor values in the results dictionary provided by the user.
         ///
         /// It ensures all target operations also executed. This call is asynchronous and will return immediately if a completionHandler is set.
@@ -143,18 +115,16 @@ impl Graph {
         descriptor: Option<&CompilationDescriptor>,
     ) -> Retained<Executable> {
         autoreleasepool(|_| unsafe {
-            let feeds_keys: Vec<&Tensor> = feeds.keys().copied().collect();
-            let feeds_values: Vec<&ShapedType> = feeds.values().copied().collect();
-            let feeds_dict = NSDictionary::from_slices(&feeds_keys, &feeds_values);
+            let feeds_dict = feeds.to_dictionary();
             let targets_array = NSArray::from_slice(targets);
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
             msg_send![
                 self,
-                compileWithDevice: device as &Device,
+                compileWithDevice: device,
                 feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
-                compilationDescriptor: descriptor
+                targetOperations: target_operations_array.as_deref(),
+                compilationDescriptor: descriptor.as_deref()
             ]
         })
     }
@@ -182,9 +152,8 @@ impl Graph {
                 self,
                 runWithFeeds: &*feeds_dict,
                 targetTensors: &*targets_array,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                targetOperations: target_operations_array.as_deref(),
             ];
-
             result.to_hashmap()
         })
     }
@@ -207,16 +176,16 @@ impl Graph {
         target_operations: Option<&[&Operation]>,
     ) -> RetainedTensorDataHashMap {
         autoreleasepool(|_| unsafe {
+            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
             let feeds_dict = feeds.to_dictionary();
             let targets_array = NSArray::from_slice(target_tensors);
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
-            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
             let result: Retained<TensorDataDictionary> = msg_send![
                 self,
                 runWithMTLCommandQueue: cmd_queue_ptr,
                 feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                targetOperations: target_operations_array.as_deref(),
             ];
             result.to_hashmap()
         })
@@ -239,15 +208,15 @@ impl Graph {
         results: &mut RetainedTensorDataHashMap,
     ) {
         autoreleasepool(|_| unsafe {
+            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
             let feeds_dict = feeds.to_dictionary();
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
-            let cmd_queue_ptr = command_queue.as_ptr() as *mut std::ffi::c_void;
             let results_dict = NSMutableDictionary::<Tensor, TensorData>::new();
             let _: () = msg_send![
                 self,
                 runWithMTLCommandQueue: cmd_queue_ptr,
                 feeds: &*feeds_dict,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                targetOperations: target_operations_array.as_deref(),
                 resultsDictionary: &*results_dict,
             ];
             results.extend(results_dict.to_hashmap());
@@ -275,18 +244,13 @@ impl Graph {
             let feeds_dict = feeds.to_dictionary();
             let targets_array = NSArray::from_slice(target_tensors);
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
-            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const ExecutionDescriptor
-            });
-
             let results: Retained<TensorDataDictionary> = msg_send![
                 self,
                 runAsyncWithFeeds: &*feeds_dict,
                 targetTensors: &*targets_array,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
-                executionDescriptor: desc_ptr
+                targetOperations: target_operations_array.as_deref(),
+                executionDescriptor: execution_descriptor.as_deref()
             ];
-
             results.to_hashmap()
         })
     }
@@ -315,16 +279,13 @@ impl Graph {
             let feeds_dict = feeds.to_dictionary();
             let targets_array = NSArray::from_slice(target_tensors);
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
-            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const ExecutionDescriptor
-            });
             let results: Retained<TensorDataDictionary> = msg_send![
                 self,
                 runAsyncWithMTLCommandQueue: cmd_queue_ptr,
                 feeds: &*feeds_dict,
                 targetTensors: &*targets_array,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
-                executionDescriptor: desc_ptr
+                targetOperations: target_operations_array.as_deref(),
+                executionDescriptor: execution_descriptor.as_deref()
             ];
             results.to_hashmap()
         })
@@ -353,18 +314,50 @@ impl Graph {
             let feeds_dict = feeds.to_dictionary();
             let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
             let results_dict = NSMutableDictionary::<Tensor, TensorData>::new();
-            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const ExecutionDescriptor
-            });
             let _: () = msg_send![
                 self,
                 runAsyncWithMTLCommandQueue: cmd_queue_ptr,
                 feeds: &*feeds_dict,
-                targetOperations: target_operations_array.as_ref().map(|ops| &**ops),
+                targetOperations: target_operations_array.as_deref(),
                 resultsDictionary: &*results_dict,
-                executionDescriptor: desc_ptr
+                executionDescriptor: execution_descriptor.as_deref()
             ];
             results.extend(results_dict.to_hashmap());
+        })
+    }
+
+    /// Encodes the graph for the given feeds to returns the target tensor values, ensuring all target operations also executed.
+    ///
+    /// This call is asynchronous and will return immediately if a completionHandler is set.
+    ///
+    /// - Parameters:
+    /// - command_buffer: commandBuffer passed to exectute the graph on, it is an MPSCommandBuffer, commitAndContinue might be called, please don't rely on underlying MTLCommandBuffer to remain uncommitted.
+    /// - feeds: Feeds dictionary for the placeholder tensors.
+    /// - target_tensors: Tensors for which the caller wishes TensorData to be returned.
+    /// - target_operations: Operations to be completed at the end of the run.
+    /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
+    /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
+    pub fn encode_to_command_buffer(
+        &self,
+        command_buffer: &CommandBuffer,
+        feeds: &TensorDataHashMap,
+        target_tensors: &[&Tensor],
+        target_operations: Option<&[&Operation]>,
+        execution_descriptor: Option<&ExecutionDescriptor>,
+    ) -> RetainedTensorDataHashMap {
+        autoreleasepool(|_| unsafe {
+            let feeds_dict = feeds.to_dictionary();
+            let targets_array = NSArray::from_slice(target_tensors);
+            let target_operations_array = target_operations.map(|ops| NSArray::from_slice(ops));
+            let results: Retained<TensorDataDictionary> = msg_send![
+                self,
+                encodeToCommandBuffer: command_buffer,
+                feeds: &*feeds_dict,
+                targetTensors: &*targets_array,
+                targetOperations: target_operations_array.as_deref(),
+                executionDescriptor: execution_descriptor.as_deref()
+            ];
+            results.to_hashmap()
         })
     }
 }
@@ -470,103 +463,6 @@ impl Graph {
                 compilationDescriptor: desc_ptr
             ];
             executable
-        })
-    }
-
-    /// Encodes the graph to a command buffer for execution
-    ///
-    /// - Parameters:
-    ///   - command_buffer: Command buffer to encode operations into
-    ///   - feeds: A dictionary mapping input tensors to their values
-    ///   - target_tensors: Tensors whose values should be computed
-    ///   - target_operations: Optional operations to be completed
-    ///   - execution_descriptor: Optional execution descriptor
-    ///
-    /// - Returns: A dictionary mapping output tensors to their computed values
-    pub fn encode_to_command_buffer(
-        &self,
-        command_buffer: &CommandBuffer,
-        feeds: &HashMap<&Tensor, &TensorData>,
-        target_tensors: Option<&[&Tensor]>,
-        target_operations: Option<&[&Operation]>,
-        execution_descriptor: Option<&ExecutionDescriptor>,
-    ) -> HashMap<Retained<Tensor>, Retained<TensorData>> {
-        autoreleasepool(|_| unsafe {
-            // Create NSMutableDictionary for feeds
-            let dictionary_class = NSMutableDictionary::<Tensor, TensorData>::class();
-            let dictionary: Retained<NSMutableDictionary<Tensor, TensorData>> =
-                msg_send![dictionary_class, dictionaryWithCapacity: feeds.len()];
-
-            // Add entries to dictionary
-            for (tensor, data) in feeds {
-                let _: () = msg_send![&*dictionary, setObject: data.as_ref() as &TensorData, forKey: tensor.as_ref() as &Tensor];
-            }
-
-            // Create NSArray for target tensors if provided
-            let targets_array_option = match target_tensors {
-                Some(tensors) => {
-                    let targets_refs: Vec<&Tensor> = tensors
-                        .iter()
-                        .map(|retained_tensor| retained_tensor.as_ref())
-                        .collect();
-                    Some(NSArray::from_slice(&targets_refs))
-                }
-                None => None,
-            };
-
-            let targets_array_ptr = targets_array_option
-                .as_ref()
-                .map_or(std::ptr::null(), |arr| &**arr as *const NSArray<Tensor>);
-
-            // Create NSArray for target operations if provided
-            let ops_array_option: Option<Retained<NSArray<Operation>>> = match target_operations {
-                Some(ops_retained) => {
-                    let ops_refs: Vec<&Operation> = ops_retained
-                        .iter()
-                        .map(|retained_op| retained_op.as_ref())
-                        .collect();
-                    Some(NSArray::from_slice(&ops_refs))
-                }
-                None => None,
-            };
-
-            let ops_array_ptr = ops_array_option
-                .as_ref()
-                .map_or(std::ptr::null(), |arr| &**arr as *const NSArray<Operation>);
-
-            // Get descriptor pointer if provided
-            let desc_ptr = execution_descriptor.map_or(std::ptr::null(), |d| {
-                d.as_ref() as *const ExecutionDescriptor
-            });
-
-            // Encode the graph to the command buffer
-            let results_dict_opt: Option<Retained<NSMutableDictionary<Tensor, TensorData>>> = msg_send![
-                self,
-                encodeToCommandBuffer: command_buffer as &CommandBuffer,
-                feeds: &*dictionary,
-                targetTensors: targets_array_ptr,
-                targetOperations: ops_array_ptr,
-                executionDescriptor: desc_ptr
-            ];
-
-            let results_dict = match results_dict_opt {
-                Some(dict) => dict,
-                None => return HashMap::new(),
-            };
-
-            let mut result = HashMap::new();
-            let keys: Retained<NSArray<Tensor>> = msg_send![&*results_dict, allKeys];
-
-            // Retain the keys array
-            let keys_count = keys.len();
-
-            for i in 0..keys_count {
-                let key: Retained<Tensor> = msg_send![&*keys, objectAtIndex: i];
-                let value: Retained<TensorData> = msg_send![&*results_dict, objectForKey: &*key];
-                result.insert(key, value);
-            }
-
-            result
         })
     }
 
