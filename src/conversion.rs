@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use objc2::{rc::Retained, Message};
-use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSDictionary, NSObjectProtocol};
+use objc2_foundation::{CopyingHelper, NSCopying, NSDictionary, NSObjectProtocol};
 use std::hash::Hash;
 
 /// Trait providing a conversion from a `HashMap<&K, &V>` to an Objective-C

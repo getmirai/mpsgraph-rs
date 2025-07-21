@@ -3,7 +3,7 @@ use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send};
 use objc2_foundation::{CopyingHelper, NSCopying, NSObjectProtocol};
 
 use crate::GraphObject;

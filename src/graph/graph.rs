@@ -7,18 +7,13 @@ use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
 use crate::operation::Operation;
 use crate::GraphObject;
-use crate::Shape;
-use crate::ShapedType;
-use crate::{DataType, Tensor, TensorData};
 use crate::{NSDictionaryExt, ToNSDictionary};
+use crate::{Tensor, TensorData};
 use metal::{foreign_types::ForeignType, CommandQueue};
 use objc2::rc::{autoreleasepool, Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
-use objc2_foundation::{
-    NSArray, NSData, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString,
-};
-use std::collections::HashMap;
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send};
+use objc2_foundation::{NSArray, NSMutableDictionary, NSObjectProtocol};
 
 extern_class!(
     /// The optimized representation of a compute graph of operations and tensors.
@@ -48,7 +43,7 @@ impl Graph {
         /// Setter for [`options`][Self::options].
         #[unsafe(method(setOptions:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn setOptions(&self, options: GraphOptions);
+        pub unsafe fn set_options(&self, options: GraphOptions);
 
         /// Creates a new graph to insert nodes in.
         #[unsafe(method(new))]
@@ -60,11 +55,6 @@ impl Graph {
         #[unsafe(method_family = init)]
         pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
     );
-}
-
-pub enum GraphRunTargetFeedsOrResultsDictionary<'a> {
-    TargetFeeds(&'a NSArray<Tensor>),
-    TargetResults(TensorDataHashMap<'a>),
 }
 
 impl Graph {
