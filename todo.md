@@ -2,7 +2,7 @@
                          
 - [x] ActivationOps
 - [x] ArithmeticOps
-- [ ] CallOps
+- [x] CallOps
 - [ ] ConvolutionOps
 - [ ] ConvolutionTransposeOps
 - [ ] ControlFlowOps

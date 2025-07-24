@@ -22,11 +22,6 @@ impl Graph {
         name: Option<&str>,
     ) -> Box<[Retained<Tensor>]> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-
             let symbol_name_ns = NSString::from_str(symbol_name);
             let input_tensors_array = NSArray::from_slice(input_tensors);
             let output_types_array = NSArray::from_slice(output_types);
@@ -36,7 +31,7 @@ impl Graph {
                 callSymbolName: &*symbol_name_ns,
                 inputTensors: &*input_tensors_array,
                 outputTypes: &*output_types_array,
-                name: name_ptr,
+                name: name.map(NSString::from_str).as_deref(),
             ];
 
             result_nsarray.to_vec().into_boxed_slice()
