@@ -1,7 +1,7 @@
 # ToDo
                          
 - [x] ActivationOps
-- [ ] ArithmeticOps
+- [x] ArithmeticOps
 - [ ] CallOps
 - [ ] ConvolutionOps
 - [ ] ConvolutionTransposeOps

@@ -16,11 +16,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object which is a copy of the input.
     pub fn identity(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, identityWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                identityWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -32,11 +32,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn exponent(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, exponentWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                exponentWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -48,11 +48,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn exponent_base2(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, exponentBase2WithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                exponentBase2WithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -64,11 +64,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn exponent_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, exponentBase10WithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                exponentBase10WithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -80,11 +80,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn logarithm(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logarithmWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                logarithmWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -96,11 +96,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn logarithm_base2(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logarithmBase2WithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                logarithmBase2WithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -112,11 +112,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn logarithm_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, logarithmBase10WithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                logarithmBase10WithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -128,11 +128,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn square(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, squareWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                squareWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -144,11 +144,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn square_root(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, squareRootWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                squareRootWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -160,11 +160,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn reciprocal_square_root(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, reciprocalSquareRootWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                reciprocalSquareRootWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -176,11 +176,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn reciprocal(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, reciprocalWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                reciprocalWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -192,11 +192,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn absolute(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, absoluteWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                absoluteWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -208,11 +208,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn absolute_square(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, absoluteSquareWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                absoluteSquareWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -224,11 +224,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn negative(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, negativeWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                negativeWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -244,11 +244,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn sign(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, signWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                signWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -263,11 +263,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn signbit(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, signbitWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                signbitWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -279,11 +279,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn ceil(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, ceilWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                ceilWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -295,11 +295,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn floor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, floorWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                floorWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -311,11 +311,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn round(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, roundWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                roundWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -327,11 +327,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn rint(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, rintWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                rintWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -343,11 +343,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn sin(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, sinWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                sinWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -359,11 +359,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn cos(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, cosWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                cosWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -375,11 +375,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn tan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, tanWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                tanWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -391,11 +391,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn sinh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, sinhWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                sinhWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -407,11 +407,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn cosh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, coshWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                coshWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -423,11 +423,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn tanh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, tanhWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                tanhWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -439,11 +439,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn asin(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, asinWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                asinWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -455,11 +455,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn acos(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, acosWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                acosWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -471,11 +471,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn atan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, atanWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                atanWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -487,11 +487,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn asinh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, asinhWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                asinhWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -503,11 +503,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn acosh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, acoshWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                acoshWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -519,11 +519,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn atanh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, atanhWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                atanhWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -535,11 +535,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn not(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, notWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                notWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -553,11 +553,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn is_infinite(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, isInfiniteWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                isInfiniteWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -571,11 +571,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn is_finite(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, isFiniteWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                isFiniteWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -589,11 +589,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn is_nan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, isNaNWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                isNaNWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -605,11 +605,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn erf(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, erfWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                erfWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -623,11 +623,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn truncate(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, truncateWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                truncateWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -641,11 +641,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn bitwise_not(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, bitwiseNOTWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                bitwiseNOTWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -663,11 +663,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, bitwisePopulationCountWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                bitwisePopulationCountWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -679,11 +679,11 @@ impl Graph {
     /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
     pub fn conjugate(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, conjugateWithTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                conjugateWithTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -710,15 +710,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 additionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -742,15 +738,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 subtractionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -774,15 +766,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 multiplicationWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -838,15 +826,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 moduloWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -870,15 +854,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 powerWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -902,15 +882,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 minimumWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -934,15 +910,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 maximumWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -967,15 +939,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 minimumWithNaNPropagationWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1000,15 +968,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 maximumWithNaNPropagationWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1032,15 +996,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 equalWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1064,15 +1024,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 notEqualWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1128,15 +1084,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 lessThanOrEqualToWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1160,15 +1112,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 greaterThanWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1224,15 +1172,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 logicalANDWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1254,15 +1198,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 logicalORWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1286,15 +1226,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 logicalNANDWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1318,15 +1254,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 logicalNORWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1350,15 +1282,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 logicalXORWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1382,15 +1310,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 logicalXNORWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1415,15 +1339,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 atan2WithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1442,15 +1362,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 bitwiseANDWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1469,15 +1385,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 bitwiseORWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1496,15 +1408,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 bitwiseXORWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1523,15 +1431,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 bitwiseLeftShiftWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1550,15 +1454,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 bitwiseRightShiftWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1586,16 +1486,12 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 selectWithPredicateTensor: predicate,
                 truePredicateTensor: true_tensor,
                 falsePredicateTensor: false_tensor,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1621,16 +1517,12 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 clampWithTensor: tensor,
                 minValueTensor: min_tensor,
                 maxValueTensor: max_tensor,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1688,15 +1580,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 floorModuloWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1745,11 +1633,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, imaginaryPartOfTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                imaginaryPartOfTensor: tensor,
+                name: name.map(NSString::from_str).as_deref()
+            ]
         }
     }
 
@@ -1767,15 +1655,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 complexTensorWithRealTensor: real,
                 imaginaryTensor: imaginary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
