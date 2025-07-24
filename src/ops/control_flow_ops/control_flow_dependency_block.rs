@@ -15,13 +15,13 @@ pub struct ControlFlowDependencyBlock {
 }
 
 impl ControlFlowDependencyBlock {
-    pub fn new<F>(dependent_ops: F) -> Self
+    pub fn new<F>(control_flow_dependency_ops: F) -> Self
     where
         F: Fn() -> Box<[Retained<Tensor>]> + 'static,
     {
         Self {
             block: RcBlock::new(move || {
-                let tensors = dependent_ops();
+                let tensors = control_flow_dependency_ops();
                 let arr = NSArray::from_retained_slice(&tensors);
                 let raw = Retained::autorelease_return(arr);
                 unsafe { NonNull::new_unchecked(raw) }

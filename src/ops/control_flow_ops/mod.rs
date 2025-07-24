@@ -18,24 +18,6 @@ use std::ptr::NonNull;
 /// MPSGraphControlFlowOps.
 impl Graph {
     extern_methods!(
-        /// Adds a while loop operation.
-        ///
-        /// - Parameters:
-        /// - initialInputs: inputTensors to the `beforeBlock`, for the 1st iteration will be same as initialInputs passed to the while loop.
-        /// - before: `beforeBlock`, this will be run first and then call the `afterBlock` with results or return results from the loop.
-        /// - after: `afterBlock`, this will execute after the condition evaluation.
-        /// - name: name of operation.
-        /// - Returns: A valid MPSGraphTensor array with results returned from the conditionBlock depending on the predicate tensor.
-        #[unsafe(method(whileWithInitialInputs:before:after:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn while_with_initial_inputs(
-            &self,
-            initial_inputs: &NSArray<Tensor>,
-            before: WhileBeforeBlock,
-            after: WhileAfterBlock,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<Tensor>>;
-
         /// Adds a for loop operation, The lower and upper bounds specify a half-open range: the range includes the lower bound but does not include the upper bound.
         ///
         /// - Parameters:
@@ -85,20 +67,16 @@ impl Graph {
     ///
     /// - Parameters:
     /// - operations: Operations marked as control dependency for all ops created inside the dependent block
-    /// - dependent_ops: closure which is provided by caller to create dependent ops
+    /// - dependent_block: closure which is provided by caller to create dependent ops
     /// - name: name of scope
     /// - Returns: A valid MPSGraphTensor array with results returned from dependent_block forwarded
-    fn control_dependency<F>(
+    fn control_dependency(
         &self,
         operations: &[&Operation],
-        dependent_ops: F,
+        dependent_block: ControlFlowDependencyBlock,
         name: Option<&str>,
-    ) -> Box<[Retained<Tensor>]>
-    where
-        F: Fn() -> Box<[Retained<Tensor>]> + 'static,
-    {
+    ) -> Box<[Retained<Tensor>]> {
         let operations_array = NSArray::from_slice(operations);
-        let dependent_block = ControlFlowDependencyBlock::new(dependent_ops);
         let result: Retained<NSArray<Tensor>> = unsafe {
             msg_send![
                 self,
@@ -119,25 +97,46 @@ impl Graph {
     /// - name: name of operation
     /// - Returns: results If no error, the tensors returned by user. If not empty, user must define both then/else block,
     /// both should have same number of arguments and each corresponding argument should have same elementTypes.
-    pub fn if_then_else<T, E>(
+    pub fn if_then_else(
         &self,
         predicate_tensor: &Tensor,
-        then_block: T,
-        else_block: E,
+        then_block: IfThenElseBlock,
+        else_block: IfThenElseBlock,
         name: Option<&str>,
-    ) -> Box<[Retained<Tensor>]>
-    where
-        T: Fn() -> Box<[Retained<Tensor>]> + 'static,
-        E: Fn() -> Box<[Retained<Tensor>]> + 'static,
-    {
-        let then_block = IfThenElseBlock::new(then_block);
-        let else_block = IfThenElseBlock::new(else_block);
+    ) -> Box<[Retained<Tensor>]> {
         let result: Retained<NSArray<Tensor>> = unsafe {
             msg_send![
                 self,
                 ifWithPredicateTensor: predicate_tensor,
                 thenBlock: then_block.as_deref(),
                 elseBlock: else_block.as_deref(),
+                name: name.map(NSString::from_str).as_deref(),
+            ]
+        };
+        result.to_vec().into_boxed_slice()
+    }
+
+    /// Adds a while loop operation.
+    ///
+    /// - Parameters:
+    /// - initial_inputs: inputTensors to the `beforeBlock`, for the 1st iteration will be same as initialInputs passed to the while loop.
+    /// - before_block: `beforeBlock`, this will be run first and then call the `afterBlock` with results or return results from the loop.
+    /// - after_block: `afterBlock`, this will execute after the condition evaluation.
+    /// - name: name of operation.
+    /// - Returns: A valid MPSGraphTensor array with results returned from the conditionBlock depending on the predicate tensor.
+    pub fn while_loop(
+        &self,
+        initial_inputs: &NSArray<Tensor>,
+        before_block: WhileBeforeBlock,
+        after_block: WhileAfterBlock,
+        name: Option<&str>,
+    ) -> Box<[Retained<Tensor>]> {
+        let result: Retained<NSArray<Tensor>> = unsafe {
+            msg_send![
+                self,
+                whileWithInitialInputs: initial_inputs,
+                before: before_block.as_deref(),
+                after: after_block.as_deref(),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };
