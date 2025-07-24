@@ -19,16 +19,13 @@ impl ControlFlowDependencyBlock {
     where
         F: Fn() -> Box<[Retained<Tensor>]> + 'static,
     {
-        let dependent_block: RcBlock<dyn Fn() -> NonNull<NSArray<Tensor>>> =
-            RcBlock::new(move || {
+        Self {
+            block: RcBlock::new(move || {
                 let tensors = dependent_ops();
                 let arr = NSArray::from_retained_slice(&tensors);
                 let raw = Retained::autorelease_return(arr);
                 unsafe { NonNull::new_unchecked(raw) }
-            });
-
-        Self {
-            block: dependent_block,
+            }),
         }
     }
 

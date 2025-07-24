@@ -18,25 +18,6 @@ use std::ptr::NonNull;
 /// MPSGraphControlFlowOps.
 impl Graph {
     extern_methods!(
-        /// Adds an if-then-else operation to the graph.
-        ///
-        /// - Parameters:
-        /// - predicateTensor: Tensor must have a single scalar value, used to decide between then/else branches
-        /// - thenBlock: If predicate is true operations in this block are executed
-        /// - elseBlock: If predicate is false operations in this block are executed
-        /// - name: name of operation
-        /// - Returns: results If no error, the tensors returned by user. If not empty, user must define both then/else block,
-        /// both should have same number of arguments and each corresponding argument should have same elementTypes.
-        #[unsafe(method(ifWithPredicateTensor:thenBlock:elseBlock:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn if_with_predicate(
-            &self,
-            predicate_tensor: &Tensor,
-            then_block: IfThenElseBlock,
-            else_block: IfThenElseBlock,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<Tensor>>;
-
         /// Adds a while loop operation.
         ///
         /// - Parameters:
@@ -103,10 +84,10 @@ impl Graph {
     /// This call blocks until execution has completed.
     ///
     /// - Parameters:
-    /// - operations: Operations maked as control dependency for all ops created inside the dependent block
+    /// - operations: Operations marked as control dependency for all ops created inside the dependent block
     /// - dependent_ops: closure which is provided by caller to create dependent ops
     /// - name: name of scope
-    /// - Returns: A valid MPSGraphTensor array with results returned from dependentBlock forwarded
+    /// - Returns: A valid MPSGraphTensor array with results returned from dependent_block forwarded
     fn control_dependency<F>(
         &self,
         operations: &[&Operation],
@@ -116,16 +97,50 @@ impl Graph {
     where
         F: Fn() -> Box<[Retained<Tensor>]> + 'static,
     {
-        unsafe {
-            let operations_array = NSArray::from_slice(operations);
-            let dependent_block = ControlFlowDependencyBlock::new(dependent_ops);
-            let result: Retained<NSArray<Tensor>> = msg_send![
+        let operations_array = NSArray::from_slice(operations);
+        let dependent_block = ControlFlowDependencyBlock::new(dependent_ops);
+        let result: Retained<NSArray<Tensor>> = unsafe {
+            msg_send![
                 self,
                 controlDependencyWithOperations: &*operations_array,
                 dependentBlock: dependent_block.as_deref(),
                 name: name.map(NSString::from_str).as_deref(),
-            ];
-            result.to_vec().into_boxed_slice()
-        }
+            ]
+        };
+        result.to_vec().into_boxed_slice()
+    }
+
+    /// Adds an if-then-else operation to the graph.
+    ///
+    /// - Parameters:
+    /// - predicate_tensor: Tensor must have a single scalar value, used to decide between then/else branches
+    /// - then_block: If predicate is true operations in this block are executed
+    /// - else_block: If predicate is false operations in this block are executed
+    /// - name: name of operation
+    /// - Returns: results If no error, the tensors returned by user. If not empty, user must define both then/else block,
+    /// both should have same number of arguments and each corresponding argument should have same elementTypes.
+    pub fn if_then_else<T, E>(
+        &self,
+        predicate_tensor: &Tensor,
+        then_block: T,
+        else_block: E,
+        name: Option<&str>,
+    ) -> Box<[Retained<Tensor>]>
+    where
+        T: Fn() -> Box<[Retained<Tensor>]> + 'static,
+        E: Fn() -> Box<[Retained<Tensor>]> + 'static,
+    {
+        let then_block = IfThenElseBlock::new(then_block);
+        let else_block = IfThenElseBlock::new(else_block);
+        let result: Retained<NSArray<Tensor>> = unsafe {
+            msg_send![
+                self,
+                ifWithPredicateTensor: predicate_tensor,
+                thenBlock: then_block.as_deref(),
+                elseBlock: else_block.as_deref(),
+                name: name.map(NSString::from_str).as_deref(),
+            ]
+        };
+        result.to_vec().into_boxed_slice()
     }
 }
