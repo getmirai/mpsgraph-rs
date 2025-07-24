@@ -4,7 +4,7 @@
 - [x] ArithmeticOps
 - [x] CallOps
 - [x] ConvolutionOps
-- [ ] ConvolutionTransposeOps
+- [x] ConvolutionTransposeOps
 - [ ] ControlFlowOps
 - [ ] CumulativeOps
 - [ ] DepthwiseConvolutionOps
