@@ -10,6 +10,7 @@ mod graph;
 mod operation;
 mod ops;
 mod scalar_or_tensor;
+mod shape_or_tensor;
 mod tensor;
 mod tensor_data;
 
@@ -21,5 +22,6 @@ pub use executable::*;
 pub use graph::*;
 pub use operation::*;
 pub use scalar_or_tensor::*;
+pub use shape_or_tensor::*;
 pub use tensor::*;
 pub use tensor_data::*;

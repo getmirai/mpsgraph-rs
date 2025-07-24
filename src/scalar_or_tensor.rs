@@ -1,4 +1,4 @@
-use crate::tensor::Tensor;
+use crate::Tensor;
 
 pub enum ScalarOrTensor<'a> {
     Scalar(f64),
