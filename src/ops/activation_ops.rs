@@ -19,11 +19,7 @@ impl Graph {
     /// - Returns: A valid `Tensor` object.
     pub fn relu(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, reLUWithTensor: tensor, name: name_ptr]
+            msg_send![self, reLUWithTensor: tensor, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
@@ -41,15 +37,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 reLUGradientWithIncomingGradient: gradient,
                 sourceTensor: source,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -62,11 +54,7 @@ impl Graph {
     /// - Returns: A valid `Tensor` object.
     pub fn sigmoid(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, sigmoidWithTensor: tensor, name: name_ptr]
+            msg_send![self, sigmoidWithTensor: tensor, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
@@ -84,15 +72,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 sigmoidGradientWithIncomingGradient: gradient,
                 sourceTensor: source,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -106,11 +90,7 @@ impl Graph {
     /// - Returns: A valid `Tensor` object.
     pub fn soft_max(&self, tensor: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, softMaxWithTensor: tensor, axis: axis, name: name_ptr]
+            msg_send![self, softMaxWithTensor: tensor, axis: axis, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
@@ -130,16 +110,12 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 softMaxGradientWithIncomingGradient: gradient,
                 sourceTensor: source,
                 axis: axis,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -160,16 +136,12 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             match alpha {
                 ScalarOrTensor::Scalar(alpha) => {
-                    msg_send![self, leakyReLUWithTensor: tensor, alpha: alpha, name: name_ptr]
+                    msg_send![self, leakyReLUWithTensor: tensor, alpha: alpha, name: name.map(NSString::from_str).as_deref()]
                 }
                 ScalarOrTensor::Tensor(alpha_tensor) => {
-                    msg_send![self, leakyReLUWithTensor: tensor, alphaTensor: alpha_tensor, name: name_ptr]
+                    msg_send![self, leakyReLUWithTensor: tensor, alphaTensor: alpha_tensor, name: name.map(NSString::from_str).as_deref()]
                 }
             }
         }
@@ -193,16 +165,12 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 leakyReLUGradientWithIncomingGradient: gradient,
                 sourceTensor: source,
                 alphaTensor: alpha_tensor,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
