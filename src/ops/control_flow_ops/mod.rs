@@ -4,11 +4,11 @@ mod if_then_else_block;
 mod while_after_block;
 mod while_before_block;
 
-use control_flow_dependency_block::ControlFlowDependencyBlock;
-use for_loop_body_block::ForLoopBodyBlock;
-use if_then_else_block::IfThenElseBlock;
-use while_after_block::WhileAfterBlock;
-use while_before_block::WhileBeforeBlock;
+pub use control_flow_dependency_block::ControlFlowDependencyBlock;
+pub use for_loop_body_block::ForLoopBodyBlock;
+pub use if_then_else_block::IfThenElseBlock;
+pub use while_after_block::WhileAfterBlock;
+pub use while_before_block::WhileBeforeBlock;
 
 use crate::{Graph, Operation, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
@@ -18,28 +18,6 @@ use std::ptr::NonNull;
 /// MPSGraphControlFlowOps.
 impl Graph {
     extern_methods!(
-        /// Adds a for loop operation, The lower and upper bounds specify a half-open range: the range includes the lower bound but does not include the upper bound.
-        ///
-        /// - Parameters:
-        /// - lowerBound: Lower bound value of the loop, this is a scalar tensor, this is the index the loop will start with.
-        /// - upperBound: Upper bound value of the loop, this is a scalar tensor.
-        /// - step: Step value of the loop, this is a scalar tensor and must be positive.
-        /// - initialBodyArguments: initial set of iteration arguments passed to the bodyBlock of the for loop.
-        /// - body: This block will execute the body of the for loop.
-        /// - name: name of operation.
-        /// - Returns: A valid `MPSGraphTensor` array with same count and corresponding element types as `initialIterationArguments` and return types of the for loop.
-        #[unsafe(method(forLoopWithLowerBound:upperBound:step:initialBodyArguments:body:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn for_loop(
-            &self,
-            lower_bound: &Tensor,
-            upper_bound: &Tensor,
-            step: &Tensor,
-            initial_body_arguments: &NSArray<Tensor>,
-            body: ForLoopBodyBlock,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<Tensor>>;
-
         /// Adds a for loop operation, with a specific number of iterations.
         ///
         /// - Parameters:
@@ -126,17 +104,52 @@ impl Graph {
     /// - Returns: A valid MPSGraphTensor array with results returned from the conditionBlock depending on the predicate tensor.
     pub fn while_loop(
         &self,
-        initial_inputs: &NSArray<Tensor>,
+        initial_inputs: &[&Tensor],
         before_block: WhileBeforeBlock,
         after_block: WhileAfterBlock,
         name: Option<&str>,
     ) -> Box<[Retained<Tensor>]> {
+        let initial_intputs_array = NSArray::from_slice(initial_inputs);
         let result: Retained<NSArray<Tensor>> = unsafe {
             msg_send![
                 self,
-                whileWithInitialInputs: initial_inputs,
+                whileWithInitialInputs: &*initial_intputs_array,
                 before: before_block.as_deref(),
                 after: after_block.as_deref(),
+                name: name.map(NSString::from_str).as_deref(),
+            ]
+        };
+        result.to_vec().into_boxed_slice()
+    }
+
+    /// Adds a for loop operation, The lower and upper bounds specify a half-open range: the range includes the lower bound but does not include the upper bound.
+    ///
+    /// - Parameters:
+    /// - lowerBound: Lower bound value of the loop, this is a scalar tensor, this is the index the loop will start with.
+    /// - upperBound: Upper bound value of the loop, this is a scalar tensor.
+    /// - step: Step value of the loop, this is a scalar tensor and must be positive.
+    /// - initialBodyArguments: initial set of iteration arguments passed to the bodyBlock of the for loop.
+    /// - body: This block will execute the body of the for loop.
+    /// - name: name of operation.
+    /// - Returns: A valid `MPSGraphTensor` array with same count and corresponding element types as `initialIterationArguments` and return types of the for loop.
+    pub unsafe fn for_loop(
+        &self,
+        lower_bound: &Tensor,
+        upper_bound: &Tensor,
+        step: &Tensor,
+        initial_body_arguments: &[&Tensor],
+        body: ForLoopBodyBlock,
+        name: Option<&str>,
+    ) -> Box<[Retained<Tensor>]> {
+        let initial_body_arguments_array = NSArray::from_slice(initial_body_arguments);
+        let result: Retained<NSArray<Tensor>> = unsafe {
+            msg_send![
+                self,
+                forLoopWithLowerBound: lower_bound,
+                upperBound: upper_bound,
+                step: step,
+                initialBodyArguments: &*initial_body_arguments_array,
+                body: body.as_deref(),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };
