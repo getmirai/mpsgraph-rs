@@ -48,6 +48,13 @@ The rules below are CRITICAL. Each rule should be respected. Rules can only be o
 - For calling API that was never used before, read the sources of the installed dependencies, otherwise, search in docs.rs.
 - Instead of calling .as_ref() on an instanse of Retained<T>. type, prefer `&*`.
 
+- Function documentation comments **must** follow rustdoc conventions:
+  - Use `///` for each comment line.
+  - Start with a concise one-sentence summary.
+  - After a blank line, add a `# Arguments` heading with each parameter listed as `* `back-ticked` - description`.
+  - Optionally include a `# Returns` heading describing the return value(s).
+  - Reference types with markdown links, e.g. [`Tensor`].
+
 ## Rust port of Obj-C rules
 
 - The amount and order of Rust functions should match the Obj-C version

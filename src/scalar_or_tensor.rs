@@ -1,6 +1,7 @@
-use crate::Tensor;
+use crate::{GraphScalar, Tensor};
 
-pub enum ScalarOrTensor<'a> {
-    Scalar(f64),
+#[derive(Debug, Clone, Copy)]
+pub enum ScalarOrTensor<'a, T: GraphScalar> {
+    Scalar(T),
     Tensor(&'a Tensor),
 }

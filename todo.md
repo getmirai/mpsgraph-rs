@@ -1,12 +1,12 @@
 # ToDo
-                         
+
 - [x] ActivationOps
 - [x] ArithmeticOps
 - [x] CallOps
 - [x] ConvolutionOps
 - [x] ConvolutionTransposeOps
-- [ ] ControlFlowOps
-- [ ] CumulativeOps
+- [x] ControlFlowOps
+- [x] CumulativeOps
 - [ ] DepthwiseConvolutionOps
 - [ ] FourierTransformOps
 - [ ] GatherOps

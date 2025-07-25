@@ -129,10 +129,10 @@ impl Graph {
     ///   - alpha: The scalar value alpha used by all elements in the input tensor.
     ///   - name: The name for the operation.
     /// - Returns: A valid `Tensor` object.
-    pub fn leaky_relu(
+    pub fn leaky_relu<'a>(
         &self,
         tensor: &Tensor,
-        alpha: ScalarOrTensor,
+        alpha: ScalarOrTensor<'a, f64>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
