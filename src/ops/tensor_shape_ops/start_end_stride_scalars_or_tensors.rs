@@ -1,6 +1,6 @@
 use crate::Tensor;
 
-pub enum StridedSliceScalarsOrTensors<'a> {
+pub enum StartEndStrideScalarsOrTensors<'a> {
     Scalars {
         starts: &'a [u64],
         ends: &'a [u64],
