@@ -39,16 +39,16 @@ impl Tensor {
         /// -1 value for a dimension represents that it will be resolved via shape inference at runtime and it can be anything.
         #[unsafe(method(shape))]
         #[unsafe(method_family = none)]
-        pub unsafe fn shape(&self) -> Option<Retained<Shape>>;
+        pub fn shape(&self) -> Option<Retained<Shape>>;
 
         /// The data type of the tensor.
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
-        pub unsafe fn data_type(&self) -> DataType;
+        pub fn data_type(&self) -> DataType;
 
         /// The operation responsible for creating this tensor.
         #[unsafe(method(operation))]
         #[unsafe(method_family = none)]
-        pub unsafe fn operation(&self) -> Retained<Operation>;
+        pub fn operation(&self) -> Retained<Operation>;
     );
 }

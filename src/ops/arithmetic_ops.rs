@@ -1,9 +1,6 @@
-use objc2::msg_send;
-use objc2::rc::Retained;
+use crate::{Graph, Tensor};
+use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
-
-use crate::Graph;
-use crate::Tensor;
 
 impl Graph {
     // region: UnaryArithmeticOps

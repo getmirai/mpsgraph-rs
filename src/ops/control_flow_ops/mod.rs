@@ -126,7 +126,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid [`Tensor`] slice with the same count and corresponding element types as `initial_body_arguments` and the return types of the for loop.
-    pub unsafe fn for_loop(
+    pub fn for_loop(
         &self,
         lower_bound: &Tensor,
         upper_bound: &Tensor,
@@ -162,7 +162,7 @@ impl Graph {
     /// # Returns
     ///
     /// A valid [`Tensor`] slice with the same count and corresponding element types as `initial_body_arguments` and the return types of the for loop.
-    pub unsafe fn for_loop_with_number_of_iterations(
+    pub fn for_loop_with_number_of_iterations(
         &self,
         number_of_iterations: &Tensor,
         initial_body_arguments: &[&Tensor],

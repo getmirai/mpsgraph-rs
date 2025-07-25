@@ -26,7 +26,7 @@ impl Device {
         /// Device of the MPSGraphDevice.
         #[unsafe(method(type))]
         #[unsafe(method_family = none)]
-        pub unsafe fn r#type(&self) -> DeviceType;
+        pub fn r#type(&self) -> DeviceType;
     );
 }
 

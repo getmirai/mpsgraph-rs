@@ -38,22 +38,22 @@ impl Graph {
         /// The default value is `MPSGraphOptionsDefault`.
         #[unsafe(method(options))]
         #[unsafe(method_family = none)]
-        pub unsafe fn options(&self) -> GraphOptions;
+        pub fn options(&self) -> GraphOptions;
 
         /// Setter for [`options`][Self::options].
         #[unsafe(method(setOptions:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_options(&self, options: GraphOptions);
+        pub fn set_options(&self, options: GraphOptions);
 
         /// Creates a new graph to insert nodes in.
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub unsafe fn new() -> Retained<Self>;
+        pub fn new() -> Retained<Self>;
 
         /// Initialize an MPSGraph to insert nodes in.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub fn init(this: Allocated<Self>) -> Retained<Self>;
     );
 }
 
@@ -131,7 +131,7 @@ impl Graph {
     /// - target_tensors: Tensors for which the caller wishes MPSGraphTensorData to be returned.
     /// - target_operations: Operations to be completed at the end of the run.
     /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
-    pub unsafe fn run_with_command_queue(
+    pub fn run_with_command_queue(
         &self,
         command_queue: &CommandQueue,
         feeds: &TensorDataHashMap,
@@ -163,7 +163,7 @@ impl Graph {
     /// - feeds: Feeds dictionary for the placeholder tensors.
     /// - target_operations: Operations to be completed at the end of the run.
     /// - results: Tensors hashmap passed by user, these will be filled with graph output data.
-    pub unsafe fn run_with_command_queue_in_place_results(
+    pub fn run_with_command_queue_in_place_results(
         &self,
         command_queue: &CommandQueue,
         feeds: &TensorDataHashMap,
@@ -196,7 +196,7 @@ impl Graph {
     /// - target_operations: Operations to be completed at the end of the run.
     /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
     /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
-    pub unsafe fn run_async(
+    pub fn run_async(
         &self,
         feeds: &TensorDataHashMap,
         target_tensors: &[&Tensor],
@@ -229,7 +229,7 @@ impl Graph {
     /// - target_operations: Operations to be completed at the end of the run.
     /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
     /// - Returns: A valid Tensors hashmap with results synchronized to the CPU memory.
-    pub unsafe fn run_async_with_command_queue(
+    pub fn run_async_with_command_queue(
         &self,
         command_queue: &CommandQueue,
         feeds: &TensorDataHashMap,
@@ -264,7 +264,7 @@ impl Graph {
     /// - target_operations: Operations to be completed at the end of the run.
     /// - results: Tensors hashmap passed by user, these will be filled with graph output data.
     /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
-    pub unsafe fn run_async_with_command_queue_in_place_results(
+    pub fn run_async_with_command_queue_in_place_results(
         &self,
         command_queue: &CommandQueue,
         feeds: &TensorDataHashMap,
@@ -334,7 +334,7 @@ impl Graph {
     /// - target_operations: Operations to be completed at the end of the run.
     /// - results: Tensors hashmap passed by user, these will be filled with graph output data.
     /// - execution_descriptor: ExecutionDescriptor to be passed in and used.
-    pub unsafe fn encode_to_command_buffer_in_place_results(
+    pub fn encode_to_command_buffer_in_place_results(
         &self,
         command_buffer: &CommandBuffer,
         feeds: &TensorDataHashMap,

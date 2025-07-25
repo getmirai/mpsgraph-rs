@@ -32,22 +32,22 @@ impl ShapedType {
         /// The Shape of the shaped type.
         #[unsafe(method(shape))]
         #[unsafe(method_family = none)]
-        pub unsafe fn shape(&self) -> Option<Retained<Shape>>;
+        pub fn shape(&self) -> Option<Retained<Shape>>;
 
         /// Setter for [`shape`][Self::shape].
         #[unsafe(method(setShape:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_shape(&self, shape: Option<&Shape>);
+        pub fn set_shape(&self, shape: Option<&Shape>);
 
         /// The data type of the shaped type.
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
-        pub unsafe fn data_type(&self) -> DataType;
+        pub fn data_type(&self) -> DataType;
 
         /// Setter for [`dataType`][Self::dataType].
         #[unsafe(method(setDataType:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_data_type(&self, data_type: DataType);
+        pub fn set_data_type(&self, data_type: DataType);
 
         /// Initializes a shaped type.
         ///
@@ -57,7 +57,7 @@ impl ShapedType {
         /// - Returns: A valid MPSGraphShapedType, or nil if allocation failure.
         #[unsafe(method(initWithShape:dataType:))]
         #[unsafe(method_family = init)]
-        pub unsafe fn init_with_shape_data_type(
+        pub fn init_with_shape_data_type(
             this: Allocated<Self>,
             shape: Option<&Shape>,
             data_type: DataType,
@@ -70,7 +70,7 @@ impl ShapedType {
         /// - Returns: true if equal, false if unequal
         #[unsafe(method(isEqualTo:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn is_equal_to(&self, object: Option<&ShapedType>) -> bool;
+        pub fn is_equal_to(&self, object: Option<&ShapedType>) -> bool;
     );
 }
 
@@ -79,10 +79,10 @@ impl ShapedType {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub unsafe fn new() -> Retained<Self>;
+        pub fn new() -> Retained<Self>;
     );
 }

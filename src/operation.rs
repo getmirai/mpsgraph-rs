@@ -35,26 +35,26 @@ impl Operation {
         /// The input tensors of the operation.
         #[unsafe(method(inputTensors))]
         #[unsafe(method_family = none)]
-        pub unsafe fn input_tensors(&self) -> Retained<NSArray<Tensor>>;
+        pub fn input_tensors(&self) -> Retained<NSArray<Tensor>>;
 
         /// The output tensors of the operation.
         #[unsafe(method(outputTensors))]
         #[unsafe(method_family = none)]
-        pub unsafe fn output_tensors(&self) -> Retained<NSArray<Tensor>>;
+        pub fn output_tensors(&self) -> Retained<NSArray<Tensor>>;
 
         /// The set of operations guaranteed to execute before this operation.
         #[unsafe(method(controlDependencies))]
         #[unsafe(method_family = none)]
-        pub unsafe fn control_dependencies(&self) -> Retained<NSArray<Operation>>;
+        pub fn control_dependencies(&self) -> Retained<NSArray<Operation>>;
 
         /// The graph on which the operation is defined.
         #[unsafe(method(graph))]
         #[unsafe(method_family = none)]
-        pub unsafe fn graph(&self) -> Retained<Graph>;
+        pub fn graph(&self) -> Retained<Graph>;
 
         /// Name of the operation.
         #[unsafe(method(name))]
         #[unsafe(method_family = none)]
-        pub unsafe fn name(&self) -> Retained<NSString>;
+        pub fn name(&self) -> Retained<NSString>;
     );
 }

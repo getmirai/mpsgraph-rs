@@ -5,8 +5,8 @@ use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
-use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSError, NSObjectProtocol, NSUInteger};
+use objc2::{extern_class, extern_conformance, extern_methods, msg_send};
+use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSError, NSObjectProtocol};
 use std::ptr::NonNull;
 
 use crate::GraphObject;
@@ -36,48 +36,45 @@ impl ExecutableExecutionDescriptor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub unsafe fn new() -> Retained<Self>;
+        pub fn new() -> Retained<Self>;
 
         /// A notification that appears when graph-executable execution is scheduled.
         ///
         /// Default value is nil.
         #[unsafe(method(scheduledHandler))]
         #[unsafe(method_family = none)]
-        pub unsafe fn scheduled_handler(&self) -> ExecutableScheduledHandler;
+        pub fn scheduled_handler(&self) -> ExecutableScheduledHandler;
 
         /// Setter for [`scheduledHandler`][Self::scheduledHandler].
         #[unsafe(method(setScheduledHandler:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_scheduled_handler(&self, scheduled_handler: ExecutableScheduledHandler);
+        pub fn set_scheduled_handler(&self, scheduled_handler: ExecutableScheduledHandler);
 
         /// Getter for [`completionHandler`][Self::completionHandler].
         #[unsafe(method(completionHandler))]
         #[unsafe(method_family = none)]
-        pub unsafe fn completion_handler_raw(&self) -> ExecutableCompletionHandler;
+        pub fn completion_handler_raw(&self) -> ExecutableCompletionHandler;
 
         /// Setter for [`completionHandler`][Self::completionHandler].
         #[unsafe(method(setCompletionHandler:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_completion_handler_raw(
-            &self,
-            completion_handler: ExecutableCompletionHandler,
-        );
+        pub fn set_completion_handler_raw(&self, completion_handler: ExecutableCompletionHandler);
 
         /// Flag for the graph executable to wait till the execution has completed.
         ///
         /// Default value is false.
         #[unsafe(method(waitUntilCompleted))]
         #[unsafe(method_family = none)]
-        pub unsafe fn wait_until_completed(&self) -> bool;
+        pub fn wait_until_completed(&self) -> bool;
 
         /// Setter for [`waitUntilCompleted`][Self::waitUntilCompleted].
         #[unsafe(method(setWaitUntilCompleted:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_wait_until_completed(&self, wait_until_completed: bool);
+        pub fn set_wait_until_completed(&self, wait_until_completed: bool);
     );
 }
 

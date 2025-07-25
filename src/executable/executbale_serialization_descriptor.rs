@@ -26,36 +26,36 @@ impl ExecutableSerializationDescriptor {
         /// If false, the exisiting .mpsgraphpackage will be overwritten.
         #[unsafe(method(append))]
         #[unsafe(method_family = none)]
-        pub unsafe fn append(&self) -> bool;
+        pub fn append(&self) -> bool;
 
         /// Setter for [`append`][Self::append].
         #[unsafe(method(setAppend:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_append(&self, append: bool);
+        pub fn set_append(&self, append: bool);
 
         /// The deployment platform used to serialize the executable.
         ///
         /// Defaults to the current platform.
         #[unsafe(method(deploymentPlatform))]
         #[unsafe(method_family = none)]
-        pub unsafe fn deployment_platform(&self) -> DeploymentPlatform;
+        pub fn deployment_platform(&self) -> DeploymentPlatform;
 
         /// Setter for [`deploymentPlatform`][Self::deploymentPlatform].
         #[unsafe(method(setDeploymentPlatform:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_deployment_platform(&self, deployment_platform: DeploymentPlatform);
+        pub fn set_deployment_platform(&self, deployment_platform: DeploymentPlatform);
 
         /// The minimum deployment target to serialize the executable.
         ///
         /// If not set, the package created will target the latest version of the `deploymentPlatform` set.
         #[unsafe(method(minimumDeploymentTarget))]
         #[unsafe(method_family = none)]
-        pub unsafe fn minimum_deployment_target(&self) -> Retained<NSString>;
+        pub fn minimum_deployment_target(&self) -> Retained<NSString>;
 
         /// Setter for [`minimumDeploymentTarget`][Self::minimumDeploymentTarget].
         #[unsafe(method(setMinimumDeploymentTarget:))]
         #[unsafe(method_family = none)]
-        pub unsafe fn set_minimum_deployment_target(&self, minimum_deployment_target: &NSString);
+        pub fn set_minimum_deployment_target(&self, minimum_deployment_target: &NSString);
     );
 }
 
@@ -64,10 +64,10 @@ impl ExecutableSerializationDescriptor {
     extern_methods!(
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
-        pub unsafe fn init(this: Allocated<Self>) -> Retained<Self>;
+        pub fn init(this: Allocated<Self>) -> Retained<Self>;
 
         #[unsafe(method(new))]
         #[unsafe(method_family = new)]
-        pub unsafe fn new() -> Retained<Self>;
+        pub fn new() -> Retained<Self>;
     );
 }

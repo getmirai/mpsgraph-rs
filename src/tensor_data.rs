@@ -29,17 +29,17 @@ impl TensorData {
         /// The shape of the tensor data.
         #[unsafe(method(shape))]
         #[unsafe(method_family = none)]
-        pub unsafe fn shape(&self) -> Retained<Shape>;
+        pub fn shape(&self) -> Retained<Shape>;
 
         /// The data type of the tensor data.
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
-        pub unsafe fn data_type(&self) -> DataType;
+        pub fn data_type(&self) -> DataType;
 
         /// The device of the tensor data.
         #[unsafe(method(device))]
         #[unsafe(method_family = none)]
-        pub unsafe fn device(&self) -> Retained<Device>;
+        pub fn device(&self) -> Retained<Device>;
 
         /// Initializes the tensor data with an `NSData` on a device.
         ///
@@ -51,7 +51,7 @@ impl TensorData {
         /// - Returns: A valid MPSGraphTensorData, or nil if allocation failure.
         #[unsafe(method(initWithDevice:data:shape:dataType:))]
         #[unsafe(method_family = init)]
-        pub unsafe fn init_with_device_data_shape_data_type(
+        pub fn init_with_device(
             this: Allocated<Self>,
             device: &Device,
             data: &NSData,
@@ -70,7 +70,7 @@ impl TensorData {
     /// - shape: shape of the output tensor
     /// - dataType: dataType of the placeholder tensor
     /// - Returns: A valid TensorData, or nil if allocation failure.
-    pub fn new_with_device_ns_data_shape_data_type(
+    pub fn new_with_ns_data(
         device: &Device,
         data: &NSData,
         shape: &Shape,
@@ -79,7 +79,7 @@ impl TensorData {
         unsafe {
             let class = Self::class();
             let allocated: Allocated<Self> = msg_send![class, alloc];
-            Self::init_with_device_data_shape_data_type(allocated, device, data, shape, data_type)
+            Self::init_with_device(allocated, device, data, shape, data_type)
         }
     }
 
@@ -91,7 +91,7 @@ impl TensorData {
     /// - shape: shape of the output tensor
     /// - dataType: dataType of the placeholder tensor
     /// - Returns: A valid TensorData, or nil if allocation failure.
-    pub fn new_with_device_data_shape_data_type<T: Copy>(
+    pub fn new_with_data<T: Copy>(
         device: &Device,
         data: &[T],
         shape: &Shape,
@@ -100,32 +100,7 @@ impl TensorData {
         unsafe {
             let data_size = size_of_val(data);
             let ns_data = NSData::with_bytes(from_raw_parts(data.as_ptr() as *const u8, data_size));
-            Self::new_with_device_ns_data_shape_data_type(device, &ns_data, shape, data_type)
-        }
-    }
-
-    /// Initializes the tensor data with a Metal buffer.
-    ///
-    /// - Parameters:
-    /// - buffer: Metal buffer from which to copy the contents
-    /// - shape: shape of the output tensor
-    /// - dataType: dataType of the placeholder tensor
-    /// - Returns: A valid TensorData, or nil if allocation failure.
-    pub fn new_with_mtl_buffer_shape_data_type(
-        buffer: &Buffer,
-        shape: &Shape,
-        data_type: DataType,
-    ) -> Retained<Self> {
-        unsafe {
-            let class = Self::class();
-            let buffer_ptr = buffer.as_ptr() as *mut AnyObject;
-            let allocated: Allocated<Self> = msg_send![class, alloc];
-            msg_send![
-                allocated,
-                initWithMTLBuffer: buffer_ptr,
-                shape: shape,
-                dataType: data_type as u32
-            ]
+            Self::new_with_ns_data(device, &ns_data, shape, data_type)
         }
     }
 
@@ -137,23 +112,34 @@ impl TensorData {
     /// - dataType: dataType of the placeholder tensor
     /// - rowBytes: rowBytes for the fastest moving dimension, must be larger than or equal to sizeOf(dataType)shape[rank - 1] and must be a multiple of sizeOf(dataType)
     /// - Returns: A valid TensorData, or nil if allocation failure.
-    pub fn new_with_mtl_buffer_shape_data_type_row_bytes(
+    pub fn new_with_mtl_buffer_row_bytes(
         buffer: &Buffer,
         shape: &Shape,
         data_type: DataType,
-        row_bytes: u64,
+        row_bytes: Option<u64>,
     ) -> Retained<Self> {
-        unsafe {
-            let class = Self::class();
-            let buffer_ptr = buffer.as_ptr() as *mut AnyObject;
-            let allocated: Allocated<Self> = msg_send![class, alloc];
-            msg_send![
-                allocated,
-                initWithMTLBuffer: buffer_ptr,
-                shape: shape,
-                dataType: data_type as u32,
-                rowBytes: row_bytes
-            ]
+        let class = Self::class();
+        let buffer_ptr = buffer.as_ptr() as *mut AnyObject;
+        let allocated: Allocated<Self> = unsafe { msg_send![class, alloc] };
+
+        match row_bytes {
+            Some(row_bytes) => unsafe {
+                msg_send![
+                    allocated,
+                    initWithMTLBuffer: buffer_ptr,
+                    shape: shape,
+                    dataType: data_type,
+                    rowBytes: row_bytes
+                ]
+            },
+            None => unsafe {
+                msg_send![
+                    allocated,
+                    initWithMTLBuffer: buffer_ptr,
+                    shape: shape,
+                    dataType: data_type
+                ]
+            },
         }
     }
 }
