@@ -4,12 +4,14 @@ mod slice_ops;
 mod slice_update_ops;
 mod start_end_stride_scalars_or_tensors;
 mod strided_slice_ops;
+mod tile_ops;
 
 pub use concat_ops::*;
 pub use slice_gradient_ops::*;
 pub use slice_ops::*;
 pub use slice_update_ops::*;
 pub use strided_slice_ops::*;
+pub use tile_ops::*;
 
 use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
