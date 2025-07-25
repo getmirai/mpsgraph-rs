@@ -1,10 +1,12 @@
 use crate::{DataType, Device, GraphObject, Shape};
-use metal::foreign_types::ForeignType;
-use metal::Buffer;
-use objc2::rc::{Allocated, Retained};
-use objc2::runtime::{AnyObject, NSObject};
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
-use objc2_foundation::{NSData, NSObjectProtocol};
+use metal::{foreign_types::ForeignType, Buffer};
+use objc2::{
+    extern_class, extern_conformance, extern_methods, msg_send,
+    rc::{Allocated, Retained},
+    runtime::{AnyObject, NSObject},
+    ClassType,
+};
+use objc2_foundation::{NSArray, NSData, NSNumber, NSObjectProtocol};
 use std::mem::size_of_val;
 use std::slice::from_raw_parts;
 
@@ -26,11 +28,6 @@ extern_conformance!(
 
 impl TensorData {
     extern_methods!(
-        /// The shape of the tensor data.
-        #[unsafe(method(shape))]
-        #[unsafe(method_family = none)]
-        pub fn shape(&self) -> Retained<Shape>;
-
         /// The data type of the tensor data.
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
@@ -141,5 +138,11 @@ impl TensorData {
                 ]
             },
         }
+    }
+
+    /// The shape of the tensor data.
+    pub fn shape(&self) -> Shape {
+        let array: Retained<NSArray<NSNumber>> = unsafe { msg_send![self, shape] };
+        array.into()
     }
 }

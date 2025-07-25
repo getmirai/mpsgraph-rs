@@ -1,11 +1,10 @@
+use crate::{DataType, Graph, GraphObject, Operation, Shape, ShapeOrTensor, Tensor};
 use objc2::{
-    extern_class, extern_conformance, extern_methods,
+    extern_class, extern_conformance, extern_methods, msg_send,
     rc::{Allocated, Retained},
     runtime::NSObject,
 };
-use objc2_foundation::{CopyingHelper, NSCopying, NSObjectProtocol};
-
-use crate::{DataType, Graph, GraphObject, Operation, Shape, ShapeOrTensor, Tensor};
+use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSNumber, NSObjectProtocol};
 
 extern_class!(
     /// The class that defines the parameters for a variable.
@@ -30,11 +29,6 @@ extern_conformance!(
 
 impl GraphVariableOp {
     extern_methods!(
-        /// The shape of the variable.
-        #[unsafe(method(shape))]
-        #[unsafe(method_family = none)]
-        pub fn shape(&self) -> Retained<Shape>;
-
         /// The data type of the variable.
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
@@ -59,4 +53,12 @@ impl GraphVariableOp {
         #[unsafe(method_family = new)]
         pub fn new() -> Retained<Self>;
     );
+}
+
+impl GraphVariableOp {
+    /// The shape of the variable.
+    pub fn shape(&self) -> Shape {
+        let array: Retained<NSArray<NSNumber>> = unsafe { msg_send![self, shape] };
+        array.into()
+    }
 }

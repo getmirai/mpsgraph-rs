@@ -1,4 +1,6 @@
+use objc2::{rc::Retained, runtime::AnyObject, Encode, RefEncode};
 use objc2_foundation::{NSArray, NSNumber};
+use std::ops::Deref;
 
 /// An array of NSNumbers where dimension lengths provided by the user goes from slowest moving to fastest moving dimension.
 /// This is same order as MLMultiArray in coreML and most frameworks in Python.
@@ -9,4 +11,56 @@ use objc2_foundation::{NSArray, NSNumber};
 /// ```
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshaders/mpsshape?language=objc)
-pub type Shape = NSArray<NSNumber>;
+#[repr(transparent)]
+pub struct Shape(Retained<NSArray<NSNumber>>);
+
+impl Shape {
+    pub fn new(values: &[i64]) -> Self {
+        let ns_numbers = values
+            .iter()
+            .map(|&x| NSNumber::new_i64(x))
+            .collect::<Box<[Retained<NSNumber>]>>();
+        let shape = NSArray::from_retained_slice(&ns_numbers);
+        Self(shape)
+    }
+}
+
+impl From<&[i64]> for Shape {
+    fn from(values: &[i64]) -> Self {
+        Self::new(values)
+    }
+}
+
+impl<const N: usize> From<&[i64; N]> for Shape {
+    fn from(values: &[i64; N]) -> Self {
+        Self::new(values)
+    }
+}
+
+impl From<Shape> for Retained<NSArray<NSNumber>> {
+    fn from(shape: Shape) -> Self {
+        shape.0
+    }
+}
+
+impl From<Retained<NSArray<NSNumber>>> for Shape {
+    fn from(array: Retained<NSArray<NSNumber>>) -> Self {
+        Shape(array)
+    }
+}
+
+impl Deref for Shape {
+    type Target = NSArray<NSNumber>;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
+    }
+}
+
+unsafe impl Encode for Shape {
+    const ENCODING: objc2::Encoding = <*mut AnyObject>::ENCODING;
+}
+
+unsafe impl RefEncode for Shape {
+    const ENCODING_REF: objc2::Encoding = <*mut AnyObject>::ENCODING_REF;
+}

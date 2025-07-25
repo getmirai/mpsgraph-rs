@@ -1,10 +1,8 @@
 use crate::{DataType, GraphObject, Operation, Shape};
-use objc2::rc::Retained;
-use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, extern_methods};
-use objc2_foundation::CopyingHelper;
-use objc2_foundation::NSCopying;
-use objc2_foundation::NSObjectProtocol;
+use objc2::{
+    extern_class, extern_conformance, extern_methods, msg_send, rc::Retained, runtime::NSObject,
+};
+use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSNumber, NSObjectProtocol};
 
 extern_class!(
     /// The symbolic representation of a compute data type.
@@ -33,14 +31,6 @@ extern_conformance!(
 
 impl Tensor {
     extern_methods!(
-        /// The shape of the tensor.
-        ///
-        /// nil shape represents an unranked tensor.
-        /// -1 value for a dimension represents that it will be resolved via shape inference at runtime and it can be anything.
-        #[unsafe(method(shape))]
-        #[unsafe(method_family = none)]
-        pub fn shape(&self) -> Option<Retained<Shape>>;
-
         /// The data type of the tensor.
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
@@ -51,4 +41,15 @@ impl Tensor {
         #[unsafe(method_family = none)]
         pub fn operation(&self) -> Retained<Operation>;
     );
+}
+
+impl Tensor {
+    /// The shape of the tensor.
+    ///
+    /// nil shape represents an unranked tensor.
+    /// -1 value for a dimension represents that it will be resolved via shape inference at runtime and it can be anything.
+    pub fn shape(&self) -> Option<Shape> {
+        let array: Option<Retained<NSArray<NSNumber>>> = unsafe { msg_send![self, shape] };
+        array.map(|array| array.into())
+    }
 }

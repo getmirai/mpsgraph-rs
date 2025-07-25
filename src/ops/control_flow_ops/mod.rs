@@ -13,7 +13,7 @@ pub use while_before_block::WhileBeforeBlock;
 use crate::{Graph, Operation, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSString};
-use std::ptr::NonNull;
+use std::{ops::Deref, ptr::NonNull};
 
 /// MPSGraphControlFlowOps.
 impl Graph {
@@ -41,7 +41,7 @@ impl Graph {
             msg_send![
                 self,
                 controlDependencyWithOperations: &*operations_array,
-                dependentBlock: dependent_block.as_deref(),
+                dependentBlock: &*dependent_block,
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };
@@ -72,8 +72,8 @@ impl Graph {
             msg_send![
                 self,
                 ifWithPredicateTensor: predicate_tensor,
-                thenBlock: then_block.as_deref(),
-                elseBlock: else_block.as_deref(),
+                thenBlock: &*then_block,
+                elseBlock: &*else_block,
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };
@@ -104,8 +104,8 @@ impl Graph {
             msg_send![
                 self,
                 whileWithInitialInputs: &*initial_intputs_array,
-                before: before_block.as_deref(),
-                after: after_block.as_deref(),
+                before: &*before_block,
+                after: &*after_block,
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };
@@ -143,7 +143,7 @@ impl Graph {
                 upperBound: upper_bound,
                 step: step,
                 initialBodyArguments: &*initial_body_arguments_array,
-                body: body.as_deref(),
+                body: &*body,
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };
@@ -175,7 +175,7 @@ impl Graph {
                 self,
                 forLoopWithNumberOfIterations: number_of_iterations,
                 initialBodyArguments: &*initial_body_arguments_array,
-                body: body.as_deref(),
+                body: &*body,
                 name: name.map(NSString::from_str).as_deref(),
             ]
         };

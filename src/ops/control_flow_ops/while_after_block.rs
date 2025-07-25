@@ -2,7 +2,7 @@ use crate::Tensor;
 use block2::{Block, IntoBlock, RcBlock};
 use objc2::rc::Retained;
 use objc2_foundation::{NSArray, NSMutableArray};
-use std::ptr::NonNull;
+use std::{ops::Deref, ptr::NonNull};
 
 /// The block that executes after the condition evaluates for each iteration.
 ///
@@ -16,29 +16,30 @@ use std::ptr::NonNull;
 /// A valid [`Tensor`] array with results forwarded to the condition block.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphwhileafterblock?language=objc)
-#[repr(transparent)]
-pub struct WhileAfterBlock {
-    block: RcBlock<dyn Fn(NonNull<NSArray<Tensor>>) -> NonNull<NSArray<Tensor>>>,
-}
+pub struct WhileAfterBlock(RcBlock<dyn Fn(NonNull<NSArray<Tensor>>) -> NonNull<NSArray<Tensor>>>);
 
 impl WhileAfterBlock {
     pub fn new<F>(while_after_ops: F) -> Self
     where
         F: Fn(&[&Tensor]) -> Box<[Retained<Tensor>]> + 'static,
     {
-        Self {
-            block: RcBlock::new(move |body_block_arguments: NonNull<NSArray<Tensor>>| {
+        Self(RcBlock::new(
+            move |body_block_arguments: NonNull<NSArray<Tensor>>| {
                 let body_block_arguments =
                     unsafe { body_block_arguments.as_ref().to_vec_unchecked() };
                 let results = while_after_ops(&body_block_arguments);
                 let results_array = NSArray::from_retained_slice(&results);
                 let raw = Retained::autorelease_return(results_array);
                 unsafe { NonNull::new_unchecked(raw) }
-            }),
-        }
+            },
+        ))
     }
+}
 
-    pub fn as_deref(&self) -> &Block<dyn Fn(NonNull<NSArray<Tensor>>) -> NonNull<NSArray<Tensor>>> {
-        &*self.block
+impl Deref for WhileAfterBlock {
+    type Target = Block<dyn Fn(NonNull<NSArray<Tensor>>) -> NonNull<NSArray<Tensor>>>;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
     }
 }
