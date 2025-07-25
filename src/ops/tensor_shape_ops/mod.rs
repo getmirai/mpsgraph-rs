@@ -1,9 +1,11 @@
+mod concat_ops;
 mod slice_gradient_ops;
 mod slice_ops;
 mod slice_update_ops;
 mod start_end_stride_scalars_or_tensors;
 mod strided_slice_ops;
 
+pub use concat_ops::*;
 pub use slice_gradient_ops::*;
 pub use slice_ops::*;
 pub use slice_update_ops::*;
@@ -17,136 +19,6 @@ use start_end_stride_scalars_or_tensors::StartEndStrideScalarsOrTensors;
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a strided-slice update operation with zero masks and returns the result tensor.
-        ///
-        /// - Parameters:
-        /// - dataTensor: The large tensor that will receive the update.
-        /// - updateTensor: The tensor with the new values that will replace values in the dataTensor.
-        /// - startsTensor: A Tensor that contains an array of numbers that specify the starting points for each dimension.
-        /// - endsTensor: A Tensor that contains an array of numbers that specify the ending points for each dimension.
-        /// - stridesTensor: A Tensor that contains an array of numbers that specify the strides for each dimension.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(sliceUpdateDataTensor:updateTensor:startsTensor:endsTensor:stridesTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn sliceUpdateDataTensor_updateTensor_startsTensor_endsTensor_stridesTensor_name(
-            &self,
-            data_tensor: &MPSGraphTensor,
-            update_tensor: &MPSGraphTensor,
-            starts_tensor: &MPSGraphTensor,
-            ends_tensor: &MPSGraphTensor,
-            strides_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a strided-slice update operation with zero masks and returns the result tensor.
-        ///
-        /// - Parameters:
-        /// - dataTensor: The large tensor that will receive the update.
-        /// - updateTensor: The tensor with the new values that will replace values in the dataTensor.
-        /// - starts: An array of numbers that specify the starting points for each dimension.
-        /// - ends: An array of numbers that specify the ending points for each dimension.
-        /// - strides: An array of numbers that specify the strides for each dimension.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(sliceUpdateDataTensor:updateTensor:starts:ends:strides:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn sliceUpdateDataTensor_updateTensor_starts_ends_strides_name(
-            &self,
-            data_tensor: &MPSGraphTensor,
-            update_tensor: &MPSGraphTensor,
-            starts: &NSArray<NSNumber>,
-            ends: &NSArray<NSNumber>,
-            strides: &NSArray<NSNumber>,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a concatenation operation and returns the result tensor.
-        ///
-        /// Concatenates two input tensors along the specified dimension. Tensors must be broadcast
-        /// compatible along all other dimensions, and have the same datatype.
-        ///
-        /// - Parameters:
-        /// - tensor: The first tensor to concatenate.
-        /// - tensor2: The second tensor to concatenate.
-        /// - dimensionIndex: The dimension to concatenate across, must be in range: `-rank
-        /// <
-        /// = dimension
-        /// <
-        /// rank`.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(concatTensor:withTensor:dimension:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn concatTensor_withTensor_dimension_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            tensor2: &MPSGraphTensor,
-            dimension_index: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a concatenation operation and returns the result tensor.
-        ///
-        /// Concatenates all input tensors along the specified dimension. All inputs must be broadcast
-        /// compatible along all other dimensions, and have the same datatype.
-        ///
-        /// - Parameters:
-        /// - tensors: The tensors to concatenate.
-        /// - dimensionIndex: The dimension to concatenate across, must be in range: `-rank
-        /// <
-        /// = dimension
-        /// <
-        /// rank`.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(concatTensors:dimension:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn concatTensors_dimension_name(
-            &self,
-            tensors: &NSArray<MPSGraphTensor>,
-            dimension_index: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a concatenation operation and returns the result tensor.
-        ///
-        /// Concatenates all input tensors along specified dimension. All inputs must be broadcast
-        /// compatible along all other dimensions, and have the same type.
-        /// When interleave is specified, all tensors will be interleaved. To interleave, make sure to provide broadcast
-        /// compatible inputs along the specified dimension as well.
-        /// For example:
-        /// ```md
-        /// operand0 = [1, 2, 3]
-        /// operand1 = [4, 5, 6]
-        /// concat([operand0, operand1], axis = 0, interleave = YES) = [1, 4, 2, 5, 3, 6]
-        /// ```
-        ///
-        /// - Parameters:
-        /// - tensors: The tensors to concatenate.
-        /// - dimensionIndex: The dimension to concatenate across, must be in range: `-rank
-        /// <
-        /// = dimension
-        /// <
-        /// rank`.
-        /// - interleave: A boolean value that specifies whether the operation interleaves input tensors.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(concatTensors:dimension:interleave:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn concatTensors_dimension_interleave_name(
-            &self,
-            tensors: &NSArray<MPSGraphTensor>,
-            dimension_index: NSInteger,
-            interleave: bool,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(all(
             feature = "MPSGraphTensor",
             feature = "objc2-metal-performance-shaders"
