@@ -1,10 +1,8 @@
 use objc2::Encoding;
 use objc2::{Encode, RefEncode};
-use objc2_foundation::NSUInteger;
 
 /// Tensor padding style
-#[allow(dead_code)]
-#[repr(usize)]
+#[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub enum PaddingStyle {
     /// Explicit
@@ -19,14 +17,8 @@ pub enum PaddingStyle {
     ONNXSAMELOWER = 4,
 }
 
-impl From<PaddingStyle> for NSUInteger {
-    fn from(style: PaddingStyle) -> Self {
-        style as NSUInteger
-    }
-}
-
 unsafe impl Encode for PaddingStyle {
-    const ENCODING: Encoding = NSUInteger::ENCODING;
+    const ENCODING: Encoding = u64::ENCODING;
 }
 
 unsafe impl RefEncode for PaddingStyle {

@@ -2,8 +2,7 @@ use objc2::Encoding;
 use objc2::{Encode, RefEncode};
 use objc2_foundation::NSUInteger;
 
-#[allow(dead_code)]
-#[repr(usize)]
+#[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub enum TensorNamedDataLayout {
     /// LayoutNCHW

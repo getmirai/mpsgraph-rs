@@ -5,15 +5,9 @@ use objc2_foundation::NSString;
 
 mod convolution_2d_op_descriptor;
 mod convolution_3d_op_descriptor;
-mod convolution_data_layout;
-mod padding_mode;
-mod weights_layout;
 
 pub use convolution_2d_op_descriptor::Convolution2DOpDescriptor;
 pub use convolution_3d_op_descriptor::Convolution3DOpDescriptor;
-pub use convolution_data_layout::ConvolutionDataLayout;
-pub use padding_mode::PaddingMode;
-pub use weights_layout::WeightsLayout;
 
 impl Graph {
     /// Creates a 2-D (forward) convolution operation and returns the result tensor.

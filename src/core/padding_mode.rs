@@ -1,11 +1,10 @@
 use objc2::{Encode, Encoding, RefEncode};
-use objc2_foundation::NSInteger;
 
 /// Tensor padding mode
 #[allow(dead_code)]
-#[repr(isize)]
+#[repr(i64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
-pub enum MPSGraphPaddingMode {
+pub enum PaddingMode {
     /// Constant
     Constant = 0,
     /// Reflect
@@ -22,16 +21,10 @@ pub enum MPSGraphPaddingMode {
     AntiPeriodic = 6,
 }
 
-impl From<MPSGraphPaddingMode> for NSInteger {
-    fn from(mode: MPSGraphPaddingMode) -> Self {
-        mode as NSInteger
-    }
+unsafe impl Encode for PaddingMode {
+    const ENCODING: Encoding = i64::ENCODING;
 }
 
-unsafe impl Encode for MPSGraphPaddingMode {
-    const ENCODING: Encoding = NSInteger::ENCODING;
-}
-
-unsafe impl RefEncode for MPSGraphPaddingMode {
+unsafe impl RefEncode for PaddingMode {
     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
 }

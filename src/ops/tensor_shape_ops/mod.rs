@@ -1,4 +1,5 @@
 mod concat_ops;
+mod pad_ops;
 mod slice_gradient_ops;
 mod slice_ops;
 mod slice_update_ops;
@@ -7,6 +8,7 @@ mod strided_slice_ops;
 mod tile_ops;
 
 pub use concat_ops::*;
+pub use pad_ops::*;
 pub use slice_gradient_ops::*;
 pub use slice_ops::*;
 pub use slice_update_ops::*;
@@ -21,102 +23,6 @@ use start_end_stride_scalars_or_tensors::StartEndStrideScalarsOrTensors;
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a tile operation and returns the result tensor.
-        ///
-        /// Creates a tensor which contains multiple copies of the input tensor along each dimension of the tensor.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor
-        /// - multiplier: An array of numbers that specifies how many copies per dimension MPSGraph produces.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(tileTensor:withMultiplier:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn tileTensor_withMultiplier_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            multiplier: &MPSShape,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a tile gradient operation and returns the result tensor.
-        ///
-        /// - Parameters:
-        /// - incomingGradientTensor: The input gradient tensor.
-        /// - sourceTensor: The input tensor of the forward pass.
-        /// - multiplier: An array of numbers that specifies how many copies per dimension MPSGraph produced in the forward pass.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(tileGradientWithIncomingGradientTensor:sourceTensor:withMultiplier:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn tileGradientWithIncomingGradientTensor_sourceTensor_withMultiplier_name(
-            &self,
-            incoming_gradient_tensor: &MPSGraphTensor,
-            source_tensor: &MPSGraphTensor,
-            multiplier: &MPSShape,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a padding operation and returns the result tensor.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - paddingMode: The parameter that defines the padding mode.
-        /// - leftPadding: The parameter that defines how much padding the operation applies to the input tensor before each dimension - must be of size `rank(tensor)`.
-        /// - rightPadding: The parameter that defines how much padding the operation applies to the input tensor after each dimension - must be of size `rank(tensor)`.
-        /// - constantValue: The constant value the operation uses when `paddingMode = MPSGraphPaddingModeConstant`.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(padTensor:withPaddingMode:leftPadding:rightPadding:constantValue:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn padTensor_withPaddingMode_leftPadding_rightPadding_constantValue_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            padding_mode: MPSGraphPaddingMode,
-            left_padding: &MPSShape,
-            right_padding: &MPSShape,
-            constant_value: c_double,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a padding gradient operation and returns the result tensor.
-        ///
-        /// - Parameters:
-        /// - incomingGradientTensor: The input gradient tensor.
-        /// - sourceTensor: The input tensor of the forward pass.
-        /// - paddingMode: The parameter that defines the padding mode.
-        /// - leftPadding: The parameter that defines how much padding the operation applies to the input tensor before each dimension - must be of size `rank(tensor)`.
-        /// - rightPadding: The parameter that defines how much padding the operation applies to the input tensor after each dimension - must be of size `rank(tensor)`.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(padGradientWithIncomingGradientTensor:sourceTensor:paddingMode:leftPadding:rightPadding:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn padGradientWithIncomingGradientTensor_sourceTensor_paddingMode_leftPadding_rightPadding_name(
-            &self,
-            incoming_gradient_tensor: &MPSGraphTensor,
-            source_tensor: &MPSGraphTensor,
-            padding_mode: MPSGraphPaddingMode,
-            left_padding: &MPSShape,
-            right_padding: &MPSShape,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a space-to-depth2D operation and returns the result tensor.
         ///
