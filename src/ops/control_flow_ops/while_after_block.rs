@@ -6,9 +6,14 @@ use std::ptr::NonNull;
 
 /// The block that executes after the condition evaluates for each iteration.
 ///
-/// - Parameters:
-///   - body_block_arguments: Inputs to the body of the while loop passed by the condition block return, and should be the same element types as the return of the while loop.
-/// - Returns: A valid `MPSGraphTensor` array with results forwarded to the condition block.
+/// # Arguments
+///
+/// * `body_block_arguments` - Inputs to the body of the while loop returned by the condition block.
+///   These tensors must have the same element types as the return value of the while loop.
+///
+/// # Returns
+///
+/// A valid [`Tensor`] array with results forwarded to the condition block.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphwhileafterblock?language=objc)
 #[repr(transparent)]

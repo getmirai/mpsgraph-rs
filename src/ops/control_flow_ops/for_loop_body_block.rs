@@ -4,12 +4,16 @@ use objc2::rc::Retained;
 use objc2_foundation::NSArray;
 use std::ptr::NonNull;
 
-/// A block for the body in the for loop.
+/// A block for the body of the `for` loop.
 ///
-/// - Parameters:
-/// - index: The for loop index per iteration, it is a scalar tensor.
-/// - iteration_arguments: Arguments for this iteration, with the same count and corresponding element types as `initial_iteration_arguments` and return types of the `for` loop.
-/// - Returns: A valid Tensor slice with same count and corresponding element types as `initial_iteration_arguments` and return types of the `for` loop.
+/// # Arguments
+///
+/// * `index` - The loop index for this iteration; it is a scalar [`Tensor`].
+/// * `iteration_arguments` - Arguments for this iteration, with the same count and corresponding element types as `initial_iteration_arguments` and the return types of the `for` loop.
+///
+/// # Returns
+///
+/// A valid [`Tensor`] slice with the same count and corresponding element types as `initial_iteration_arguments` and the return types of the `for` loop.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphforloopbodyblock?language=objc)
 #[repr(transparent)]

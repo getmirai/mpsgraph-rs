@@ -6,10 +6,14 @@ use std::ptr::NonNull;
 
 /// The block that executes before the condition evaluates for each iteration.
 ///
-/// - Parameters:
-///     - input_tensors: Input tensors to the `whileConditionBlock`, for the first iteration will be same as initialInputs passed to the while loop.
-///     - result_tensors: A valid `MPSGraphTensor` array with results forwarded to after block or returned from the while loop depending on the predicate tensor. It will be empty and the caller block should fill it up before returning.
-/// - Returns: Tensor MUST be set and have a single scalar value, used to decide between executing the body block or returning from the while loop.
+/// # Arguments
+///
+/// * `input_tensors` - Input tensors to the `whileConditionBlock`. For the first iteration, these are the same as the `initial_inputs` passed to the while loop.
+/// * `result_tensors` - A valid [`Tensor`] array with results forwarded to the after block or returned from the while loop, depending on the predicate tensor. It will be empty and the caller block should fill it before returning.
+///
+/// # Returns
+///
+/// A [`Tensor`] that MUST be set and have a single scalar value, used to decide between executing the body block or returning from the while loop.
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphwhilebeforeblock?language=objc)
 #[repr(transparent)]

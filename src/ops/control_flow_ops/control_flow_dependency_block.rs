@@ -6,7 +6,9 @@ use std::ptr::NonNull;
 
 /// The scope where all the operations defined in this block get control-dependency operations.
 ///
-/// - Returns: A valid tensor with the results forwarded to the return of `controlDependency` call.
+/// # Returns
+///
+/// A valid [`Tensor`] with the results forwarded to the return of [`Graph::control_dependency`].
 ///
 /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphcontrolflowdependencyblock?language=objc)
 #[repr(transparent)]

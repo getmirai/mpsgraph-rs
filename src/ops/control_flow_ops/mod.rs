@@ -50,13 +50,17 @@ impl Graph {
 
     /// Adds an if-then-else operation to the graph.
     ///
-    /// - Parameters:
-    /// - predicate_tensor: Tensor must have a single scalar value, used to decide between then/else branches
-    /// - then_block: If predicate is true operations in this block are executed
-    /// - else_block: If predicate is false operations in this block are executed
-    /// - name: name of operation
-    /// - Returns: results If no error, the tensors returned by user. If not empty, user must define both then/else block,
-    /// both should have same number of arguments and each corresponding argument should have same elementTypes.
+    /// # Arguments
+    ///
+    /// * `predicate_tensor` - [`Tensor`] must have a single scalar value, used to decide between then/else branches
+    /// * `then_block` - If predicate is true operations in this block are executed
+    /// * `else_block` - If predicate is false operations in this block are executed
+    /// * `name` - Name of the operation
+    ///
+    /// # Returns
+    ///
+    /// If no error, the tensors returned by the user. If not empty, the user must define both `then_block` and `else_block`;
+    /// both should have the same number of arguments and each corresponding argument should have the same element types.
     pub fn if_then_else(
         &self,
         predicate_tensor: &Tensor,
@@ -78,12 +82,16 @@ impl Graph {
 
     /// Adds a while loop operation.
     ///
-    /// - Parameters:
-    /// - initial_inputs: inputTensors to the `beforeBlock`, for the 1st iteration will be same as initialInputs passed to the while loop.
-    /// - before_block: `beforeBlock`, this will be run first and then call the `afterBlock` with results or return results from the loop.
-    /// - after_block: `afterBlock`, this will execute after the condition evaluation.
-    /// - name: name of operation.
-    /// - Returns: A valid `Tensor` slice with results returned from the conditionBlock depending on the predicate tensor.
+    /// # Arguments
+    ///
+    /// * `initial_inputs` - Input tensors to the `before_block`. For the first iteration, these are the same as the `initial_inputs` passed to the while loop.
+    /// * `before_block` - This block is run first and then calls the `after_block` with the results, or returns the results from the loop.
+    /// * `after_block` - Executed after the condition evaluation.
+    /// * `name` - Name of the operation.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] slice with results returned from the condition block, depending on the predicate tensor.
     pub fn while_loop(
         &self,
         initial_inputs: &[&Tensor],
@@ -104,16 +112,20 @@ impl Graph {
         result.to_vec().into_boxed_slice()
     }
 
-    /// Adds a for loop operation, The lower and upper bounds specify a half-open range: the range includes the lower bound but does not include the upper bound.
+    /// Adds a for loop operation. The lower and upper bounds specify a half-open range: the range includes the lower bound but does not include the upper bound.
     ///
-    /// - Parameters:
-    /// - lower_bound: Lower bound value of the loop, this is a scalar tensor, this is the index the loop will start with.
-    /// - upper_bound: Upper bound value of the loop, this is a scalar tensor.
-    /// - step: Step value of the loop, this is a scalar tensor and must be positive.
-    /// - initial_body_arguments: initial set of iteration arguments passed to the bodyBlock of the for loop.
-    /// - body: This block will execute the body of the for loop.
-    /// - name: name of operation.
-    /// - Returns: A valid `Tensor` slice with same count and corresponding element types as `initial_iteration_arguments` and return types of the for loop.
+    /// # Arguments
+    ///
+    /// * `lower_bound` - Lower bound value of the loop. This is a scalar tensor and is the index the loop will start with.
+    /// * `upper_bound` - Upper bound value of the loop. This is a scalar tensor.
+    /// * `step` - Step value of the loop. This is a scalar tensor and must be positive.
+    /// * `initial_body_arguments` - Initial set of iteration arguments passed to the `body` block of the for loop.
+    /// * `body` - This block will execute the body of the for loop.
+    /// * `name` - Name of the operation.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] slice with the same count and corresponding element types as `initial_body_arguments` and the return types of the for loop.
     pub unsafe fn for_loop(
         &self,
         lower_bound: &Tensor,
@@ -138,14 +150,18 @@ impl Graph {
         result.to_vec().into_boxed_slice()
     }
 
-    /// Adds a for loop operation, with a specific number of iterations.
+    /// Adds a for loop operation with a specific number of iterations.
     ///
-    /// - Parameters:
-    /// - number_of_iterations: tensor with number of iterations the loop will execute
-    /// - initial_body_arguments: initial set of iteration arguments passed to the body_block of the for loop
-    /// - body: body_block, this will execute the body of the for loop, index will go from 0 to numberOfIterations-1
-    /// - name: name of operation
-    /// - Returns: A valid `Tensor` slice with same count and corresponding elementTypes as `initial_iteration_arguments` and return types of the for loop
+    /// # Arguments
+    ///
+    /// * `number_of_iterations` - [`Tensor`] with the number of iterations the loop will execute.
+    /// * `initial_body_arguments` - Initial set of iteration arguments passed to the `body` block of the for loop.
+    /// * `body` - The `body` block. This executes the body of the for loop; the index will go from 0 to `number_of_iterations` − 1.
+    /// * `name` - Name of the operation.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] slice with the same count and corresponding element types as `initial_body_arguments` and the return types of the for loop.
     pub unsafe fn for_loop_with_number_of_iterations(
         &self,
         number_of_iterations: &Tensor,
