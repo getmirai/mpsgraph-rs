@@ -15,7 +15,7 @@
 - [ ] LossOps
 - [ ] MatrixInverseOps
 - [x] MatrixMultiplicationOps
-- [ ] MemoryOps
+- [x] MemoryOps
 - [ ] NonMaximumSuppressionOps
 - [ ] NonZeroOps
 - [ ] NormalizationOps
