@@ -17,37 +17,19 @@ use std::ptr::NonNull;
 
 /// MPSGraphControlFlowOps.
 impl Graph {
-    extern_methods!(
-        /// Adds a for loop operation, with a specific number of iterations.
-        ///
-        /// - Parameters:
-        /// - numberOfIterations: tensor with number of iterations the loop will execute
-        /// - initialBodyArguments: initial set of iteration arguments passed to the bodyBlock of the for loop
-        /// - body: bodyBlock, this will execute the body of the for loop, index will go from 0 to numberOfIterations-1
-        /// - name: name of operation
-        /// - Returns: A valid MPSGraphTensor array with same count and corresponding elementTypes as initialIterationArguments and return types of the for loop
-        #[unsafe(method(forLoopWithNumberOfIterations:initialBodyArguments:body:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn for_loop_with_number_of_iterations(
-            &self,
-            number_of_iterations: &Tensor,
-            initial_body_arguments: &NSArray<Tensor>,
-            body: ForLoopBodyBlock,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<Tensor>>;
-    );
-}
-
-impl Graph {
     /// Runs the graph for the given feeds and returns the target tensor values, ensuring all target operations also executed.
     ///
     /// This call blocks until execution has completed.
     ///
-    /// - Parameters:
+    /// # Arguments
+    ///
     /// - operations: Operations marked as control dependency for all ops created inside the dependent block
     /// - dependent_block: closure which is provided by caller to create dependent ops
     /// - name: name of scope
-    /// - Returns: A valid MPSGraphTensor array with results returned from dependent_block forwarded
+    ///
+    /// # Returns
+    ///
+    /// A valid MPSGraphTensor array with results returned from dependent_block forwarded
     fn control_dependency(
         &self,
         operations: &[&Operation],
@@ -101,7 +83,7 @@ impl Graph {
     /// - before_block: `beforeBlock`, this will be run first and then call the `afterBlock` with results or return results from the loop.
     /// - after_block: `afterBlock`, this will execute after the condition evaluation.
     /// - name: name of operation.
-    /// - Returns: A valid MPSGraphTensor array with results returned from the conditionBlock depending on the predicate tensor.
+    /// - Returns: A valid `Tensor` slice with results returned from the conditionBlock depending on the predicate tensor.
     pub fn while_loop(
         &self,
         initial_inputs: &[&Tensor],
@@ -125,13 +107,13 @@ impl Graph {
     /// Adds a for loop operation, The lower and upper bounds specify a half-open range: the range includes the lower bound but does not include the upper bound.
     ///
     /// - Parameters:
-    /// - lowerBound: Lower bound value of the loop, this is a scalar tensor, this is the index the loop will start with.
-    /// - upperBound: Upper bound value of the loop, this is a scalar tensor.
+    /// - lower_bound: Lower bound value of the loop, this is a scalar tensor, this is the index the loop will start with.
+    /// - upper_bound: Upper bound value of the loop, this is a scalar tensor.
     /// - step: Step value of the loop, this is a scalar tensor and must be positive.
-    /// - initialBodyArguments: initial set of iteration arguments passed to the bodyBlock of the for loop.
+    /// - initial_body_arguments: initial set of iteration arguments passed to the bodyBlock of the for loop.
     /// - body: This block will execute the body of the for loop.
     /// - name: name of operation.
-    /// - Returns: A valid `MPSGraphTensor` array with same count and corresponding element types as `initialIterationArguments` and return types of the for loop.
+    /// - Returns: A valid `Tensor` slice with same count and corresponding element types as `initial_iteration_arguments` and return types of the for loop.
     pub unsafe fn for_loop(
         &self,
         lower_bound: &Tensor,
@@ -148,6 +130,34 @@ impl Graph {
                 forLoopWithLowerBound: lower_bound,
                 upperBound: upper_bound,
                 step: step,
+                initialBodyArguments: &*initial_body_arguments_array,
+                body: body.as_deref(),
+                name: name.map(NSString::from_str).as_deref(),
+            ]
+        };
+        result.to_vec().into_boxed_slice()
+    }
+
+    /// Adds a for loop operation, with a specific number of iterations.
+    ///
+    /// - Parameters:
+    /// - number_of_iterations: tensor with number of iterations the loop will execute
+    /// - initial_body_arguments: initial set of iteration arguments passed to the body_block of the for loop
+    /// - body: body_block, this will execute the body of the for loop, index will go from 0 to numberOfIterations-1
+    /// - name: name of operation
+    /// - Returns: A valid `Tensor` slice with same count and corresponding elementTypes as `initial_iteration_arguments` and return types of the for loop
+    pub unsafe fn for_loop_with_number_of_iterations(
+        &self,
+        number_of_iterations: &Tensor,
+        initial_body_arguments: &[&Tensor],
+        body: ForLoopBodyBlock,
+        name: Option<&str>,
+    ) -> Box<[Retained<Tensor>]> {
+        let initial_body_arguments_array = NSArray::from_slice(initial_body_arguments);
+        let result: Retained<NSArray<Tensor>> = unsafe {
+            msg_send![
+                self,
+                forLoopWithNumberOfIterations: number_of_iterations,
                 initialBodyArguments: &*initial_body_arguments_array,
                 body: body.as_deref(),
                 name: name.map(NSString::from_str).as_deref(),
