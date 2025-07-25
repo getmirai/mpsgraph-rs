@@ -14,7 +14,7 @@
 - [ ] LinearAlgebraOps
 - [ ] LossOps
 - [ ] MatrixInverseOps
-- [ ] MatrixMultiplicationOps
+- [x] MatrixMultiplicationOps
 - [ ] MemoryOps
 - [ ] NonMaximumSuppressionOps
 - [ ] NonZeroOps
@@ -36,7 +36,7 @@
 - [ ] TopKOps
 
 
-- [ ] MPSGraphTensorData
+- [x] MPSGraphTensorData
 - [x] MPSGraph
 - [x] MPSGraphCore
 - [ ] MetalPerformanceShadersGraph
