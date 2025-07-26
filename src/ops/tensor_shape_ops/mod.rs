@@ -6,6 +6,7 @@ mod reverse_tensor_ops;
 mod slice_ops;
 mod space_to_batch;
 mod space_to_depth_ops;
+mod split_ops;
 mod tile_ops;
 
 pub use broadcast_ops::*;
@@ -16,6 +17,7 @@ pub use reverse_tensor_ops::*;
 pub use slice_ops::*;
 pub use space_to_batch::*;
 pub use space_to_depth_ops::*;
+pub use split_ops::*;
 pub use tile_ops::*;
 
 use crate::{DataType, Graph, ShapeOrTensor, ShapedType, Tensor};
@@ -25,50 +27,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a split operation and returns the result tensor.
-        ///
-        /// Splits the input tensor along `axis` into multiple result tensors of size determined by `splitSizes`.
-        /// Requires that the sum of `splitSizes` is equal to the lenth of the input along `axis`.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - splitSizes: The lengths of the result tensors along the split axis.
-        /// - axis: The dimension along which MPSGraph splits the input tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(splitTensor:splitSizes:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn splitTensor_splitSizes_axis_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            split_sizes: &NSArray<NSNumber>,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<MPSGraphTensor>>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a split operation and returns the result tensor.
-        ///
-        /// Splits the input tensor along `axis` into multiple result tensors of size determined by `splitSizesTensor`.
-        /// Requires that the sum of the elements of `splitSizesTensor` is equal to the lenth of the input along `axis`.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor
-        /// - splitSizesTensor: The lengths of the result tensors along the split axis.
-        /// - axis: The dimension along which MPSGraph splits the input tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(splitTensor:splitSizesTensor:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn splitTensor_splitSizesTensor_axis_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            split_sizes_tensor: &MPSGraphTensor,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<MPSGraphTensor>>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a split operation and returns the result tensor.
         ///
