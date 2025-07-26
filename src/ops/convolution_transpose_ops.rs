@@ -1,5 +1,4 @@
-use objc2::msg_send;
-use objc2::rc::Retained;
+use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 use super::Convolution2DOpDescriptor;

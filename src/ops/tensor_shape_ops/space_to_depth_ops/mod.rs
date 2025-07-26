@@ -2,9 +2,9 @@ mod scalars_or_tensors;
 
 pub use scalars_or_tensors::WidthHeightDepthAxisScalarsOrTensors;
 
-use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
-use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use crate::{Graph, Tensor};
+use objc2::{msg_send, rc::Retained};
+use objc2_foundation::NSString;
 
 impl Graph {
     /// Creates a space-to-depth2D operation and returns the result tensor.

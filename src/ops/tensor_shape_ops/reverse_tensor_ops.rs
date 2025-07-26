@@ -1,7 +1,7 @@
-use objc2::{extern_class, msg_send, rc::Retained};
+use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
-use crate::{DataType, Graph, ShapeOrTensor, Tensor};
+use crate::{Graph, ShapeOrTensor, Tensor};
 
 impl Graph {
     /// Creates a reverse operation and returns the result tensor.

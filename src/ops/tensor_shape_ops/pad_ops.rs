@@ -1,6 +1,6 @@
-use crate::{Graph, PaddingMode, Shape, ShapeOrTensor, ShapedType, Tensor};
-use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use crate::{Graph, PaddingMode, Shape, Tensor};
+use objc2::{msg_send, rc::Retained};
+use objc2_foundation::NSString;
 
 impl Graph {
     /// Creates a padding operation and returns the result tensor.

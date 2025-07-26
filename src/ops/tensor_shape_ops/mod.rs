@@ -26,52 +26,9 @@ pub use split_ops::*;
 pub use squeeze_ops::*;
 pub use tile_ops::*;
 
-use crate::{DataType, Graph, ShapeOrTensor, ShapedType, Tensor};
+use crate::{DataType, Graph, ShapeOrTensor, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSNumber, NSString};
-
-/// TensorShapeOps.
-impl Graph {
-    extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a get-coordindate operation and returns the result tensor.
-        ///
-        /// See ``coordinateAlongAxis:withShape:name:``.
-        ///
-        /// - Parameters:
-        /// - axis: The coordinate axis an element's value is set to. Negative values wrap around.
-        /// - shapeTensor: A rank-1 tensor of type `MPSDataTypeInt32` or `MPSDataTypeInt64` that defines the shape of the result tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(coordinateAlongAxis:withShapeTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn coordinateAlongAxis_withShapeTensor_name(
-            &self,
-            axis: NSInteger,
-            shape_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a get-coordindate operation and returns the result tensor.
-        ///
-        /// See ``coordinateAlongAxis:withShape:name:``.
-        ///
-        /// - Parameters:
-        /// - axisTensor: A Scalar tensor of type `MPSDataTypeInt32`, that specifies the coordinate axis an element's value is set to. Negative values wrap around.
-        /// - shapeTensor: A rank-1 tensor of type `MPSDataTypeInt32` or `MPSDataTypeInt64` that defines the shape of the result tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(coordinateAlongAxisTensor:withShapeTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn coordinateAlongAxisTensor_withShapeTensor_name(
-            &self,
-            axis_tensor: &MPSGraphTensor,
-            shape_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-    );
-}
 
 impl Graph {
     /// Creates a reshape operation and returns the result tensor.

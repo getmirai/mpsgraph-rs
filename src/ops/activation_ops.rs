@@ -1,12 +1,7 @@
-//! Activation operations exposed as inherent methods on `Graph`.
-
-use objc2::msg_send;
-use objc2::rc::Retained;
+use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
-use crate::graph::Graph;
-use crate::ScalarOrTensor;
-use crate::Tensor;
+use crate::{Graph, ScalarOrTensor, Tensor};
 
 impl Graph {
     /// Computes the ReLU (rectified linear activation unit) function with the input tensor.
