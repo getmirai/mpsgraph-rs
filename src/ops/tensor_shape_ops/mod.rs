@@ -1,4 +1,5 @@
 mod concat_ops;
+mod flatten_ops;
 mod pad_ops;
 mod reverse_tensor_ops;
 mod slice_ops;
@@ -7,6 +8,7 @@ mod space_to_depth_ops;
 mod tile_ops;
 
 pub use concat_ops::*;
+pub use flatten_ops::*;
 pub use pad_ops::*;
 pub use reverse_tensor_ops::*;
 pub use slice_ops::*;
@@ -21,46 +23,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a flatten2D operation and returns the result tensor.
-        ///
-        /// Flattens dimensions before `axis` to `result[0]` and dimensions starting
-        /// from `axis` to `result[1]` and returns a rank-2 tensor as result.
-        ///
-        /// - Parameters:
-        /// - tensor: The tensor to be flattened.
-        /// - axis: The axis around which to flatten.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(flatten2DTensor:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn flatten2DTensor_axis_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a flatten2D operation and returns the result tensor.
-        ///
-        /// Flattens dimensions before `axis` to `result[0]` and dimensions starting
-        /// from `axis` to `result[1]` and returns a rank-2 tensor as result.
-        ///
-        /// - Parameters:
-        /// - tensor: The tensor to be flattened.
-        /// - axisTensor: A scalar tensor that contains the axis around which to flatten.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(flatten2DTensor:axisTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn flatten2DTensor_axisTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axis_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(all(
             feature = "MPSGraphTensor",
             feature = "objc2-metal-performance-shaders"
