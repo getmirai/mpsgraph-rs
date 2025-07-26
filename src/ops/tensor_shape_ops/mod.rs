@@ -1,5 +1,6 @@
 mod broadcast_ops;
 mod concat_ops;
+mod expand_dims_ops;
 mod flatten_ops;
 mod pad_ops;
 mod reverse_tensor_ops;
@@ -12,6 +13,7 @@ mod tile_ops;
 
 pub use broadcast_ops::*;
 pub use concat_ops::*;
+pub use expand_dims_ops::*;
 pub use flatten_ops::*;
 pub use pad_ops::*;
 pub use reverse_tensor_ops::*;
@@ -29,83 +31,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a squeeze operation and returns the result tensor.
-        ///
-        /// Squeezes the tensor, removing all dimensions with size 1.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(squeezeTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn squeezeTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a squeeze operation and returns the result tensor.
-        ///
-        /// Squeezes the tensor, removing a dimension with size 1 at the specified axis.
-        /// The size of the input tensor must be 1 at the specified axis.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - axis: The axis to squeeze.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(squeezeTensor:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn squeezeTensor_axis_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a squeeze operation and returns the result tensor.
-        ///
-        /// Squeezes the tensor, removing dimensions with size 1 at specified axes.
-        /// The size of the input tensor must be 1 at all specified axes.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - axes: The axes to squeeze.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(squeezeTensor:axes:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn squeezeTensor_axes_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axes: &NSArray<NSNumber>,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a squeeze operation and returns the result tensor.
-        ///
-        /// Squeezes the tensor, removing dimensions with size 1 at specified axes.
-        /// The size of the input tensor must be 1 at all specified axes.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - axesTensor: The tensor containing the axes to squeeze.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(squeezeTensor:axesTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn squeezeTensor_axesTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axes_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates an expand-dimensions operation and returns the result tensor.
         ///
