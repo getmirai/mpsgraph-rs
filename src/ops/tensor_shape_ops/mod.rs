@@ -25,31 +25,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a reinterpret cast operation and returns the result tensor.
-        ///
-        /// Returns input tensor (with element type `tensor_type`) reinterpreted to element type
-        /// passed in with the last dimension scaled by `sizeof(tensor_type) / sizeof(type)`.
-        /// This operation is endianness agnostic and MPSGraph reinterprets the data with the endianness of the
-        /// system.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - type: The element type of the returned tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(reinterpretCastTensor:toType:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn reinterpretCastTensor_toType_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            r#type: MPSDataType,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a stack operation and returns the result tensor.
         ///
@@ -454,6 +429,29 @@ impl Graph {
     ) -> Retained<Tensor> {
         unsafe {
             msg_send![self, castTensor: tensor, toType: r#type, name: name.map(NSString::from_str).as_deref()]
+        }
+    }
+
+    /// Creates a reinterpret cast operation and returns the result tensor.
+    ///
+    /// Returns input tensor (with element type `tensor_type`) reinterpreted to element type
+    /// passed in with the last dimension scaled by `sizeof(tensor_type) / sizeof(type)`.
+    /// This operation is endianness agnostic and MPSGraph reinterprets the data with the endianness of the
+    /// system.
+    ///
+    /// - Parameters:
+    /// - tensor: The input tensor.
+    /// - type: The element type of the returned tensor.
+    /// - name: The name for the operation.
+    /// - Returns: A valid MPSGraphTensor object.
+    pub fn reinterpret_cast(
+        &self,
+        tensor: &Tensor,
+        r#type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            msg_send![self, reinterpretCastTensor: tensor, toType: r#type, name: name.map(NSString::from_str).as_deref()]
         }
     }
 }
