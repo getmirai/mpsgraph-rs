@@ -9,6 +9,7 @@ mod convolution_transpose_ops;
 mod cumulative_ops;
 mod matrix_multiplication_ops;
 mod memory_ops;
+mod quantization_ops;
 mod tensor_shape_ops;
 
 pub use activation_ops::*;
@@ -20,4 +21,5 @@ pub use convolution_transpose_ops::*;
 pub use cumulative_ops::*;
 pub use matrix_multiplication_ops::*;
 pub use memory_ops::*;
+pub use quantization_ops::*;
 pub use tensor_shape_ops::*;

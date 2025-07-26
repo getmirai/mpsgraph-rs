@@ -31,6 +31,16 @@ impl From<&[i64]> for Shape {
     }
 }
 
+impl Into<Box<[i64]>> for Shape {
+    fn into(self) -> Box<[i64]> {
+        self.0
+            .to_vec()
+            .into_iter()
+            .map(|x| x.longLongValue())
+            .collect::<Box<[i64]>>()
+    }
+}
+
 impl<const N: usize> From<&[i64; N]> for Shape {
     fn from(values: &[i64; N]) -> Self {
         Self::new(values)

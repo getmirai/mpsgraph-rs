@@ -25,6 +25,7 @@ pub enum DataType {
     Int4 = DataType::SignedBit as u32 | 4,
     Int8 = DataType::SignedBit as u32 | 8,
     Int16 = DataType::SignedBit as u32 | 16,
+    Int32 = DataType::SignedBit as u32 | 32,
     Int64 = DataType::SignedBit as u32 | 64,
 
     // Unsigned integers

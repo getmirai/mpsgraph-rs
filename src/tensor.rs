@@ -1,4 +1,4 @@
-use crate::{DataType, GraphObject, Operation, Shape};
+use crate::{DataType, GraphObject, Operation, Shape, ShapedType};
 use objc2::{
     extern_class, extern_conformance, extern_methods, msg_send, rc::Retained, runtime::NSObject,
 };
@@ -51,5 +51,11 @@ impl Tensor {
     pub fn shape(&self) -> Option<Shape> {
         let array: Option<Retained<NSArray<NSNumber>>> = unsafe { msg_send![self, shape] };
         array.map(|array| array.into())
+    }
+
+    pub fn shaped_type(&self) -> Retained<ShapedType> {
+        let shape = self.shape();
+        let data_type = self.data_type();
+        ShapedType::new_with_shape_data_type(shape.as_ref(), data_type)
     }
 }

@@ -90,11 +90,7 @@ impl ShapedType {
     /// # Returns
     ///
     /// A valid [`ShapedType`] object, or `nil` if allocation failure.
-    pub fn new_with_shape_data_type(
-        &self,
-        shape: Option<&Shape>,
-        data_type: DataType,
-    ) -> Retained<Self> {
+    pub fn new_with_shape_data_type(shape: Option<&Shape>, data_type: DataType) -> Retained<Self> {
         let class = Self::class();
         let allocated: Allocated<Self> = unsafe { msg_send![class, alloc] };
         let shape = shape.map(|s| &**s);

@@ -22,7 +22,7 @@
 - [ ] OneHotOps
 - [ ] OptimizerOps
 - [ ] PoolingOps
-- [ ] QuantizationOps
+- [x] QuantizationOps
 - [ ] RandomOps
 - [ ] ReductionOps
 - [ ] ResizeOps
@@ -32,7 +32,7 @@
 - [ ] SortOps
 - [ ] SparseOps
 - [ ] StencilOps
-- [ ] TensorShapeOps
+- [x] TensorShapeOps
 - [ ] TopKOps
 
 
