@@ -1,4 +1,3 @@
-use super::StartEndStrideScalarsOrTensors;
 use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSNumber, NSString};
