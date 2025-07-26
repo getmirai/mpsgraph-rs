@@ -1,5 +1,6 @@
 mod broadcast_ops;
 mod concat_ops;
+mod coordinate_ops;
 mod expand_dims_ops;
 mod flatten_ops;
 mod pad_ops;
@@ -13,6 +14,7 @@ mod tile_ops;
 
 pub use broadcast_ops::*;
 pub use concat_ops::*;
+pub use coordinate_ops::*;
 pub use expand_dims_ops::*;
 pub use flatten_ops::*;
 pub use pad_ops::*;
@@ -31,114 +33,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates an expand-dimensions operation and returns the result tensor.
-        ///
-        /// Expands the tensor, inserting a dimension with size 1 at the specified axis.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - axis: The axis to expand.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(expandDimsOfTensor:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn expandDimsOfTensor_axis_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates an expand-dimensions operation and returns the result tensor.
-        ///
-        /// Expands the tensor, inserting dimensions with size 1 at specified axes.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - axes: The axes to expand.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(expandDimsOfTensor:axes:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn expandDimsOfTensor_axes_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axes: &NSArray<NSNumber>,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates an expand-dimensions operation and returns the result tensor.
-        ///
-        /// Expands the tensor, inserting dimensions with size 1 at specified axes.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - axesTensor: The tensor containing the axes to expand.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(expandDimsOfTensor:axesTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn expandDimsOfTensor_axesTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axes_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a get-coordindate operation and returns the result tensor.
-        ///
-        /// Creates a tensor of specified shape with value at index `[i_0, i_1, ... , i_N] = i_axis`
-        /// For example,
-        /// ```md
-        /// coordinateAlongAxis(0, withShape=[5]) = [0, 1, 2, 3, 4]
-        /// coordinateAlongAxis(0, withShape=[3,2]) = [[0, 0],
-        /// [1, 1],
-        /// [2, 2]]
-        /// ```
-        ///
-        /// - Parameters:
-        /// - axis: The coordinate axis an element's value is set to. Negative values wrap around.
-        /// - shape: The shape of the result tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(coordinateAlongAxis:withShape:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn coordinateAlongAxis_withShape_name(
-            &self,
-            axis: NSInteger,
-            shape: &MPSShape,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a get-coordindate operation and returns the result tensor.
-        ///
-        /// See ``MPSGraph/coordinateAlongAxis:withShape:name:``.
-        ///
-        /// - Parameters:
-        /// - axisTensor: A Scalar tensor of type `MPSDataTypeInt32`, that specifies the coordinate axis an element's value is set to. Negative values wrap around.
-        /// - shape: The shape of the result tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(coordinateAlongAxisTensor:withShape:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn coordinateAlongAxisTensor_withShape_name(
-            &self,
-            axis_tensor: &MPSGraphTensor,
-            shape: &MPSShape,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a get-coordindate operation and returns the result tensor.
         ///
