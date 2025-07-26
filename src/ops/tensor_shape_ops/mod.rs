@@ -1,3 +1,4 @@
+mod broadcast_ops;
 mod concat_ops;
 mod flatten_ops;
 mod pad_ops;
@@ -7,6 +8,7 @@ mod space_to_batch;
 mod space_to_depth_ops;
 mod tile_ops;
 
+pub use broadcast_ops::*;
 pub use concat_ops::*;
 pub use flatten_ops::*;
 pub use pad_ops::*;
@@ -23,49 +25,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a broadcast operation and returns the result tensor.
-        ///
-        /// Broadcasts values inside the tensor, starting from the trailing dimensions, to give it the correct shape.
-        /// This is equivalent to the broadcasting for arithmetic operations when operands have different shapes.
-        ///
-        /// - Parameters:
-        /// - tensor: The tensor to be broadcasted
-        /// - shape: The shape of the result tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object
-        #[unsafe(method(broadcastTensor:toShape:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn broadcastTensor_toShape_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            shape: &MPSShape,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a broadcast operation and returns the result tensor.
-        ///
-        /// Broadcasts values inside the tensor, starting from the trailing dimensions, to give it the correct shape.
-        /// This is equivalent to the broadcasting for arithmetic operations when operands have different shapes.
-        ///
-        /// - Parameters:
-        /// - tensor: The Tensor to be broadcasted.
-        /// - shapeTensor: A rank-1 tensor of type `MPSDataTypeInt32` or `MPSDataTypeInt64` that defines the shape of the result tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(broadcastTensor:toShapeTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn broadcastTensor_toShapeTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            shape_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a shape-of operation and returns the result tensor.
         ///
