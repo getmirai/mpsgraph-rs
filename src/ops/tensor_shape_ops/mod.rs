@@ -1,5 +1,6 @@
 mod concat_ops;
 mod pad_ops;
+mod reverse_tensor_ops;
 mod slice_ops;
 mod space_to_batch;
 mod space_to_depth_ops;
@@ -7,6 +8,7 @@ mod tile_ops;
 
 pub use concat_ops::*;
 pub use pad_ops::*;
+pub use reverse_tensor_ops::*;
 pub use slice_ops::*;
 pub use space_to_batch::*;
 pub use space_to_depth_ops::*;
@@ -19,64 +21,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a reverse operation and returns the result tensor.
-        ///
-        /// Reverses a tensor on given axes.
-        /// Semantics based on [TensorFlow reverse op](https://www.tensorflow.org/api_docs/python/tf/reverse).
-        ///
-        /// - Parameters:
-        /// - tensor: The tensor to be reversed.
-        /// - axesTensor: A tensor that specifies axes to be reversed (Axes must be unique and within normal axis range).
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(reverseTensor:axesTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn reverseTensor_axesTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axes_tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a reverse operation and returns the result tensor.
-        ///
-        /// Reverses a tensor on given axes.
-        /// Semantics based on [TensorFlow reverse op](https://www.tensorflow.org/api_docs/python/tf/reverse).
-        ///
-        /// - Parameters:
-        /// - tensor: The tensor to be reversed.
-        /// - axes: A tensor that specifies axes to be reversed (Axes must be unique and within normal axis range).
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(reverseTensor:axes:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn reverseTensor_axes_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            axes: &NSArray<NSNumber>,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a reverse operation and returns the result tensor.
-        ///
-        /// Reverses a tensor on all axes.
-        /// Semantics based on [TensorFlow reverse op](https://www.tensorflow.org/api_docs/python/tf/reverse).
-        ///
-        /// - Parameters:
-        /// - tensor: The tensor to be reversed.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(reverseTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn reverseTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a flatten2D operation and returns the result tensor.
         ///
