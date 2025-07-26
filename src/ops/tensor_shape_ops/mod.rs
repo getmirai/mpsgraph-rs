@@ -26,30 +26,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 impl Graph {
     extern_methods!(
         #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a stack operation and returns the result tensor.
-        ///
-        /// Stacks all input tensors along `axis` into a result tensor of `rank + 1`. Tensors must be broadcast
-        /// compatible along all dimensions except `axis`, and have the same type.
-        ///
-        /// - Parameters:
-        /// - inputTensors: The input tensors.
-        /// - axis: The dimension to stack tensors into result. Must be in range: `-rank + 1
-        /// <
-        /// = dimension
-        /// <
-        /// rank + 1`.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(stackTensors:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn stackTensors_axis_name(
-            &self,
-            input_tensors: &NSArray<MPSGraphTensor>,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(feature = "MPSGraphTensor")]
         /// Creates a split operation and returns the result tensor.
         ///
         /// Splits the input tensor along `axis` into multiple result tensors of size determined by `splitSizes`.
@@ -452,6 +428,37 @@ impl Graph {
     ) -> Retained<Tensor> {
         unsafe {
             msg_send![self, reinterpretCastTensor: tensor, toType: r#type, name: name.map(NSString::from_str).as_deref()]
+        }
+    }
+
+    /// Creates a stack operation and returns the result tensor.
+    ///
+    /// Stacks all input tensors along `axis` into a result tensor of `rank + 1`. Tensors must be broadcast
+    /// compatible along all dimensions except `axis`, and have the same type.
+    ///
+    /// - Parameters:
+    /// - inputTensors: The input tensors.
+    /// - axis: The dimension to stack tensors into result. Must be in range: `-rank + 1
+    /// <
+    /// = dimension
+    /// <
+    /// rank + 1`.
+    /// - name: The name for the operation.
+    /// - Returns: A valid MPSGraphTensor object.
+    pub fn stack_tensors(
+        &self,
+        input_tensors: &[&Tensor],
+        axis: i64,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        let input_tensors_array = NSArray::from_slice(input_tensors);
+        unsafe {
+            msg_send![
+                self,
+                stackTensors: &*input_tensors_array,
+                axis: axis,
+                name: name.map(NSString::from_str).as_deref(),
+            ]
         }
     }
 }
