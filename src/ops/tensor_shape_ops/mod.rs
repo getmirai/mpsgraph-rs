@@ -18,52 +18,13 @@ pub use space_to_batch::*;
 pub use space_to_depth_ops::*;
 pub use tile_ops::*;
 
-use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
+use crate::{DataType, Graph, ShapeOrTensor, ShapedType, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSNumber, NSString};
 
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a shape-of operation and returns the result tensor.
-        ///
-        /// Returns a rank-1 tensor of type `MPSDataTypeInt32` with the values of the static shape of the input tensor.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(shapeOfTensor:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn shapeOfTensor_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
-        #[cfg(all(
-            feature = "MPSGraphTensor",
-            feature = "objc2-metal-performance-shaders"
-        ))]
-        /// Creates a cast operation and returns the result tensor.
-        ///
-        /// Returns the input tensor casted to the specied data type.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - type: The datatype to which MPSGraph casts the input.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(castTensor:toType:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn castTensor_toType_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            r#type: MPSDataType,
-            name: Option<&NSString>,
-        ) -> Retained<MPSGraphTensor>;
-
         #[cfg(all(
             feature = "MPSGraphTensor",
             feature = "objc2-metal-performance-shaders"
@@ -459,6 +420,40 @@ impl Graph {
                 permutation: &*permutation_array,
                 name: name.map(NSString::from_str).as_deref(),
             ]
+        }
+    }
+
+    /// Creates a shape-of operation and returns the result tensor.
+    ///
+    /// Returns a rank-1 tensor of type `MPSDataTypeInt32` with the values of the static shape of the input tensor.
+    ///
+    /// - Parameters:
+    /// - tensor: The input tensor.
+    /// - name: The name for the operation.
+    /// - Returns: A valid MPSGraphTensor object.
+    pub fn shape_of_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+        unsafe {
+            msg_send![self, shapeOfTensor: tensor, name: name.map(NSString::from_str).as_deref()]
+        }
+    }
+
+    /// Creates a cast operation and returns the result tensor.
+    ///
+    /// Returns the input tensor casted to the specied data type.
+    ///
+    /// - Parameters:
+    /// - tensor: The input tensor.
+    /// - type: The datatype to which MPSGraph casts the input.
+    /// - name: The name for the operation.
+    /// - Returns: A valid MPSGraphTensor object.
+    pub fn cast_tensor(
+        &self,
+        tensor: &Tensor,
+        r#type: DataType,
+        name: Option<&str>,
+    ) -> Retained<Tensor> {
+        unsafe {
+            msg_send![self, castTensor: tensor, toType: r#type, name: name.map(NSString::from_str).as_deref()]
         }
     }
 }
