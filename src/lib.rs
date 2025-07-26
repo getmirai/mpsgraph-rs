@@ -23,6 +23,7 @@ pub use executable::*;
 pub use graph::*;
 pub use graph_scalar::*;
 pub use operation::*;
+pub use ops::*;
 pub use scalar_or_tensor::*;
 pub use shape_or_tensor::*;
 pub use tensor::*;
