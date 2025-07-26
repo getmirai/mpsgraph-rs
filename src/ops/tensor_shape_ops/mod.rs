@@ -7,6 +7,7 @@ mod slice_ops;
 mod space_to_batch;
 mod space_to_depth_ops;
 mod split_ops;
+mod squeeze_ops;
 mod tile_ops;
 
 pub use broadcast_ops::*;
@@ -18,6 +19,7 @@ pub use slice_ops::*;
 pub use space_to_batch::*;
 pub use space_to_depth_ops::*;
 pub use split_ops::*;
+pub use squeeze_ops::*;
 pub use tile_ops::*;
 
 use crate::{DataType, Graph, ShapeOrTensor, ShapedType, Tensor};
@@ -27,28 +29,6 @@ use objc2_foundation::{NSArray, NSNumber, NSString};
 /// TensorShapeOps.
 impl Graph {
     extern_methods!(
-        #[cfg(feature = "MPSGraphTensor")]
-        /// Creates a split operation and returns the result tensor.
-        ///
-        /// Splits the input tensor along `axis` into `numsplits` result tensors of equal size.
-        /// Requires that the lenth of the input along `axis` is divisible by `numSplits`.
-        ///
-        /// - Parameters:
-        /// - tensor: The input tensor.
-        /// - numSplits: The number of result tensors to split to.
-        /// - axis: The dimension along which MPSGraph splits the input tensor.
-        /// - name: The name for the operation.
-        /// - Returns: A valid MPSGraphTensor object.
-        #[unsafe(method(splitTensor:numSplits:axis:name:))]
-        #[unsafe(method_family = none)]
-        pub unsafe fn splitTensor_numSplits_axis_name(
-            &self,
-            tensor: &MPSGraphTensor,
-            num_splits: NSUInteger,
-            axis: NSInteger,
-            name: Option<&NSString>,
-        ) -> Retained<NSArray<MPSGraphTensor>>;
-
         #[cfg(feature = "MPSGraphTensor")]
         /// Creates a squeeze operation and returns the result tensor.
         ///
