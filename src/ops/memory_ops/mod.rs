@@ -72,6 +72,7 @@ impl Graph {
         data_type: Option<DataType>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
+        let shape = shape.map(|s| &**s);
         match data_type {
             Some(data_type) => unsafe {
                 msg_send![
@@ -111,7 +112,15 @@ impl Graph {
         let data_size = size_of_val(data);
         let ns_data =
             unsafe { NSData::with_bytes(from_raw_parts(data.as_ptr() as *const u8, data_size)) };
-        Self::constant_with_ns_data(self, &ns_data, shape, data_type)
+        let shape_ns_array = &**shape;
+        unsafe {
+            msg_send![
+                self,
+                constantWithData: &*ns_data,
+                shape: shape_ns_array,
+                dataType: data_type
+            ]
+        }
     }
 
     /// Creates a constant operation and returns the result tensor.

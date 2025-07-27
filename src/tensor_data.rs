@@ -119,12 +119,13 @@ impl TensorData {
         let buffer_ptr = buffer.as_ptr() as *mut AnyObject;
         let allocated: Allocated<Self> = unsafe { msg_send![class, alloc] };
 
+        let shape_ns = &**shape;
         match row_bytes {
             Some(row_bytes) => unsafe {
                 msg_send![
                     allocated,
                     initWithMTLBuffer: buffer_ptr,
-                    shape: shape,
+                    shape: shape_ns,
                     dataType: data_type,
                     rowBytes: row_bytes
                 ]
@@ -133,7 +134,7 @@ impl TensorData {
                 msg_send![
                     allocated,
                     initWithMTLBuffer: buffer_ptr,
-                    shape: shape,
+                    shape: shape_ns,
                     dataType: data_type
                 ]
             },

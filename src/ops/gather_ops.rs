@@ -36,7 +36,7 @@ impl Graph {
         &self,
         updates_tensor: &Tensor,
         indices_tensor: &Tensor,
-        axis: u64,
+        axis: i64,
         batch_dimensions: u64,
         name: Option<&str>,
     ) -> Retained<Tensor> {

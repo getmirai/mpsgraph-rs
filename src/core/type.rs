@@ -12,6 +12,7 @@ extern_class!(
     /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphtype?language=objc)
     #[unsafe(super(GraphObject, NSObject))]
     #[derive(Debug, PartialEq, Eq, Hash)]
+    #[name = "MPSGraphType"]
     pub struct GraphType;
 );
 
