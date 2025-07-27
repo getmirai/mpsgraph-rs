@@ -1,12 +1,15 @@
-use crate::{DataType, Device, GraphObject, Shape};
+use crate::{
+    ns_number_array_from_slice, ns_number_array_to_boxed_slice, DataType, Device, GraphObject,
+    Shape,
+};
 use metal::{foreign_types::ForeignType, Buffer};
 use objc2::{
     extern_class, extern_conformance, extern_methods, msg_send,
-    rc::{Allocated, Retained},
+    rc::{autoreleasepool, Allocated, Retained},
     runtime::{AnyObject, NSObject},
     ClassType,
 };
-use objc2_foundation::{NSArray, NSData, NSNumber, NSObjectProtocol};
+use objc2_foundation::{NSData, NSObjectProtocol};
 use std::mem::size_of_val;
 use std::slice::from_raw_parts;
 
@@ -37,24 +40,6 @@ impl TensorData {
         #[unsafe(method(device))]
         #[unsafe(method_family = none)]
         pub fn device(&self) -> Retained<Device>;
-
-        /// Initializes the tensor data with an `NSData` on a device.
-        ///
-        /// - Parameters:
-        /// - device: MPSDevice on which the MPSGraphTensorData exists
-        /// - data: NSData from which to copy the contents
-        /// - shape: shape of the output tensor
-        /// - dataType: dataType of the placeholder tensor
-        /// - Returns: A valid MPSGraphTensorData, or nil if allocation failure.
-        #[unsafe(method(initWithDevice:data:shape:dataType:))]
-        #[unsafe(method_family = init)]
-        pub fn init_with_device(
-            this: Allocated<Self>,
-            device: &Device,
-            data: &NSData,
-            shape: &Shape,
-            data_type: DataType,
-        ) -> Retained<Self>;
     );
 }
 
@@ -70,13 +55,19 @@ impl TensorData {
     pub fn new_with_ns_data(
         device: &Device,
         data: &NSData,
-        shape: &Shape,
+        shape: &[usize],
         data_type: DataType,
     ) -> Retained<Self> {
+        let class = Self::class();
+        let allocated: Allocated<Self> = unsafe { msg_send![class, alloc] };
         unsafe {
-            let class = Self::class();
-            let allocated: Allocated<Self> = msg_send![class, alloc];
-            Self::init_with_device(allocated, device, data, shape, data_type)
+            msg_send![
+                allocated,
+                initWithDevice: device,
+                data: data,
+                shape: &*ns_number_array_from_slice(shape),
+                dataType: data_type
+            ]
         }
     }
 
@@ -91,14 +82,14 @@ impl TensorData {
     pub fn new_with_data<T: Copy>(
         device: &Device,
         data: &[T],
-        shape: &Shape,
+        shape: &[usize],
         data_type: DataType,
     ) -> Retained<Self> {
-        unsafe {
+        autoreleasepool(|_| unsafe {
             let data_size = size_of_val(data);
             let ns_data = NSData::with_bytes(from_raw_parts(data.as_ptr() as *const u8, data_size));
             Self::new_with_ns_data(device, &ns_data, shape, data_type)
-        }
+        })
     }
 
     /// Initializes the tensor data with a Metal buffer specifying rowBytes (stride between rows)
@@ -109,23 +100,22 @@ impl TensorData {
     /// - dataType: dataType of the placeholder tensor
     /// - rowBytes: rowBytes for the fastest moving dimension, must be larger than or equal to sizeOf(dataType)shape[rank - 1] and must be a multiple of sizeOf(dataType)
     /// - Returns: A valid TensorData, or nil if allocation failure.
-    pub fn new_with_mtl_buffer_row_bytes(
+    pub fn new_with_mtl_buffer(
         buffer: &Buffer,
-        shape: &Shape,
+        shape: &[usize],
         data_type: DataType,
         row_bytes: Option<u64>,
     ) -> Retained<Self> {
         let class = Self::class();
         let buffer_ptr = buffer.as_ptr() as *mut AnyObject;
         let allocated: Allocated<Self> = unsafe { msg_send![class, alloc] };
-
-        let shape_ns = &**shape;
+        let shape = ns_number_array_from_slice(shape);
         match row_bytes {
             Some(row_bytes) => unsafe {
                 msg_send![
                     allocated,
                     initWithMTLBuffer: buffer_ptr,
-                    shape: shape_ns,
+                    shape: &*shape,
                     dataType: data_type,
                     rowBytes: row_bytes
                 ]
@@ -134,7 +124,7 @@ impl TensorData {
                 msg_send![
                     allocated,
                     initWithMTLBuffer: buffer_ptr,
-                    shape: shape_ns,
+                    shape: &*shape,
                     dataType: data_type
                 ]
             },
@@ -142,8 +132,8 @@ impl TensorData {
     }
 
     /// The shape of the tensor data.
-    pub fn shape(&self) -> Shape {
-        let array: Retained<NSArray<NSNumber>> = unsafe { msg_send![self, shape] };
-        array.into()
+    pub fn shape(&self) -> Box<[usize]> {
+        let array: Retained<Shape> = unsafe { msg_send![self, shape] };
+        ns_number_array_to_boxed_slice(&array)
     }
 }

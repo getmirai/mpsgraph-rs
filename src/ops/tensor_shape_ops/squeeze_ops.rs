@@ -1,4 +1,4 @@
-use crate::{Graph, ShapeOrTensor, Tensor};
+use crate::{ns_number_array_from_slice, AxesOrTensor, Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
@@ -55,22 +55,19 @@ impl Graph {
     pub fn squeeze_tensor_axes<'a>(
         &self,
         tensor: &Tensor,
-        axes: ShapeOrTensor<'a>,
+        axes: AxesOrTensor<'a>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         match axes {
-            ShapeOrTensor::Shape(axes) => {
-                let axes_ns_array = &**axes;
-                unsafe {
-                    msg_send![
-                        self,
-                        squeezeTensor: tensor,
-                        axes: axes_ns_array,
-                        name: name.map(NSString::from_str).as_deref(),
-                    ]
-                }
-            }
-            ShapeOrTensor::Tensor(axes) => unsafe {
+            AxesOrTensor::Axes(axes) => unsafe {
+                msg_send![
+                    self,
+                    squeezeTensor: tensor,
+                    axes: &*ns_number_array_from_slice(axes),
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
+            AxesOrTensor::Tensor(axes) => unsafe {
                 msg_send![
                     self,
                     squeezeTensor: tensor,

@@ -1,4 +1,8 @@
-use crate::{Graph, ShapeOrTensor, Tensor};
+mod sizes_or_tensor;
+
+pub use sizes_or_tensor::SizesOrTensor;
+
+use crate::{ns_number_array_from_slice, Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSString};
 
@@ -17,30 +21,29 @@ impl Graph {
     pub fn split_tensor<'a>(
         &self,
         tensor: &Tensor,
-        split_sizes: ShapeOrTensor<'a>,
+        split_sizes: SizesOrTensor<'a>,
         axis: i64,
         name: Option<&str>,
     ) -> Box<[Retained<Tensor>]> {
         match split_sizes {
-            ShapeOrTensor::Shape(split_sizes) => {
-                let split_sizes_ns_array = &**split_sizes;
+            SizesOrTensor::Sizes(split_sizes) => {
                 let result: Retained<NSArray<Tensor>> = unsafe {
                     msg_send![
                         self,
                         splitTensor: tensor,
-                        splitSizes: split_sizes_ns_array,
+                        splitSizes: &*ns_number_array_from_slice(split_sizes),
                         axis: axis,
                         name: name.map(NSString::from_str).as_deref(),
                     ]
                 };
                 result.to_vec().into_boxed_slice()
             }
-            ShapeOrTensor::Tensor(split_sizes) => unsafe {
+            SizesOrTensor::Tensor(split_sizes_tensor) => unsafe {
                 let result: Retained<NSArray<Tensor>> = unsafe {
                     msg_send![
                         self,
                         splitTensor: tensor,
-                        splitSizesTensor: split_sizes,
+                        splitSizesTensor: split_sizes_tensor,
                         axis: axis,
                         name: name.map(NSString::from_str).as_deref(),
                     ]

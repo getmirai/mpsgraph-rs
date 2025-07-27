@@ -1,4 +1,4 @@
-use crate::{Graph, Shape, ShapeOrTensor, Tensor};
+use crate::{ns_number_array_from_slice, Graph, ShapeOrTensor, Tensor};
 use objc2::msg_send;
 use objc2::rc::Retained;
 use objc2_foundation::NSString;
@@ -50,11 +50,11 @@ impl Graph {
     /// * `output_shape` – Shape of the forward-pass source tensor.
     /// * `forward_convolution_descriptor` – Descriptor used in the forward op.
     /// * `name` – Optional debug name.
-    pub fn convolution_2d_data_gradient(
+    pub fn convolution_2d_data_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
         weights_tensor: &Tensor,
-        output_shape: &ShapeOrTensor,
+        output_shape: ShapeOrTensor<'a>,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -65,7 +65,7 @@ impl Graph {
                         self,
                         convolution2DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                         weightsTensor: weights_tensor,
-                        outputShape: output_shape,
+                        outputShape: &*ns_number_array_from_slice(output_shape),
                         forwardConvolutionDescriptor: forward_convolution_descriptor,
                         name: name.map(NSString::from_str).as_deref()
                     ]
@@ -90,11 +90,11 @@ impl Graph {
     ///
     /// Parameters are analogous to the data-gradient variant, replacing `weights_tensor` with
     /// `source_tensor`.
-    pub fn convolution_2d_weights_gradient(
+    pub fn convolution_2d_weights_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
-        output_shape: &ShapeOrTensor,
+        output_shape: ShapeOrTensor<'a>,
         forward_convolution_descriptor: &Convolution2DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -105,7 +105,7 @@ impl Graph {
                         self,
                         convolution2DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                         sourceTensor: source_tensor,
-                        outputShape: output_shape,
+                        outputShape: &*ns_number_array_from_slice(output_shape),
                         forwardConvolutionDescriptor: forward_convolution_descriptor,
                         name: name.map(NSString::from_str).as_deref()
                     ]
@@ -125,7 +125,7 @@ impl Graph {
     }
 
     /// Creates a 3-D (forward) convolution operation. See the 2-D variant for parameter meaning.
-    pub fn convolution_3d(
+    pub fn convolution_3d<'a>(
         &self,
         source_tensor: &Tensor,
         weights_tensor: &Tensor,
@@ -150,11 +150,11 @@ impl Graph {
     ///
     /// The `output_shape` can be supplied either as a static `Shape` or dynamically as a `Tensor`
     /// via `ShapeOrTensor`, matching the interface of the 2-D variant.
-    pub fn convolution_3d_data_gradient(
+    pub fn convolution_3d_data_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
         weights_tensor: &Tensor,
-        output_shape: &ShapeOrTensor,
+        output_shape: ShapeOrTensor<'a>,
         forward_convolution_descriptor: &Convolution3DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -165,7 +165,7 @@ impl Graph {
                         self,
                         convolution3DDataGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                         weightsTensor: weights_tensor,
-                        outputShape: output_shape,
+                        outputShape: &*ns_number_array_from_slice(output_shape),
                         forwardConvolutionDescriptor: forward_convolution_descriptor,
                         name: name.map(NSString::from_str).as_deref()
                     ]
@@ -189,11 +189,11 @@ impl Graph {
     /// Computes `dL/dW = dL/dR · dR/dW`, where `R` is the forward convolution result.
     /// `output_shape` can be passed either as a static `Shape` or a dynamic `Tensor` via
     /// `ShapeOrTensor`, analogous to the 2-D variant.
-    pub fn convolution_3d_weights_gradient(
+    pub fn convolution_3d_weights_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
-        output_shape: &ShapeOrTensor,
+        output_shape: ShapeOrTensor<'a>,
         forward_convolution_descriptor: &Convolution3DOpDescriptor,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -204,7 +204,7 @@ impl Graph {
                         self,
                         convolution3DWeightsGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                         sourceTensor: source_tensor,
-                        outputShape: output_shape,
+                        outputShape: &*ns_number_array_from_slice(output_shape),
                         forwardConvolutionDescriptor: forward_convolution_descriptor,
                         name: name.map(NSString::from_str).as_deref()
                     ]

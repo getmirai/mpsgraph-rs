@@ -1,3 +1,4 @@
+mod axes_or_tensor;
 mod broadcast_ops;
 mod concat_ops;
 mod coordinate_ops;
@@ -12,6 +13,7 @@ mod split_ops;
 mod squeeze_ops;
 mod tile_ops;
 
+pub use axes_or_tensor::*;
 pub use broadcast_ops::*;
 pub use concat_ops::*;
 pub use coordinate_ops::*;
@@ -26,7 +28,7 @@ pub use split_ops::*;
 pub use squeeze_ops::*;
 pub use tile_ops::*;
 
-use crate::{DataType, Graph, ShapeOrTensor, Tensor};
+use crate::{ns_number_array_from_slice, DataType, Graph, ShapeOrTensor, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSNumber, NSString};
 
@@ -50,10 +52,20 @@ impl Graph {
     ) -> Retained<Tensor> {
         match shape {
             ShapeOrTensor::Shape(shape) => unsafe {
-                msg_send![self, reshapeTensor: tensor, withShape: shape, name: name.map(NSString::from_str).as_deref()]
+                msg_send![
+                    self,
+                    reshapeTensor: tensor,
+                    withShape: &*ns_number_array_from_slice(shape),
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
             },
             ShapeOrTensor::Tensor(shape_tensor) => unsafe {
-                msg_send![self, reshapeTensor: tensor, withShapeTensor: shape_tensor, name: name.map(NSString::from_str).as_deref()]
+                msg_send![
+                    self,
+                    reshapeTensor: tensor,
+                    withShapeTensor: shape_tensor,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
             },
         }
     }
@@ -73,16 +85,11 @@ impl Graph {
         permutation: &[u64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
-        let permutation = permutation
-            .iter()
-            .map(|x| NSNumber::new_u64(*x))
-            .collect::<Box<[Retained<NSNumber>]>>();
-        let permutation_array = NSArray::from_retained_slice(&permutation);
         unsafe {
             msg_send![
                 self,
                 transposeTensor: tensor,
-                permutation: &*permutation_array,
+                permutation: &*ns_number_array_from_slice(permutation),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         }

@@ -1,4 +1,4 @@
-use crate::{Graph, ScalarOrTensor, Shape, Tensor};
+use crate::{ns_number_array_from_slice, Graph, ScalarOrTensor, Shape, Tensor};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
@@ -22,15 +22,16 @@ impl Graph {
     pub fn coordinate_along_axis<'a>(
         &self,
         axis: ScalarOrTensor<'a, i64>,
-        shape: &Shape,
+        shape: &[isize],
         name: Option<&str>,
     ) -> Retained<Tensor> {
+        let shape = ns_number_array_from_slice(shape);
         match axis {
             ScalarOrTensor::Scalar(axis) => unsafe {
                 msg_send![
                     self,
                     coordinateAlongAxis: axis,
-                    withShape: shape,
+                    withShape: &*shape,
                     name: name.map(NSString::from_str).as_deref(),
                 ]
             },
@@ -38,7 +39,7 @@ impl Graph {
                 msg_send![
                     self,
                     coordinateAlongAxisTensor: axis,
-                    withShape: shape,
+                    withShape: &*shape,
                     name: name.map(NSString::from_str).as_deref(),
                 ]
             },

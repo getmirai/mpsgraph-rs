@@ -1,7 +1,7 @@
+use super::AxesOrTensor;
+use crate::{ns_number_array_from_slice, Graph, Tensor};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
-
-use crate::{Graph, ShapeOrTensor, Tensor};
 
 impl Graph {
     /// Creates a reverse operation and returns the result tensor.
@@ -17,18 +17,25 @@ impl Graph {
     pub fn reverse_tensor_with_axes<'a>(
         &self,
         tensor: &Tensor,
-        axes: ShapeOrTensor<'a>,
+        axes: AxesOrTensor<'a>,
         name: Option<&str>,
     ) -> Retained<Tensor> {
         match axes {
-            ShapeOrTensor::Shape(axes) => {
-                let axes_ns_array = &**axes;
-                unsafe {
-                    msg_send![self, reverseTensor: tensor, axes: axes_ns_array, name: name.map(NSString::from_str).as_deref()]
-                }
-            }
-            ShapeOrTensor::Tensor(tensor) => unsafe {
-                msg_send![self, reverseTensor: tensor, axesTensor: tensor, name: name.map(NSString::from_str).as_deref()]
+            AxesOrTensor::Axes(axes) => unsafe {
+                msg_send![
+                    self,
+                    reverseTensor: tensor,
+                    axes: &*ns_number_array_from_slice(axes),
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
+            AxesOrTensor::Tensor(tensor) => unsafe {
+                msg_send![
+                    self,
+                    reverseTensor: tensor,
+                    axesTensor: tensor,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
             },
         }
     }
@@ -44,7 +51,11 @@ impl Graph {
     /// - Returns: A valid MPSGraphTensor object.
     pub fn reverse_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            msg_send![self, reverseTensor: tensor, name: name.map(NSString::from_str).as_deref()]
+            msg_send![
+                self,
+                reverseTensor: tensor,
+                name: name.map(NSString::from_str).as_deref(),
+            ]
         }
     }
 }

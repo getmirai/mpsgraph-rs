@@ -14,6 +14,7 @@ mod scalar_or_tensor;
 mod shape_or_tensor;
 mod tensor;
 mod tensor_data;
+mod utils;
 
 pub use command_buffer::*;
 pub use conversion::*;
@@ -28,3 +29,4 @@ pub use scalar_or_tensor::*;
 pub use shape_or_tensor::*;
 pub use tensor::*;
 pub use tensor_data::*;
+pub use utils::*;

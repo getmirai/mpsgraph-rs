@@ -1,10 +1,11 @@
 use super::{DataType, GraphObject, GraphType, Shape};
+use crate::{ns_number_array_from_slice, ns_number_array_to_boxed_slice};
 use objc2::{
     extern_class, extern_conformance, extern_methods, msg_send,
     rc::{Allocated, Retained},
     ClassType,
 };
-use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSNumber, NSObject, NSObjectProtocol};
+use objc2_foundation::{CopyingHelper, NSCopying, NSObject, NSObjectProtocol};
 
 extern_class!(
     /// The shaped type class for types on tensors with a shape and data type.
@@ -70,31 +71,34 @@ impl ShapedType {
 
 impl ShapedType {
     /// The Shape of the shaped type.
-    pub fn shape(&self) -> Option<Shape> {
-        let array: Option<Retained<NSArray<NSNumber>>> = unsafe { msg_send![self, shape] };
-        array.map(|array| array.into())
+    pub fn shape(&self) -> Option<Box<[isize]>> {
+        let array: Option<Retained<Shape>> = unsafe { msg_send![self, shape] };
+        array.map(|array| ns_number_array_to_boxed_slice(&array))
     }
 
     /// Setter for [`shape`][Self::shape].
-    pub fn set_shape(&self, shape: Option<&Shape>) {
-        let shape = shape.map(|s| &**s);
-        let _: () = unsafe { msg_send![self, setShape: shape] };
+    pub fn set_shape(&self, shape: Option<&[isize]>) {
+        let shape = shape.map(|s| ns_number_array_from_slice(s));
+        let _: () = unsafe { msg_send![self, setShape: shape.as_deref()] };
     }
 
     /// Initializes a shaped type.
     ///
     /// # Arguments
     ///
-    /// * `shape` - Optional [`Shape`] of the shaped type.
+    /// * `shape` - Optional [`[isize]`] of the shaped type.
     /// * `data_type` - [`DataType`] of the shaped type.
     ///
     /// # Returns
     ///
     /// A valid [`ShapedType`] object, or `nil` if allocation failure.
-    pub fn new_with_shape_data_type(shape: Option<&Shape>, data_type: DataType) -> Retained<Self> {
+    pub fn new_with_shape_data_type(
+        shape: Option<&[isize]>,
+        data_type: DataType,
+    ) -> Retained<Self> {
         let class = Self::class();
         let allocated: Allocated<Self> = unsafe { msg_send![class, alloc] };
-        let shape = shape.map(|s| &**s);
-        unsafe { msg_send![allocated, initWithShape: shape, dataType: data_type] }
+        let shape = shape.map(|s| ns_number_array_from_slice(s));
+        unsafe { msg_send![allocated, initWithShape: shape.as_deref(), dataType: data_type] }
     }
 }

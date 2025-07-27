@@ -1,8 +1,8 @@
-use crate::{DataType, GraphObject, Operation, Shape, ShapedType};
+use crate::{ns_number_array_to_boxed_slice, DataType, GraphObject, Operation, Shape, ShapedType};
 use objc2::{
     extern_class, extern_conformance, extern_methods, msg_send, rc::Retained, runtime::NSObject,
 };
-use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSNumber, NSObjectProtocol};
+use objc2_foundation::{CopyingHelper, NSCopying, NSObjectProtocol};
 
 extern_class!(
     /// The symbolic representation of a compute data type.
@@ -48,14 +48,14 @@ impl Tensor {
     ///
     /// nil shape represents an unranked tensor.
     /// -1 value for a dimension represents that it will be resolved via shape inference at runtime and it can be anything.
-    pub fn shape(&self) -> Option<Shape> {
-        let array: Option<Retained<NSArray<NSNumber>>> = unsafe { msg_send![self, shape] };
-        array.map(|array| array.into())
+    pub fn shape(&self) -> Option<Box<[isize]>> {
+        let shape: Option<Retained<Shape>> = unsafe { msg_send![self, shape] };
+        shape.map(|shape| ns_number_array_to_boxed_slice(&shape))
     }
 
     pub fn shaped_type(&self) -> Retained<ShapedType> {
         let shape = self.shape();
         let data_type = self.data_type();
-        ShapedType::new_with_shape_data_type(shape.as_ref(), data_type)
+        ShapedType::new_with_shape_data_type(shape.as_deref(), data_type)
     }
 }

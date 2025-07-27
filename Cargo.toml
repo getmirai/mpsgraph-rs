@@ -25,18 +25,6 @@ ndarray = "0.16.1"
 [build-dependencies]
 bindgen = "0.72.0"
 
-[[example]]
-name = "matmul"
-path = "examples/matmul.rs"
-
-[[example]]
-name = "type_test"
-path = "examples/type_test.rs"
-
-[[example]]
-name = "callback_test"
-path = "examples/callback_test.rs"
-
 [package.metadata.docs.rs]
 default-target = "aarch64-apple-darwin"
 targets = ["aarch64-apple-darwin", "aarch64-apple-ios"]

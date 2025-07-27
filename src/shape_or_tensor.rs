@@ -1,6 +1,6 @@
-use crate::{Shape, Tensor};
+use crate::Tensor;
 
 pub enum ShapeOrTensor<'a> {
-    Shape(&'a Shape),
+    Shape(&'a [isize]),
     Tensor(&'a Tensor),
 }

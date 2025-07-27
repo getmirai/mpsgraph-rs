@@ -2,65 +2,83 @@ mod graph_variable_op;
 
 pub use graph_variable_op::GraphVariableOp;
 
-use crate::{DataType, Graph, Operation, Shape, Tensor};
-use objc2::{extern_methods, msg_send, rc::Retained};
+use crate::{ns_number_array_from_slice, DataType, Graph, Operation, Shape, Tensor};
+use objc2::{
+    extern_methods, msg_send,
+    rc::{autoreleasepool, Retained},
+};
 use objc2_foundation::{NSData, NSString};
 use std::{mem::size_of_val, slice::from_raw_parts};
 
 /// MemoryOps.
 impl Graph {
-    extern_methods!(
-        /// Creates a constant op with a given shape and data, and returns the result tensor.
-        ///
-        /// # Arguments
-        ///
-        /// * `data` - Raw tensor bytes. The length must be `sizeof(data_type) * number_of_elements`.
-        /// * `shape` - Statically shaped output [`Shape`].
-        /// * `data_type` - [`DataType`] of the constant tensor.
-        ///
-        /// # Returns
-        ///
-        /// A valid [`Tensor`] object.
-        #[unsafe(method(constantWithData:shape:dataType:))]
-        #[unsafe(method_family = none)]
-        pub fn constant_with_ns_data(
-            &self,
-            data: &NSData,
-            shape: &Shape,
-            data_type: DataType,
-        ) -> Retained<Tensor>;
-
-        /// Creates a complex constant op with a given shape and returns the result tensor.
-        ///
-        /// # Arguments
-        ///
-        /// * `real_part` - Real component of the complex scalar to fill the entire tensor values with  .
-        /// * `imaginary_part` - Imaginary component of the complex scalar to fill the entire tensor values with.
-        /// * `shape` - Statically shaped output [`Shape`].
-        /// * `data_type` - [`DataType`] of the constant tensor.
-        ///
-        /// # Returns
-        ///
-        /// A valid [`Tensor`] object.
-        #[unsafe(method(constantWithRealPart:imaginaryPart:shape:dataType:))]
-        #[unsafe(method_family = none)]
-        pub fn constant_with_real_imaginary_shape(
-            &self,
-            real_part: f64,
-            imaginary_part: f64,
-            shape: &Shape,
-            data_type: DataType,
-        ) -> Retained<Tensor>;
-    );
+    extern_methods!();
 }
 
 impl Graph {
+    /// Creates a constant op with a given shape and data, and returns the result tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Raw tensor bytes. The length must be `sizeof(data_type) * number_of_elements`.
+    /// * `shape` - Statically shaped output `[usize]`.
+    /// * `data_type` - [`DataType`] of the constant tensor.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object.
+    pub fn constant_with_ns_data(
+        &self,
+        data: &NSData,
+        shape: &[usize],
+        data_type: DataType,
+    ) -> Retained<Tensor> {
+        unsafe {
+            msg_send![
+                self,
+                constantWithData: data,
+                shape: &*ns_number_array_from_slice(shape),
+                dataType: data_type
+            ]
+        }
+    }
+
+    /// Creates a complex constant op with a given shape and returns the result tensor.
+    ///
+    /// # Arguments
+    ///
+    /// * `real_part` - Real component of the complex scalar to fill the entire tensor values with  .
+    /// * `imaginary_part` - Imaginary component of the complex scalar to fill the entire tensor values with.
+    /// * `shape` - Statically shaped output `[usize]`.
+    /// * `data_type` - [`DataType`] of the constant tensor.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object.
+    pub fn constant_with_real_imaginary_shape(
+        &self,
+        real_part: f64,
+        imaginary_part: f64,
+        shape: &[usize],
+        data_type: DataType,
+    ) -> Retained<Tensor> {
+        unsafe {
+            msg_send![
+                self,
+                constantWithRealPart: real_part,
+                imaginaryPart: imaginary_part,
+                shape: &*ns_number_array_from_slice(shape),
+                dataType: data_type
+            ]
+        }
+    }
+
     /// Creates a placeholder operation and returns the result tensor.
     ///
     /// # Arguments
     ///
-    /// * `shape` - Optional [`Shape`] of the output tensor. `None` produces an unranked tensor.
-    /// * `data_type` - Optional [`DataType`] for the placeholder. `None` defaults to 32-bit float.
+    /// * `shape` - Optional [`[isize]`] of the output tensor. `None` produces an unranked tensor.
+    /// * `data_type` - [`DataType`] for the placeholder.
     /// * `name` - Name of the operation.
     ///
     /// # Returns
@@ -68,28 +86,19 @@ impl Graph {
     /// A valid [`Tensor`] object.
     pub fn placeholder(
         &self,
-        shape: Option<&Shape>,
-        data_type: Option<DataType>,
+        shape: Option<&[isize]>,
+        data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
-        let shape = shape.map(|s| &**s);
-        match data_type {
-            Some(data_type) => unsafe {
-                msg_send![
-                    self,
-                    placeholderWithShape: shape,
-                    dataType: data_type,
-                    name: name.map(NSString::from_str).as_deref()
-                ]
-            },
-            None => unsafe {
-                msg_send![
-                    self,
-                    placeholderWithShape: shape,
-                    name: name.map(NSString::from_str).as_deref()
-                ]
-            },
-        }
+        let shape = shape.map(ns_number_array_from_slice);
+        autoreleasepool(|_| unsafe {
+            msg_send![
+                self,
+                placeholderWithShape: shape.as_deref(),
+                dataType: data_type,
+                name: name.map(NSString::from_str).as_deref()
+            ]
+        })
     }
 
     /// Creates a constant op with a given shape and data, and returns the result tensor.
@@ -97,7 +106,7 @@ impl Graph {
     /// # Arguments
     ///
     /// * `data` - Slice containing tensor elements.
-    /// * `shape` - Statically shaped output [`Shape`].
+    /// * `shape` - Statically shaped output `[isize]`.
     /// * `data_type` - [`DataType`] of the constant tensor.
     ///
     /// # Returns
@@ -106,21 +115,25 @@ impl Graph {
     pub fn constant_with_data<T: Copy>(
         &self,
         data: &[T],
-        shape: &Shape,
+        shape: &[usize],
         data_type: DataType,
     ) -> Retained<Tensor> {
-        let data_size = size_of_val(data);
-        let ns_data =
-            unsafe { NSData::with_bytes(from_raw_parts(data.as_ptr() as *const u8, data_size)) };
-        let shape_ns_array = &**shape;
-        unsafe {
-            msg_send![
+        autoreleasepool(|_| {
+            let ns_data = unsafe {
+                NSData::with_bytes(from_raw_parts(
+                    data.as_ptr() as *const u8,
+                    size_of_val(data),
+                ))
+            };
+            unsafe {
+                msg_send![
                 self,
                 constantWithData: &*ns_data,
-                shape: shape_ns_array,
+                shape: &*ns_number_array_from_slice(shape),
                 dataType: data_type
-            ]
-        }
+                ]
+            }
+        })
     }
 
     /// Creates a constant operation and returns the result tensor.
@@ -128,7 +141,7 @@ impl Graph {
     /// # Arguments
     ///
     /// * `scalar` - Scalar value used to fill the tensor.
-    /// * `shape` - Optional output [`Shape`]. If `None`, the tensor is scalar-shaped.
+    /// * `shape_option` - Optional output `[usize]`. If `None`, the tensor is scalar-shaped.
     /// * `data_type` - [`DataType`] of the constant tensor.
     ///
     /// # Returns
@@ -137,15 +150,15 @@ impl Graph {
     pub fn constant_with_scalar(
         &self,
         scalar: f64,
-        shape: Option<&Shape>,
+        shape_option: Option<&[usize]>,
         data_type: DataType,
     ) -> Retained<Tensor> {
-        match shape {
+        match shape_option {
             Some(shape) => unsafe {
                 msg_send![
                     self,
                     constantWithScalar: scalar,
-                    shape: shape,
+                    shape: &*ns_number_array_from_slice(shape),
                     dataType: data_type
                 ]
             },
@@ -210,7 +223,7 @@ impl Graph {
     pub fn variable_with_ns_data(
         &self,
         data: &NSData,
-        shape: &Shape,
+        shape: &[isize],
         data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -218,7 +231,7 @@ impl Graph {
             msg_send![
                 self,
                 variableWithData: data,
-                shape: shape,
+                shape: &*ns_number_array_from_slice(shape),
                 dataType: data_type,
                 name: name.map(NSString::from_str).as_deref()
             ]
@@ -240,14 +253,17 @@ impl Graph {
     pub fn variable_with_data<T: Copy>(
         &self,
         data: &[T],
-        shape: &Shape,
+        shape: &[isize],
         data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
-        let data_size = size_of_val(data);
-        let ns_data =
-            unsafe { NSData::with_bytes(from_raw_parts(data.as_ptr() as *const u8, data_size)) };
-        Self::variable_with_ns_data(self, &ns_data, shape, data_type, name)
+        autoreleasepool(|_| {
+            let data_size = size_of_val(data);
+            let ns_data = unsafe {
+                NSData::with_bytes(from_raw_parts(data.as_ptr() as *const u8, data_size))
+            };
+            Self::variable_with_ns_data(self, &ns_data, shape, data_type, name)
+        })
     }
 
     /// Creates a variable from an input tensor.

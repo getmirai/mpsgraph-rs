@@ -1,7 +1,7 @@
 use super::StartEndStrideScalarsOrTensors;
-use crate::{Graph, Shape, ShapeOrTensor, ShapedType, Tensor};
+use crate::{ns_number_array_from_slice, Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::NSString;
 
 impl Graph {
     /// Creates a tile operation and returns the result tensor.
@@ -16,14 +16,14 @@ impl Graph {
     pub fn tile_tensor(
         &self,
         tensor: &Tensor,
-        multiplier: &Shape,
+        multiplier: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
             msg_send![
                 self,
                 tileTensor: tensor,
-                withMultiplier: multiplier,
+                withMultiplier: &*ns_number_array_from_slice(multiplier),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         }
@@ -41,7 +41,7 @@ impl Graph {
         &self,
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
-        multiplier: &Shape,
+        multiplier: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -49,7 +49,7 @@ impl Graph {
                 self,
                 tileGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 sourceTensor: source_tensor,
-                withMultiplier: multiplier,
+                withMultiplier: &*ns_number_array_from_slice(multiplier),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         }

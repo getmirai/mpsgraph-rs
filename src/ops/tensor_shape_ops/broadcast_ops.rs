@@ -1,4 +1,4 @@
-use crate::{Graph, ShapeOrTensor, Tensor};
+use crate::{ns_number_array_from_slice, Graph, ShapeOrTensor, Tensor};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
@@ -21,10 +21,20 @@ impl Graph {
     ) -> Retained<Tensor> {
         match shape {
             ShapeOrTensor::Shape(shape) => unsafe {
-                msg_send![self, broadcastTensor: tensor, toShape: shape, name: name.map(NSString::from_str).as_deref()]
+                msg_send![
+                    self,
+                    broadcastTensor: tensor,
+                    toShape: &*ns_number_array_from_slice(shape),
+                    name: name.map(NSString::from_str).as_deref()
+                ]
             },
             ShapeOrTensor::Tensor(shape) => unsafe {
-                msg_send![self, broadcastTensor: tensor, toShapeTensor: shape, name: name.map(NSString::from_str).as_deref()]
+                msg_send![
+                    self,
+                    broadcastTensor: tensor,
+                    toShapeTensor: shape,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
             },
         }
     }

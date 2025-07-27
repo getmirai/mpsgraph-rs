@@ -1,4 +1,4 @@
-use crate::{Graph, PaddingMode, Shape, Tensor};
+use crate::{ns_number_array_from_slice, Graph, PaddingMode, Shape, Tensor};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
@@ -17,8 +17,8 @@ impl Graph {
         &self,
         tensor: &Tensor,
         padding_mode: PaddingMode,
-        left_padding: &Shape,
-        right_padding: &Shape,
+        left_padding: &[i64],
+        right_padding: &[i64],
         constant_value: f64,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -27,8 +27,8 @@ impl Graph {
                 self,
                 padTensor: tensor,
                 withPaddingMode: padding_mode,
-                leftPadding: left_padding,
-                rightPadding: right_padding,
+                leftPadding: &*ns_number_array_from_slice(left_padding),
+                rightPadding: &*ns_number_array_from_slice(right_padding),
                 constantValue: constant_value,
                 name: name.map(NSString::from_str).as_deref(),
             ]
@@ -50,8 +50,8 @@ impl Graph {
         incoming_gradient_tensor: &Tensor,
         source_tensor: &Tensor,
         padding_mode: PaddingMode,
-        left_padding: &Shape,
-        right_padding: &Shape,
+        left_padding: &[i64],
+        right_padding: &[i64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
@@ -60,8 +60,8 @@ impl Graph {
                 padGradientWithIncomingGradientTensor: incoming_gradient_tensor,
                 sourceTensor: source_tensor,
                 paddingMode: padding_mode,
-                leftPadding: left_padding,
-                rightPadding: right_padding,
+                leftPadding: &*ns_number_array_from_slice(left_padding),
+                rightPadding: &*ns_number_array_from_slice(right_padding),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         }

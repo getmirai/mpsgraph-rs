@@ -1,4 +1,4 @@
-use crate::{DataType, Graph, ScalarOrTensor, Tensor};
+use crate::{Graph, ScalarOrTensor, Tensor};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 

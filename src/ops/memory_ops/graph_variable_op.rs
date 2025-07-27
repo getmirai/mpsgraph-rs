@@ -1,10 +1,10 @@
-use crate::{DataType, Graph, GraphObject, Operation, Shape, ShapeOrTensor, Tensor};
+use crate::{ns_number_array_to_boxed_slice, DataType, Graph, GraphObject, Operation, Shape};
 use objc2::{
     extern_class, extern_conformance, extern_methods, msg_send,
     rc::{Allocated, Retained},
     runtime::NSObject,
 };
-use objc2_foundation::{CopyingHelper, NSArray, NSCopying, NSNumber, NSObjectProtocol};
+use objc2_foundation::{CopyingHelper, NSCopying, NSObjectProtocol};
 
 extern_class!(
     /// The class that defines the parameters for a variable.
@@ -57,8 +57,8 @@ impl GraphVariableOp {
 
 impl GraphVariableOp {
     /// The shape of the variable.
-    pub fn shape(&self) -> Shape {
-        let array: Retained<NSArray<NSNumber>> = unsafe { msg_send![self, shape] };
-        array.into()
+    pub fn shape(&self) -> Box<[isize]> {
+        let array: Retained<Shape> = unsafe { msg_send![self, shape] };
+        ns_number_array_to_boxed_slice(&array)
     }
 }
