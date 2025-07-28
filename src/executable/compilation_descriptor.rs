@@ -4,9 +4,9 @@ use super::OptimizationProfile;
 use crate::ComputeDevice;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, msg_send, ClassType, Message};
-use objc2_foundation::{NSArray, NSDictionary, NSMutableDictionary, NSObjectProtocol, NSString};
-use std::collections::HashMap;
+use objc2::{extern_class, msg_send, ClassType};
+use objc2_foundation::{NSDictionary, NSObjectProtocol, NSString};
+use std::{collections::HashMap, iter::zip, ptr::null};
 
 extern_class!(
     #[derive(Debug, PartialEq, Eq)]
@@ -49,110 +49,52 @@ impl CompilationDescriptor {
         }
     }
 
-    /// Get the callables map as a Rust HashMap
-    pub fn get_callables(&self) -> HashMap<String, Retained<Executable>> {
-        unsafe {
-            let ns_dict_opt: Option<Retained<NSDictionary<NSString, Executable>>> =
-                msg_send![self, callables];
-            let ns_dict = match ns_dict_opt {
-                Some(dict) => dict,
-                None => return HashMap::new(),
-            };
-
-            let keys_opt: Option<Retained<NSArray<NSString>>> = msg_send![&*ns_dict, allKeys];
-            let keys = match keys_opt {
-                Some(arr) => arr,
-                None => return HashMap::new(),
-            };
-
-            let mut result = HashMap::with_capacity(keys.len());
-
-            for i in 0..keys.len() {
-                let ns_key_opt: Option<Retained<NSString>> = msg_send![&*keys, objectAtIndex: i];
-                let ns_key = match ns_key_opt {
-                    Some(key) => key,
-                    None => continue,
-                };
-
-                let key_str = ns_key.to_string();
-
-                let executable_opt: Option<Retained<Executable>> =
-                    msg_send![&*ns_dict, objectForKey: &*ns_key];
-                let executable = match executable_opt {
-                    Some(exec) => exec,
-                    None => continue,
-                };
-
-                result.insert(key_str, executable);
-            }
-            result
-        }
+    /// Get the callables map as an `Option<HashMap>`.
+    pub fn get_callables(&self) -> Option<HashMap<String, Retained<Executable>>> {
+        let optional_dict: Option<Retained<NSDictionary<NSString, Executable>>> =
+            unsafe { msg_send![self, callables] };
+        optional_dict.map(|d| {
+            let (keys, objects) = d.to_vecs();
+            zip(keys.into_iter().map(|k| k.to_string()), objects.into_iter())
+                .collect::<HashMap<_, _>>()
+        })
     }
 
     /// Set the callables map using a Rust HashMap
-    pub fn set_callables(&self, callables: &HashMap<String, &Executable>) {
-        if callables.is_empty() {
-            // If the HashMap is empty, set the property to nil
-            unsafe {
-                let _: () = msg_send![self, setCallables: std::ptr::null::<NSDictionary<NSString, Executable>>()];
+    pub fn set_callables(&self, callables: &Option<HashMap<String, &Executable>>) {
+        match callables {
+            None => {
+                // Set property to nil
+                unsafe {
+                    let _: () = msg_send![
+                        self,
+                        setCallables: null::<NSDictionary<NSString, Executable>>()
+                    ];
+                }
             }
-            return;
-        }
+            Some(map) if map.is_empty() => unsafe {
+                let _: () = msg_send![
+                    self,
+                    setCallables: null::<NSDictionary<NSString, Executable>>()
+                ];
+            },
+            Some(map) => {
+                let mut ns_keys: Vec<Retained<NSString>> = Vec::with_capacity(map.len());
+                let mut exec_refs: Vec<&Executable> = Vec::with_capacity(map.len());
 
-        // Create a mutable dictionary
-        let mutable_dict = NSMutableDictionary::<NSString, Executable>::new();
+                for (k, &exec) in map {
+                    ns_keys.push(NSString::from_str(k));
+                    exec_refs.push(exec);
+                }
 
-        // Add each entry to the dictionary
-        for (key, &exec_ref) in callables {
-            let ns_key = NSString::from_str(key);
-            unsafe {
-                let _: () = msg_send![&*mutable_dict, setObject: exec_ref, forKey: &*ns_key];
+                let key_refs: Vec<&NSString> = ns_keys.iter().map(|k| &**k).collect();
+                let dict: Retained<NSDictionary<NSString, Executable>> =
+                    NSDictionary::from_slices(&key_refs, &exec_refs);
+
+                unsafe {
+                    let _: () = msg_send![self, setCallables: &*dict];
+                }
             }
-        }
-
-        // Convert to immutable dictionary
-        let immutable_dict: Retained<NSDictionary<NSString, Executable>> =
-            unsafe { msg_send![&*mutable_dict, copy] };
-
-        // Set the property
-        unsafe {
-            let _: () = msg_send![self, setCallables: &*immutable_dict];
-        }
-    }
-
-    /// Add a callable executable for a specific symbol name
-    pub fn add_callable(&self, symbol_name: &str, executable: &Executable) {
-        // Get the current callables
-        let mut callables_retained_map = self.get_callables();
-
-        // Add the new callable, retaining it for the map
-        callables_retained_map.insert(symbol_name.to_string(), executable.retain());
-
-        // Convert map values from Retained<Executable> to &Executable for set_callables
-        let callables_refs_map: HashMap<String, &Executable> = callables_retained_map
-            .iter()
-            .map(|(k, v)| (k.clone(), v.as_ref()))
-            .collect();
-
-        // Update the callables property
-        self.set_callables(&callables_refs_map);
-    }
-
-    /// Remove a callable executable for a specific symbol name
-    pub fn remove_callable(&self, symbol_name: &str) {
-        let mut callables_retained_map = self.get_callables();
-        callables_retained_map.remove(symbol_name);
-
-        let callables_refs_map: HashMap<String, &Executable> = callables_retained_map
-            .iter()
-            .map(|(k, v)| (k.clone(), v.as_ref()))
-            .collect();
-        self.set_callables(&callables_refs_map);
-    }
-
-    pub fn set_allowed_device(&self, devices: u64) {
-        unsafe {
-            let _: () = msg_send![self, setAllowedComputeDevices: devices as u64];
         }
     }
 
