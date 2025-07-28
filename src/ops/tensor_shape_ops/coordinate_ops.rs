@@ -9,9 +9,11 @@ impl Graph {
     /// of `axis` at every position: `result[i₀ … iₙ] = i_axis`.
     ///
     /// Example:
-    /// ```rust
-    /// coordinate_along_axis(0, &[5])  // ➜ [0,1,2,3,4]
-    /// coordinate_along_axis(0, &[3,2]) // ➜ [[0,0],[1,1],[2,2]]
+    /// ```rust,no_run
+    /// # use mpsgraph::{Graph, ScalarOrTensor};
+    /// # let graph = Graph::new();
+    /// let _ = graph.coordinate_along_axis(ScalarOrTensor::Scalar(0), &[5], None);  // ➜ [0, 1, 2, 3, 4]
+    /// let _ = graph.coordinate_along_axis(ScalarOrTensor::Scalar(0), &[3, 2], None); // ➜ [[0, 0], [1, 1], [2, 2]]
     /// ```
     ///
     /// # Arguments

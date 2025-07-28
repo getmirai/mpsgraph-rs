@@ -12,17 +12,6 @@ This crate provides Rust bindings for the Metal Performance Shaders Graph framew
 - Better Debug and display support via standard traits
 - Cleaner FFI boundary between Rust and Objective-C
 
-## Status
-
-This crate is stable and ready for production use. It is the result of a completed migration effort from the original AnyObject-based implementation to a modern Objective-C integration approach. See the [Migration Progress](../../../MIGRATION-PROGRESS.md) document for details.
-
-## Features
-
-- Create and manipulate graph-based neural network models
-- Define tensor operations with strong typing
-- Execute models on Metal-compatible GPUs
-- Automatic memory management for Objective-C objects
-
 ## Requirements
 
 - macOS 10.15 or newer
@@ -102,26 +91,6 @@ fn main() {
 }
 ```
 
-## Key Features
-
-The main features of this crate are:
-
-1. **Memory Management**: Uses `Retained<T>` for automatic memory management instead of raw pointers and manual retain/release
-2. **Type Safety**: Strong type safety through the use of generics and proper Objective-C class wrappers
-3. **API Design**: Idiomatic Rust API with methods returning `Option<T>` and `Result<T, E>` where appropriate
-4. **Naming**: Uses simpler type names without the MPS prefix (e.g., `Device` instead of `MPSGraphDevice`)
-5. **Error Handling**: Comprehensive error handling with better Rust integration
-6. **Block Support**: Full support for Objective-C blocks with proper type safety and memory management
-
 ## License
 
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-
-at your option.
-
-## License
-
-Licensed under MIT license.
+Licensed under [MIT license](LICENSE).

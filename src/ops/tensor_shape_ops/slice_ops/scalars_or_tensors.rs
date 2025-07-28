@@ -13,6 +13,7 @@ use crate::Tensor;
 ///
 /// Using compile-time scalars:
 /// ```rust
+/// use mpsgraph::StartEndStrideScalarsOrTensors;
 /// let args = StartEndStrideScalarsOrTensors::Scalars {
 ///     starts: &[0, 0],
 ///     ends: &[10, 10],
@@ -21,7 +22,11 @@ use crate::Tensor;
 /// ```
 ///
 /// Using tensors (dynamic at graph-build time):
-/// ```rust
+/// ```rust,no_run
+/// use mpsgraph::{StartEndStrideScalarsOrTensors, Tensor};
+/// let start_tensor: &Tensor = unsafe { core::mem::transmute(0usize) };
+/// let end_tensor: &Tensor = unsafe { core::mem::transmute(0usize) };
+/// let stride_tensor: &Tensor = unsafe { core::mem::transmute(0usize) };
 /// let args = StartEndStrideScalarsOrTensors::Tensors {
 ///     start_tensor,
 ///     end_tensor,

@@ -1,5 +1,4 @@
-use super::StartEndStrideScalarsOrTensors;
-use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
+use crate::{Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSString};
 
@@ -43,9 +42,13 @@ impl Graph {
     ///
     /// If `interleave` is `true`, the tensors are interleaved rather than
     /// stacked. Example:
-    /// ```rust
+    /// ```rust,no_run
+    /// use mpsgraph::{Graph, Tensor};
+    /// let graph = Graph::new();
+    /// let a: &Tensor = unsafe { core::mem::transmute(0usize) };
+    /// let b: &Tensor = unsafe { core::mem::transmute(0usize) };
+    /// let _ = graph.concat_tensors(&[a, b], 0, true, None);
     /// // axis = 0, interleave = true
-    /// [1,2,3] ⧺ [4,5,6] == [1,4,2,5,3,6]
     /// ```
     ///
     /// # Arguments
