@@ -4,34 +4,21 @@ use objc2_foundation::NSString;
 
 /// GatherOps.
 impl Graph {
-    /// Creates a Gather operation and returns the result tensor.
+    /// General *gather* with batch support.
     ///
-    /// Gathers the values in updatesTensor to the result tensor along the indices in indicesTensor.
-    /// The gather is defined as
-    /// ```md
-    /// B = batchDims
-    /// U = updates.rank
-    /// P = res.rank
-    /// Q = inds.rank
-    /// res[p_{0},...p_{axis-1}, i_{B},...,i_{Q}, ...,p_{axis+1},...,p{U-1}] =
-    /// updates[p_{0},...p_{axis-1}, indices[p_{0},...,p_{B-1},i_{B},...,i_{Q}, ...,p_{axis+1},...,p{U-1}]
-    /// ```
-    /// The tensors have the following shape requirements
-    /// ```md
-    /// P = Q-B + U-1
-    /// indices.shape[0:B] = updates.shape[0:B] = res.shape[0:B]
-    /// res.shape[0:axis] = updates.shape[0:axis]
-    /// res.shape[axis:axis+Q-B] = indices.shape[B:]
-    /// res.shape[axis+1+Q-B:] = updates.shape[axis+1:]
-    /// ```
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - updatesTensor: Tensor containing slices to be inserted into the result tensor.
-    /// - indicesTensor: Tensor containg the updates indices to read slices from
-    /// - axis: The dimension on which to perform the gather
-    /// - batchDimensions: The number of batch dimensions
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// * `updates_tensor` – Tensor supplying the slices.
+    /// * `indices_tensor` – Indices that pick slices out of
+    ///   `updates_tensor`.
+    /// * `axis` – Dimension along which to gather.
+    /// * `batch_dimensions` – Number of leading batch dims shared by all
+    ///   tensors.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the gathered slices.
     pub fn gather_with_updates(
         &self,
         updates_tensor: &Tensor,
@@ -52,19 +39,22 @@ impl Graph {
         }
     }
 
-    /// Creates a GatherAlongAxis operation and returns the result tensor.
+    /// *Gather-along-axis* variant.
     ///
-    /// Gather values from `updatesTensor` along the specified `axis` at indices in `indicesTensor`.
-    /// The shape of `updatesTensor` and `indicesTensor` must match except at `axis`.
-    /// The shape of the result tensor is equal to the shape of `indicesTensor`.
-    /// If an index is out of bounds of the `updatesTensor` along `axis` a 0 is inserted.
+    /// Gathers values from `updates_tensor` at `indices_tensor` along `axis`.
+    /// The resulting tensor has the same shape as `indices_tensor`.
+    /// Out-of-bounds indices produce zeros.
     ///
-    /// - Parameters:
-    /// - axis: The axis scalar or [`DataType::Int32`] tensor to gather from. Negative values wrap around
-    /// - updatesTensor: The input tensor to gather values from
-    /// - indicesTensor: Int32 or Int64 tensor used to index `updatesTensor`
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// # Arguments
+    ///
+    /// * `axis` – Axis to gather from (scalar or tensor; negative wraps).
+    /// * `updates_tensor` – Source tensor.
+    /// * `indices_tensor` – Int32/Int64 indices tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing gathered values.
     pub fn gather_along_axis<'a>(
         &self,
         axis: ScalarOrTensor<'a, i64>,

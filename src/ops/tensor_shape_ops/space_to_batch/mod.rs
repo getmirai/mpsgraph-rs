@@ -2,32 +2,31 @@ mod scalars_or_tensors;
 
 pub use scalars_or_tensors::SpatialAxesBatchAxisBlockDimensionsScalarsOrTensors;
 
-use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
+use crate::{ns_number_array_from_slice, Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a space-to-batch operation and returns the result tensor.
+    /// Creates a *space-to-batch* operation.
     ///
-    /// This operation outputs a copy of the `input` tensor, where values from the
-    /// `spatialAxes` (for `usePixelShuffleOrder=YES` 1,2 or 3 axes supported, otherwise
-    /// limited only by `MPSNDArray` rank limitations) dimensions are moved in spatial blocks with
-    /// rectangular size defined by `blockDimensions` to the `batchAxis` dimension.
-    /// Use the `usePixelShuffleOrder` parameter  to control how the data within spatial blocks is ordered
-    /// in the `batchAxis` dimension: with `usePixelShuffleOrder=YES` MPSGraph stores
-    /// the values of the spatial blocks contiguosly within the `batchAxis` dimension, whereas
-    /// otherwise they are stored interleaved with existing values in the `batchAxis` dimension.
-    /// Note: This operation is the inverse of
-    /// ``MPSGraph/batchToSpaceTensor:spatialAxes:batchAxis:blockDimensions:usePixelShuffleOrder:name:``.
-    /// Note: This operation is a generalization of
-    /// ``MPSGraph/spaceToDepth2DTensor:widthAxis:heightAxis:depthAxis:blockSize:usePixelShuffleOrder:name:``.
+    /// Values from the `spatial_axes` dimensions are packed into blocks of
+    /// `block_dimensions` and moved to the `batch_axis` dimension.
+    /// Setting `use_pixel_shuffle_order` controls whether the blocks are stored
+    /// contiguously (pixel-shuffle order) or interleaved.
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - spatial_axes_batch_axis_block_dimensions: The axes that define the dimensions containing the spatial blocks, the axis that defines the destination dimension, where to copy the blocks, and the size of the rectangular spatial sub-block.
-    /// - usePixelShuffleOrder: A parameter that controls layout of the sub-blocks within the batch dimension.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `spatial_axes_batch_axis_block_dimensions` – Tuple of spatial axes,
+    ///   destination batch axis, and per-axis block sizes. Accepts scalars or
+    ///   tensors via [`SpatialAxesBatchAxisBlockDimensionsScalarsOrTensors`].
+    /// * `use_pixel_shuffle_order` – If `true`, blocks are laid out
+    ///   contiguously along the batch axis.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with spatial data moved into the batch dimension.
     pub fn space_to_batch<'a>(
         &self,
         tensor: &Tensor,
@@ -40,29 +39,17 @@ impl Graph {
                 spatial_axes,
                 batch_axis,
                 block_dimensions,
-            } => {
-                let spatial_axes = spatial_axes
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let block_dimensions = block_dimensions
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let spatial_axes_array = NSArray::from_retained_slice(&spatial_axes);
-                let block_dimensions_array = NSArray::from_retained_slice(&block_dimensions);
-                unsafe {
-                    msg_send![
-                        self,
-                        spaceToBatchTensor: tensor,
-                        spatialAxes: &*spatial_axes_array,
-                        batchAxis: batch_axis,
-                        blockDimensions: &*block_dimensions_array,
-                        usePixelShuffleOrder: use_pixel_shuffle_order,
-                        name: name.map(NSString::from_str).as_deref(),
-                    ]
-                }
-            }
+            } => unsafe {
+                msg_send![
+                    self,
+                    spaceToBatchTensor: tensor,
+                    spatialAxes: &*ns_number_array_from_slice(spatial_axes),
+                    batchAxis: batch_axis,
+                    blockDimensions: &*ns_number_array_from_slice(block_dimensions),
+                    usePixelShuffleOrder: use_pixel_shuffle_order,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
             SpatialAxesBatchAxisBlockDimensionsScalarsOrTensors::Tensors {
                 spatial_axes_tensor,
                 batch_axis_tensor,
@@ -81,27 +68,23 @@ impl Graph {
         }
     }
 
-    /// Creates a batch-to-space operation and returns the result tensor.
+    /// Creates a *batch-to-space* operation (inverse of space-to-batch).
     ///
-    /// This operation outputs a copy of the input tensor, where values from the
-    /// `batchAxis` dimension are moved in spatial blocks of size `blockDimensions` to the
-    /// `spatialAxes` dimensions (for `usePixelShuffleOrder=YES` 1,2 or 3 axes supported,
-    /// otherwise limited only by `MPSNDArray` rank limitations).  Use the `usePixelShuffleOrder` parameter
-    /// to control how the data within spatial blocks is ordered in the
-    /// `batchAxis` dimension: with `usePixelShuffleOrder = YES` MPSGraph stores
-    /// the values of the spatial block contiguosly within the `batchAxis` dimension whereas
-    /// without it they are stored interleaved with existing values in the `batchAxis` dimension.
-    /// Note: This operation is the inverse of
-    /// ``MPSGraph/spaceToBatchTensor:spatialAxes:batchAxis:blockDimensions:usePixelShuffleOrder:name:``.
-    /// Note: This operation is a generalization of
-    /// ``MPSGraph/depthToSpace2DTensor:widthAxis:heightAxis:depthAxis:blockSize:usePixelShuffleOrder:name:``.
+    /// Values from the `batch_axis` are unpacked into spatial blocks of
+    /// `block_dimensions` and distributed across the `spatial_axes`.
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - spatial_axes_batch_axis_block_dimensions: The axes that define the dimensions containing the spatial blocks, the axis that defines the destination dimension, where to copy the blocks, and the size of the rectangular spatial sub-block.
-    /// - usePixelShuffleOrder: A parameter that controls layout of the sub-blocks within the batch dimension.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `spatial_axes_batch_axis_block_dimensions` – Tuple of spatial axes,
+    ///   source batch axis, and per-axis block sizes.
+    /// * `use_pixel_shuffle_order` – If `true`, expects contiguous
+    ///   pixel-shuffle layout in the batch dimension.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with batch data moved back into spatial dimensions.
     pub fn batch_to_space<'a>(
         &self,
         tensor: &Tensor,
@@ -114,29 +97,17 @@ impl Graph {
                 spatial_axes,
                 batch_axis,
                 block_dimensions,
-            } => {
-                let spatial_axes = spatial_axes
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let block_dimensions = block_dimensions
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let spatial_axes_array = NSArray::from_retained_slice(&spatial_axes);
-                let block_dimensions_array = NSArray::from_retained_slice(&block_dimensions);
-                unsafe {
-                    msg_send![
-                        self,
-                        batchToSpaceTensor: tensor,
-                        spatialAxes: &*spatial_axes_array,
-                        batchAxis: batch_axis,
-                        blockDimensions: &*block_dimensions_array,
-                        usePixelShuffleOrder: use_pixel_shuffle_order,
-                        name: name.map(NSString::from_str).as_deref(),
-                    ]
-                }
-            }
+            } => unsafe {
+                msg_send![
+                    self,
+                    batchToSpaceTensor: tensor,
+                    spatialAxes: &*ns_number_array_from_slice(spatial_axes),
+                    batchAxis: batch_axis,
+                    blockDimensions: &*ns_number_array_from_slice(block_dimensions),
+                    usePixelShuffleOrder: use_pixel_shuffle_order,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
             SpatialAxesBatchAxisBlockDimensionsScalarsOrTensors::Tensors {
                 spatial_axes_tensor,
                 batch_axis_tensor,

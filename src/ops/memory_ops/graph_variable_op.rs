@@ -7,9 +7,12 @@ use objc2::{
 use objc2_foundation::{CopyingHelper, NSCopying, NSObjectProtocol};
 
 extern_class!(
-    /// The class that defines the parameters for a variable.
+    /// Defines a variable operation within a graph.
     ///
-    /// See also [Apple's documentation](https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphvariableop?language=objc)
+    /// # Details
+    ///
+    /// Mirrors Apple’s `MPSGraphVariableOp`. See
+    /// <https://developer.apple.com/documentation/metalperformanceshadersgraph/mpsgraphvariableop?language=objc>
     #[unsafe(super(Operation, GraphObject, NSObject))]
     #[derive(Debug, PartialEq, Eq, Hash)]
     pub struct GraphVariableOp;
@@ -29,7 +32,11 @@ extern_conformance!(
 
 impl GraphVariableOp {
     extern_methods!(
-        /// The data type of the variable.
+        /// Returns the data type of the variable.
+        ///
+        /// # Returns
+        ///
+        /// The variable's [`DataType`].
         #[unsafe(method(dataType))]
         #[unsafe(method_family = none)]
         pub fn data_type(&self) -> DataType;
@@ -39,7 +46,11 @@ impl GraphVariableOp {
 /// Methods declared on superclass `MPSGraphOperation`.
 impl GraphVariableOp {
     extern_methods!(
-        /// Unavailable, please utilize graph methods to create and initialize operations.
+        /// This initializer is unavailable.
+        ///
+        /// # Details
+        ///
+        /// Use graph methods to create and initialize variable operations.
         #[unsafe(method(init))]
         #[unsafe(method_family = init)]
         pub fn init(this: Allocated<Self>) -> Retained<Self>;
@@ -56,7 +67,11 @@ impl GraphVariableOp {
 }
 
 impl GraphVariableOp {
-    /// The shape of the variable.
+    /// Returns the shape of the variable.
+    ///
+    /// # Returns
+    ///
+    /// A boxed slice containing the variable shape.
     pub fn shape(&self) -> Box<[isize]> {
         let array: Retained<Shape> = unsafe { msg_send![self, shape] };
         ns_number_array_to_boxed_slice(&array)

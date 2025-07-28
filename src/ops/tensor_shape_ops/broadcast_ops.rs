@@ -3,17 +3,22 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a broadcast operation and returns the result tensor.
+    /// Broadcasts `tensor` to a new shape.
     ///
-    /// Broadcasts values inside the tensor, starting from the trailing dimensions, to give it the correct shape.
-    /// This is equivalent to the broadcasting for arithmetic operations when operands have different shapes.
+    /// Semantics match NumPy-style broadcasting: starting from the trailing
+    /// dimensions, singleton axes are repeated to match `shape`.
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be broadcasted
-    /// - shape: The shape of the result tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
-    pub fn broadcast_tensor<'a>(
+    /// # Arguments
+    ///
+    /// * `tensor` – Tensor to broadcast.
+    /// * `shape` – Desired output shape specified either as a slice or as a
+    ///   [`Tensor`] (see [`ShapeOrTensor`]).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A broadcasted [`Tensor`] with the requested shape.
+    pub fn broadcast<'a>(
         &self,
         tensor: &Tensor,
         shape: ShapeOrTensor<'a>,

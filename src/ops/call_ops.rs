@@ -5,14 +5,19 @@ use objc2_foundation::{NSArray, NSString};
 use crate::{Graph, ShapedType, Tensor};
 
 impl Graph {
-    /// Creates an operation which invokes another executable.
+    /// Invokes a compiled graph callable identified by `symbol_name`.
     ///
-    /// - Parameters:
-    ///   - symbol_name: The unique identifier used to find the executable in the `MPSGraphCompilationDescriptor.callables` directory.
-    ///   - input_tensors: The tensors which are passed as inputs to the executable being invoked.
-    ///   - output_types: The expected return types of the executable being invoked.
-    ///   - name: name of operation.
-    /// - Returns: A boxed slice of valid `Tensor` objects representing the return tensors of the invoked executable.
+    /// # Arguments
+    ///
+    /// * `symbol_name` – Identifier used to look up the executable inside the
+    ///   compilation descriptor’s `callables` map.
+    /// * `input_tensors` – Inputs passed to the callee.
+    /// * `output_types` – Expected result tensor types.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// Boxed slice of output [`Tensor`] objects returned by the callee.
     pub fn call_symbol_name(
         &self,
         symbol_name: &str,

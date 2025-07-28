@@ -1,17 +1,22 @@
-use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
+use crate::{Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a slice operation and returns the result tensor.
+    /// Creates a one-dimensional slice along a given axis.
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be sliced.
-    /// - dimensionIndex: The dimension to slice.
-    /// - start: The starting index of the slice, can be negative to count from the end of the tensor dimension.
-    /// - length: The length of the slice.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Source tensor to slice.
+    /// * `dimension_index` – Axis along which to slice.
+    /// * `start` – Starting index (negative values count from the end of the
+    ///   dimension).
+    /// * `length` – Number of elements to keep.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] representing the slice.
     pub fn slice(
         &self,
         tensor: &Tensor,
@@ -32,19 +37,23 @@ impl Graph {
         }
     }
 
-    /// Creates a slice operation and returns the result tensor.
+    /// Creates an N-dimensional slice using *start* and *size* tensors.
     ///
-    /// Slices a tensor starting from `startTensor`, stopping short before `startTensor + endTensor` stepping
-    /// a single pace between each value. Semantics based on
-    /// [TensorFlow Strided Slice Op](https://www.tensorflow.org/api_docs/python/tf/strided_slice).
+    /// The operation starts at `start_tensor` and keeps `size_tensor` elements
+    /// along each dimension, following the semantics of TensorFlow’s *Slice*
+    /// op.
     ///
-    /// - Parameters:
-    /// - tensor: The Tensor to be sliced.
-    /// - startTensor: The tensor that specifies the starting points for each dimension.
-    /// - sizeTensor: The tensor that specifies the size of the result for each dimension.
-    /// - squeezeMask: A bitmask that indicates dimensions the operation will squeeze out from the result.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Tensor to slice.
+    /// * `start_tensor` – Per-dimension starting indices.
+    /// * `size_tensor` – Per-dimension slice lengths.
+    /// * `squeeze_mask` – Bitmask of dimensions to remove from the result.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the slice.
     pub fn slice_with_tensors(
         &self,
         tensor: &Tensor,

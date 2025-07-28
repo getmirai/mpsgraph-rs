@@ -4,16 +4,18 @@ use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a tile operation and returns the result tensor.
+    /// Tiles `tensor` according to `multiplier`.
     ///
-    /// Creates a tensor which contains multiple copies of the input tensor along each dimension of the tensor.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor
-    /// - multiplier: An array of numbers that specifies how many copies per dimension MPSGraph produces.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn tile_tensor(
+    /// * `tensor` – Input tensor.
+    /// * `multiplier` – Number of repeats for each dimension (`rank` values).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing repeated copies of `tensor`.
+    pub fn tile(
         &self,
         tensor: &Tensor,
         multiplier: &[i64],
@@ -29,14 +31,18 @@ impl Graph {
         }
     }
 
-    /// Creates a tile gradient operation and returns the result tensor.
+    /// Computes the gradient for a tile operation.
     ///
-    /// - Parameters:
-    /// - incomingGradientTensor: The input gradient tensor.
-    /// - sourceTensor: The input tensor of the forward pass.
-    /// - multiplier: An array of numbers that specifies how many copies per dimension MPSGraph produced in the forward pass.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `incoming_gradient_tensor` – Gradient flowing from subsequent ops (`dL/dT`).
+    /// * `source_tensor` – Original tensor fed to the forward *tile* op.
+    /// * `multiplier` – Same multiplier used in the forward op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the gradient with respect to `source_tensor`.
     pub fn tile_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,

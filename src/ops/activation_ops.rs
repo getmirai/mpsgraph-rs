@@ -4,27 +4,33 @@ use objc2_foundation::NSString;
 use crate::{Graph, ScalarOrTensor, Tensor};
 
 impl Graph {
-    /// Computes the ReLU (rectified linear activation unit) function with the input tensor.
+    /// Applies the ReLU activation: `f(x) = max(x, 0)`.
     ///
-    /// The operation is:  f(x) = max(x, 0).
+    /// # Arguments
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// * `tensor` – Input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the ReLU results.
     pub fn relu(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, reLUWithTensor: tensor, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Computes the gradient of the ReLU  (rectified linear activation unit) function using the incoming gradient.
+    /// Gradient of the ReLU activation.
     ///
-    /// - Parameters:
-    ///   - gradient: The incoming gradient tensor.
-    ///   - source: The input tensor from forward pass.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// # Arguments
+    ///
+    /// * `gradient` – Incoming gradient (`dL/dR`).
+    /// * `source` – Tensor used in the forward ReLU pass.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing `dL/dX`.
     pub fn relu_gradient(
         &self,
         gradient: &Tensor,
@@ -41,25 +47,33 @@ impl Graph {
         }
     }
 
-    /// Computes the sigmoid operation on an input tensor.
+    /// Applies the sigmoid activation.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] after sigmoid.
     pub fn sigmoid(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, sigmoidWithTensor: tensor, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Computes the gradient of the sigmoid function using the incoming gradient tensor.
+    /// Gradient of the sigmoid activation.
     ///
-    /// - Parameters:
-    ///   - gradient: The incoming gradient tensor.
-    ///   - source: The input tensor.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// # Arguments
+    ///
+    /// * `gradient` – Incoming gradient.
+    /// * `source` – Tensor used in the forward sigmoid pass.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing `dL/dX`.
     pub fn sigmoid_gradient(
         &self,
         gradient: &Tensor,
@@ -76,27 +90,35 @@ impl Graph {
         }
     }
 
-    /// Computes the softmax function on the input tensor along the specified axis.
+    /// Applies the softmax function along `axis`.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - axis: The axis along which softmax is computed.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `axis` – Axis along which softmax is computed.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing probabilities that sum to 1 across `axis`.
     pub fn soft_max(&self, tensor: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, softMaxWithTensor: tensor, axis: axis, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Computes the gradient of the softmax function along the specified axis using the incoming gradient tensor.
+    /// Gradient of the softmax function.
     ///
-    /// - Parameters:
-    ///   - gradient: The incoming gradient tensor.
-    ///   - source: The input tensor.
-    ///   - axis: The axis along which softmax is computed.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// # Arguments
+    ///
+    /// * `gradient` – Incoming gradient.
+    /// * `source` – Tensor used in the forward softmax pass.
+    /// * `axis` – Axis along which softmax was computed.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing `dL/dX`.
     pub fn soft_max_gradient(
         &self,
         gradient: &Tensor,
@@ -115,15 +137,17 @@ impl Graph {
         }
     }
 
-    /// Computes the leaky rectified linear unit (ReLU) activation function on the input tensor.
+    /// Applies leaky ReLU: `f(x) = max(x, α x)`.
     ///
-    /// The operation is: f(x) = max(x, alpha).
+    /// # Arguments
     ///
-    /// - Parameters:
-    ///   - tensor: An input tensor.
-    ///   - alpha: The scalar value alpha used by all elements in the input tensor.
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// * `tensor` – Input tensor.
+    /// * `alpha` – Slope for negative values (scalar or tensor).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] after leaky ReLU.
     pub fn leaky_relu<'a>(
         &self,
         tensor: &Tensor,
@@ -142,16 +166,20 @@ impl Graph {
         }
     }
 
-    /// Computes the gradient of the leaky rectified linear unit (ReLU) activation.
+    /// Gradient of the leaky ReLU activation.
     ///
-    /// This operation supports broadcasting with the alpha tensor.
+    /// Supports broadcasting of `alpha_tensor`.
     ///
-    /// - Parameters:
-    ///   - gradient: The incoming gradient tensor.
-    ///   - source: The input tensor in forward pass.
-    ///   - alpha: The alpha tensor
-    ///   - name: The name for the operation.
-    /// - Returns: A valid `Tensor` object.
+    /// # Arguments
+    ///
+    /// * `gradient` – Incoming gradient.
+    /// * `source` – Input tensor from forward pass.
+    /// * `alpha_tensor` – Alpha tensor used in the forward pass.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing `dL/dX`.
     pub fn leaky_relu_gradient(
         &self,
         gradient: &Tensor,

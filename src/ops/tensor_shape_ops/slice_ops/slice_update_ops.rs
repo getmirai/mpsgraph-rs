@@ -1,19 +1,25 @@
 use super::StartEndStrideScalarsOrTensors;
-use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
+use crate::{ns_number_array_from_slice, Graph, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a strided-slice update operation with zero masks and returns the result tensor.
+    /// Creates a strided-slice update operation.
     ///
-    /// - Parameters:
-    /// - dataTensor: The large tensor that will receive the update.
-    /// - updateTensor: The tensor with the new values that will replace values in the dataTensor.
-    /// - startsTensor: A Tensor that contains an array of numbers that specify the starting points for each dimension.
-    /// - endsTensor: A Tensor that contains an array of numbers that specify the ending points for each dimension.
-    /// - stridesTensor: A Tensor that contains an array of numbers that specify the strides for each dimension.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// Replaces a slice of `data_tensor` with `update_tensor` using *start*,
+    /// *end*, and *stride* parameters. All masks are implicitly set to zero.
+    ///
+    /// # Arguments
+    ///
+    /// * `data_tensor` – Tensor to be updated.
+    /// * `update_tensor` – Tensor providing replacement values.
+    /// * `start_end_stride` – Slice parameters provided as scalars or tensors
+    ///   (see [`StartEndStrideScalarsOrTensors`]).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] representing the updated data.
     pub fn slice_update<'a>(
         &self,
         data_tensor: &Tensor,
@@ -26,34 +32,17 @@ impl Graph {
                 starts,
                 ends,
                 strides,
-            } => {
-                let starts = starts
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let ends = ends
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let strides = strides
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let starts_array = NSArray::from_retained_slice(&starts);
-                let ends_array = NSArray::from_retained_slice(&ends);
-                let strides_array = NSArray::from_retained_slice(&strides);
-                unsafe {
-                    msg_send![
-                        self,
-                        sliceUpdateDataTensor: data_tensor,
-                        updateTensor: update_tensor,
-                        starts: &*starts_array,
-                        ends: &*ends_array,
-                        strides: &*strides_array,
-                        name: name.map(NSString::from_str).as_deref(),
-                    ]
-                }
-            }
+            } => unsafe {
+                msg_send![
+                    self,
+                    sliceUpdateDataTensor: data_tensor,
+                    updateTensor: update_tensor,
+                    starts: &*ns_number_array_from_slice(starts),
+                    ends: &*ns_number_array_from_slice(ends),
+                    strides: &*ns_number_array_from_slice(strides),
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
             StartEndStrideScalarsOrTensors::Tensors {
                 start_tensor,
                 end_tensor,
@@ -72,19 +61,21 @@ impl Graph {
         }
     }
 
-    /// Creates a strided-slice update operation and returns the result tensor.
+    /// Creates a strided-slice update operation with explicit *mask* control.
     ///
-    /// - Parameters:
-    /// - dataTensor: The large tensor that will receive the update.
-    /// - updateTensor: The tensor with the new values that will replace values in the dataTensor.
-    /// - startsTensor: A Tensor that contains an array of numbers that specify the starting points for each dimension.
-    /// - endsTensor: A Tensor that contains an array of numbers that specify the ending points for each dimension.
-    /// - stridesTensor: A Tensor that contains an array of numbers that specify the strides for each dimension.
-    /// - startMask: A bitmask that indicates dimensions whose `starts` values the operation should ignore.
-    /// - endMask: A bitmask that indicates dimensions whose `ends` values the operation should ignore.
-    /// - squeezeMask: A bitmask that indicates dimensions the operation will squeeze out from the result.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// # Arguments
+    ///
+    /// * `data_tensor` – Tensor to be updated.
+    /// * `update_tensor` – Tensor providing replacement values.
+    /// * `start_end_stride` – Slice parameters provided as scalars or tensors.
+    /// * `start_mask` – Bitmask of dimensions whose `starts` values are ignored.
+    /// * `end_mask` – Bitmask of dimensions whose `ends` values are ignored.
+    /// * `squeeze_mask` – Bitmask of dimensions to remove from the result.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] representing the updated data.
     pub fn slice_update_with_masks<'a>(
         &self,
         data_tensor: &Tensor,
@@ -100,37 +91,20 @@ impl Graph {
                 starts,
                 ends,
                 strides,
-            } => {
-                let starts = starts
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let ends = ends
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let strides = strides
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let starts_array = NSArray::from_retained_slice(&starts);
-                let ends_array = NSArray::from_retained_slice(&ends);
-                let strides_array = NSArray::from_retained_slice(&strides);
-                unsafe {
-                    msg_send![
-                        self,
-                        sliceUpdateDataTensor: data_tensor,
-                        updateTensor: update_tensor,
-                        starts: &*starts_array,
-                        ends: &*ends_array,
-                        strides: &*strides_array,
-                        startMask: start_mask,
-                        endMask: end_mask,
-                        squeezeMask: squeeze_mask,
-                        name: name.map(NSString::from_str).as_deref(),
-                    ]
-                }
-            }
+            } => unsafe {
+                msg_send![
+                    self,
+                    sliceUpdateDataTensor: data_tensor,
+                    updateTensor: update_tensor,
+                    starts: &*ns_number_array_from_slice(starts),
+                    ends: &*ns_number_array_from_slice(ends),
+                    strides: &*ns_number_array_from_slice(strides),
+                    startMask: start_mask,
+                    endMask: end_mask,
+                    squeezeMask: squeeze_mask,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
             StartEndStrideScalarsOrTensors::Tensors {
                 start_tensor,
                 end_tensor,

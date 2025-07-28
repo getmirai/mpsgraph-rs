@@ -1,3 +1,10 @@
+//! Space-to-depth and depth-to-space helper operations.
+//!
+//! These are 2-D specializations that pack or unpack spatial blocks between
+//! the H/W axes and the depth axis, optionally using *pixel-shuffle* ordering
+//! (contiguous vs interleaved).
+//!
+
 mod scalars_or_tensors;
 
 pub use scalars_or_tensors::WidthHeightDepthAxisScalarsOrTensors;
@@ -7,23 +14,21 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a space-to-depth2D operation and returns the result tensor.
+    /// Creates a *space-to-depth 2-D* operation.
     ///
-    /// This operation outputs a copy of the `input` tensor, where values from the
-    /// `widthAxis` and `heightAxis` dimensions are moved in spatial blocks of size
-    /// `blockSize` to the `depthAxis` dimension. Use the `usePixelShuffleOrder` parameter
-    /// to control how the data within spatial blocks is ordered in the
-    /// `depthAxis` dimension: with `usePixelShuffleOrder=YES` MPSGraph stores the
-    /// values of the spatial blocks  contiguosly within the `depthAxis` dimension, whereas
-    /// otherwise they are stored interleaved with existing values in the `depthAxis` dimension.
-    /// This operation is the inverse of `MPSGraph/depthToSpace2DTensor:widthAxis:heightAxis:depthAxis:blockSize:usePixelShuffleOrder:name:`.
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - axis: The axis that defines the fastest running dimension within the block, the 2nd fastest running dimension within the block, and the destination dimension, where to copy the blocks.
-    /// - blockSize: The size of the square spatial sub-block.
-    /// - usePixelShuffleOrder: A parameter that controls the layout of the sub-blocks within the depth dimension.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `axis` – Tuple specifying width-, height-, and depth-axis indices (see
+    ///   [`WidthHeightDepthAxisScalarsOrTensors`]).
+    /// * `block_size` – Size of the square spatial block.
+    /// * `use_pixel_shuffle_order` – If `true`, blocks are stored contiguously
+    ///   along the depth axis (pixel-shuffle order).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] where H/W spatial blocks are packed into the depth axis.
     pub fn space_to_depth_2d<'a>(
         &self,
         tensor: &Tensor,
@@ -68,25 +73,20 @@ impl Graph {
         }
     }
 
-    /// Creates a depth-to-space2D operation and returns the result tensor.
+    /// Creates a *depth-to-space 2-D* operation (inverse of space-to-depth).
     ///
-    /// This operation outputs a copy of the input tensor, where values from the
-    /// `depthAxis` dimension are moved in spatial blocks of size `blockSize` to the
-    /// `heightAxis` and `widthAxis` dimensions.  Use the `usePixelShuffleOrder` parameter
-    /// to control how the data within spatial blocks is ordered in the
-    /// `depthAxis` dimension: with `usePixelShuffleOrder = YES` MPSGraph stores the values
-    /// of the spatial block contiguosly within the `depthAxis` dimension, whereas
-    /// without it they are stored interleaved with existing values in the `depthAxisTensor` dimension.
-    /// This operation is the inverse of
-    /// ``MPSGraph/spaceToDepth2DTensor:widthAxis:heightAxis:depthAxis:blockSize:usePixelShuffleOrder:name:``.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - axis: The axis that defines the fastest running dimension within the block, the 2nd fastest running dimension within the block, and the destination dimension, where to copy the blocks.
-    /// - blockSize: The size of the square spatial sub-block.
-    /// - usePixelShuffleOrder: A parameter that controls the layout of the sub-blocks within the depth dimension.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// * `tensor` – Input tensor.
+    /// * `axis` – Tuple specifying width-, height-, and depth-axis indices.
+    /// * `block_size` – Size of the square spatial block.
+    /// * `use_pixel_shuffle_order` – If `true`, expects contiguous pixel-shuffle
+    ///   layout in the depth axis.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] where data from the depth axis is unpacked into H/W axes.
     pub fn depth_to_space_2d<'a>(
         &self,
         tensor: &Tensor,

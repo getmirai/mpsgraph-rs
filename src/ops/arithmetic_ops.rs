@@ -3,14 +3,16 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    // region: UnaryArithmeticOps
-
     /// Copies the input tensor values into the output, behaving as an identity operation.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object which is a copy of the input.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object which is a copy of the input.
     pub fn identity(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -23,10 +25,14 @@ impl Graph {
 
     /// Applies the natural exponent to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn exponent(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -39,10 +45,14 @@ impl Graph {
 
     /// Applies an exponent with base 2 to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn exponent_base2(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -55,10 +65,14 @@ impl Graph {
 
     /// Applies an exponent with base 10 to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn exponent_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -71,10 +85,14 @@ impl Graph {
 
     /// Computes the natural logarithm to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logarithm(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -87,10 +105,14 @@ impl Graph {
 
     /// Computes the logarithm with base 2 to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logarithm_base2(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -103,10 +125,14 @@ impl Graph {
 
     /// Computes the logarithm with base 10 to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logarithm_base10(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -119,10 +145,14 @@ impl Graph {
 
     /// Applies the square operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn square(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -135,10 +165,14 @@ impl Graph {
 
     /// Applies the square root operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn square_root(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -151,10 +185,14 @@ impl Graph {
 
     /// Applies the reciprocal square root operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn reciprocal_square_root(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -167,10 +205,14 @@ impl Graph {
 
     /// Applies the reciprocal operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn reciprocal(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -183,10 +225,14 @@ impl Graph {
 
     /// Returns the absolute values of the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn absolute(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -199,10 +245,14 @@ impl Graph {
 
     /// Returns the absolute square of the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation..
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn absolute_square(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -215,10 +265,14 @@ impl Graph {
 
     /// Applies negative to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn negative(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -235,10 +289,14 @@ impl Graph {
     /// -1.0 if it is lesser than 0, -0.0 if it is equal to -0.0, and
     /// +0.0 if it is equal to +0.0.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn sign(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -254,10 +312,14 @@ impl Graph {
     /// This operation returns `true` if the sign bit is set for the correspnding floating-point input element,
     /// otherwise it returns `false`.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn signbit(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -270,10 +332,14 @@ impl Graph {
 
     /// Applies the ceiling operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn ceil(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -286,10 +352,14 @@ impl Graph {
 
     /// Applies the floor operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn floor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -302,10 +372,14 @@ impl Graph {
 
     /// Rounds the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn round(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -350,10 +424,14 @@ impl Graph {
 
     /// Applies the cosine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn cos(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -366,10 +444,14 @@ impl Graph {
 
     /// Applies the tangent operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn tan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -382,10 +464,14 @@ impl Graph {
 
     /// Applies the hyperbolic sine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn sinh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -398,10 +484,14 @@ impl Graph {
 
     /// Applies the hyperbolic cosine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn cosh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -414,10 +504,14 @@ impl Graph {
 
     /// Applies the hyperbolic tangent operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn tanh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -430,10 +524,14 @@ impl Graph {
 
     /// Applies the inverse sine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn asin(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -446,10 +544,14 @@ impl Graph {
 
     /// Applies the inverse cosine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn acos(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -462,10 +564,14 @@ impl Graph {
 
     /// Applies the inverse tangent operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn atan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -478,10 +584,14 @@ impl Graph {
 
     /// Applies the inverse hyperbolic sine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn asinh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -494,10 +604,14 @@ impl Graph {
 
     /// Applies the inverse hyperbolic cosine operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn acosh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -510,10 +624,14 @@ impl Graph {
 
     /// Applies the inverse hyperbolic tangent operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn atanh(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -526,10 +644,14 @@ impl Graph {
 
     /// Applies the logical NOT operation to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn not(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -544,10 +666,14 @@ impl Graph {
     ///
     /// If the input tensor element is infinite, the operation returns `true`, else it returns `false`.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Arguments
+    ///
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn is_infinite(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -562,10 +688,12 @@ impl Graph {
     ///
     /// If the input tensor element is finite, the operation returns `true`, else it returns `false`.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn is_finite(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -580,10 +708,12 @@ impl Graph {
     ///
     /// If the input tensor element is `NaN`, the operation returns `true`, else it returns `false`.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn is_nan(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -596,10 +726,12 @@ impl Graph {
 
     /// Applies the error function to the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn erf(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -632,10 +764,12 @@ impl Graph {
     ///
     ///  This operation only accepts integer tensors.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor, which must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The input tensor, which must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_not(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -650,10 +784,12 @@ impl Graph {
     ///
     ///  This operation only accepts integer tensors, and returns the number of bits set in the input element.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor, which must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The input tensor, which must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_population_count(
         &self,
         tensor: &Tensor,
@@ -670,10 +806,12 @@ impl Graph {
 
     /// Returns the complex conjugate of the input tensor elements.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation..
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn conjugate(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -695,11 +833,13 @@ impl Graph {
     /// resultTensor = primaryTensor + secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn addition(
         &self,
         primary: &Tensor,
@@ -723,11 +863,13 @@ impl Graph {
     /// resultTensor = primaryTensor - secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn subtraction(
         &self,
         primary: &Tensor,
@@ -751,11 +893,13 @@ impl Graph {
     /// resultTensor = primaryTensor * secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn multiplication(
         &self,
         primary: &Tensor,
@@ -779,11 +923,13 @@ impl Graph {
     /// resultTensor = primaryTensor / secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn division(
         &self,
         primary: &Tensor,
@@ -791,15 +937,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 divisionWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -811,11 +953,13 @@ impl Graph {
     /// resultTensor = primaryTensor % secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn modulo(
         &self,
         primary: &Tensor,
@@ -839,11 +983,13 @@ impl Graph {
     /// resultTensor = pow(primaryTensor, secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn power(
         &self,
         primary: &Tensor,
@@ -895,11 +1041,13 @@ impl Graph {
     /// resultTensor = max(primaryTensor, secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn maximum(
         &self,
         primary: &Tensor,
@@ -924,11 +1072,13 @@ impl Graph {
     /// resultTensor = isNaN(primaryTensor) || isNan(secondaryTensor) ? NaN : min(primaryTensor, secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn minimum_with_nan_propagation(
         &self,
         primary: &Tensor,
@@ -981,11 +1131,13 @@ impl Graph {
     /// resultTensor = primaryTensor == secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn equal(
         &self,
         primary: &Tensor,
@@ -1009,11 +1161,13 @@ impl Graph {
     /// resultTensor = primaryTensor != secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn not_equal(
         &self,
         primary: &Tensor,
@@ -1037,11 +1191,13 @@ impl Graph {
     /// resultTensor = primaryTensor < secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn less_than(
         &self,
         primary: &Tensor,
@@ -1049,15 +1205,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 lessThanWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1069,11 +1221,13 @@ impl Graph {
     /// resultTensor = primaryTensor <= secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn less_than_or_equal_to(
         &self,
         primary: &Tensor,
@@ -1097,11 +1251,13 @@ impl Graph {
     /// resultTensor = primaryTensor > secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn greater_than(
         &self,
         primary: &Tensor,
@@ -1125,11 +1281,13 @@ impl Graph {
     /// resultTensor = primaryTensor < secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn greater_than_or_equal_to(
         &self,
         primary: &Tensor,
@@ -1137,15 +1295,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 greaterThanOrEqualToWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1185,9 +1339,13 @@ impl Graph {
     /// resultTensor = primaryTensor || secondaryTensor
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logical_or(
         &self,
         primary: &Tensor,
@@ -1211,11 +1369,13 @@ impl Graph {
     /// resultTensor = !(primaryTensor && secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logical_nand(
         &self,
         primary: &Tensor,
@@ -1239,11 +1399,13 @@ impl Graph {
     /// resultTensor = !(primaryTensor || secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logical_nor(
         &self,
         primary: &Tensor,
@@ -1295,11 +1457,13 @@ impl Graph {
     /// resultTensor = XNOR(primaryTensor, secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn logical_xnor(
         &self,
         primary: &Tensor,
@@ -1324,11 +1488,13 @@ impl Graph {
     /// resultTensor = atan2(primaryTensor, secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn atan2(
         &self,
         primary: &Tensor,
@@ -1347,11 +1513,13 @@ impl Graph {
 
     /// Returns the elementwise bitwise AND of binary representations of two integer tensors.
     ///
-    /// - Parameters:
-    ///   - primary: The primary input tensor, must be of integer type.
-    ///   - secondary: The secondary input tensor, must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The primary input tensor, must be of integer type.
+    /// * `secondary` – The secondary input tensor, must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_and(
         &self,
         primary: &Tensor,
@@ -1370,11 +1538,13 @@ impl Graph {
 
     /// Returns the elementwise bitwise OR of binary representations of two integer tensors.
     ///
-    /// - Parameters:
-    ///   - primaryTensor: The primary input tensor, must be of integer type.
-    ///   - secondaryTensor: The secondary input tensor, must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The primary input tensor, must be of integer type.
+    /// * `secondary` – The secondary input tensor, must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_or(
         &self,
         primary: &Tensor,
@@ -1393,11 +1563,13 @@ impl Graph {
 
     /// Returns the elementwise bitwise XOR of binary representations of two integer tensors.
     ///
-    /// - Parameters:
-    ///   - primary: The primary input tensor, must be of integer type.
-    ///   - secondary: The secondary input tensor, must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The primary input tensor, must be of integer type.
+    /// * `secondary` – The secondary input tensor, must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_xor(
         &self,
         primary: &Tensor,
@@ -1416,11 +1588,13 @@ impl Graph {
 
     /// Returns the elementwise left-shifted binary representations of the primary integer by the secondary tensor amount.
     ///
-    /// - Parameters:
-    ///   - primaryTensor: The primary input tensor, must be of integer type.
-    ///   - secondaryTensor: The secondary input tensor, must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The primary input tensor, must be of integer type.
+    /// * `secondary` – The secondary input tensor, must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_left_shift(
         &self,
         primary: &Tensor,
@@ -1439,11 +1613,13 @@ impl Graph {
 
     /// Returns the elementwise right-shifted binary representations of the primary integer by the secondary tensor amount.
     ///
-    /// - Parameters:
-    ///   - primary: The primary input tensor, must be of integer type.
-    ///   - secondary: The secondary input tensor, must be of integer type.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The primary input tensor, must be of integer type.
+    /// * `secondary` – The secondary input tensor, must be of integer type.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn bitwise_right_shift(
         &self,
         primary: &Tensor,
@@ -1460,8 +1636,6 @@ impl Graph {
         }
     }
 
-    // #region TernaryArithmeticOps
-
     /// Selects values from either the true or false predicate tensor, depending on the values in the first input.
     ///
     /// This operation creates a select operation and returns the result tensor. It supports broadcasting as well.
@@ -1469,12 +1643,14 @@ impl Graph {
     /// resultTensor = select(predicateTensor, truePredicateTensor, falseSelectTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - predicate: The predicate tensor.
-    ///   - true_predicate: The tensor to select values from if predicate is true.
-    ///   - false_select: The tensor to select values from if predicate is false.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `predicate` – The predicate tensor.
+    /// * `true_predicate` – The tensor to select values from if predicate is true.
+    /// * `false_select` – The tensor to select values from if predicate is false.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn select(
         &self,
         predicate: &Tensor,
@@ -1500,12 +1676,14 @@ impl Graph {
     /// resultTensor = clamp(tensor, minValueTensor, maxValueTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - tensor: The tensor to be clamped.
-    ///   - minValueTensor: The tensor with min values to clamp to.
-    ///   - minValueTensor: The tensor with max values to clamp to.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `tensor` – The tensor to be clamped.
+    /// * `min_tensor` – The tensor with min values to clamp to.
+    /// * `max_tensor` – The tensor with max values to clamp to.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn clamp(
         &self,
         tensor: &Tensor,
@@ -1524,20 +1702,19 @@ impl Graph {
         }
     }
 
-    // #endregion
-
-    // #region ConvenienceMathOps
     /// Divides the first input tensor by the second, with the result being 0 if the denominator is 0.
     ///
     /// ```md
     /// resultTensor = select(secondaryTensor, primaryTensor / secondaryTensor, 0)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn division_no_nan(
         &self,
         primary: &Tensor,
@@ -1545,15 +1722,11 @@ impl Graph {
         name: Option<&str>,
     ) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
             msg_send![
                 self,
                 divisionNoNaNWithPrimaryTensor: primary,
                 secondaryTensor: secondary,
-                name: name_ptr
+                name: name.map(NSString::from_str).as_deref()
             ]
         }
     }
@@ -1565,11 +1738,13 @@ impl Graph {
     /// resultTensor = primaryTensor - (floor(primaryTensor / secondaryTensor) * secondaryTensor)
     /// ```
     ///
-    /// - Parameters:
-    ///   - primary: The LHS tensor of the binary Op.
-    ///   - secondary: The RHS tensor of the binary Op.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
+    /// * `primary` – The LHS tensor of the binary Op.
+    /// * `secondary` – The RHS tensor of the binary Op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn floor_modulo(
         &self,
         primary: &Tensor,
@@ -1586,44 +1761,32 @@ impl Graph {
         }
     }
 
-    // #endregion
-
-    // #region ComplexOps
-
     /// Returns the real part of a tensor.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation..
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
-    /// Returns the real part of a tensor.
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn real_part_of_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
-            let name_ptr = name
-                .map(NSString::from_str)
-                .as_deref()
-                .map_or(std::ptr::null(), |s| s as *const _);
-            msg_send![self, realPartOfTensor: tensor, name: name_ptr]
+            msg_send![
+                self,
+                realPartOfTensor: tensor,
+                name: name.map(NSString::from_str).as_deref(),
+            ]
         }
     }
 
     /// Returns the imaginary part of a tensor.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation..
-    /// - Returns: A valid `MPSGraphTensor` object containing the elementwise result of the applied operation.
-    /// Returns the imaginary part of a tensor.
+    /// * `tensor` – The input tensor.
+    /// * `name` – Optional debug label.
     ///
-    /// - Parameters:
-    ///   - tensor: The input tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn imaginary_part_of_tensor(
         &self,
         tensor: &Tensor,
@@ -1640,11 +1803,13 @@ impl Graph {
 
     /// Returns a complex tensor from the two input tensors.
     ///
-    /// - Parameters:
-    ///   - real: The real part of the complex tensor.
-    ///   - imaginary: The imaginary part of the complex tensor.
-    ///   - name: An optional string which serves as an identifier for the operation.
-    /// - Returns: A valid `Tensor` object containing the elementwise result of the applied operation.
+    /// * `real` – The real part of the complex tensor.
+    /// * `imaginary` – The imaginary part of the complex tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A valid [`Tensor`] object containing the elementwise result of the applied operation.
     pub fn complex_tensor(
         &self,
         real: &Tensor,
@@ -1661,4 +1826,3 @@ impl Graph {
         }
     }
 }
-// #endregion

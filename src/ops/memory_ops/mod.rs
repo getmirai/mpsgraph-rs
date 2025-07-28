@@ -16,17 +16,17 @@ impl Graph {
 }
 
 impl Graph {
-    /// Creates a constant op with a given shape and data, and returns the result tensor.
+    /// Creates a constant operation from raw bytes.
     ///
     /// # Arguments
     ///
-    /// * `data` - Raw tensor bytes. The length must be `sizeof(data_type) * number_of_elements`.
-    /// * `shape` - Statically shaped output `[usize]`.
-    /// * `data_type` - [`DataType`] of the constant tensor.
+    /// * `data` – Raw tensor bytes (`len` must equal `sizeof(data_type) * number_of_elements`).
+    /// * `shape` – Statically shaped output `[usize]`.
+    /// * `data_type` – [`DataType`] of the constant tensor.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new [`Tensor`] containing the constant values.
     pub fn constant_with_ns_data(
         &self,
         data: &NSData,
@@ -43,18 +43,19 @@ impl Graph {
         }
     }
 
-    /// Creates a complex constant op with a given shape and returns the result tensor.
+    /// Creates a complex constant operation that fills the tensor with a single
+    /// complex scalar value.
     ///
     /// # Arguments
     ///
-    /// * `real_part` - Real component of the complex scalar to fill the entire tensor values with  .
-    /// * `imaginary_part` - Imaginary component of the complex scalar to fill the entire tensor values with.
-    /// * `shape` - Statically shaped output `[usize]`.
-    /// * `data_type` - [`DataType`] of the constant tensor.
+    /// * `real_part` – Real component of the scalar.
+    /// * `imaginary_part` – Imaginary component of the scalar.
+    /// * `shape` – Statically shaped output `[usize]`.
+    /// * `data_type` – [`DataType`] of the constant tensor.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new [`Tensor`] containing the constant complex values.
     pub fn constant_with_real_imaginary_shape(
         &self,
         real_part: f64,
@@ -73,17 +74,17 @@ impl Graph {
         }
     }
 
-    /// Creates a placeholder operation and returns the result tensor.
+    /// Creates a placeholder tensor.
     ///
     /// # Arguments
     ///
-    /// * `shape` - Optional [`[isize]`] of the output tensor. `None` produces an unranked tensor.
-    /// * `data_type` - [`DataType`] for the placeholder.
-    /// * `name` - Name of the operation.
+    /// * `shape` – Optional shape of the tensor (`None` produces an unranked tensor).
+    /// * `data_type` – [`DataType`] of the placeholder.
+    /// * `name` – Optional debug label.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new placeholder [`Tensor`].
     pub fn placeholder(
         &self,
         shape: Option<&[isize]>,
@@ -101,17 +102,17 @@ impl Graph {
         })
     }
 
-    /// Creates a constant op with a given shape and data, and returns the result tensor.
+    /// Creates a constant operation from a slice of values.
     ///
     /// # Arguments
     ///
-    /// * `data` - Slice containing tensor elements.
-    /// * `shape` - Statically shaped output `[isize]`.
-    /// * `data_type` - [`DataType`] of the constant tensor.
+    /// * `data` – Slice containing tensor elements.
+    /// * `shape` – Statically shaped output `[usize]`.
+    /// * `data_type` – [`DataType`] of the constant tensor.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new [`Tensor`] containing the constant values.
     pub fn constant_with_data<T: Copy>(
         &self,
         data: &[T],
@@ -136,17 +137,17 @@ impl Graph {
         })
     }
 
-    /// Creates a constant operation and returns the result tensor.
+    /// Creates a scalar-filled constant operation.
     ///
     /// # Arguments
     ///
-    /// * `scalar` - Scalar value used to fill the tensor.
-    /// * `shape_option` - Optional output `[usize]`. If `None`, the tensor is scalar-shaped.
-    /// * `data_type` - [`DataType`] of the constant tensor.
+    /// * `scalar` – Scalar value used to fill the tensor.
+    /// * `shape_option` – Optional output shape; `None` produces a scalar tensor.
+    /// * `data_type` – [`DataType`] of the constant tensor.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new [`Tensor`] containing the scalar value.
     pub fn constant_with_scalar(
         &self,
         scalar: f64,
@@ -172,17 +173,17 @@ impl Graph {
         }
     }
 
-    /// Creates a complex constant operation and returns the result tensor.
+    /// Creates a complex scalar constant operation.
     ///
     /// # Arguments
     ///
-    /// * `real_part` - Real component of the complex scalar.
-    /// * `imaginary_part` - Imaginary component of the complex scalar.
-    /// * `data_type` - Optional [`DataType`] for the constant tensor. Defaults to [`DataType::ComplexFloat32`].
+    /// * `real_part` – Real component of the scalar.
+    /// * `imaginary_part` – Imaginary component of the scalar.
+    /// * `data_type` – Optional [`DataType`] (defaults to [`DataType::ComplexFloat32`]).
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new [`Tensor`] containing the complex scalar.
     pub fn constant_with_real_imaginary(
         &self,
         real_part: f64,
@@ -208,22 +209,22 @@ impl Graph {
         }
     }
 
-    /// Creates a variable operation and returns the result tensor.
+    /// Creates a variable operation from raw bytes.
     ///
     /// # Arguments
     ///
-    /// * `data` - Raw tensor bytes.
-    /// * `shape` - Statically shaped output [`Shape`].
-    /// * `data_type` - [`DataType`] of the variable tensor.
-    /// * `name` - Name of the operation.
+    /// * `data` – Raw tensor bytes.
+    /// * `shape` – Statically shaped output [`Shape`].
+    /// * `data_type` – [`DataType`] of the variable tensor.
+    /// * `name` – Optional debug label.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new variable [`Tensor`].
     pub fn variable_with_ns_data(
         &self,
         data: &NSData,
-        shape: &[isize],
+        shape: &[usize],
         data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -238,22 +239,22 @@ impl Graph {
         }
     }
 
-    /// Creates a variable operation and returns the result tensor.
+    /// Creates a variable operation from a slice of values.
     ///
     /// # Arguments
     ///
-    /// * `data` - Slice containing tensor elements.
-    /// * `shape` - Statically shaped output [`Shape`].
-    /// * `data_type` - [`DataType`] of the variable tensor.
-    /// * `name` - Name of the operation.
+    /// * `data` – Slice containing tensor elements.
+    /// * `shape` – Statically shaped output [`Shape`].
+    /// * `data_type` – [`DataType`] of the variable tensor.
+    /// * `name` – Optional debug label.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new variable [`Tensor`].
     pub fn variable_with_data<T: Copy>(
         &self,
         data: &[T],
-        shape: &[isize],
+        shape: &[usize],
         data_type: DataType,
         name: Option<&str>,
     ) -> Retained<Tensor> {
@@ -266,16 +267,16 @@ impl Graph {
         })
     }
 
-    /// Creates a variable from an input tensor.
+    /// Creates a variable from another tensor.
     ///
     /// # Arguments
     ///
-    /// * `tensor` - Source [`Tensor`].
-    /// * `name` - Name of the operation.
+    /// * `tensor` – Source [`Tensor`].
+    /// * `name` – Optional debug label.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A new variable [`Tensor`].
     pub fn variable_from_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -286,16 +287,16 @@ impl Graph {
         }
     }
 
-    /// Creates a read op which reads at this point of execution of the graph and returns the result tensor.
+    /// Reads the value of a variable tensor at this point in the graph.
     ///
     /// # Arguments
     ///
-    /// * `variable` - Variable [`Tensor`] to read.
-    /// * `name` - Name of the operation.
+    /// * `variable` – Variable [`Tensor`] to read.
+    /// * `name` – Optional debug label.
     ///
     /// # Returns
     ///
-    /// A valid [`Tensor`] object.
+    /// A [`Tensor`] representing the read result.
     pub fn read_variable(&self, variable: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
@@ -306,17 +307,17 @@ impl Graph {
         }
     }
 
-    /// Creates an assign operation which writes at this point of execution of the graph.
+    /// Assigns `tensor` to `variable` at this point in the graph.
     ///
     /// # Arguments
     ///
-    /// * `variable` - Variable [`Tensor`] to assign to.
-    /// * `tensor` - Value [`Tensor`] that will be written into the variable.
-    /// * `name` - Name of the operation.
+    /// * `variable` – Variable [`Tensor`] to assign to.
+    /// * `tensor` – Value [`Tensor`] written into the variable.
+    /// * `name` – Optional debug label.
     ///
     /// # Returns
     ///
-    /// A valid [`Operation`] representing the assignment.
+    /// An [`Operation`] representing the assignment.
     pub fn assign_variable(
         &self,
         variable: &Tensor,

@@ -3,22 +3,27 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a get-coordindate operation and returns the result tensor.
+    /// Generates a coordinate tensor along a single axis.
     ///
-    /// Creates a tensor of specified shape with value at index `[i_0, i_1, ... , i_N] = i_axis`
-    /// For example,
-    /// ```md
-    /// coordinateAlongAxis(0, withShape=[5]) = [0, 1, 2, 3, 4]
-    /// coordinateAlongAxis(0, withShape=[3,2]) = [[0, 0],
-    /// [1, 1],
-    /// [2, 2]]
+    /// The resulting tensor has the given `shape` and contains the index value
+    /// of `axis` at every position: `result[i₀ … iₙ] = i_axis`.
+    ///
+    /// Example:
+    /// ```rust
+    /// coordinate_along_axis(0, &[5])  // ➜ [0,1,2,3,4]
+    /// coordinate_along_axis(0, &[3,2]) // ➜ [[0,0],[1,1],[2,2]]
     /// ```
     ///
-    /// - Parameters:
-    /// - axis: The coordinate axis an element's value is set to. Negative values wrap around.
-    /// - shape: The shape of the result tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `axis` – Axis whose coordinate values to generate (negative indices
+    ///   wrap around).
+    /// * `shape` – Desired output shape.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] filled with coordinate values along `axis`.
     pub fn coordinate_along_axis<'a>(
         &self,
         axis: ScalarOrTensor<'a, i64>,
@@ -46,15 +51,17 @@ impl Graph {
         }
     }
 
-    /// Creates a get-coordindate operation and returns the result tensor.
+    /// Same as [`coordinate_along_axis`], but accepts the shape as a tensor.
     ///
-    /// See ``coordinateAlongAxis:withShape:name:``.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - axis: The coordinate axis an element's value is set to. Negative values wrap around.
-    /// - shapeTensor: A rank-1 tensor of type `MPSDataTypeInt32` or `MPSDataTypeInt64` that defines the shape of the result tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// * `axis` – Axis whose coordinate values to generate (scalar or tensor).
+    /// * `shape_tensor` – Rank-1 tensor (`i32`/`i64`) defining the output shape.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] filled with coordinate values along `axis`.
     pub fn coordinate_along_axis_with_shape_tensor<'a>(
         &self,
         axis: ScalarOrTensor<'a, i64>,

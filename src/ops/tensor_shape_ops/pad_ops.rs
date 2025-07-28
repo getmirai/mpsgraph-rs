@@ -3,17 +3,21 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a padding operation and returns the result tensor.
+    /// Pads `tensor` according to `padding_mode`.
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - paddingMode: The parameter that defines the padding mode.
-    /// - leftPadding: The parameter that defines how much padding the operation applies to the input tensor before each dimension - must be of size `rank(tensor)`.
-    /// - rightPadding: The parameter that defines how much padding the operation applies to the input tensor after each dimension - must be of size `rank(tensor)`.
-    /// - constantValue: The constant value the operation uses when `paddingMode = MPSGraphPaddingModeConstant`.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn pad_tensor(
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `padding_mode` – Padding strategy (constant, reflection, etc.).
+    /// * `left_padding` – Padding sizes before each dimension (`rank` elements).
+    /// * `right_padding` – Padding sizes after each dimension (`rank` elements).
+    /// * `constant_value` – Value used when `padding_mode` is constant.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A padded [`Tensor`].
+    pub fn pad(
         &self,
         tensor: &Tensor,
         padding_mode: PaddingMode,
@@ -35,16 +39,20 @@ impl Graph {
         }
     }
 
-    /// Creates a padding gradient operation and returns the result tensor.
+    /// Computes the gradient for a padding operation.
     ///
-    /// - Parameters:
-    /// - incomingGradientTensor: The input gradient tensor.
-    /// - sourceTensor: The input tensor of the forward pass.
-    /// - paddingMode: The parameter that defines the padding mode.
-    /// - leftPadding: The parameter that defines how much padding the operation applies to the input tensor before each dimension - must be of size `rank(tensor)`.
-    /// - rightPadding: The parameter that defines how much padding the operation applies to the input tensor after each dimension - must be of size `rank(tensor)`.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `incoming_gradient_tensor` – Gradient flowing from subsequent ops (`dL/dP`).
+    /// * `source_tensor` – Original unpadded tensor from the forward pass.
+    /// * `padding_mode` – Padding strategy used in the forward op.
+    /// * `left_padding` – Padding sizes before each dimension.
+    /// * `right_padding` – Padding sizes after each dimension.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the gradient with respect to the unpadded input.
     pub fn pad_gradient(
         &self,
         incoming_gradient_tensor: &Tensor,

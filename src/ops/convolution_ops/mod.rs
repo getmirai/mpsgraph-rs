@@ -10,17 +10,24 @@ pub use convolution_2d_op_descriptor::Convolution2DOpDescriptor;
 pub use convolution_3d_op_descriptor::Convolution3DOpDescriptor;
 
 impl Graph {
-    /// Creates a 2-D (forward) convolution operation and returns the result tensor.
+    /// Creates a 2-D (forward) convolution operation.
     ///
-    /// Corresponds to Objective-C selector `convolution2DWithSourceTensor:weightsTensor:descriptor:name:`.
+    /// Corresponds to Objective-C selector
+    /// `convolution2DWithSourceTensor:weightsTensor:descriptor:name:`.
     ///
-    /// Parameters
-    /// * `source_tensor` – Rank-4 source tensor. The layout is defined by `descriptor.data_layout`.
-    /// * `weights_tensor` – Rank-4 weights tensor. The layout is defined by `descriptor.weights_layout`.
-    /// * `descriptor` – Strides, dilation rates, padding and layout information.
-    /// * `name` – Optional debug name.
+    /// # Arguments
     ///
-    /// Returns a valid `Retained<Tensor>` with the convolution result.
+    /// * `source_tensor` – Rank-4 source tensor (layout defined by
+    ///   `descriptor.data_layout`).
+    /// * `weights_tensor` – Rank-4 weights tensor (layout defined by
+    ///   `descriptor.weights_layout`).
+    /// * `descriptor` – Strides, dilation rates, padding, and layout
+    ///   information.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A `Retained<Tensor>` containing the convolution result.
     pub fn convolution_2d(
         &self,
         source_tensor: &Tensor,
@@ -39,17 +46,25 @@ impl Graph {
         }
     }
 
-    /// Creates a 2-D convolution gradient operation with respect to the *source* tensor.
+    /// Creates a 2-D convolution gradient operation with respect to the
+    /// *source* tensor.
     ///
-    /// Computes `dL/dS = dL/dR · dR/dS`, where `R` is the forward convolution result and
-    /// `incoming_gradient_tensor` provides `dL/dR`.
+    /// Computes `dL/dS = dL/dR · dR/dS`, where `R` is the forward-pass result
+    /// and `incoming_gradient_tensor` supplies `dL/dR`.
     ///
-    /// Parameters
-    /// * `incoming_gradient_tensor` – Loss gradient wrt. forward result.
-    /// * `weights_tensor` – Forward-pass weights tensor.
-    /// * `output_shape` – Shape of the forward-pass source tensor.
+    /// # Arguments
+    ///
+    /// * `incoming_gradient_tensor` – Loss gradient with respect to the forward
+    ///   result.
+    /// * `weights_tensor` – Weights tensor from the forward pass.
+    /// * `output_shape` – Shape of the forward-pass source tensor (static
+    ///   slice or dynamic tensor via [`ShapeOrTensor`]).
     /// * `forward_convolution_descriptor` – Descriptor used in the forward op.
-    /// * `name` – Optional debug name.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A `Retained<Tensor>` containing the data-gradient result.
     pub fn convolution_2d_data_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
@@ -84,12 +99,25 @@ impl Graph {
         }
     }
 
-    /// Creates a 2-D convolution gradient operation with respect to the *weights* tensor.
+    /// Creates a 2-D convolution gradient operation with respect to the
+    /// *weights* tensor.
     ///
-    /// Computes `dL/dW = dL/dR · dR/dW`, where `R` is the forward convolution result.
+    /// Computes `dL/dW = dL/dR · dR/dW`, where `R` is the forward convolution
+    /// result.
     ///
-    /// Parameters are analogous to the data-gradient variant, replacing `weights_tensor` with
-    /// `source_tensor`.
+    /// # Arguments
+    ///
+    /// * `incoming_gradient_tensor` – Loss gradient with respect to the forward
+    ///   result.
+    /// * `source_tensor` – Source tensor from the forward pass.
+    /// * `output_shape` – Shape of the forward-pass weights tensor (static or
+    ///   dynamic via [`ShapeOrTensor`]).
+    /// * `forward_convolution_descriptor` – Descriptor used in the forward op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A `Retained<Tensor>` containing the weights-gradient result.
     pub fn convolution_2d_weights_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
@@ -124,7 +152,20 @@ impl Graph {
         }
     }
 
-    /// Creates a 3-D (forward) convolution operation. See the 2-D variant for parameter meaning.
+    /// Creates a 3-D (forward) convolution operation. Parameter semantics
+    /// mirror the 2-D variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `source_tensor` – Rank-5 source tensor.
+    /// * `weights_tensor` – Rank-5 weights tensor.
+    /// * `descriptor` – Strides, dilation rates, padding, and layout
+    ///   information.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A `Retained<Tensor>` containing the convolution result.
     pub fn convolution_3d<'a>(
         &self,
         source_tensor: &Tensor,
@@ -143,13 +184,24 @@ impl Graph {
         }
     }
 
-    /// Creates a 3-D convolution gradient operation with respect to the *source* tensor.
+    /// Creates a 3-D convolution gradient operation with respect to the
+    /// *source* tensor.
     ///
-    /// Computes `dL/dS = dL/dR · dR/dS`, where `R` is the forward convolution result and
-    /// `incoming_gradient_tensor` provides `dL/dR`.
+    /// Computes `dL/dS = dL/dR · dR/dS`, analogous to the 2-D variant.
     ///
-    /// The `output_shape` can be supplied either as a static `Shape` or dynamically as a `Tensor`
-    /// via `ShapeOrTensor`, matching the interface of the 2-D variant.
+    /// # Arguments
+    ///
+    /// * `incoming_gradient_tensor` – Loss gradient with respect to the forward
+    ///   result.
+    /// * `weights_tensor` – Weights tensor from the forward pass.
+    /// * `output_shape` – Forward-pass source shape (static slice or dynamic
+    ///   tensor).
+    /// * `forward_convolution_descriptor` – Descriptor used in the forward op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A `Retained<Tensor>` containing the data-gradient result.
     pub fn convolution_3d_data_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,
@@ -184,11 +236,24 @@ impl Graph {
         }
     }
 
-    /// Creates a 3-D convolution gradient operation with respect to the *weights* tensor.
+    /// Creates a 3-D convolution gradient operation with respect to the
+    /// *weights* tensor.
     ///
-    /// Computes `dL/dW = dL/dR · dR/dW`, where `R` is the forward convolution result.
-    /// `output_shape` can be passed either as a static `Shape` or a dynamic `Tensor` via
-    /// `ShapeOrTensor`, analogous to the 2-D variant.
+    /// Computes `dL/dW = dL/dR · dR/dW`, analogous to the 2-D variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `incoming_gradient_tensor` – Loss gradient with respect to the forward
+    ///   result.
+    /// * `source_tensor` – Source tensor from the forward pass.
+    /// * `output_shape` – Forward-pass weights shape (static slice or dynamic
+    ///   tensor).
+    /// * `forward_convolution_descriptor` – Descriptor used in the forward op.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A `Retained<Tensor>` containing the weights-gradient result.
     pub fn convolution_3d_weights_gradient<'a>(
         &self,
         incoming_gradient_tensor: &Tensor,

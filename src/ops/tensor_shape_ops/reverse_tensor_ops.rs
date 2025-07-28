@@ -4,17 +4,21 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a reverse operation and returns the result tensor.
+    /// Reverses `tensor` along the provided `axes`.
     ///
-    /// Reverses a tensor on given axes.
-    /// Semantics based on [TensorFlow reverse op](https://www.tensorflow.org/api_docs/python/tf/reverse).
+    /// Semantics match TensorFlow’s *reverse* op.
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be reversed.
-    /// - axes: A tensor or nsarray of scalars that specifies axes to be reversed (Axes must be unique and within normal axis range).
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn reverse_tensor_with_axes<'a>(
+    /// # Arguments
+    ///
+    /// * `tensor` – Tensor to reverse.
+    /// * `axes` – Axes to flip (slice or tensor; must be unique and within
+    ///   range).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with the specified axes reversed.
+    pub fn reverse_with_axes<'a>(
         &self,
         tensor: &Tensor,
         axes: AxesOrTensor<'a>,
@@ -40,16 +44,17 @@ impl Graph {
         }
     }
 
-    /// Creates a reverse operation and returns the result tensor.
+    /// Reverses `tensor` along *all* axes.
     ///
-    /// Reverses a tensor on all axes.
-    /// Semantics based on [TensorFlow reverse op](https://www.tensorflow.org/api_docs/python/tf/reverse).
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be reversed.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn reverse_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    /// * `tensor` – Tensor to reverse.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A fully reversed [`Tensor`].
+    pub fn reverse(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
                 self,

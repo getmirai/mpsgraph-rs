@@ -1,4 +1,4 @@
-use crate::Tensor;
+use crate::{Graph, Tensor};
 use block2::{Block, RcBlock};
 use objc2::rc::Retained;
 use objc2_foundation::NSArray;

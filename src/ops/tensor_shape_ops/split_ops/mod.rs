@@ -1,24 +1,32 @@
+//! Tensor *split* helper operations.
+//!
+//! Provides 1) size-based split (`split_tensor`) and 2) equal-part split
+//! (`split_tensor_num_splits`). Both return boxed slices of result tensors.
+//!
+
 mod sizes_or_tensor;
 
 pub use sizes_or_tensor::SizesOrTensor;
 
 use crate::{ns_number_array_from_slice, Graph, Tensor};
-use objc2::{extern_methods, msg_send, rc::Retained};
+use objc2::{msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSString};
 
 impl Graph {
-    /// Creates a split operation and returns the result tensor.
+    /// Splits `tensor` into variable-sized chunks.
     ///
-    /// Splits the input tensor along `axis` into multiple result tensors of size determined by `splitSizes`.
-    /// Requires that the sum of `splitSizes` is equal to the lenth of the input along `axis`.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - splitSizes: The lengths of the result tensors along the split axis.
-    /// - axis: The dimension along which MPSGraph splits the input tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn split_tensor<'a>(
+    /// * `tensor` – Input tensor to split.
+    /// * `split_sizes` – Slice or tensor specifying the size of each chunk.
+    ///   The sum must equal `tensor.shape[axis]`.
+    /// * `axis` – Dimension along which to split.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A boxed slice of [`Tensor`] objects, one for each split.
+    pub fn split<'a>(
         &self,
         tensor: &Tensor,
         split_sizes: SizesOrTensor<'a>,
@@ -53,18 +61,20 @@ impl Graph {
         }
     }
 
-    /// Creates a split operation and returns the result tensor.
+    /// Splits `tensor` into `num_splits` equal-sized chunks.
     ///
-    /// Splits the input tensor along `axis` into `numsplits` result tensors of equal size.
-    /// Requires that the lenth of the input along `axis` is divisible by `numSplits`.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - numSplits: The number of result tensors to split to.
-    /// - axis: The dimension along which MPSGraph splits the input tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn split_tensor_num_splits(
+    /// * `tensor` – Input tensor to split.
+    /// * `num_splits` – Number of equal parts to create (must divide
+    ///   `tensor.shape[axis]`).
+    /// * `axis` – Dimension along which to split.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A boxed slice of [`Tensor`] objects, one for each split.
+    pub fn split_num_splits(
         &self,
         tensor: &Tensor,
         num_splits: u64,

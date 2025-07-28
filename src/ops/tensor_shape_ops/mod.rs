@@ -28,22 +28,30 @@ pub use split_ops::*;
 pub use squeeze_ops::*;
 pub use tile_ops::*;
 
+/// Tensor shape-manipulation helpers (reshape, transpose, stack, etc.).
+///
+/// All functions live as extension methods on [`Graph`] and mirror their
+/// Objective-C counterparts while using idiomatic Rust types.
+///
 use crate::{ns_number_array_from_slice, DataType, Graph, ShapeOrTensor, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::{NSArray, NSString};
 
 impl Graph {
-    /// Creates a reshape operation and returns the result tensor.
+    /// Reshapes `tensor` to `shape`.
     ///
-    /// This operation reshapes the input tensor to the target shape.
-    /// The shape must be compatible with the input tensor shape, specifically the volume of the input tensor has to match the volume defined by the shape.
-    /// The shape is allowed to contain dynamic dimensions (-1) when the result type can be inferred unambiguously.
+    /// The total number of elements must not change. A value of `-1` in `shape`
+    /// denotes a dynamic dimension that will be inferred.
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be reshaped.
-    /// - shape: The result tensor shape.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Tensor to reshape.
+    /// * `shape` – Desired shape (slice or tensor).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with the requested shape.
     pub fn reshape<'a>(
         &self,
         tensor: &Tensor,
@@ -70,15 +78,17 @@ impl Graph {
         }
     }
 
-    /// Creates a permutation operation and returns the result tensor.
+    /// Permutes the axes of `tensor`.
     ///
-    /// Permutes the dimensions of the input tensor according to values in `permutation`.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be permuted.
-    /// - permutation: An array of numbers defining the permutation, must be of length `rank(tensor)` and define a valid permutation.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// * `tensor` – Tensor to transpose.
+    /// * `permutation` – Permutation vector (`len == rank`).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with permuted axes.
     pub fn transpose(
         &self,
         tensor: &Tensor,
@@ -95,52 +105,53 @@ impl Graph {
         }
     }
 
-    /// Creates a shape-of operation and returns the result tensor.
+    /// Returns the static shape of `tensor` as a rank-1 int32 tensor.
     ///
-    /// Returns a rank-1 tensor of type `MPSDataTypeInt32` with the values of the static shape of the input tensor.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn shape_of_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    /// * `tensor` – Input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A rank-1 [`Tensor`] containing the shape.
+    pub fn shape_of(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, shapeOfTensor: tensor, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Creates a cast operation and returns the result tensor.
+    /// Casts `tensor` to `type`.
     ///
-    /// Returns the input tensor casted to the specied data type.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - type: The datatype to which MPSGraph casts the input.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn cast_tensor(
-        &self,
-        tensor: &Tensor,
-        r#type: DataType,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    /// * `tensor` – Input tensor.
+    /// * `type` – Destination [`DataType`].
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A tensor with the same data reinterpreted as `type`.
+    pub fn cast(&self, tensor: &Tensor, r#type: DataType, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, castTensor: tensor, toType: r#type, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Creates a reinterpret cast operation and returns the result tensor.
+    /// Reinterprets the underlying bytes of `tensor` as a different element type.
     ///
-    /// Returns input tensor (with element type `tensor_type`) reinterpreted to element type
-    /// passed in with the last dimension scaled by `sizeof(tensor_type) / sizeof(type)`.
-    /// This operation is endianness agnostic and MPSGraph reinterprets the data with the endianness of the
-    /// system.
+    /// The total byte size is preserved; the last dimension is scaled by
+    /// `sizeof(old_type) / sizeof(type)`.
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - type: The element type of the returned tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor.
+    /// * `type` – Target [`DataType`].
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A tensor sharing the same buffer but with a new element type.
     pub fn reinterpret_cast(
         &self,
         tensor: &Tensor,
@@ -152,21 +163,21 @@ impl Graph {
         }
     }
 
-    /// Creates a stack operation and returns the result tensor.
+    /// Stacks `input_tensors` along a new `axis` (rank increases by 1).
     ///
-    /// Stacks all input tensors along `axis` into a result tensor of `rank + 1`. Tensors must be broadcast
-    /// compatible along all dimensions except `axis`, and have the same type.
+    /// All tensors must be broadcast compatible along the existing dimensions
+    /// and share the same datatype.
     ///
-    /// - Parameters:
-    /// - inputTensors: The input tensors.
-    /// - axis: The dimension to stack tensors into result. Must be in range: `-rank + 1
-    /// <
-    /// = dimension
-    /// <
-    /// rank + 1`.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn stack_tensors(
+    /// # Arguments
+    ///
+    /// * `input_tensors` – Slice of tensors to stack.
+    /// * `axis` – Axis index for the new dimension (supports negative indexing).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A stacked [`Tensor`].
+    pub fn stack(
         &self,
         input_tensors: &[&Tensor],
         axis: i64,

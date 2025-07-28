@@ -4,36 +4,36 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates an expand-dimensions operation and returns the result tensor.
+    /// Inserts a singleton dimension at `axis`.
     ///
-    /// Expands the tensor, inserting a dimension with size 1 at the specified axis.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - axis: The axis to expand.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn expand_dims_of_tensor(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    /// * `tensor` – Input tensor to reshape.
+    /// * `axis` – Axis index at which to insert a dimension of size 1 (negative
+    ///   indices wrap around).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A reshaped [`Tensor`] with one additional dimension.
+    pub fn expand_dims(&self, tensor: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, expandDimsOfTensor: tensor, axis: axis, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Creates an expand-dimensions operation and returns the result tensor.
+    /// Inserts singleton dimensions at multiple `axes`.
     ///
-    /// Expands the tensor, inserting dimensions with size 1 at specified axes.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - axes: The axes to expand.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn expand_dims_of_tensor_axes<'a>(
+    /// * `tensor` – Input tensor.
+    /// * `axes` – Axes at which to insert size-1 dimensions (slice or tensor).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A reshaped [`Tensor`] with additional dimensions.
+    pub fn expand_dims_axes<'a>(
         &self,
         tensor: &Tensor,
         axes: AxesOrTensor<'a>,

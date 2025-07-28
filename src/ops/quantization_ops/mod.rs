@@ -7,15 +7,20 @@ use objc2_foundation::NSString;
 
 use crate::{DataType, Graph, Tensor};
 
-/// MPSGraphMatrixMultiplicationOps.
+/// Quantization operations: helpers to create quantize and dequantize ops.
 impl Graph {
-    /// Creates a Quantize operation and returns the result tensor.
+    /// Creates a quantization operation.
     ///
-    /// - Parameters:
-    /// - tensor: Input tensor to be quantized
-    /// - arguments: The arguments for the quantization operation
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor array of datatype dataType
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor to be quantized.
+    /// * `arguments` – Parameters that control scaling, zero-point, axis, and
+    ///   target [`DataType`].
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] of the requested quantized `data_type`.
     pub fn quantize<'a>(
         &self,
         tensor: &Tensor,
@@ -71,13 +76,18 @@ impl Graph {
         }
     }
 
-    /// Creates Dequantize operation and returns the result tensor.
+    /// Creates a dequantization operation.
     ///
-    /// - Parameters:
-    /// - tensor: Input tensor to be dequantized
-    /// - arguments: The arguments for the dequantization operation
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor array of datatype dataType
+    /// # Arguments
+    ///
+    /// * `tensor` – Input tensor to be dequantized.
+    /// * `arguments` – Parameters that describe scale / LUT information and
+    ///   target [`DataType`].
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] converted back to the floating-point domain.
     pub fn dequantize<'a>(
         &self,
         tensor: &Tensor,

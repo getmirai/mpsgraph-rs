@@ -3,16 +3,21 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a flatten2D operation and returns the result tensor.
+    /// Flattens a tensor to rank-2 by collapsing dimensions around `axis`.
     ///
-    /// Flattens dimensions before `axis` to `result[0]` and dimensions starting
-    /// from `axis` to `result[1]` and returns a rank-2 tensor as result.
+    /// All dimensions before `axis` are multiplied into the first output
+    /// dimension, and the remaining ones into the second.
     ///
-    /// - Parameters:
-    /// - tensor: The tensor to be flattened.
-    /// - axis: The axis around which to flatten.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensor` – Tensor to flatten.
+    /// * `axis` – Split point between the two flattened groups (scalar or
+    ///   tensor; negative indices wrap).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A rank-2 [`Tensor`] with shape `[∏ dims<axis, ∏ dims≥axis]`.
     pub fn flatten_2d<'a>(
         &self,
         tensor: &Tensor,

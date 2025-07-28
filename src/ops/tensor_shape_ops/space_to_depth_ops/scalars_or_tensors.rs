@@ -1,5 +1,11 @@
 use crate::Tensor;
 
+/// Helper enum for specifying the three axis indices required by the
+/// *space-to-depth* / *depth-to-space* 2-D transforms.
+///
+/// The axes can be provided either as compile-time scalar values (`u64`) or as
+/// graph [`Tensor`] inputs, allowing dynamic graph construction.
+///
 pub enum WidthHeightDepthAxisScalarsOrTensors<'a> {
     Scalars {
         /// The axis that defines the fastest running dimension within the block.

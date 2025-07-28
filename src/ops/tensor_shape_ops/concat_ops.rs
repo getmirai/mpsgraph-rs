@@ -1,25 +1,24 @@
 use super::StartEndStrideScalarsOrTensors;
 use crate::{Graph, ShapeOrTensor, ShapedType, Tensor};
 use objc2::{extern_methods, msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::{NSArray, NSString};
 
 impl Graph {
-    /// Creates a concatenation operation and returns the result tensor.
+    /// Concatenates two tensors along a given axis.
     ///
-    /// Concatenates two input tensors along the specified dimension. Tensors must be broadcast
-    /// compatible along all other dimensions, and have the same datatype.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The first tensor to concatenate.
-    /// - tensor2: The second tensor to concatenate.
-    /// - dimensionIndex: The dimension to concatenate across, must be in range: `-rank
-    /// <
-    /// = dimension
-    /// <
-    /// rank`.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn concat_tensor(
+    /// * `tensor` – First tensor.
+    /// * `tensor2` – Second tensor (must be broadcast compatible along all
+    ///   other axes and share the same datatype).
+    /// * `dimension_index` – Axis along which to concatenate (supports negative
+    ///   indexing).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the concatenation result.
+    pub fn concat(
         &self,
         tensor: &Tensor,
         tensor2: &Tensor,
@@ -37,31 +36,30 @@ impl Graph {
         }
     }
 
-    /// Creates a concatenation operation and returns the result tensor.
+    /// Concatenates a slice of tensors along a given axis.
     ///
-    /// Concatenates all input tensors along specified dimension. All inputs must be broadcast
-    /// compatible along all other dimensions, and have the same type.
+    /// All input tensors must be broadcast compatible along the non-concat
+    /// dimensions and share the same datatype.
     ///
-    /// When interleave is specified, all tensors will be interleaved. To interleave, make sure to provide broadcast
-    /// compatible inputs along the specified dimension as well.
-    ///
-    /// For example:
-    /// ```md
-    /// operand0 = [1, 2, 3]
-    /// operand1 = [4, 5, 6]
-    /// concat([operand0, operand1], axis = 0, interleave = YES) = [1, 4, 2, 5, 3, 6]
+    /// If `interleave` is `true`, the tensors are interleaved rather than
+    /// stacked. Example:
+    /// ```rust
+    /// // axis = 0, interleave = true
+    /// [1,2,3] ⧺ [4,5,6] == [1,4,2,5,3,6]
     /// ```
     ///
-    /// - Parameters:
-    /// - tensors: The tensors to concatenate.
-    /// - dimensionIndex: The dimension to concatenate across, must be in range: `-rank
-    /// <
-    /// = dimension
-    /// <
-    /// rank`.
-    /// - interleave: A boolean value that specifies whether the operation interleaves input tensors.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
+    /// # Arguments
+    ///
+    /// * `tensors` – Slice of tensors to concatenate.
+    /// * `dimension_index` – Axis along which to concatenate (supports negative
+    ///   indexing).
+    /// * `interleave` – Whether to interleave the tensors along the concat
+    ///   axis.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the concatenation result.
     pub fn concat_tensors(
         &self,
         tensors: &[&Tensor],

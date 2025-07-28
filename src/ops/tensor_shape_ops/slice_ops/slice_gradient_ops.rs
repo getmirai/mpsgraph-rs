@@ -1,19 +1,25 @@
 use super::StartEndStrideScalarsOrTensors;
-use crate::{Graph, Tensor};
+use crate::{ns_number_array_from_slice, Graph, Tensor};
 use objc2::{msg_send, rc::Retained};
-use objc2_foundation::{NSArray, NSNumber, NSString};
+use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a strided-slice gradient operation and returns the result tensor.
+    /// Creates a strided-slice gradient operation.
     ///
-    /// - Parameters:
-    /// - inputGradientTensor: The input gradient.
-    /// - fwdInShapeTensor: The shape of the forward pass input, that is the shape of the gradient output.
-    /// - starts: An array of numbers that specify the starting points for each dimension.
-    /// - ends: An array of numbers that specify the ending points for each dimension.
-    /// - strides: An array of numbers that specify the strides for each dimension.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// # Arguments
+    ///
+    /// * `input_gradient_tensor` – Gradient flowing into the slice op
+    ///   (`dL/dR`).
+    /// * `fwd_in_shape_tensor` – Shape of the forward-pass input (defines the
+    ///   output shape of this gradient op).
+    /// * `starts` – Per-dimension start indices.
+    /// * `ends` – Per-dimension end indices.
+    /// * `strides` – Per-dimension strides.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing `dL/dS` where `S` was the sliced tensor.
     pub fn slice_gradient(
         &self,
         input_gradient_tensor: &Tensor,
@@ -23,45 +29,36 @@ impl Graph {
         strides: &[u64],
         name: Option<&str>,
     ) -> Retained<Tensor> {
-        let starts = starts
-            .iter()
-            .map(|x| NSNumber::new_u64(*x))
-            .collect::<Box<[Retained<NSNumber>]>>();
-        let ends = ends
-            .iter()
-            .map(|x| NSNumber::new_u64(*x))
-            .collect::<Box<[Retained<NSNumber>]>>();
-        let strides = strides
-            .iter()
-            .map(|x| NSNumber::new_u64(*x))
-            .collect::<Box<[Retained<NSNumber>]>>();
-        let starts_array = NSArray::from_retained_slice(&starts);
-        let ends_array = NSArray::from_retained_slice(&ends);
-        let strides_array = NSArray::from_retained_slice(&strides);
         unsafe {
             msg_send![
                 self,
                 sliceGradientTensor: input_gradient_tensor,
                 fwdInShapeTensor: fwd_in_shape_tensor,
-                starts: &*starts_array,
-                ends: &*ends_array,
-                strides: &*strides_array,
+                starts: &*ns_number_array_from_slice(starts),
+                ends: &*ns_number_array_from_slice(ends),
+                strides: &*ns_number_array_from_slice(strides),
                 name: name.map(NSString::from_str).as_deref(),
             ]
         }
     }
 
-    /// Creates a strided-slice gradient operation and returns the result tensor.
+    /// Creates a strided-slice gradient operation with *mask* support.
     ///
-    /// - Parameters:
-    /// - inputGradientTensor: The input gradient.
-    /// - fwdInShapeTensor: The shape of the forward pass input, that is the shape of the gradient output.
-    /// - start_end_stride: An enum of numbers or tensors that specify the starting points for each dimension.
-    /// - startMask: A bitmask that indicates dimensions whose `starts` values the operation should ignore.
-    /// - endMask: A bitmask that indicates dimensions whose `ends` values the operation should ignore.
-    /// - squeezeMask: A bitmask that indicates dimensions the operation will squeeze out from the result.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// # Arguments
+    ///
+    /// * `input_gradient_tensor` – Gradient flowing into the slice op.
+    /// * `fwd_in_shape_tensor` – Shape of the forward-pass input.
+    /// * `start_end_stride` – Slice parameters provided either as scalars or
+    ///   tensors (see [`StartEndStrideScalarsOrTensors`]).
+    /// * `start_mask` – Bitmask of dimensions whose `starts` values are
+    ///   ignored.
+    /// * `end_mask` – Bitmask of dimensions whose `ends` values are ignored.
+    /// * `squeeze_mask` – Bitmask of dimensions to squeeze out of the result.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the gradient result.
     pub fn slice_gradient_with_masks<'a>(
         &self,
         input_gradient_tensor: &Tensor,
@@ -77,37 +74,20 @@ impl Graph {
                 starts,
                 ends,
                 strides,
-            } => {
-                let starts = starts
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let ends = ends
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let strides = strides
-                    .iter()
-                    .map(|x| NSNumber::new_u64(*x))
-                    .collect::<Box<[Retained<NSNumber>]>>();
-                let starts_array = NSArray::from_retained_slice(&starts);
-                let ends_array = NSArray::from_retained_slice(&ends);
-                let strides_array = NSArray::from_retained_slice(&strides);
-                unsafe {
-                    msg_send![
-                        self,
-                        sliceGradientTensor: input_gradient_tensor,
-                        fwdInShapeTensor: fwd_in_shape_tensor,
-                        starts: &*starts_array,
-                        ends: &*ends_array,
-                        strides: &*strides_array,
-                        startMask: start_mask,
-                        endMask: end_mask,
-                        squeezeMask: squeeze_mask,
-                        name: name.map(NSString::from_str).as_deref(),
-                    ]
-                }
-            }
+            } => unsafe {
+                msg_send![
+                    self,
+                    sliceGradientTensor: input_gradient_tensor,
+                    fwdInShapeTensor: fwd_in_shape_tensor,
+                    starts: &*ns_number_array_from_slice(starts),
+                    ends: &*ns_number_array_from_slice(ends),
+                    strides: &*ns_number_array_from_slice(strides),
+                    startMask: start_mask,
+                    endMask: end_mask,
+                    squeezeMask: squeeze_mask,
+                    name: name.map(NSString::from_str).as_deref(),
+                ]
+            },
             StartEndStrideScalarsOrTensors::Tensors {
                 start_tensor,
                 end_tensor,
@@ -129,16 +109,21 @@ impl Graph {
         }
     }
 
-    /// Creates a slice gradient operation and returns the result tensor.
+    /// Creates a slice gradient operation that uses *start* and *size* tensors.
     ///
-    /// - Parameters:
-    /// - inputGradientTensor: The input gradient.
-    /// - fwdInShapeTensor: The shape of the forward pass input, that is the shape of the gradient output.
-    /// - startTensor: The tensor that specifies the starting points for each dimension.
-    /// - sizeTensor: The tensor that specifies the size of the forward result for each dimension.
-    /// - squeezeMask: A bitmask that indicates dimensions the operation will squeeze out from the result.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
+    /// # Arguments
+    ///
+    /// * `input_gradient_tensor` – Gradient flowing into the slice op.
+    /// * `fwd_in_shape_tensor` – Shape of the forward-pass input.
+    /// * `start_tensor` – Tensor defining per-dimension start indices.
+    /// * `size_tensor` – Tensor defining the size of the forward result per
+    ///   dimension.
+    /// * `squeeze_mask` – Bitmask of dimensions to squeeze from the result.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] containing the gradient result.
     pub fn slice_gradient_start_tensor_size_tensor_squeeze_mask(
         &self,
         input_gradient_tensor: &Tensor,

@@ -3,15 +3,17 @@ use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 impl Graph {
-    /// Creates a squeeze operation and returns the result tensor.
+    /// Removes all singleton dimensions from `tensor`.
     ///
-    /// Squeezes the tensor, removing all dimensions with size 1.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn squeeze_tensor(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
+    /// * `tensor` – Input tensor.
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with all size-1 dimensions removed.
+    pub fn squeeze(&self, tensor: &Tensor, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![
                 self,
@@ -21,38 +23,35 @@ impl Graph {
         }
     }
 
-    /// Creates a squeeze operation and returns the result tensor.
+    /// Removes the singleton dimension at `axis`.
     ///
-    /// Squeezes the tensor, removing a dimension with size 1 at the specified axis.
-    /// The size of the input tensor must be 1 at the specified axis.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - axis: The axis to squeeze.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object.
-    pub fn squeeze_tensor_axis(
-        &self,
-        tensor: &Tensor,
-        axis: i64,
-        name: Option<&str>,
-    ) -> Retained<Tensor> {
+    /// * `tensor` – Input tensor.
+    /// * `axis` – Axis to remove (size must be 1).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with the specified axis removed.
+    pub fn squeeze_axis(&self, tensor: &Tensor, axis: i64, name: Option<&str>) -> Retained<Tensor> {
         unsafe {
             msg_send![self, squeezeTensor: tensor, axis: axis, name: name.map(NSString::from_str).as_deref()]
         }
     }
 
-    /// Creates a squeeze operation and returns the result tensor.
+    /// Removes singleton dimensions at multiple `axes`.
     ///
-    /// Squeezes the tensor, removing dimensions with size 1 at specified axes.
-    /// The size of the input tensor must be 1 at all specified axes.
+    /// # Arguments
     ///
-    /// - Parameters:
-    /// - tensor: The input tensor.
-    /// - axes: The axes to squeeze.
-    /// - name: The name for the operation.
-    /// - Returns: A valid MPSGraphTensor object
-    pub fn squeeze_tensor_axes<'a>(
+    /// * `tensor` – Input tensor.
+    /// * `axes` – Axes to remove (slice or tensor).
+    /// * `name` – Optional debug label.
+    ///
+    /// # Returns
+    ///
+    /// A [`Tensor`] with the specified axes removed.
+    pub fn squeeze_axes<'a>(
         &self,
         tensor: &Tensor,
         axes: AxesOrTensor<'a>,

@@ -1,5 +1,12 @@
 use crate::Tensor;
 
+/// Helper enum for specifying *spatial axes*, *batch axis*, and *block
+/// dimensions* either as plain Rust slices or as graph [`Tensor`] inputs.
+///
+/// This polymorphism allows `space_to_batch` / `batch_to_space` to accept
+/// compile-time constants as well as values computed dynamically during graph
+/// construction.
+///
 pub enum SpatialAxesBatchAxisBlockDimensionsScalarsOrTensors<'a> {
     Scalars {
         /// The axes that define the dimensions containing the spatial blocks.
