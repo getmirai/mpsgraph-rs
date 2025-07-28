@@ -1,6 +1,6 @@
 use super::{ExecutableCompletionHandler, ExecutableScheduledHandler, ExecutionStage};
 use crate::TensorData;
-use block2::RcBlock;
+use block2::DynBlock;
 use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
 use objc2::rc::{Allocated, Retained};
@@ -43,28 +43,6 @@ impl ExecutableExecutionDescriptor {
         #[unsafe(method_family = new)]
         pub fn new() -> Retained<Self>;
 
-        /// A notification that appears when graph-executable execution is scheduled.
-        ///
-        /// Default value is nil.
-        #[unsafe(method(scheduledHandler))]
-        #[unsafe(method_family = none)]
-        pub fn scheduled_handler(&self) -> ExecutableScheduledHandler;
-
-        /// Setter for [`scheduledHandler`][Self::scheduledHandler].
-        #[unsafe(method(setScheduledHandler:))]
-        #[unsafe(method_family = none)]
-        pub fn set_scheduled_handler(&self, scheduled_handler: ExecutableScheduledHandler);
-
-        /// Getter for [`completionHandler`][Self::completionHandler].
-        #[unsafe(method(completionHandler))]
-        #[unsafe(method_family = none)]
-        pub fn completion_handler_raw(&self) -> ExecutableCompletionHandler;
-
-        /// Setter for [`completionHandler`][Self::completionHandler].
-        #[unsafe(method(setCompletionHandler:))]
-        #[unsafe(method_family = none)]
-        pub fn set_completion_handler_raw(&self, completion_handler: ExecutableCompletionHandler);
-
         /// Flag for the graph executable to wait till the execution has completed.
         ///
         /// Default value is false.
@@ -96,53 +74,37 @@ impl ExecutableExecutionDescriptor {
         }
     }
 
-    /// Set the Rust closure that should be called once the executable finishes.
-    pub fn set_completion_handler<F>(&self, handler: Option<F>)
-    where
-        F: Fn(&[&TensorData], *mut NSError) + 'static,
-    {
+    /// Getter for [`completionHandler`][Self::completionHandler].
+    pub fn completion_handler(&self) -> ExecutableCompletionHandler {
         unsafe {
-            if let Some(h) = handler {
-                let wrapped = move |ns_results: NonNull<NSArray<TensorData>>,
-                                    error: *mut NSError| {
-                    let ns_array = ns_results.as_ref();
-                    let retained_vec = ns_array.to_vec();
-                    let refs: Vec<&TensorData> = retained_vec.iter().map(|r| &**r).collect();
-                    h(&refs, error)
-                };
-                let rc_block = RcBlock::new(wrapped);
-                let ptr = RcBlock::as_ptr(&rc_block) as ExecutableCompletionHandler;
-                self.set_completion_handler_raw(ptr);
-            } else {
-                self.set_completion_handler_raw(std::ptr::null_mut());
-            }
+            let block_ptr: *mut DynBlock<dyn Fn(NonNull<NSArray<TensorData>>, *mut NSError)> =
+                msg_send![self, completionHandler];
+            ExecutableCompletionHandler::copy(block_ptr)
         }
     }
 
-    /// Retrieve the completion handler as a Rust closure, if any.
-    ///
-    /// The returned closure owns an internal copy of the Objective-C block and
-    /// can therefore outlive this `ExecutableExecutionDescriptor`.
-    pub fn completion_handler(
-        &self,
-    ) -> Option<Box<dyn Fn(&[&TensorData], *mut NSError) + 'static>> {
+    /// Setter for [`completionHandler`][Self::completionHandler].
+    pub fn set_completion_handler(&self, completion_handler: ExecutableCompletionHandler) {
         unsafe {
-            let block_ptr = self.completion_handler_raw();
-            if block_ptr.is_null() {
-                return None;
-            }
+            let _: () = msg_send![self, setCompletionHandler: &*completion_handler];
+        }
+    }
 
-            let block_ref = &*block_ptr;
-            let rc_block = block_ref.copy();
-            let rc_block_clone = rc_block.clone();
+    /// A notification that appears when graph-executable execution is scheduled.
+    ///
+    /// Default value is nil.
+    pub fn scheduled_handler(&self) -> ExecutableScheduledHandler {
+        unsafe {
+            let block_ptr: *mut DynBlock<dyn Fn(NonNull<NSArray<TensorData>>, *mut NSError)> =
+                msg_send![self, scheduledHandler];
+            ExecutableScheduledHandler::copy(block_ptr)
+        }
+    }
 
-            Some(Box::new(
-                move |slice: &[&TensorData], error: *mut NSError| {
-                    let ns_array = NSArray::from_slice(slice);
-                    let ns_ptr = NonNull::from(&*ns_array);
-                    rc_block_clone.call((ns_ptr, error));
-                },
-            ))
+    /// Setter for [`scheduledHandler`][Self::scheduledHandler].
+    pub fn set_scheduled_handler(&self, scheduled_handler: ExecutableScheduledHandler) {
+        unsafe {
+            let _: () = msg_send![self, setScheduledHandler: &*scheduled_handler];
         }
     }
 }
