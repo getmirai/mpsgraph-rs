@@ -15,7 +15,7 @@ readme = "README.md"
 objc2 = "0.6.1"
 objc2-foundation = "0.3.1"
 block2 = "0.6.1"
-metal =  "0.32.0"
+metal = "0.32.0"
 bitflags = "2.9.1"
 
 [package.metadata.docs.rs]
