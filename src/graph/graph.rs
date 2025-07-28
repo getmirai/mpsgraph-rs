@@ -2,15 +2,15 @@ use super::{
     GraphOptions, RetainedTensorDataHashMap, TensorDataDictionary, TensorDataHashMap,
     TensorShapedTypeHashMap,
 };
+use crate::GraphObject;
 use crate::command_buffer::CommandBuffer;
 use crate::device::Device;
 use crate::executable::{CompilationDescriptor, Executable, ExecutionDescriptor};
 use crate::operation::Operation;
-use crate::GraphObject;
 use crate::{NSDictionaryExt, ToNSDictionary};
 use crate::{Tensor, TensorData};
-use metal::{foreign_types::ForeignType, CommandQueue};
-use objc2::rc::{autoreleasepool, Allocated, Retained};
+use metal::{CommandQueue, foreign_types::ForeignType};
+use objc2::rc::{Allocated, Retained, autoreleasepool};
 use objc2::runtime::NSObject;
 use objc2::{extern_class, extern_conformance, extern_methods, msg_send};
 use objc2_foundation::{NSArray, NSMutableDictionary, NSObjectProtocol};

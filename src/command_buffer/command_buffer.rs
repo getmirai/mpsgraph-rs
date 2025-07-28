@@ -2,7 +2,7 @@ use metal::foreign_types::ForeignType;
 use metal::{CommandBuffer as MTLCommandBuffer, CommandQueue as MetalCommandQueue};
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, msg_send, ClassType};
+use objc2::{ClassType, extern_class, extern_conformance, msg_send};
 use objc2_foundation::NSObjectProtocol;
 
 extern_class!(

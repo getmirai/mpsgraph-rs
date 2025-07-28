@@ -1,4 +1,4 @@
-use crate::{ns_number_array_to_boxed_slice, DataType, GraphObject, Operation, Shape, ShapedType};
+use crate::{DataType, GraphObject, Operation, Shape, ShapedType, ns_number_array_to_boxed_slice};
 use objc2::{
     extern_class, extern_conformance, extern_methods, msg_send, rc::Retained, runtime::NSObject,
 };

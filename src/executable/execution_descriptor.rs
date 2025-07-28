@@ -1,9 +1,9 @@
 use super::ExecutionStage;
-use metal::foreign_types::ForeignType;
 use metal::SharedEvent;
+use metal::foreign_types::ForeignType;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, msg_send, ClassType};
+use objc2::{ClassType, extern_class, msg_send};
 use objc2_foundation::NSObjectProtocol;
 
 extern_class!(

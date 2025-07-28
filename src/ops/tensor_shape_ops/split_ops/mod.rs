@@ -8,7 +8,7 @@ mod sizes_or_tensor;
 
 pub use sizes_or_tensor::SizesOrTensor;
 
-use crate::{ns_number_array_from_slice, Graph, Tensor};
+use crate::{Graph, Tensor, ns_number_array_from_slice};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSString};
 

@@ -1,4 +1,4 @@
-use objc2::rc::{autoreleasepool, Retained};
+use objc2::rc::{Retained, autoreleasepool};
 use objc2_foundation::{NSArray, NSInteger, NSNumber, NSUInteger};
 
 pub trait NSNumberValue: Copy {}

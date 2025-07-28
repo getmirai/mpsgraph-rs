@@ -1,8 +1,8 @@
-use metal::{foreign_types::ForeignType, CommandQueue};
+use metal::{CommandQueue, foreign_types::ForeignType};
 use objc2::rc::autoreleasepool;
 use objc2::rc::{Allocated, Retained};
 use objc2::runtime::NSObject;
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
+use objc2::{ClassType, extern_class, extern_conformance, extern_methods, msg_send};
 use objc2_foundation::{NSArray, NSObjectProtocol, NSString, NSURL};
 use std::path::Path;
 

@@ -1,13 +1,12 @@
 use crate::{
-    ns_number_array_from_slice, ns_number_array_to_boxed_slice, DataType, Device, GraphObject,
-    Shape,
+    DataType, Device, GraphObject, Shape, ns_number_array_from_slice,
+    ns_number_array_to_boxed_slice,
 };
-use metal::{foreign_types::ForeignType, Buffer};
+use metal::{Buffer, foreign_types::ForeignType};
 use objc2::{
-    extern_class, extern_conformance, extern_methods, msg_send,
-    rc::{autoreleasepool, Allocated, Retained},
+    ClassType, extern_class, extern_conformance, extern_methods, msg_send,
+    rc::{Allocated, Retained, autoreleasepool},
     runtime::{AnyObject, NSObject},
-    ClassType,
 };
 use objc2_foundation::{NSData, NSObjectProtocol};
 use std::mem::size_of_val;

@@ -33,7 +33,7 @@ pub use tile_ops::*;
 /// All functions live as extension methods on [`Graph`] and mirror their
 /// Objective-C counterparts while using idiomatic Rust types.
 ///
-use crate::{ns_number_array_from_slice, DataType, Graph, ShapeOrTensor, Tensor};
+use crate::{DataType, Graph, ShapeOrTensor, Tensor, ns_number_array_from_slice};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::{NSArray, NSString};
 

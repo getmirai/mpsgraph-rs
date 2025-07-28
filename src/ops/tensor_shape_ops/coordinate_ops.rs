@@ -1,4 +1,4 @@
-use crate::{ns_number_array_from_slice, Graph, ScalarOrTensor, Shape, Tensor};
+use crate::{Graph, ScalarOrTensor, Shape, Tensor, ns_number_array_from_slice};
 use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 

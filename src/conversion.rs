@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use objc2::{rc::Retained, Message};
+use objc2::{Message, rc::Retained};
 use objc2_foundation::{CopyingHelper, NSCopying, NSDictionary, NSObjectProtocol};
 use std::hash::Hash;
 

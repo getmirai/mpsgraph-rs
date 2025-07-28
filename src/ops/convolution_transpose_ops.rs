@@ -2,7 +2,7 @@ use objc2::{msg_send, rc::Retained};
 use objc2_foundation::NSString;
 
 use super::Convolution2DOpDescriptor;
-use crate::{ns_number_array_from_slice, Graph, ShapeOrTensor, Tensor};
+use crate::{Graph, ShapeOrTensor, Tensor, ns_number_array_from_slice};
 
 impl Graph {
     // ----- Forward ----------------------------------------------------------

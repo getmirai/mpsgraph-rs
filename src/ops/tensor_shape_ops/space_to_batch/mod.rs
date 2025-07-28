@@ -2,7 +2,7 @@ mod scalars_or_tensors;
 
 pub use scalars_or_tensors::SpatialAxesBatchAxisBlockDimensionsScalarsOrTensors;
 
-use crate::{ns_number_array_from_slice, Graph, Tensor};
+use crate::{Graph, Tensor, ns_number_array_from_slice};
 use objc2::{extern_methods, msg_send, rc::Retained};
 use objc2_foundation::NSString;
 

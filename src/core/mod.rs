@@ -12,7 +12,7 @@ pub use mps_types::*;
 pub use object::GraphObject;
 pub use padding_mode::PaddingMode;
 pub use padding_style::PaddingStyle;
-pub use r#type::GraphType;
 pub use reduction_mode::ReductionMode;
 pub use shaped_type::ShapedType;
 pub use tensor_named_data_layout::TensorNamedDataLayout;
+pub use r#type::GraphType;

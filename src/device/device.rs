@@ -1,10 +1,10 @@
 use crate::DeviceType;
 use crate::GraphObject;
-use metal::foreign_types::ForeignType;
 use metal::Device as MetalDevice;
+use metal::foreign_types::ForeignType;
 use objc2::rc::Retained;
 use objc2::runtime::{AnyObject, NSObject};
-use objc2::{extern_class, extern_conformance, extern_methods, msg_send, ClassType};
+use objc2::{ClassType, extern_class, extern_conformance, extern_methods, msg_send};
 use objc2_foundation::NSObjectProtocol;
 
 extern_class!(

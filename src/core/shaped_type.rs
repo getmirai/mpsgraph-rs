@@ -1,9 +1,8 @@
 use super::{DataType, GraphObject, GraphType, Shape};
 use crate::{ns_number_array_from_slice, ns_number_array_to_boxed_slice};
 use objc2::{
-    extern_class, extern_conformance, extern_methods, msg_send,
+    ClassType, extern_class, extern_conformance, extern_methods, msg_send,
     rc::{Allocated, Retained},
-    ClassType,
 };
 use objc2_foundation::{CopyingHelper, NSCopying, NSObject, NSObjectProtocol};
 

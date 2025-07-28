@@ -2,10 +2,10 @@ mod graph_variable_op;
 
 pub use graph_variable_op::GraphVariableOp;
 
-use crate::{ns_number_array_from_slice, DataType, Graph, Operation, Shape, Tensor};
+use crate::{DataType, Graph, Operation, Shape, Tensor, ns_number_array_from_slice};
 use objc2::{
     extern_methods, msg_send,
-    rc::{autoreleasepool, Retained},
+    rc::{Retained, autoreleasepool},
 };
 use objc2_foundation::{NSData, NSString};
 use std::{mem::size_of_val, slice::from_raw_parts};
