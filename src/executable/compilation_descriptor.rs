@@ -3,10 +3,9 @@ use super::Optimization;
 use super::OptimizationProfile;
 use crate::ComputeDevice;
 use objc2::{
-    extern_class, msg_send,
+    ClassType, extern_class, msg_send,
     rc::{Allocated, Retained},
     runtime::NSObject,
-    ClassType,
 };
 use objc2_foundation::{NSDictionary, NSObjectProtocol, NSString};
 use std::{collections::HashMap, iter::zip, ptr::null};
